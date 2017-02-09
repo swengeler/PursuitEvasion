@@ -33,6 +33,8 @@ public class Base extends Application {
     //used to indicate whether we should draw the 'possible line' or not
     private boolean drawPos;
 
+    //Hoi Jordy
+
     @Override
     public void start(Stage primaryStage) {
         //radius for circles aka points
