@@ -1,23 +1,15 @@
 package ui;
 
-import javafx.animation.FadeTransition;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Separator;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.Stage;
@@ -32,8 +24,10 @@ public class Main extends Application {
     private ZoomablePane pane;
 
     private Line indicatorLine;
-    private ArrayList<MapPolygon> mapPolygons;
+    public static ArrayList<MapPolygon> mapPolygons;
     private MapPolygon currentMapPolygon;
+
+    public static MapPolygon outerBorder;
 
     private BooleanProperty addPoints;
 
@@ -84,6 +78,7 @@ public class Main extends Application {
         pane.getChildren().add(indicatorLine);
 
         currentMapPolygon = new MapPolygon(pane);
+        outerBorder = currentMapPolygon;
         pane.getChildren().add(currentMapPolygon);
         mapPolygons = new ArrayList<>();
         mapPolygons.add(currentMapPolygon);
@@ -150,11 +145,6 @@ public class Main extends Application {
                 if (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY())) {
                     return;
                 }
-                for (int i = 1; i < mapPolygons.size(); i++) {
-                    if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
-                        return;
-                    }
-                }
 
                 Anchor a = null;
                 boolean connectedToOld = false;
@@ -171,17 +161,31 @@ public class Main extends Application {
                 }
 
                 if (!connectedToOld) {
-                    DoubleProperty xProperty = new SimpleDoubleProperty(e.getX());
-                    DoubleProperty yProperty = new SimpleDoubleProperty(e.getY());
-                    a = new Anchor(Color.GOLD, xProperty, yProperty);
                     if (indicatorLine.isVisible()) {
                         for (MapPolygon mp : mapPolygons) {
                             if (mp.lineIntersects(indicatorLine)) {
                                 return;
                             }
                         }
+                    } else {
+                        for (int i = 1; i < mapPolygons.size(); i++) {
+                            if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
+                                return;
+                            }
+                        }
+                    }
+                    DoubleProperty xProperty = new SimpleDoubleProperty(e.getX());
+                    DoubleProperty yProperty = new SimpleDoubleProperty(e.getY());
+                    a = new Anchor(Color.GOLD, xProperty, yProperty);
+                } else if (a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
+                    for (int i = 1; i < mapPolygons.size(); i++) {
+                        if (mapPolygons.get(i) != currentMapPolygon && currentMapPolygon.contains(mapPolygons.get(i).getPoints().get(0), mapPolygons.get(i).getPoints().get(1))) {
+                            // currentMapPolygon.removeAnchor(a);
+                            return;
+                        }
                     }
                 }
+
 
                 currentMapPolygon.addAnchor(a);
 
@@ -193,8 +197,11 @@ public class Main extends Application {
                     indicatorLine.setVisible(true);
                 } else {
                     if (connectedToOld && /*currentMapPolygon.isClosed()*/a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
-                        for (int i = 0; i < currentMapPolygon.getPoints().size(); i += 2) {
-                            System.out.println(currentMapPolygon.getPoints().get(i) + ", " + currentMapPolygon.getPoints().get(i + 1));
+                        for (int i = 1; i < mapPolygons.size(); i++) {
+                            if (mapPolygons.get(i) != currentMapPolygon && currentMapPolygon.contains(mapPolygons.get(i).getPoints().get(0), mapPolygons.get(i).getPoints().get(1))) {
+                                // currentMapPolygon.removeAnchor(a);
+                                return;
+                            }
                         }
                         // connected to first point to close the polygon
                         StrokeTransition st = new StrokeTransition(new Duration(500), currentMapPolygon, Color.BLUE, Color.ORANGE);

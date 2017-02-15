@@ -1,5 +1,6 @@
 package ui;
 
+import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
@@ -29,19 +30,43 @@ public class MapPolygon extends Polyline {
     public boolean lineIntersects(Line line) {
         double a1, a2, a3, a4;
         for (int i = 0; i < getPoints().size() - 2; i += 2) {
+            if (!((line.getStartX() == getPoints().get(i) && line.getStartY() == getPoints().get(i + 1)) || (line.getEndX() == getPoints().get(i) && line.getEndY() == getPoints().get(i + 1)) ||
+                (line.getStartX() == getPoints().get(i + 2) && line.getStartY() == getPoints().get(i + 3)) || (line.getEndX() == getPoints().get(i + 2) && line.getEndY() == getPoints().get(i + 3)))) {
+                a1 = signed2DTriArea(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY(), getPoints().get(i), getPoints().get(i + 1));
+                a2 = signed2DTriArea(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY(), getPoints().get(i + 2), getPoints().get(i + 3));
+                if (a1 * a2 < 0) {
+                    a3 = signed2DTriArea(getPoints().get(i + 2), getPoints().get(i + 3), getPoints().get(i), getPoints().get(i + 1), line.getStartX(), line.getStartY());
+                    a4 = a3 + a2 - a1;
+                    if (a3 * a4 < 0) {
+                        return true;
+                    }
+                }
+                //System.out.println("(" + line.getStartX() + "|" + line.getStartY() + ") to (" + line.getEndX() + "|" + line.getEndY() + ")" +
+                //" not intersecting with (" + getPoints().get(i) + "|" + getPoints().get(i + 1) + ") to (" + getPoints().get(i + 2) + "|" + getPoints().get(i + 3) + ")");
+            }
+        }
+        return false;
+    }
+
+    public Point2D lineIntersectionPoint(Line line) {
+        Point2D intersectionPoint;
+        double a1, a2, a3, a4, t;
+        for (int i = 0; i < getPoints().size() - 2; i += 2) {
             a1 = signed2DTriArea(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY(), getPoints().get(i), getPoints().get(i + 1));
             a2 = signed2DTriArea(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY(), getPoints().get(i + 2), getPoints().get(i + 3));
             if (a1 * a2 < 0) {
                 a3 = signed2DTriArea(getPoints().get(i + 2), getPoints().get(i + 3), getPoints().get(i), getPoints().get(i + 1), line.getStartX(), line.getStartY());
                 a4 = a3 + a2 - a1;
                 if (a3 * a4 < 0) {
-                    return true;
+                    t = a3 / (a3 - a4);
+                    intersectionPoint = new Point2D(line.getStartX() + t * (line.getEndX() - line.getStartX()), line.getStartY() + t * (line.getEndY() - line.getStartY()));
+                    return intersectionPoint;
                 }
             }
             //System.out.println("(" + line.getStartX() + "|" + line.getStartY() + ") to (" + line.getEndX() + "|" + line.getEndY() + ")" +
-                    //" not intersecting with (" + getPoints().get(i) + "|" + getPoints().get(i + 1) + ") to (" + getPoints().get(i + 2) + "|" + getPoints().get(i + 3) + ")");
+            //" not intersecting with (" + getPoints().get(i) + "|" + getPoints().get(i + 1) + ") to (" + getPoints().get(i + 2) + "|" + getPoints().get(i + 3) + ")");
         }
-        return false;
+        return null;
     }
 
     private static double signed2DTriArea(double ax, double ay, double bx, double by, double cx, double cy) {
@@ -63,6 +88,10 @@ public class MapPolygon extends Polyline {
             allAnchors.add(a);
             parent.getChildren().add(a);
         }
+    }
+
+    public void removeAnchor(Anchor a) {
+
     }
 
     public boolean isClosed() {

@@ -5,27 +5,25 @@
  */
 package pursuitevasion;
 
-import java.util.ArrayList;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Polygon;
+import javafx.scene.shape.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.ArrayList;
+
 /**
- *
  * @author jyrr
  */
 public class Base extends Application {
 
     //used to continously draw a 'possible line' when the mouse is moving on the scene
     private Line possibleLine = null;
-    
+
     private ArrayList<Circle> points;
     private ArrayList<Line> lines;
     private ArrayList<Polygon> polygons;
@@ -39,7 +37,7 @@ public class Base extends Application {
     public void start(Stage primaryStage) {
         //radius for circles aka points
         float radius = 7.5f;
-        
+
         //offset for clicking on a point aka circle, within this offset it will be seen as the point itself
         double offset = 15;
 
@@ -55,7 +53,7 @@ public class Base extends Application {
         scene.setOnMouseClicked(eh -> {
             //probably need some more sophisticated logic for this... :D
             root.getChildren().clear();
-            
+
             //avoiding errors
             if (possibleLine != null) {
                 //adding to our line array (line between two points)
@@ -87,13 +85,13 @@ public class Base extends Application {
                     p.getPoints().add(cp.getCenterX());
                     p.getPoints().add(cp.getCenterY());
                 }
-                
+
                 //addition of polygon, setting stroke, color etc
                 p.setFill(null);
                 p.setStrokeWidth(2);
                 p.setStroke(Color.TOMATO);
                 polygons.add(p);
-                
+
                 //set everything to default
                 possibleLine = null;
                 points.clear();
@@ -125,15 +123,15 @@ public class Base extends Application {
             //check if we should even draw the possible line, and if we have a starting point (otherwise we'd get errors)
             if (drawPos && points.size() > 0) {
                 root.getChildren().clear();
-                
+
                 //retrieve last point, and current point the mouse is hovering over
                 Circle pc = points.get(points.size() - 1);
                 Circle nc = new Circle(eh.getX(), eh.getY(), radius);
-                
+
                 //construct 'possible line'
                 possibleLine = new Line(pc.getCenterX(), pc.getCenterY(), nc.getCenterX(), nc.getCenterY());
                 possibleLine.setStrokeWidth(2);
-                
+
                 root.getChildren().addAll(points);
                 root.getChildren().addAll(lines);
                 root.getChildren().addAll(polygons);
