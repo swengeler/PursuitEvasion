@@ -27,9 +27,6 @@ public class Anchor extends Circle {
         x.bind(centerXProperty());
         y.bind(centerYProperty());
 
-        lastLegalX = x.get();
-        lastLegalY = y.get();
-
         enableDrag();
     }
 
@@ -41,9 +38,32 @@ public class Anchor extends Circle {
             dragDelta.x = getCenterX() - e.getX();
             dragDelta.y = getCenterY() - e.getY();
             getScene().setCursor(Cursor.MOVE);
+            lastLegalX = getCenterX();
+            lastLegalY = getCenterY();
         });
         setOnMouseReleased(e -> {
             getScene().setCursor(Cursor.HAND);
+            for (MapPolygon mp1 : Main.mapPolygons) {
+                for (MapPolygon mp2 : Main.mapPolygons) {
+                    // check for intersection between lines
+                    for (int i = 0; i < mp2.getPoints().size() - 2; i += 2) {
+                        if (mp1.lineIntersects(new Line(mp2.getPoints().get(i), mp2.getPoints().get(i + 1), mp2.getPoints().get(i + 2), mp2.getPoints().get(i + 3)))) {
+                            setCenterX(lastLegalX);
+                            setCenterY(lastLegalY);
+                            return;
+                        }
+                    }
+                }
+            }
+            for (int i = 1; i < Main.mapPolygons.size(); i++) {
+                for (int j = 0; j < Main.mapPolygons.get(i).getPoints().size(); j += 2) {
+                    if (!Main.outerBorder.contains(Main.mapPolygons.get(i).getPoints().get(j), Main.mapPolygons.get(i).getPoints().get(j + 1))) {
+                        setCenterX(lastLegalX);
+                        setCenterY(lastLegalY);
+                        return;
+                    }
+                }
+            }
         });
         setOnMouseDragged(e -> {
             /*for (MapPolygon mp1 : Main.mapPolygons) {
@@ -61,7 +81,7 @@ public class Anchor extends Circle {
                 }
             }*/
 
-            boolean anchorBelongsToBorder = false;
+            /*boolean anchorBelongsToBorder = false;
             for (int i = 0; i < Main.outerBorder.getPoints().size(); i += 2) {
                 if (getCenterX() == Main.outerBorder.getPoints().get(i) && getCenterY() == Main.outerBorder.getPoints().get(i + 1)) {
                     anchorBelongsToBorder = true;
@@ -73,7 +93,7 @@ public class Anchor extends Circle {
                 //setCenterX(intersectionPoint.getX());
                 //setCenterY(intersectionPoint.getY());
                 return;
-            }
+            }*/
             double newX = e.getX() + dragDelta.x;
             if (newX > 0 && newX < ((Pane) getParent()).getWidth()) {
                 setCenterX(newX);
@@ -90,8 +110,8 @@ public class Anchor extends Circle {
             } else {
                 setCenterY(0);
             }
-            lastLegalX = getCenterX();
-            lastLegalY = getCenterY();
+            //lastLegalX = getCenterX();
+            //lastLegalY = getCenterY();
             System.out.println("lastLegalX = " + lastLegalX + ", lastLegalY = " + lastLegalY);
         });
         setOnMouseEntered(e -> {
