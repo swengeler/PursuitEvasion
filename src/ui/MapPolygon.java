@@ -15,6 +15,7 @@ public class MapPolygon extends Polyline {
         super();
         this.parent = parent;
         setStroke(Color.BLUE);
+        setFill(Color.TRANSPARENT);
         setStrokeWidth(3.0);
         setStrokeLineCap(StrokeLineCap.ROUND);
         setStrokeLineJoin(StrokeLineJoin.ROUND);

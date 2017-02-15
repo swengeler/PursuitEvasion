@@ -8,6 +8,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -18,8 +19,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -89,17 +89,29 @@ public class Main extends Application {
         mapPolygons.add(currentMapPolygon);
         addListeners();
 
-        indicatorLine.startXProperty().addListener((ov, oldValue, newValue) -> {
-            System.out.println("Start of line (x) changed from " + oldValue + " to " + newValue);
-        });
-        indicatorLine.startYProperty().addListener((ov, oldValue, newValue) -> {
-            System.out.println("Start of line (y) changed from " + oldValue + " to " + newValue);
-        });
-
         Scene scene = new Scene(outerLayout, 1200, 800);
-        primaryStage.setTitle("Proper Drawing");
+        primaryStage.setTitle("Robin's Ruthless Robbers");
         primaryStage.setScene(scene);
         primaryStage.show();
+
+
+        Polyline p = new Polyline();
+        p.getPoints().addAll(
+                0.0, 0.0,
+                0.0, 100.0,
+                100.0, 100.0,
+                100.0, 0.0,
+                0.0, 0.0
+        );
+        p.setFill(Color.YELLOW.deriveColor(1, 1, 1, 0.5));
+        p.setStroke(Color.YELLOW);
+        pane.getChildren().add(p);
+
+        Point2D p2d = new Point2D(50.0, 50.0);
+        System.out.println(p.contains(p2d));
+        pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+            System.out.println("contains (" + e.getX() + "|" + e.getY() + "): " + p.contains(e.getX(), e.getY()));
+        });
     }
 
     private void addListeners() {
@@ -132,7 +144,18 @@ public class Main extends Application {
             }
 
             if (addPoints.getValue()) {
-                System.out.println("STill working");
+                /*System.out.println("\nMouseclick: " + e.getX() + " - " + e.getY() + " (" + mapPolygons.get(0).contains(e.getX(), e.getY()) + ")");
+                System.out.println("parentToLocal: " + mapPolygons.get(0).parentToLocal(e.getX(), e.getY()).getX() + " - " + mapPolygons.get(0).parentToLocal(e.getX(), e.getY()).getY());
+                System.out.println("sceneToLocal: " + mapPolygons.get(0).sceneToLocal(e.getX(), e.getY()).getX() + " - " + mapPolygons.get(0).sceneToLocal(e.getX(), e.getY()).getY() + "\n");*/
+                if (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY())) {
+                    return;
+                }
+                for (int i = 1; i < mapPolygons.size(); i++) {
+                    if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
+                        return;
+                    }
+                }
+
                 Anchor a = null;
                 boolean connectedToOld = false;
 
@@ -174,8 +197,6 @@ public class Main extends Application {
                             System.out.println(currentMapPolygon.getPoints().get(i) + ", " + currentMapPolygon.getPoints().get(i + 1));
                         }
                         // connected to first point to close the polygon
-
-                        FadeTransition ft = new FadeTransition(new Duration(200));
                         StrokeTransition st = new StrokeTransition(new Duration(500), currentMapPolygon, Color.BLUE, Color.ORANGE);
                         st.play();
                         currentMapPolygon = new MapPolygon(pane);
