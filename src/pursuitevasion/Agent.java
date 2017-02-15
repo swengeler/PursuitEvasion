@@ -3,17 +3,13 @@ package pursuitevasion;
 /**
  * Created by Megan on 15/02/2017.
  */
-public class agent {
+public class Agent {
 
     boolean pursuer,moveable,communicating;
     int level,algo;
     double speed,FOV,range;
 
-
-
-
-
-    public agent(boolean hunter, int type){
+    public Agent(boolean hunter, int type){
         this.pursuer= hunter;
         this.level=type;
 
@@ -36,7 +32,7 @@ public class agent {
 
     }
 
-    public agent(boolean hunter, int type,int algorithm, boolean moveable, boolean communicating, double range){
+    public Agent(boolean hunter, int type,int algorithm, boolean moveable, boolean communicating, double range){
         this.pursuer= hunter;
         this.level=type;
         this.algo= algorithm;
@@ -63,7 +59,7 @@ public class agent {
         if(this.moveable)this.speed=type*1000;
         else this.speed=0;
     }
-    public double getSpeed(agent Agent){
+    public double getSpeed(Agent Agent){
         return Agent.speed;
     }
 
@@ -71,7 +67,7 @@ public class agent {
         this.FOV=fov;
     }
 
-    public double getFOV(agent Agent){
+    public double getFOV(Agent Agent){
         return Agent.FOV;
     }
 
@@ -79,7 +75,7 @@ public class agent {
         this.algo=algo;
     }
 
-    public double getalgo(agent Agent){
+    public double getalgo(Agent Agent){
         return Agent.algo;
     }
 
