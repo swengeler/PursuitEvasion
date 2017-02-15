@@ -1,0 +1,224 @@
+package ui;
+
+import javafx.animation.FadeTransition;
+import javafx.animation.StrokeTransition;
+import javafx.application.Application;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.geometry.Orientation;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Separator;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.util.ArrayList;
+
+public class Main extends Application {
+
+    private HBox outerLayout;
+    private VBox menu;
+    private ZoomablePane pane;
+
+    private Line indicatorLine;
+    private ArrayList<MapPolygon> mapPolygons;
+    private MapPolygon currentMapPolygon;
+
+    private BooleanProperty addPoints;
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        // top-level container, partitions window into drawing pane and menu
+        outerLayout = new HBox();
+        outerLayout.setPrefSize(1200, 800);
+
+        // sidebar menu, currently with dummy buttons
+        menu = new VBox();
+        menu.setStyle("-fx-background-color: #ffffff");
+        menu.setMinWidth(190);
+        menu.setPrefSize(190, 600);
+        menu.setMaxWidth(190);
+        menu.getChildren().addAll(
+                new Button("Dummy 1"),
+                new Button("Dummy 2"),
+                new Button("Dummy 3")
+        );
+        addPoints = new SimpleBooleanProperty(false);
+        CheckBox b = new CheckBox("Dummy 4");
+        addPoints.bind(b.selectedProperty());
+        menu.getChildren().add(b);
+
+        // zoomable drawing pane
+        pane = new ZoomablePane();
+
+        // separator between pane and menu
+        Separator separator = new Separator(Orientation.VERTICAL);
+        separator.setStyle("-fx-background-color: #ffffff");
+        separator.setMinWidth(10);
+        separator.setPrefWidth(10);
+        separator.setMaxWidth(10);
+
+        // adding elements to the top-level container
+        outerLayout.getChildren().addAll(pane, separator, menu);
+        menu.toFront();
+        HBox.setHgrow(pane, Priority.ALWAYS);
+        HBox.setHgrow(menu, Priority.NEVER);
+
+        // line indicating where a line will be drawn when clicked
+        indicatorLine = new Line();
+        indicatorLine.setVisible(false);
+        indicatorLine.setStroke(Color.FORESTGREEN);
+        indicatorLine.setStrokeWidth(3.0);
+        indicatorLine.setStrokeLineCap(StrokeLineCap.ROUND);
+        pane.getChildren().add(indicatorLine);
+
+        currentMapPolygon = new MapPolygon(pane);
+        pane.getChildren().add(currentMapPolygon);
+        mapPolygons = new ArrayList<>();
+        mapPolygons.add(currentMapPolygon);
+        addListeners();
+
+        indicatorLine.startXProperty().addListener((ov, oldValue, newValue) -> {
+            System.out.println("Start of line (x) changed from " + oldValue + " to " + newValue);
+        });
+        indicatorLine.startYProperty().addListener((ov, oldValue, newValue) -> {
+            System.out.println("Start of line (y) changed from " + oldValue + " to " + newValue);
+        });
+
+        Scene scene = new Scene(outerLayout, 1200, 800);
+        primaryStage.setTitle("Proper Drawing");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void addListeners() {
+        PaneEvents paneEvents = new PaneEvents(pane);
+        outerLayout.addEventFilter(MouseEvent.MOUSE_PRESSED, paneEvents.getOnMousePressedEventHandler());
+        outerLayout.addEventFilter(MouseEvent.MOUSE_DRAGGED, paneEvents.getOnMouseDraggedEventHandler());
+        outerLayout.addEventFilter(ScrollEvent.ANY, paneEvents.getOnScrollEventHandler());
+
+        pane.widthProperty().addListener((ov, oldValue, newValue) -> {
+            if ((double) oldValue != (double) newValue) {
+                for (Anchor anchor : MapPolygon.getAllAnchors()) {
+                    if (anchor.getCenterX() > (double) newValue) {
+                        anchor.setCenterX((double) newValue);
+                    }
+                }
+            }
+        });
+        pane.heightProperty().addListener((ov, oldValue, newValue) -> {
+            if ((double) oldValue != (double) newValue) {
+                for (Anchor anchor : MapPolygon.getAllAnchors()) {
+                    if (anchor.getCenterY() > (double) newValue) {
+                        anchor.setCenterY((double) newValue);
+                    }
+                }
+            }
+        });
+        pane.setOnMousePressed(e -> {
+            if (!e.isPrimaryButtonDown()) {
+                return;
+            }
+
+            if (addPoints.getValue()) {
+                System.out.println("STill working");
+                Anchor a = null;
+                boolean connectedToOld = false;
+
+                for (Anchor oldAnchor : MapPolygon.getAllAnchors()) {
+                    if (Math.pow(oldAnchor.getCenterX() - e.getX(), 2) + Math.pow(oldAnchor.getCenterY() - e.getY(), 2) < Math.pow(oldAnchor.getRadius(), 2)) {
+                        a = oldAnchor;
+                        connectedToOld = true;
+                        if (!indicatorLine.isVisible()) {
+                            return;
+                        }
+                        break;
+                    }
+                }
+
+                if (!connectedToOld) {
+                    DoubleProperty xProperty = new SimpleDoubleProperty(e.getX());
+                    DoubleProperty yProperty = new SimpleDoubleProperty(e.getY());
+                    a = new Anchor(Color.GOLD, xProperty, yProperty);
+                    if (indicatorLine.isVisible()) {
+                        for (MapPolygon mp : mapPolygons) {
+                            if (mp.lineIntersects(indicatorLine)) {
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                currentMapPolygon.addAnchor(a);
+
+                if (!indicatorLine.isVisible()) {
+                    indicatorLine.setStartX(e.getX());
+                    indicatorLine.setStartY(e.getY());
+                    indicatorLine.setEndX(e.getX());
+                    indicatorLine.setEndY(e.getY());
+                    indicatorLine.setVisible(true);
+                } else {
+                    if (connectedToOld && /*currentMapPolygon.isClosed()*/a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
+                        for (int i = 0; i < currentMapPolygon.getPoints().size(); i += 2) {
+                            System.out.println(currentMapPolygon.getPoints().get(i) + ", " + currentMapPolygon.getPoints().get(i + 1));
+                        }
+                        // connected to first point to close the polygon
+
+                        FadeTransition ft = new FadeTransition(new Duration(200));
+                        StrokeTransition st = new StrokeTransition(new Duration(500), currentMapPolygon, Color.BLUE, Color.ORANGE);
+                        st.play();
+                        currentMapPolygon = new MapPolygon(pane);
+                        pane.getChildren().add(currentMapPolygon);
+                        mapPolygons.add(currentMapPolygon);
+                        indicatorLine.setVisible(false);
+                    } else {
+                        // connected to other anchor or new anchor
+                        indicatorLine.setStartX(e.getX());
+                        indicatorLine.setStartY(e.getY());
+                        indicatorLine.setEndX(e.getX());
+                        indicatorLine.setEndY(e.getY());
+                    }
+                }
+            }
+        });
+        pane.setOnMouseMoved(e -> {
+            if (indicatorLine.isVisible()) {
+                indicatorLine.setEndX(e.getX());
+                indicatorLine.setEndY(e.getY());
+                boolean intersection = false;
+                for (MapPolygon mp : mapPolygons) {
+                    if (mp.lineIntersects(indicatorLine)) {
+                        indicatorLine.setStroke(Color.RED);
+                        intersection = true;
+                        break;
+                    }
+                }
+                if (!intersection) {
+                    indicatorLine.setStroke(Color.FORESTGREEN);
+                }
+            }
+        });
+        pane.setOnMouseDragged(e -> {
+            if (indicatorLine.isVisible()) {
+                indicatorLine.setEndX(e.getX());
+                indicatorLine.setEndY(e.getY());
+            }
+        });
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+}
