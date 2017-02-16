@@ -1,5 +1,6 @@
 package ui;
 
+import conversion.GridConversion;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.beans.property.*;
@@ -45,9 +46,13 @@ public class Main extends Application {
         menu.setMaxWidth(190);
         menu.getChildren().addAll(
                 new Button("Dummy 1"),
-                new Button("Dummy 2"),
-                new Button("Dummy 3")
+                new Button("Dummy 2")
         );
+        Button convertButton = new Button("Dummy 3");
+        convertButton.setOnAction(e -> {
+            GridConversion.convert(mapPolygons, pane.getWidth(), pane.getHeight(), 3);
+        });
+        menu.getChildren().add(convertButton);
         addPoints = new SimpleBooleanProperty(false);
         CheckBox b = new CheckBox("Dummy 4");
         addPoints.bind(b.selectedProperty());
