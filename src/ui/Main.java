@@ -20,6 +20,8 @@ import java.util.ArrayList;
 
 public class Main extends Application {
 
+    private static final double CELLSIZE = 5;
+
     private HBox outerLayout;
     private VBox menu;
     private ZoomablePane pane;
@@ -28,7 +30,8 @@ public class Main extends Application {
     public static ArrayList<MapPolygon> mapPolygons;
     private MapPolygon currentMapPolygon;
 
-    public static MapPolygon outerBorder;
+    private ArrayList<Point2D> pursuers;
+    private ArrayList<Point2D> invaders;
 
     private BooleanProperty addPoints;
 
@@ -50,7 +53,7 @@ public class Main extends Application {
         );
         Button convertButton = new Button("Dummy 3");
         convertButton.setOnAction(e -> {
-            GridConversion.convert(mapPolygons, pane.getWidth(), pane.getHeight(), 3);
+            GridConversion.convert(mapPolygons, pursuers, invaders, pane.getWidth(), pane.getHeight(), CELLSIZE);
         });
         menu.getChildren().add(convertButton);
         addPoints = new SimpleBooleanProperty(false);
@@ -83,11 +86,13 @@ public class Main extends Application {
         pane.getChildren().add(indicatorLine);
 
         currentMapPolygon = new MapPolygon(pane);
-        outerBorder = currentMapPolygon;
         pane.getChildren().add(currentMapPolygon);
         mapPolygons = new ArrayList<>();
         mapPolygons.add(currentMapPolygon);
         addListeners();
+
+        pursuers = new ArrayList<>();
+        invaders = new ArrayList<>();
 
         Scene scene = new Scene(outerLayout, 1200, 800);
         primaryStage.setTitle("Robin's Ruthless Robbers");
@@ -108,9 +113,9 @@ public class Main extends Application {
         pane.getChildren().add(p);
 
         Point2D p2d = new Point2D(50.0, 50.0);
-        System.out.println(p.contains(p2d));
+        //System.out.println(p.contains(p2d));
         pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            System.out.println("contains (" + e.getX() + "|" + e.getY() + "): " + p.contains(e.getX(), e.getY()));
+            //System.out.println("contains (" + e.getX() + "|" + e.getY() + "): " + p.contains(e.getX(), e.getY()));
         });
     }
 
@@ -222,6 +227,16 @@ public class Main extends Application {
                         indicatorLine.setEndX(e.getX());
                         indicatorLine.setEndY(e.getY());
                     }
+                }
+            } else {
+                if (mapPolygons.get(0).isClosed()) {
+                    Point2D pursuer = new Point2D(e.getX(), e.getY());
+                    if (pursuers == null) {
+                        pursuers = new ArrayList<>();
+                    }
+                    pursuers.add(pursuer);
+                    Circle visualPursuer = new Circle(e.getX(), e.getY(), 5, Color.TOMATO);
+                    pane.getChildren().add(visualPursuer);
                 }
             }
         });

@@ -57,7 +57,7 @@ public class Anchor extends Circle {
             }
             for (int i = 1; i < Main.mapPolygons.size(); i++) {
                 for (int j = 0; j < Main.mapPolygons.get(i).getPoints().size(); j += 2) {
-                    if (!Main.outerBorder.contains(Main.mapPolygons.get(i).getPoints().get(j), Main.mapPolygons.get(i).getPoints().get(j + 1))) {
+                    if (!Main.mapPolygons.get(0).contains(Main.mapPolygons.get(i).getPoints().get(j), Main.mapPolygons.get(i).getPoints().get(j + 1))) {
                         setCenterX(lastLegalX);
                         setCenterY(lastLegalY);
                         return;
@@ -82,14 +82,14 @@ public class Anchor extends Circle {
             }*/
 
             /*boolean anchorBelongsToBorder = false;
-            for (int i = 0; i < Main.outerBorder.getPoints().size(); i += 2) {
-                if (getCenterX() == Main.outerBorder.getPoints().get(i) && getCenterY() == Main.outerBorder.getPoints().get(i + 1)) {
+            for (int i = 0; i < Main.mapPolygons.get(0).getPoints().size(); i += 2) {
+                if (getCenterX() == Main.mapPolygons.get(0).getPoints().get(i) && getCenterY() == Main.mapPolygons.get(0).getPoints().get(i + 1)) {
                     anchorBelongsToBorder = true;
                     break;
                 }
             }
-            if (!anchorBelongsToBorder && !Main.outerBorder.contains(e.getX(), e.getY())) {
-                //Point2D intersectionPoint = Main.outerBorder.lineIntersectionPoint(new Line(getCenterX() - 0.1 * (e.getX() - getCenterX()), getCenterY() - 0.1 * (e.getY() - getCenterY()), e.getX(), e.getY()));
+            if (!anchorBelongsToBorder && !Main.mapPolygons.get(0).contains(e.getX(), e.getY())) {
+                //Point2D intersectionPoint = Main.mapPolygons.get(0).lineIntersectionPoint(new Line(getCenterX() - 0.1 * (e.getX() - getCenterX()), getCenterY() - 0.1 * (e.getY() - getCenterY()), e.getX(), e.getY()));
                 //setCenterX(intersectionPoint.getX());
                 //setCenterY(intersectionPoint.getY());
                 return;
@@ -112,7 +112,7 @@ public class Anchor extends Circle {
             }
             //lastLegalX = getCenterX();
             //lastLegalY = getCenterY();
-            System.out.println("lastLegalX = " + lastLegalX + ", lastLegalY = " + lastLegalY);
+            //System.out.println("lastLegalX = " + lastLegalX + ", lastLegalY = " + lastLegalY);
         });
         setOnMouseEntered(e -> {
             if (!e.isPrimaryButtonDown()) {
