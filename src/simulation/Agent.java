@@ -1,18 +1,21 @@
-package pursuitevasion;
+package simulation;
 
-/**
- * Created by Megan on 15/02/2017.
- */
 public class Agent {
 
     private boolean pursuer, movable, communicating;
     private int level, algo;
-    private double speed, FOV, range;
+    protected double speed, turnSpeed, turnAngle, fieldOfViewAngle, fieldOfViewRange, xPos, yPos;
+
+    public Agent(double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange) {
+        this.speed = speed;
+        this.turnSpeed = turnSpeed;
+        this.fieldOfViewAngle = fieldOfViewAngle;
+        this.fieldOfViewRange = fieldOfViewRange;
+    }
 
     public Agent(boolean hunter, int type) {
         this.pursuer = hunter;
         this.level = type;
-
 
         if (type == 1) {
             SetSpeed(type);
@@ -36,7 +39,7 @@ public class Agent {
         this.algo = algorithm;
         this.movable = moveable;
         this.communicating = communicating;
-        this.range = range;
+        this.fieldOfViewRange = range;
 
 
         if (type == 1) {
@@ -65,11 +68,11 @@ public class Agent {
     }
 
     public void SetFOV(double fov) {
-        this.FOV = fov;
+        this.fieldOfViewAngle = fov;
     }
 
     public double getFOV(Agent Agent) {
-        return Agent.FOV;
+        return Agent.fieldOfViewRange;
     }
 
     public void SetAlgo(int algo) {
@@ -80,5 +83,12 @@ public class Agent {
         return Agent.algo;
     }
 
+    public void update() {
+
+    }
+
+    public void move(MapRepresentation map) {
+
+    }
 
 }

@@ -31,7 +31,7 @@ public class Main extends Application {
     private MapPolygon currentMapPolygon;
 
     private ArrayList<Point2D> pursuers;
-    private ArrayList<Point2D> invaders;
+    private ArrayList<Point2D> evaders;
 
     private BooleanProperty addPoints;
 
@@ -53,7 +53,7 @@ public class Main extends Application {
         );
         Button convertButton = new Button("Dummy 3");
         convertButton.setOnAction(e -> {
-            GridConversion.convert(mapPolygons, pursuers, invaders, pane.getWidth(), pane.getHeight(), CELLSIZE);
+            GridConversion.convert(mapPolygons, pursuers, evaders, pane.getWidth(), pane.getHeight(), CELLSIZE);
         });
         menu.getChildren().add(convertButton);
         addPoints = new SimpleBooleanProperty(false);
@@ -92,7 +92,7 @@ public class Main extends Application {
         addListeners();
 
         pursuers = new ArrayList<>();
-        invaders = new ArrayList<>();
+        evaders = new ArrayList<>();
 
         Scene scene = new Scene(outerLayout, 1200, 800);
         primaryStage.setTitle("Robin's Ruthless Robbers");
