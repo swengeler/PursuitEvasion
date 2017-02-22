@@ -31,7 +31,7 @@ public class MapPolygon extends Polyline {
         double a1, a2, a3, a4;
         for (int i = 0; i < getPoints().size() - 2; i += 2) {
             if (!((line.getStartX() == getPoints().get(i) && line.getStartY() == getPoints().get(i + 1)) || (line.getEndX() == getPoints().get(i) && line.getEndY() == getPoints().get(i + 1)) ||
-                (line.getStartX() == getPoints().get(i + 2) && line.getStartY() == getPoints().get(i + 3)) || (line.getEndX() == getPoints().get(i + 2) && line.getEndY() == getPoints().get(i + 3)))) {
+                    (line.getStartX() == getPoints().get(i + 2) && line.getStartY() == getPoints().get(i + 3)) || (line.getEndX() == getPoints().get(i + 2) && line.getEndY() == getPoints().get(i + 3)))) {
                 a1 = signed2DTriArea(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY(), getPoints().get(i), getPoints().get(i + 1));
                 a2 = signed2DTriArea(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY(), getPoints().get(i + 2), getPoints().get(i + 3));
                 if (a1 * a2 < 0) {

@@ -98,25 +98,6 @@ public class Main extends Application {
         primaryStage.setTitle("Robin's Ruthless Robbers");
         primaryStage.setScene(scene);
         primaryStage.show();
-
-
-        Polyline p = new Polyline();
-        p.getPoints().addAll(
-                0.0, 0.0,
-                0.0, 100.0,
-                100.0, 100.0,
-                100.0, 0.0,
-                0.0, 0.0
-        );
-        p.setFill(Color.YELLOW.deriveColor(1, 1, 1, 0.5));
-        p.setStroke(Color.YELLOW);
-        pane.getChildren().add(p);
-
-        Point2D p2d = new Point2D(50.0, 50.0);
-        //System.out.println(p.contains(p2d));
-        pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            //System.out.println("contains (" + e.getX() + "|" + e.getY() + "): " + p.contains(e.getX(), e.getY()));
-        });
     }
 
     private void addListeners() {

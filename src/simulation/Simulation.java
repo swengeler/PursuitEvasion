@@ -21,11 +21,11 @@ public class Simulation implements Runnable {
                 // so the agent knows how far they can move
                 // maybe better?: define a static delay between steps that is enforced
                 a.move(map);
-                boolean simulationOver = checkSimulationOver();
-                if (simulationOver) {
-                    // do things
-                    simulationRunning = false;
-                }
+            }
+            boolean simulationOver = checkSimulationOver();
+            if (simulationOver) {
+                // do things
+                simulationRunning = false;
             }
         }
     }

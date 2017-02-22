@@ -18,16 +18,16 @@ public class Agent {
         this.level = type;
 
         if (type == 1) {
-            SetSpeed(type);
-            SetFOV(180);
-            SetAlgo(1);
+            setSpeed(type);
+            setFieldOfViewAngle(180);
+            setAlgo(1);
             //this.algo= preset1;
             //this.movable=preset1;
             //this.communicating=preset1;
         } else if (type == 2) {
-            SetSpeed(type);
-            SetFOV(360);
-            SetAlgo(2);
+            setSpeed(type);
+            setFieldOfViewAngle(360);
+            setAlgo(2);
         }
         //etc
 
@@ -43,19 +43,19 @@ public class Agent {
 
 
         if (type == 1) {
-            SetSpeed(type);
-            SetFOV(180);
-            SetAlgo(1);
+            setSpeed(type);
+            setFieldOfViewAngle(180);
+            setAlgo(1);
         } else if (type == 2) {
-            SetSpeed(type);
-            SetFOV(360);
-            SetAlgo(2);
+            setSpeed(type);
+            setFieldOfViewAngle(360);
+            setAlgo(2);
         }
         //etc
 
     }
 
-    public void SetSpeed(int type) {
+    public void setSpeed(int type) {
         if (this.movable) {
             this.speed = type * 1000;
         } else {
@@ -67,19 +67,19 @@ public class Agent {
         return Agent.speed;
     }
 
-    public void SetFOV(double fov) {
+    public void setFieldOfViewAngle(double fov) {
         this.fieldOfViewAngle = fov;
     }
 
-    public double getFOV(Agent Agent) {
+    public double getFieldOfViewAngle(Agent Agent) {
         return Agent.fieldOfViewRange;
     }
 
-    public void SetAlgo(int algo) {
+    public void setAlgo(int algo) {
         this.algo = algo;
     }
 
-    public double getalgo(Agent Agent) {
+    public double getAlgo(Agent Agent) {
         return Agent.algo;
     }
 
