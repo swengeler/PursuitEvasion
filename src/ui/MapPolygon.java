@@ -100,4 +100,10 @@ public class MapPolygon extends Polyline {
                 ((double) getPoints().get(1) == getPoints().get(getPoints().size() - 1));
     }
 
+    public Polygon getPolygon() {
+        Polygon polygon = new Polygon();
+        polygon.getPoints().addAll(getPoints().subList(0, getPoints().size()));
+        return polygon;
+    }
+
 }

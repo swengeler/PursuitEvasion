@@ -194,7 +194,10 @@ public class Main extends Application {
                                 return;
                             }
                         }
+
                         // connected to first point to close the polygon
+                        Polygon robinsPolygon = currentMapPolygon.getPolygon();
+
                         StrokeTransition st = new StrokeTransition(new Duration(500), currentMapPolygon, Color.BLUE, Color.ORANGE);
                         st.play();
                         currentMapPolygon = new MapPolygon(pane);
