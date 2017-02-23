@@ -4,16 +4,25 @@ import control.Controller;
 import conversion.GridConversion;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Orientation;
-import javafx.geometry.Point2D;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Separator;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.*;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Polygon;
+import javafx.scene.shape.StrokeLineCap;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -48,21 +57,23 @@ public class Main extends Application {
         menu.setMinWidth(190);
         menu.setPrefSize(190, 600);
         menu.setMaxWidth(190);
-        menu.getChildren().addAll(
-                new Button("Dummy 1")
-        );
-        Button testButton = new Button("Dummy 2");
+        Button simulationButton = new Button("Better simulation");
+        simulationButton.setOnAction(e -> {
+            Controller.betterTest(mapPolygons, pursuers, evaders);
+        });
+        menu.getChildren().add(simulationButton);
+        Button testButton = new Button("Start Simulation");
         testButton.setOnAction(e -> {
             Controller.test(pursuers, evaders);
         });
         menu.getChildren().add(testButton);
-        Button convertButton = new Button("Dummy 3");
+        Button convertButton = new Button("Print Grid");
         convertButton.setOnAction(e -> {
-            GridConversion.convert(mapPolygons, pursuers, evaders, pane.getWidth(), pane.getHeight(), CELLSIZE);
+            GridConversion.convert(mapPolygons, pursuers, evaders, CELLSIZE);
         });
         menu.getChildren().add(convertButton);
         addPoints = new SimpleBooleanProperty(false);
-        CheckBox b = new CheckBox("Dummy 4");
+        CheckBox b = new CheckBox("To draw or\nnot to draw");
         addPoints.bind(b.selectedProperty());
         menu.getChildren().add(b);
 
@@ -100,7 +111,10 @@ public class Main extends Application {
         evaders = new ArrayList<>();
 
         Scene scene = new Scene(outerLayout, 1200, 800);
-        primaryStage.setTitle("Robin's Ruthless Robbers");
+        primaryStage.setTitle("Coded by Winston v5.76.002 build 41 alpha");
+
+        //primaryStage.getIcons().add(new Image(getClass().getClassLoader().getResource("like-3.png").toExternalForm()));
+
         primaryStage.setScene(scene);
         primaryStage.show();
     }

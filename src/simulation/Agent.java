@@ -1,14 +1,22 @@
 package simulation;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+
 import java.util.ArrayList;
 
 public class Agent {
 
-    private double speed, turnSpeed, turnAngle, fieldOfViewAngle, fieldOfViewRange, xPos, yPos;
+    private double speed, turnSpeed, turnAngle, fieldOfViewAngle, fieldOfViewRange;
+
+    private DoubleProperty xPosProperty;
+    private DoubleProperty yPosProperty;
 
     private MovePolicy policy;
 
-    public Agent(double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange) {
+    public Agent(double xPos, double yPos, double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange) {
+        xPosProperty = new SimpleDoubleProperty(xPos);
+        yPosProperty = new SimpleDoubleProperty(yPos);
         this.speed = speed;
         this.turnSpeed = turnSpeed;
         this.fieldOfViewAngle = fieldOfViewAngle;
@@ -56,19 +64,27 @@ public class Agent {
     }
 
     public double getXPos() {
-        return xPos;
+        return xPosProperty.get();
     }
 
     public void setXPos(double xPos) {
-        this.xPos = xPos;
+        this.xPosProperty.set(xPos);
     }
 
     public double getYPos() {
-        return yPos;
+        return yPosProperty.get();
     }
 
     public void setYPos(double yPos) {
-        this.yPos = yPos;
+        this.yPosProperty.set(yPos);
+    }
+
+    public DoubleProperty getXPosProperty() {
+        return xPosProperty;
+    }
+
+    public DoubleProperty getYPosProperty() {
+        return yPosProperty;
     }
 
     public MovePolicy getPolicy() {
@@ -81,8 +97,8 @@ public class Agent {
 
     public void move(MapRepresentation map, ArrayList<Agent> agents, long timeStep) {
         Move nextMove = policy.getNextMove(map, agents, timeStep);
-        xPos += nextMove.getXDelta();
-        yPos += nextMove.getYDelta();
+        xPosProperty.set(xPosProperty.get() + nextMove.getXDelta());
+        yPosProperty.set(yPosProperty.get() + nextMove.getYDelta());
         turnAngle += nextMove.getTurnDelta();
     }
 

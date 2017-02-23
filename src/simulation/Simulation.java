@@ -1,6 +1,5 @@
 package simulation;
 
-import control.Controller;
 import javafx.scene.shape.Circle;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
@@ -29,31 +28,31 @@ public class Simulation {
     public Simulation(ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
         simulationTimer = FxTimer.runPeriodically(Duration.ofMillis(timeStep), () -> {
             for (Circle c : pursuers) {
-                c.setCenterX(c.getCenterX() + ThreadLocalRandom.current().nextInt(-10, 10));
-                c.setCenterY(c.getCenterY() + ThreadLocalRandom.current().nextInt(-10, 10));
+                c.setCenterX(c.getCenterX() + ThreadLocalRandom.current().nextInt(-9, 10));
+                c.setCenterY(c.getCenterY() + ThreadLocalRandom.current().nextInt(-9, 10));
             }
             for (Circle c : evaders) {
-                c.setCenterX(c.getCenterX() + ThreadLocalRandom.current().nextInt(-10, 10));
-                c.setCenterY(c.getCenterY() + ThreadLocalRandom.current().nextInt(-10, 10));
+                c.setCenterX(c.getCenterX() + ThreadLocalRandom.current().nextInt(-9, 10));
+                c.setCenterY(c.getCenterY() + ThreadLocalRandom.current().nextInt(-9, 10));
             }
         });
     }
 
     private void timerSetup() {
         simulationTimer = FxTimer.runPeriodically(Duration.ofMillis(timeStep), () -> {
+            System.out.println("New timer tick");
             for (Agent a : agents) {
                 // should probably also have stuff like time elapsed since last step
                 // so the agent knows how far they can move
                 // maybe better?: define a static delay between steps that is enforced
                 a.move(map, agents, timeStep);
-                Controller.testBack();
                 // update UI
             }
-            boolean simulationOver = checkSimulationOver();
+            /*boolean simulationOver = checkSimulationOver();
             if (simulationOver) {
                 // do things
                 simulationRunning = false;
-            }
+            }*/
         });
     }
 

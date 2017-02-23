@@ -1,11 +1,21 @@
 package simulation;
 
-public class GridMapRepresentation {
+import conversion.GridConversion;
+import javafx.scene.shape.Polygon;
 
-    private int[][] map;
+import java.util.ArrayList;
+import java.util.List;
 
-    public GridMapRepresentation(int[][] map) {
-        this.map = map.clone();
+public class GridMapRepresentation extends MapRepresentation {
+
+    private int[][] mapArray;
+
+    public GridMapRepresentation(Polygon borderPolygon, ArrayList<Polygon> obstaclePolygons) {
+        super(borderPolygon, obstaclePolygons);
+        ArrayList<Polygon> merge = new ArrayList<>();
+        merge.add(borderPolygon);
+        merge.addAll(obstaclePolygons);
+        mapArray = GridConversion.convert(merge, 2);
     }
 
 }
