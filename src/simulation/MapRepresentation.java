@@ -26,6 +26,14 @@ public abstract class MapRepresentation {
         return true;
     }
 
+    public Polygon getBorderPolygon() {
+        return borderPolygon;
+    }
+
+    public ArrayList<Polygon> getObstaclePolygons() {
+        return obstaclePolygons;
+    }
+
     // methods for the agent to extract the knowledge it has access to
 
 }

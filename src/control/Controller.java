@@ -1,6 +1,6 @@
 package control;
 
-import javafx.beans.property.DoubleProperty;
+import javafx.scene.shape.Circle;
 import simulation.Simulation;
 import ui.Main;
 
@@ -8,17 +8,23 @@ import java.util.ArrayList;
 
 public class Controller {
 
-    private Main userInterface;
-    private Simulation simulation;
+    private static Main userInterface;
+    private static Simulation simulation;
 
-    private ArrayList<DoubleProperty> positions;
-
-    public void setUserInterface(Main userInterface) {
-        this.userInterface = userInterface;
+    public static void setUserInterface(Main userInterfaceInput) {
+        userInterface = userInterfaceInput;
     }
 
-    public void setSimulation(Simulation simulation) {
-        this.simulation = simulation;
+    public static void setSimulation(Simulation simulationInput) {
+        simulation = simulationInput;
+    }
+
+    public static void test(ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
+        Simulation sim = new Simulation(pursuers, evaders);
+    }
+
+    public static void testBack() {
+
     }
 
 }

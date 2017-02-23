@@ -1,41 +1,74 @@
 package simulation;
 
-import java.util.ArrayList;
+import control.Controller;
+import javafx.scene.shape.Circle;
+import org.reactfx.util.FxTimer;
+import org.reactfx.util.Timer;
 
-public class Simulation implements Runnable {
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class Simulation {
+
+    private Timer simulationTimer;
 
     private MapRepresentation map;
     private ArrayList<Agent> agents;
 
     private boolean simulationRunning;
 
-    public Simulation(MapRepresentation map) {
+    private long timeStep = 10;
+
+    public Simulation(MapRepresentation map, ArrayList<Agent> agents) {
         this.map = map;
+        this.agents = agents;
+        timerSetup();
     }
 
-    public void run() {
-        simulationRunning = true;
-        while (simulationRunning) {
+    public Simulation(ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
+        simulationTimer = FxTimer.runPeriodically(Duration.ofMillis(timeStep), () -> {
+            for (Circle c : pursuers) {
+                c.setCenterX(c.getCenterX() + ThreadLocalRandom.current().nextInt(-10, 10));
+                c.setCenterY(c.getCenterY() + ThreadLocalRandom.current().nextInt(-10, 10));
+            }
+            for (Circle c : evaders) {
+                c.setCenterX(c.getCenterX() + ThreadLocalRandom.current().nextInt(-10, 10));
+                c.setCenterY(c.getCenterY() + ThreadLocalRandom.current().nextInt(-10, 10));
+            }
+        });
+    }
+
+    private void timerSetup() {
+        simulationTimer = FxTimer.runPeriodically(Duration.ofMillis(timeStep), () -> {
             for (Agent a : agents) {
                 // should probably also have stuff like time elapsed since last step
                 // so the agent knows how far they can move
                 // maybe better?: define a static delay between steps that is enforced
-                a.move(map);
+                a.move(map, agents, timeStep);
+                Controller.testBack();
+                // update UI
             }
             boolean simulationOver = checkSimulationOver();
             if (simulationOver) {
                 // do things
                 simulationRunning = false;
             }
-        }
+        });
     }
 
     public void pause() {
-        simulationRunning = true;
+        simulationTimer.stop();
     }
 
     public void unPause() {
-        run();
+        simulationTimer.restart();
+    }
+
+    public void setTimeStep(long timeStep) {
+        this.timeStep = timeStep;
+        simulationTimer.stop();
+        timerSetup();
     }
 
     public boolean checkSimulationOver() {

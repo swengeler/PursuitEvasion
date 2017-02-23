@@ -1,10 +1,12 @@
 package simulation;
 
+import java.util.ArrayList;
+
 public class Agent {
 
-    private boolean pursuer, movable, communicating;
-    private int level, algo;
-    protected double speed, turnSpeed, turnAngle, fieldOfViewAngle, fieldOfViewRange, xPos, yPos;
+    private double speed, turnSpeed, turnAngle, fieldOfViewAngle, fieldOfViewRange, xPos, yPos;
+
+    private MovePolicy policy;
 
     public Agent(double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange) {
         this.speed = speed;
@@ -13,82 +15,75 @@ public class Agent {
         this.fieldOfViewRange = fieldOfViewRange;
     }
 
-    public Agent(boolean hunter, int type) {
-        this.pursuer = hunter;
-        this.level = type;
-
-        if (type == 1) {
-            setSpeed(type);
-            setFieldOfViewAngle(180);
-            setAlgo(1);
-            //this.algo= preset1;
-            //this.movable=preset1;
-            //this.communicating=preset1;
-        } else if (type == 2) {
-            setSpeed(type);
-            setFieldOfViewAngle(360);
-            setAlgo(2);
-        }
-        //etc
-
+    public double getSpeed() {
+        return speed;
     }
 
-    public Agent(boolean hunter, int type, int algorithm, boolean moveable, boolean communicating, double range) {
-        this.pursuer = hunter;
-        this.level = type;
-        this.algo = algorithm;
-        this.movable = moveable;
-        this.communicating = communicating;
-        this.fieldOfViewRange = range;
-
-
-        if (type == 1) {
-            setSpeed(type);
-            setFieldOfViewAngle(180);
-            setAlgo(1);
-        } else if (type == 2) {
-            setSpeed(type);
-            setFieldOfViewAngle(360);
-            setAlgo(2);
-        }
-        //etc
-
+    public void setSpeed(double speed) {
+        this.speed = speed;
     }
 
-    public void setSpeed(int type) {
-        if (this.movable) {
-            this.speed = type * 1000;
-        } else {
-            this.speed = 0;
-        }
+    public double getTurnSpeed() {
+        return turnSpeed;
     }
 
-    public double getSpeed(Agent Agent) {
-        return Agent.speed;
+    public void setTurnSpeed(double turnSpeed) {
+        this.turnSpeed = turnSpeed;
     }
 
-    public void setFieldOfViewAngle(double fov) {
-        this.fieldOfViewAngle = fov;
+    public double getTurnAngle() {
+        return turnAngle;
     }
 
-    public double getFieldOfViewAngle(Agent Agent) {
-        return Agent.fieldOfViewRange;
+    public void setTurnAngle(double turnAngle) {
+        this.turnAngle = turnAngle;
     }
 
-    public void setAlgo(int algo) {
-        this.algo = algo;
+    public double getFieldOfViewAngle() {
+        return fieldOfViewAngle;
     }
 
-    public double getAlgo(Agent Agent) {
-        return Agent.algo;
+    public void setFieldOfViewAngle(double fieldOfViewAngle) {
+        this.fieldOfViewAngle = fieldOfViewAngle;
     }
 
-    public void update() {
-
+    public double getFieldOfViewRange() {
+        return fieldOfViewRange;
     }
 
-    public void move(MapRepresentation map) {
+    public void setFieldOfViewRange(double fieldOfViewRange) {
+        this.fieldOfViewRange = fieldOfViewRange;
+    }
 
+    public double getXPos() {
+        return xPos;
+    }
+
+    public void setXPos(double xPos) {
+        this.xPos = xPos;
+    }
+
+    public double getYPos() {
+        return yPos;
+    }
+
+    public void setYPos(double yPos) {
+        this.yPos = yPos;
+    }
+
+    public MovePolicy getPolicy() {
+        return policy;
+    }
+
+    public void setPolicy(MovePolicy policy) {
+        this.policy = policy;
+    }
+
+    public void move(MapRepresentation map, ArrayList<Agent> agents, long timeStep) {
+        Move nextMove = policy.getNextMove(map, agents, timeStep);
+        xPos += nextMove.getXDelta();
+        yPos += nextMove.getYDelta();
+        turnAngle += nextMove.getTurnDelta();
     }
 
 }

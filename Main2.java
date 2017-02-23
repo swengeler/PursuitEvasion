@@ -1,6 +1,5 @@
 package ui;
 
-import control.Controller;
 import conversion.GridConversion;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
@@ -49,13 +48,9 @@ public class Main extends Application {
         menu.setPrefSize(190, 600);
         menu.setMaxWidth(190);
         menu.getChildren().addAll(
-                new Button("Dummy 1")
+                new Button("Dummy 1"),
+                new Button("Dummy 2")
         );
-        Button testButton = new Button("Dummy 2");
-        testButton.setOnAction(e -> {
-            Controller.test(pursuers, evaders);
-        });
-        menu.getChildren().add(testButton);
         Button convertButton = new Button("Dummy 3");
         convertButton.setOnAction(e -> {
             GridConversion.convert(mapPolygons, pursuers, evaders, pane.getWidth(), pane.getHeight(), CELLSIZE);
