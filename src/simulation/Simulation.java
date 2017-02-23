@@ -40,7 +40,6 @@ public class Simulation {
 
     private void timerSetup() {
         simulationTimer = FxTimer.runPeriodically(Duration.ofMillis(timeStep), () -> {
-            System.out.println("New timer tick");
             for (Agent a : agents) {
                 // should probably also have stuff like time elapsed since last step
                 // so the agent knows how far they can move
