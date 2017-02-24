@@ -13,6 +13,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Separator;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
@@ -113,7 +115,8 @@ public class Main extends Application {
         Scene scene = new Scene(outerLayout, 1200, 800);
         primaryStage.setTitle("Coded by Winston v5.76.002 build 41 alpha");
 
-        //primaryStage.getIcons().add(new Image(getClass().getClassLoader().getResource("like-3.png").toExternalForm()));
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/like-3.png")));
+        //pane.getChildren().add(new ImageView(new Image(getClass().getResourceAsStream("/like-3.png"))));
 
         primaryStage.setScene(scene);
         primaryStage.show();
