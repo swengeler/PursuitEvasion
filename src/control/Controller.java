@@ -3,8 +3,7 @@ package control;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 import simulation.*;
-import ui.Main;
-import ui.MapPolygon;
+import ui.*;
 
 import java.util.ArrayList;
 
@@ -21,6 +20,31 @@ public class Controller {
         simulation = simulationInput;
     }
 
+    public static void theBestTest(ArrayList<MapPolygon> map, ArrayList<VisualAgent> visualAgents) {
+        ArrayList<Polygon> polygons = new ArrayList<>();
+        for (MapPolygon p : map) {
+            polygons.add(p.getPolygon());
+        }
+        ArrayList<Polygon> subList = new ArrayList<>();
+        for (int i = 1; i < map.size(); i++) {
+            subList.add(polygons.get(i));
+        }
+        MapRepresentation mapRepresentation = new GridMapRepresentation(polygons.get(0), subList);
+
+        ArrayList<Agent> agents = new ArrayList<>();
+        Agent temp;
+        for (VisualAgent a : visualAgents) {
+            temp = new Agent(a.getCenterX(), a.getCenterY(), 100, 5, a.getFieldOfViewAngle(), a.getFieldOfViewRange());
+            temp.setPolicy(new ShittyMovePolicy(temp, mapRepresentation));
+            a.centerXProperty().bind(temp.xPosProperty());
+            a.centerYProperty().bind(temp.yPosProperty());
+            a.turnAngleProperty().bind(temp.turnAngleProperty());
+            agents.add(temp);
+        }
+
+        Simulation sim = new Simulation(mapRepresentation, agents);
+    }
+
     public static void betterTest(ArrayList<MapPolygon> map, ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
         ArrayList<Polygon> polygons = new ArrayList<>();
         for (MapPolygon p : map) {
@@ -35,17 +59,17 @@ public class Controller {
         ArrayList<Agent> agents = new ArrayList<>();
         Agent temp;
         for (Circle c : pursuers) {
-            temp = new Agent(c.getCenterX(), c.getCenterY(), 50, 10, 10, 10);
+            temp = new Agent(c.getCenterX(), c.getCenterY(), 100, 10, 10, 10);
             temp.setPolicy(new ShittyMovePolicy(temp, mapRepresentation));
-            c.centerXProperty().bind(temp.getXPosProperty());
-            c.centerYProperty().bind(temp.getYPosProperty());
+            c.centerXProperty().bind(temp.xPosProperty());
+            c.centerYProperty().bind(temp.yPosProperty());
             agents.add(temp);
         }
         for (Circle c : evaders) {
-            temp = new Agent(c.getCenterX(), c.getCenterY(), 50, 10, 10, 10);
+            temp = new Agent(c.getCenterX(), c.getCenterY(), 100, 10, 10, 10);
             temp.setPolicy(new ShittyMovePolicy(temp, mapRepresentation));
-            c.centerXProperty().bind(temp.getXPosProperty());
-            c.centerYProperty().bind(temp.getYPosProperty());
+            c.centerXProperty().bind(temp.xPosProperty());
+            c.centerYProperty().bind(temp.yPosProperty());
             agents.add(temp);
         }
 

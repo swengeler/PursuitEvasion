@@ -2,7 +2,7 @@ package ui;
 
 import control.Controller;
 import conversion.GridConversion;
-import javafx.animation.StrokeTransition;
+import javafx.animation.*;
 import javafx.application.Application;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -21,10 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Polygon;
-import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -44,6 +41,7 @@ public class Main extends Application {
 
     private ArrayList<Circle> pursuers;
     private ArrayList<Circle> evaders;
+    private ArrayList<VisualAgent> visualAgents;
 
     private BooleanProperty addPoints;
 
@@ -59,6 +57,21 @@ public class Main extends Application {
         menu.setMinWidth(190);
         menu.setPrefSize(190, 600);
         menu.setMaxWidth(190);
+        Button theBestTestButton = new Button("The best simulation");
+        theBestTestButton.setOnAction(e -> {
+            //
+
+            Polygon outer = new Polygon();
+
+
+            for (int i = 1; i < mapPolygons.size(); i++) {
+                mapPolygons.get(i).setFill(Color.WHITE);
+                mapPolygons.get(i).toFront();
+            }
+
+            Controller.theBestTest(mapPolygons, visualAgents);
+        });
+        menu.getChildren().add(theBestTestButton);
         Button simulationButton = new Button("Better simulation");
         simulationButton.setOnAction(e -> {
             Controller.betterTest(mapPolygons, pursuers, evaders);
@@ -78,6 +91,19 @@ public class Main extends Application {
         CheckBox b = new CheckBox("To draw or\nnot to draw");
         addPoints.bind(b.selectedProperty());
         menu.getChildren().add(b);
+        Button whyNotButton = new Button("Why not?");
+        whyNotButton.setOnAction(e -> {
+            Circle pursuer;
+            if (pursuers == null) {
+                pursuers = new ArrayList<>();
+            }
+            for (int i = 0; i < 1000; i++) {
+                pursuer = new Circle(400, 400, 5, Color.RED);
+                pursuers.add(pursuer);
+                pane.getChildren().add(pursuer);
+            }
+        });
+        menu.getChildren().add(whyNotButton);
 
         // zoomable drawing pane
         pane = new ZoomablePane();
@@ -115,11 +141,77 @@ public class Main extends Application {
         Scene scene = new Scene(outerLayout, 1200, 800);
         primaryStage.setTitle("Coded by Winston v5.76.002 build 41 alpha");
 
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/like-3.png")));
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/rrr_icon.png")));
         //pane.getChildren().add(new ImageView(new Image(getClass().getResourceAsStream("/like-3.png"))));
 
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        /*Polygon arcTestPolygon = new Polygon();
+        arcTestPolygon.getPoints().addAll(
+                20.0, 30.0,
+                30.0, 90.0,
+                200.0, 150.0,
+                200.0, 80.0
+        );
+        arcTestPolygon.setFill(Color.LIGHTGREEN);
+        pane.getChildren().add(arcTestPolygon);
+
+        Arc arc = new Arc();
+        arc.setCenterX(100.0f);
+        arc.setCenterY(80.0f);
+        arc.setRadiusX(100.0f);
+        arc.setRadiusY(100.0f);
+        arc.setStartAngle(0.0f);
+        arc.setLength(60.0f);
+        arc.setType(ArcType.ROUND);
+        arc.setFill(Color.BLACK.deriveColor(1, 1, 1, 0.3));
+        arc.setStroke(Color.BLACK);
+        arc.setStrokeWidth(1);
+        pane.getChildren().add(arc);
+
+        Polygon testPolygon = new Polygon();
+        testPolygon.getPoints().addAll(
+                20.0, 30.0,
+                0.0, 0.0,
+                0.0, pane.getHeight(),
+                pane.getWidth(), pane.getHeight(),
+                pane.getWidth(), 0.0,
+                0.0, 0.0,
+                20.0, 30.0,
+                200.0, 80.0,
+                200.0, 150.0,
+                30.0, 90.0
+        );
+        testPolygon.setFill(Color.WHITE);
+        //pane.getChildren().add(testPolygon);
+
+        Button arcTestButton = new Button("Arc test");
+        arcTestButton.setOnAction(e -> {
+            arc.setStartAngle(arc.getStartAngle() + 30.0f);
+        });
+        menu.getChildren().add(arcTestButton);
+
+        VisualAgent visualAgent = new VisualAgent();
+        visualAgent.setTranslateX(300);
+        visualAgent.setTranslateY(300);
+        pane.getChildren().add(visualAgent);
+
+        Timeline timeLine = new Timeline();
+        timeLine.setCycleCount(Timeline.INDEFINITE);
+        timeLine.setAutoReverse(true);
+        KeyValue kv = new KeyValue(arc.startAngleProperty(), 360.0f);
+        KeyFrame kf = new KeyFrame(Duration.millis(4000), kv);
+        timeLine.getKeyFrames().add(kf);
+        timeLine.play();
+
+        Timeline timeLine2 = new Timeline();
+        timeLine2.setCycleCount(Timeline.INDEFINITE);
+        timeLine2.setAutoReverse(true);
+        KeyValue kv2 = new KeyValue(visualAgent.turnAngleProperty(), 360.0);
+        KeyFrame kf2 = new KeyFrame(Duration.millis(200), kv2);
+        timeLine2.getKeyFrames().add(kf2);
+        timeLine2.play();*/
     }
 
     private void addListeners() {
@@ -229,7 +321,7 @@ public class Main extends Application {
                 }
             } else {
                 if (mapPolygons.get(0).isClosed()) {
-                    if (e.isPrimaryButtonDown()) {
+                    /*if (e.isPrimaryButtonDown()) {
                         Circle pursuer = new Circle(e.getX(), e.getY(), 5, Color.TOMATO);
                         if (pursuers == null) {
                             pursuers = new ArrayList<>();
@@ -243,6 +335,14 @@ public class Main extends Application {
                         }
                         evaders.add(evader);
                         pane.getChildren().add(evader);
+                    }*/
+                    if (e.isPrimaryButtonDown()) {
+                        VisualAgent visualAgent = new VisualAgent(e.getX(), e.getY());
+                        if (visualAgents == null) {
+                            visualAgents = new ArrayList<>();
+                        }
+                        visualAgents.add(visualAgent);
+                        pane.getChildren().add(visualAgent);
                     }
                 }
             }

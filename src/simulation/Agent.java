@@ -7,16 +7,18 @@ import java.util.ArrayList;
 
 public class Agent {
 
-    private double speed, turnSpeed, turnAngle, fieldOfViewAngle, fieldOfViewRange;
+    private double speed, turnSpeed, fieldOfViewAngle, fieldOfViewRange;
 
-    private DoubleProperty xPosProperty;
-    private DoubleProperty yPosProperty;
+    private DoubleProperty xPos;
+    private DoubleProperty yPos;
+    private DoubleProperty turnAngle;
 
     private MovePolicy policy;
 
     public Agent(double xPos, double yPos, double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange) {
-        xPosProperty = new SimpleDoubleProperty(xPos);
-        yPosProperty = new SimpleDoubleProperty(yPos);
+        this.xPos = new SimpleDoubleProperty(xPos);
+        this.yPos = new SimpleDoubleProperty(yPos);
+        this.turnAngle = new SimpleDoubleProperty(0);
         this.speed = speed;
         this.turnSpeed = turnSpeed;
         this.fieldOfViewAngle = fieldOfViewAngle;
@@ -40,11 +42,11 @@ public class Agent {
     }
 
     public double getTurnAngle() {
-        return turnAngle;
+        return turnAngle.get();
     }
 
     public void setTurnAngle(double turnAngle) {
-        this.turnAngle = turnAngle;
+        this.turnAngle.set(turnAngle);
     }
 
     public double getFieldOfViewAngle() {
@@ -64,27 +66,31 @@ public class Agent {
     }
 
     public double getXPos() {
-        return xPosProperty.get();
+        return xPos.get();
     }
 
     public void setXPos(double xPos) {
-        this.xPosProperty.set(xPos);
+        this.xPos.set(xPos);
     }
 
     public double getYPos() {
-        return yPosProperty.get();
+        return yPos.get();
     }
 
     public void setYPos(double yPos) {
-        this.yPosProperty.set(yPos);
+        this.yPos.set(yPos);
     }
 
-    public DoubleProperty getXPosProperty() {
-        return xPosProperty;
+    public DoubleProperty xPosProperty() {
+        return xPos;
     }
 
-    public DoubleProperty getYPosProperty() {
-        return yPosProperty;
+    public DoubleProperty yPosProperty() {
+        return yPos;
+    }
+
+    public DoubleProperty turnAngleProperty() {
+        return turnAngle;
     }
 
     public MovePolicy getPolicy() {
@@ -97,9 +103,9 @@ public class Agent {
 
     public void move(MapRepresentation map, ArrayList<Agent> agents, long timeStep) {
         Move nextMove = policy.getNextMove(map, agents, timeStep);
-        xPosProperty.set(xPosProperty.get() + nextMove.getXDelta());
-        yPosProperty.set(yPosProperty.get() + nextMove.getYDelta());
-        turnAngle += nextMove.getTurnDelta();
+        xPos.set(xPos.get() + nextMove.getXDelta());
+        yPos.set(yPos.get() + nextMove.getYDelta());
+        turnAngle.set(turnAngle.get() + nextMove.getTurnDelta());
     }
 
 }

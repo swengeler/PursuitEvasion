@@ -17,12 +17,13 @@ public class ShittyMovePolicy extends MovePolicy {
          */
         double randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() * timeStep * 1 / 1000;
         double randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() * timeStep * 1 / 1000;
-        double randAngle = Math.atan2(randDeltaY, randDeltaX) * (180 / Math.PI);
+        //double randAngle = Math.atan2(randDeltaY, randDeltaX) * (180 / Math.PI);
+        double randAngle = (ThreadLocalRandom.current().nextInt(-360, 360)) * agent.getTurnSpeed() * timeStep * 1 / 1000;
 
         while (!map.legalPosition(agent.getXPos() + randDeltaX, agent.getYPos() + randDeltaY)) {
             randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() * timeStep * 1 / 1000;
             randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() * timeStep * 1 / 1000;
-            randAngle = Math.atan2(randDeltaY, randDeltaX) * (180 / Math.PI);
+            randAngle = (ThreadLocalRandom.current().nextInt(0, 360)) * agent.getTurnSpeed() * timeStep * 1 / 1000;
         }
 
         return new Move(randDeltaX, randDeltaY, randAngle);
