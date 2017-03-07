@@ -11,19 +11,22 @@ public class ShittyMovePolicy extends MovePolicy {
     }
 
     @Override
-    Move getNextMove(MapRepresentation map, ArrayList<Agent> agents, long timeStep) {
+    public Move getNextMove(MapRepresentation map, ArrayList<Agent> agents, long timeStep) {
+        // update revealed part of the map
+        revealedMap.update(agent.getXPos(), agent.getYPos(), agent.getTurnAngle(), agent.getFieldOfViewAngle(), agent.getFieldOfViewRange());
+
         /*
         CODED BY WINSTON 2K17
          */
-        double randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() * timeStep * 1 / 1000;
-        double randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() * timeStep * 1 / 1000;
+        double randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() /* * timeStep */ * 1 / 100;
+        double randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() /* * timeStep */ * 1 / 100;
         //double randAngle = Math.atan2(randDeltaY, randDeltaX) * (180 / Math.PI);
-        double randAngle = (ThreadLocalRandom.current().nextInt(-360, 360)) * agent.getTurnSpeed() * timeStep * 1 / 1000;
+        double randAngle = (ThreadLocalRandom.current().nextInt(-360, 360)) * agent.getTurnSpeed() /* * timeStep */ * 1 / 100;
 
         while (!map.legalPosition(agent.getXPos() + randDeltaX, agent.getYPos() + randDeltaY)) {
-            randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() * timeStep * 1 / 1000;
-            randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() * timeStep * 1 / 1000;
-            randAngle = (ThreadLocalRandom.current().nextInt(0, 360)) * agent.getTurnSpeed() * timeStep * 1 / 1000;
+            randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() /* * timeStep */ * 1 / 100;
+            randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * agent.getSpeed() /* * timeStep */ * 1 / 100;
+            randAngle = (ThreadLocalRandom.current().nextInt(0, 360)) * agent.getTurnSpeed() /* * timeStep */ * 1 / 100;
         }
 
         return new Move(randDeltaX, randDeltaY, randAngle);

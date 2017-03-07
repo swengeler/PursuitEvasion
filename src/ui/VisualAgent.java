@@ -54,6 +54,10 @@ public class VisualAgent extends Group {
         getChildren().addAll(fieldOfView, agentBody);
     }
 
+    public Arc getFieldOfView() {
+        return fieldOfView;
+    }
+
     public double getCenterX() {
         return agentBody.centerXProperty().get();
     }

@@ -24,6 +24,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import simulation.RevealedMap;
 
 import java.util.ArrayList;
 
@@ -70,6 +71,7 @@ public class Main extends Application {
             }
 
             Controller.theBestTest(mapPolygons, visualAgents);
+            RevealedMap.showMapDebug(pane);
         });
         menu.getChildren().add(theBestTestButton);
         Button simulationButton = new Button("Better simulation");
@@ -147,6 +149,24 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
+        Button polygonTestButton = new Button("Polygon test");
+        polygonTestButton.setOnAction(e -> {
+            if (pane.getChildren().contains(mapPolygons.get(0))) {
+                pane.getChildren().remove(mapPolygons.get(0));
+            }
+            pane.getChildren().removeAll(mapPolygons);
+            polygonWithHoles = mapPolygons.get(0);
+            System.out.println(mapPolygons.size());
+            for (int i = 1; i < mapPolygons.size() - 1; i++) {
+                changePolygonWithHoles(mapPolygons.get(i).getPolygon());
+            }
+            pane.getChildren().add(polygonWithHoles);
+            polygonWithHoles.setFill(Color.GREEN.deriveColor(1, 1, 1, 0.5));
+            polygonWithHoles.setStroke(Color.GREEN);
+            polygonWithHoles.toFront();
+        });
+        menu.getChildren().add(polygonTestButton);
+
         /*Polygon arcTestPolygon = new Polygon();
         arcTestPolygon.getPoints().addAll(
                 20.0, 30.0,
@@ -209,9 +229,40 @@ public class Main extends Application {
         timeLine2.setCycleCount(Timeline.INDEFINITE);
         timeLine2.setAutoReverse(true);
         KeyValue kv2 = new KeyValue(visualAgent.turnAngleProperty(), 360.0);
-        KeyFrame kf2 = new KeyFrame(Duration.millis(200), kv2);
+        KeyFrame kf2 = new KeyFrame(Duration.millis(2000), kv2);
         timeLine2.getKeyFrames().add(kf2);
-        timeLine2.play();*/
+        timeLine2.play();
+
+        union = new Rectangle(250, 250, 100, 100);
+        //union = Shape.union(union, visualAgent.getFieldOfView());
+        union.setFill(Color.GREEN);
+        union.toFront();
+
+        System.out.println(union.getBoundsInParent().getMinX() + " " + union.getBoundsInParent().getMaxX() + " - " + union.getBoundsInParent().getMinY() + " " + union.getBoundsInParent().getMaxY());
+        pane.getChildren().add(union);
+
+        Button unionTestButton = new Button("Union test");
+        unionTestButton.setOnAction(e -> {
+            pane.getChildren().remove(union);
+            changeUnion(union, visualAgent.getFieldOfView());
+            pane.getChildren().add(union);
+            //union.toBack();
+            union.setFill(Color.BLACK);
+            System.out.println("Hello");
+        });
+        menu.getChildren().add(unionTestButton);*/
+
+    }
+
+    private Shape polygonWithHoles;
+    private Shape union;
+
+    private void changePolygonWithHoles(Shape newSubtraction) {
+        polygonWithHoles = Shape.subtract(polygonWithHoles, newSubtraction);
+    }
+
+    private void changeUnion(Shape prevUnion, Shape newAddition) {
+        union = Shape.union(prevUnion, newAddition);
     }
 
     private void addListeners() {

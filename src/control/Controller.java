@@ -26,7 +26,7 @@ public class Controller {
             polygons.add(p.getPolygon());
         }
         ArrayList<Polygon> subList = new ArrayList<>();
-        for (int i = 1; i < map.size(); i++) {
+        for (int i = 1; i < map.size() - 1; i++) {
             subList.add(polygons.get(i));
         }
         MapRepresentation mapRepresentation = new GridMapRepresentation(polygons.get(0), subList);
