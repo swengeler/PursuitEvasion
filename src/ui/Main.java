@@ -2,7 +2,7 @@ package ui;
 
 import control.Controller;
 import conversion.GridConversion;
-import javafx.animation.*;
+import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -12,7 +12,8 @@ import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.*;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -22,6 +23,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import simulation.RevealedMap;
+import simulation.Simulation;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -197,7 +199,7 @@ public class Main extends Application {
             Controller.theBestTest(mapPolygons, visualAgents);
             RevealedMap.showMapDebug(pane);
         });
-        menu.getChildren().add(theBestTestButton);
+        //menu.getChildren().add(theBestTestButton);
         Button simulationButton = new Button("Better simulation");
         simulationButton.setOnAction(e -> {
             Controller.betterTest(mapPolygons, pursuers, evaders);
@@ -213,11 +215,47 @@ public class Main extends Application {
         b.setSelected(true);
         menu.getChildren().add(b);
 
+        Button startSimulationButton = new Button("Start simulation");
+        Button pauseSimulationButton = new Button("Pause simulation");
+
+        menu.getChildren().add(startSimulationButton);
+        menu.getChildren().add(pauseSimulationButton);
+
+        startSimulationButton.setOnAction(ae -> {
+            Simulation sim = Controller.getSimulation();
+            if (sim == null) {
+                Polygon outer = new Polygon();
+
+                for (int i = 1; i < mapPolygons.size(); i++) {
+                    mapPolygons.get(i).setFill(Color.WHITE);
+                    mapPolygons.get(i).toFront();
+                }
+
+                if (mapPolygons == null || visualAgents == null || mapPolygons.isEmpty() || visualAgents.isEmpty()) {
+                    System.out.println("Not enough data to construct simulation!");
+                } else {
+                    Controller.theBestTest(mapPolygons, visualAgents);
+                    RevealedMap.showMapDebug(pane);
+                }
+            } else {
+                sim.unPause();
+            }
+        });
+
+        pauseSimulationButton.setOnAction(ae -> {
+            Simulation sim = Controller.getSimulation();
+            if (sim == null) {
+                System.out.println("Simulation not started yet!");
+            } else {
+                sim.pause();
+            }
+        });
+
         pursuers = new ArrayList<>();
         evaders = new ArrayList<>();
 
         Scene scene = new Scene(outerLayout, 1200, 800);
-        primaryStage.setTitle("Coded by Winston v5.76.002 build 41 alpha");
+        primaryStage.setTitle("Coded by Winston v5.76.002 build 42 alpha");
 
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/rrr_icon.png")));
         //pane.getChildren().add(new ImageView(new Image(getClass().getResourceAsStream("/like-3.png"))));

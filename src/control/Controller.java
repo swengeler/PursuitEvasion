@@ -20,6 +20,10 @@ public class Controller {
         simulation = simulationInput;
     }
 
+    public static Simulation getSimulation() {
+        return simulation;
+    }
+
     public static void theBestTest(ArrayList<MapPolygon> map, ArrayList<VisualAgent> visualAgents) {
         ArrayList<Polygon> polygons = new ArrayList<>();
         for (MapPolygon p : map) {
@@ -43,6 +47,7 @@ public class Controller {
         }
 
         Simulation sim = new Simulation(mapRepresentation, agents);
+        setSimulation(sim);
     }
 
     public static void betterTest(ArrayList<MapPolygon> map, ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
