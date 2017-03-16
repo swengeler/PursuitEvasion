@@ -138,14 +138,14 @@ public class Main extends Application {
                     }
                 }
 
-                Shape outerCover = new Rectangle(0, 0, pane.getWidth(), pane.getHeight());
+                Shape outerCover = new Rectangle(0, 0, 1920, 1080);
                 outerCover = Shape.subtract(outerCover, mapPolygons.get(0));
-                outerCover.setFill(Color.WHITE);
+                outerCover.setFill(Color.LIGHTGREY);
                 pane.getChildren().add(outerCover);
 
                 covers.add(outerCover);
                 for (int i = 1; i < mapPolygons.size(); i++) {
-                    mapPolygons.get(i).setFill(Color.WHITE);
+                    mapPolygons.get(i).setFill(Color.LIGHTGREY);
                     covers.add(mapPolygons.get(i));
                 }
             }
@@ -210,6 +210,7 @@ public class Main extends Application {
         addPoints = new SimpleBooleanProperty(false);
         CheckBox b = new CheckBox("To draw or\nnot to draw");
         addPoints.bind(b.selectedProperty());
+        b.setSelected(true);
         menu.getChildren().add(b);
 
         pursuers = new ArrayList<>();
@@ -347,7 +348,7 @@ public class Main extends Application {
             }
         });
         pane.setOnMousePressed(e -> {
-            if (currentState == ProgramState.MAP_EDITING) {
+            if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {
                 if (!e.isPrimaryButtonDown() || (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY()))) {
                     return;
                 }
@@ -406,6 +407,9 @@ public class Main extends Application {
                                 return;
                             }
                         }
+
+                        System.out.println("Polygon created (with " + ((currentMapPolygon.getPoints().size() / 2) - 1) + " points)");
+                        System.out.println(mapPolygons.size());
 
                         // connected to first point to close the polygon
                         Polygon robinsPolygon = currentMapPolygon.getPolygon();
@@ -475,10 +479,12 @@ public class Main extends Application {
     }
 
     private void clearMap() {
+        currentState = ProgramState.MAP_EDITING;
         pane.getChildren().clear();
         pane.getChildren().add(indicatorLine);
         mapPolygons.clear();
         currentMapPolygon = new MapPolygon(pane);
+        mapPolygons.add(currentMapPolygon);
         pane.getChildren().add(currentMapPolygon);
         MapPolygon.getAllAnchors().clear();
     }
@@ -579,19 +585,23 @@ public class Main extends Application {
 
                             if (connectedToOld && a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
                                 // connected to first point to close the polygon
-                                mapPolygons.add(currentMapPolygon);
                                 StrokeTransition st = new StrokeTransition(new Duration(100), currentMapPolygon, Color.BLUE, Color.ORANGE);
                                 st.play();
                                 currentMapPolygon = new MapPolygon(pane);
+                                mapPolygons.add(currentMapPolygon);
                                 pane.getChildren().add(currentMapPolygon);
                             }
                         }
                     } while ((line = in.readLine()) != null);
 
-                    currentMapPolygon = new MapPolygon(pane);
-                    pane.getChildren().add(currentMapPolygon);
-                    mapPolygons.add(currentMapPolygon);
                     indicatorLine.setVisible(false);
+                }
+                System.out.println("After loading: " + mapPolygons.size());
+                for (MapPolygon m : mapPolygons) {
+                    System.out.println("\nPolygon: ");
+                    for (int i = 0; i < m.getPoints().size(); i += 2) {
+                        System.out.println(m.getPoints().get(i) + " " + m.getPoints().get(i + 1));
+                    }
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
