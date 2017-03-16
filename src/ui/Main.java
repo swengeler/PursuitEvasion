@@ -14,7 +14,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Separator;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
@@ -22,15 +21,21 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import simulation.RevealedMap;
 
+import java.io.*;
 import java.util.ArrayList;
 
 public class Main extends Application {
 
-    private static final double CELLSIZE = 5;
+    enum ProgramState {
+        MAP_EDITING, AGENT_PLACING, SIMULATION
+    }
+
+    private static final double CELL_SIZE = 5;
 
     private HBox outerLayout;
     private VBox menu;
@@ -40,14 +45,24 @@ public class Main extends Application {
     public static ArrayList<MapPolygon> mapPolygons;
     private MapPolygon currentMapPolygon;
 
+    private ArrayList<Shape> covers;
+
     private ArrayList<Circle> pursuers;
     private ArrayList<Circle> evaders;
     private ArrayList<VisualAgent> visualAgents;
 
     private BooleanProperty addPoints;
 
+    private ProgramState currentState;
+
     @Override
     public void start(Stage primaryStage) throws Exception {
+        covers = new ArrayList<>();
+        currentState = ProgramState.MAP_EDITING;
+
+        // zoomable drawing pane
+        pane = new ZoomablePane();
+
         // top-level container, partitions window into drawing pane and menu
         outerLayout = new HBox();
         outerLayout.setPrefSize(1200, 800);
@@ -58,54 +73,6 @@ public class Main extends Application {
         menu.setMinWidth(190);
         menu.setPrefSize(190, 600);
         menu.setMaxWidth(190);
-        Button theBestTestButton = new Button("The best simulation");
-        theBestTestButton.setOnAction(e -> {
-            //
-
-            Polygon outer = new Polygon();
-
-
-            for (int i = 1; i < mapPolygons.size(); i++) {
-                mapPolygons.get(i).setFill(Color.WHITE);
-                mapPolygons.get(i).toFront();
-            }
-
-            Controller.theBestTest(mapPolygons, visualAgents);
-            RevealedMap.showMapDebug(pane);
-        });
-        menu.getChildren().add(theBestTestButton);
-        Button simulationButton = new Button("Better simulation");
-        simulationButton.setOnAction(e -> {
-            Controller.betterTest(mapPolygons, pursuers, evaders);
-        });
-        menu.getChildren().add(simulationButton);
-        Button testButton = new Button("Start Simulation");
-        testButton.setOnAction(e -> {
-            Controller.test(pursuers, evaders);
-        });
-        menu.getChildren().add(testButton);
-        Button convertButton = new Button("Print Grid");
-        convertButton.setOnAction(e -> {
-            GridConversion.convert(mapPolygons, pursuers, evaders, CELLSIZE);
-        });
-        menu.getChildren().add(convertButton);
-        addPoints = new SimpleBooleanProperty(false);
-        CheckBox b = new CheckBox("To draw or\nnot to draw");
-        addPoints.bind(b.selectedProperty());
-        menu.getChildren().add(b);
-        Button whyNotButton = new Button("Why not?");
-        whyNotButton.setOnAction(e -> {
-            Circle pursuer;
-            if (pursuers == null) {
-                pursuers = new ArrayList<>();
-            }
-            for (int i = 0; i < 1000; i++) {
-                pursuer = new Circle(400, 400, 5, Color.RED);
-                pursuers.add(pursuer);
-                pane.getChildren().add(pursuer);
-            }
-        });
-        menu.getChildren().add(whyNotButton);
 
         // zoomable drawing pane
         pane = new ZoomablePane();
@@ -137,6 +104,142 @@ public class Main extends Application {
         mapPolygons.add(currentMapPolygon);
         addListeners();
 
+        Button placeAgentsButton = new Button("Start placing agents");
+        placeAgentsButton.setOnAction(e -> {
+            if (currentState == ProgramState.MAP_EDITING && mapPolygons.size() > 0 && mapPolygons.get(0).isClosed()) {
+                currentState = ProgramState.AGENT_PLACING;
+                for (int i = 0; i < pane.getChildren().size(); i++) {
+                    if (pane.getChildren().get(i) instanceof Anchor) {
+                        pane.getChildren().remove(i);
+                        i--;
+                    }
+                }
+
+                Shape outerCover = new Rectangle(0, 0, pane.getWidth(), pane.getHeight());
+                outerCover = Shape.subtract(outerCover, mapPolygons.get(0));
+                outerCover.setFill(Color.WHITE);
+                pane.getChildren().add(outerCover);
+
+                covers.add(outerCover);
+                for (int i = 1; i < mapPolygons.size(); i++) {
+                    mapPolygons.get(i).setFill(Color.WHITE);
+                    covers.add(mapPolygons.get(i));
+                }
+            }
+        });
+        menu.getChildren().add(placeAgentsButton);
+
+        Button saveMapButton = new Button("Save map");
+        saveMapButton.setOnAction(e -> {
+            if (mapPolygons.size() > 0 && mapPolygons.get(0).isClosed()) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Save the current map");
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Map data only file", "*.mdo"));
+                File selectedFile = fileChooser.showSaveDialog(primaryStage);
+                if (selectedFile != null) {
+                    // write map to file
+                    try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
+                        for (int i = 0; i < mapPolygons.size() - 1; i++) {
+                            for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
+                                out.print(mapPolygons.get(i).getPoints().get(j) + " ");
+                            }
+                            out.println();
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+        menu.getChildren().add(saveMapButton);
+
+        Button saveMapAndAgentsButton = new Button("Save map and agents");
+        saveMapAndAgentsButton.setOnAction(e -> {
+            if (mapPolygons.size() > 0 && mapPolygons.get(0).isClosed()) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Save the current map");
+                fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map and agent data file", "*.maa"));
+                File selectedFile = fileChooser.showSaveDialog(primaryStage);
+                if (selectedFile != null) {
+                    try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
+                        // write map to file
+                        out.println("map");
+                        for (int i = 0; i < mapPolygons.size() - 1; i++) {
+                            for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
+                                out.print(mapPolygons.get(i).getPoints().get(j) + " ");
+                            }
+                            out.println();
+                        }
+                        out.println("agents");
+                        for (VisualAgent a : visualAgents) {
+                            out.println(a.getCenterX() + " " + a.getCenterY() + " " + a.getFieldOfViewAngle() + " " + a.getFieldOfViewRange());
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+        menu.getChildren().add(saveMapAndAgentsButton);
+
+        Button loadButton = new Button("Load map");
+        loadButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Load a map");
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map data files", "*.mdo", "*.maa"));
+            File selectedFile = fileChooser.showOpenDialog(primaryStage);
+            if (selectedFile != null) {
+                try (BufferedReader in = new BufferedReader(new FileReader(selectedFile))) {
+                    // read in the map and file
+                    String line = in.readLine();
+                    if (line.contains("map")) {
+                        // map and agent data
+                        while ((line = in.readLine()) != null) {
+                            System.out.println(line);
+                        }
+                    } else {
+                        // map data only
+                        while ((line = in.readLine()) != null) {
+                            System.out.println(line);
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        menu.getChildren().add(loadButton);
+
+        Button theBestTestButton = new Button("The best simulation");
+        theBestTestButton.setOnAction(e -> {
+            //
+
+            Polygon outer = new Polygon();
+
+
+            for (int i = 1; i < mapPolygons.size(); i++) {
+                mapPolygons.get(i).setFill(Color.WHITE);
+                mapPolygons.get(i).toFront();
+            }
+
+            Controller.theBestTest(mapPolygons, visualAgents);
+            RevealedMap.showMapDebug(pane);
+        });
+        menu.getChildren().add(theBestTestButton);
+        Button simulationButton = new Button("Better simulation");
+        simulationButton.setOnAction(e -> {
+            Controller.betterTest(mapPolygons, pursuers, evaders);
+        });
+        Button convertButton = new Button("Print Grid");
+        convertButton.setOnAction(e -> {
+            GridConversion.convert(mapPolygons, pursuers, evaders, CELL_SIZE);
+        });
+        menu.getChildren().add(convertButton);
+        addPoints = new SimpleBooleanProperty(false);
+        CheckBox b = new CheckBox("To draw or\nnot to draw");
+        addPoints.bind(b.selectedProperty());
+        menu.getChildren().add(b);
+
         pursuers = new ArrayList<>();
         evaders = new ArrayList<>();
 
@@ -148,24 +251,6 @@ public class Main extends Application {
 
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        Button polygonTestButton = new Button("Polygon test");
-        polygonTestButton.setOnAction(e -> {
-            if (pane.getChildren().contains(mapPolygons.get(0))) {
-                pane.getChildren().remove(mapPolygons.get(0));
-            }
-            pane.getChildren().removeAll(mapPolygons);
-            polygonWithHoles = mapPolygons.get(0);
-            System.out.println(mapPolygons.size());
-            for (int i = 1; i < mapPolygons.size() - 1; i++) {
-                changePolygonWithHoles(mapPolygons.get(i).getPolygon());
-            }
-            pane.getChildren().add(polygonWithHoles);
-            polygonWithHoles.setFill(Color.GREEN.deriveColor(1, 1, 1, 0.5));
-            polygonWithHoles.setStroke(Color.GREEN);
-            polygonWithHoles.toFront();
-        });
-        menu.getChildren().add(polygonTestButton);
 
         /*Polygon arcTestPolygon = new Polygon();
         arcTestPolygon.getPoints().addAll(
@@ -290,7 +375,7 @@ public class Main extends Application {
             }
         });
         pane.setOnMousePressed(e -> {
-            if (addPoints.getValue()) {
+            if (currentState == ProgramState.MAP_EDITING) {
                 if (!e.isPrimaryButtonDown() || (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY()))) {
                     return;
                 }
@@ -335,7 +420,6 @@ public class Main extends Application {
                     }
                 }
 
-
                 currentMapPolygon.addAnchor(a);
 
                 if (!indicatorLine.isVisible()) {
@@ -370,30 +454,27 @@ public class Main extends Application {
                         indicatorLine.setEndY(e.getY());
                     }
                 }
-            } else {
+            } else if (currentState == ProgramState.AGENT_PLACING) {
                 if (mapPolygons.get(0).isClosed()) {
-                    /*if (e.isPrimaryButtonDown()) {
-                        Circle pursuer = new Circle(e.getX(), e.getY(), 5, Color.TOMATO);
-                        if (pursuers == null) {
-                            pursuers = new ArrayList<>();
+                    boolean placedInHole = false;
+                    for (int i = 1; i < mapPolygons.size(); i++) {
+                        if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
+                            placedInHole = true;
                         }
-                        pursuers.add(pursuer);
-                        pane.getChildren().add(pursuer);
-                    } else {
-                        Circle evader = new Circle(e.getX(), e.getY(), 5, Color.GREEN);
-                        if (evaders == null) {
-                            evaders = new ArrayList<>();
-                        }
-                        evaders.add(evader);
-                        pane.getChildren().add(evader);
-                    }*/
-                    if (e.isPrimaryButtonDown()) {
+                    }
+                    if (!placedInHole && e.isPrimaryButtonDown() && mapPolygons.get(0).contains(e.getX(), e.getY())) {
                         VisualAgent visualAgent = new VisualAgent(e.getX(), e.getY());
                         if (visualAgents == null) {
                             visualAgents = new ArrayList<>();
                         }
                         visualAgents.add(visualAgent);
                         pane.getChildren().add(visualAgent);
+
+                        // covering areas beyond the agent's vision
+                        for (Shape s : covers) {
+                            s.toFront();
+                        }
+                        mapPolygons.get(0).toFront();
                     }
                 }
             }
@@ -421,6 +502,15 @@ public class Main extends Application {
                 indicatorLine.setEndY(e.getY());
             }
         });
+    }
+
+    private void save() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open Resource File");
+    }
+
+    private void load() {
+
     }
 
     public static void main(String[] args) {

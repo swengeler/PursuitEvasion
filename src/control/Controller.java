@@ -34,7 +34,7 @@ public class Controller {
         ArrayList<Agent> agents = new ArrayList<>();
         Agent temp;
         for (VisualAgent a : visualAgents) {
-            temp = new Agent(a.getCenterX(), a.getCenterY(), 100, 5, a.getFieldOfViewAngle(), a.getFieldOfViewRange());
+            temp = new Agent(a.getCenterX(), a.getCenterY(), 100, 40, a.getFieldOfViewAngle(), a.getFieldOfViewRange());
             temp.setPolicy(new ShittyMovePolicy(temp, mapRepresentation));
             a.centerXProperty().bind(temp.xPosProperty());
             a.centerYProperty().bind(temp.yPosProperty());

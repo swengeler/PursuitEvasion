@@ -17,7 +17,7 @@ public class Simulation {
 
     private boolean simulationRunning;
 
-    private long timeStep = 10;
+    private long timeStep = 1;
 
     public Simulation(MapRepresentation map, ArrayList<Agent> agents) {
         this.map = map;
