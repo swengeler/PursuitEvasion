@@ -63,6 +63,15 @@ public class Simulation {
         simulationTimer.restart();
     }
 
+    public Agent getAgent(double x, double y) {
+        for (Agent a: agents) {
+            if (a.getXPos() == x && a.getYPos() == y) {
+                return a;
+            }
+        }
+        return null;
+    }
+
     public void setTimeStep(long timeStep) {
         this.timeStep = timeStep;
         simulationTimer.stop();

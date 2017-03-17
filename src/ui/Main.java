@@ -29,6 +29,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.Pair;
+import simulation.Agent;
 import simulation.RevealedMap;
 import simulation.Simulation;
 
@@ -532,12 +533,30 @@ public class Main extends Application {
                             grid.add(turnSpeed, 1, 1);
 
                             Node applyButton = dialog.getDialogPane().lookupButton(applyType);
-                            //TODO: force doubles
                             //give data to visual agent?
 
                             dialog.getDialogPane().setContent(grid);
 
                             Platform.runLater(() -> speed.requestFocus());
+
+                            //In order to force integers, note that this does NOT allow for decimals
+                            speed.textProperty().addListener((obs, oldv, newv) -> {
+                                for (char ch: newv.toCharArray()) {
+                                    if (!Character.isDigit(ch)) {
+                                        speed.setText(oldv);
+                                        return;
+                                    }
+                                }
+                            });
+
+                            turnSpeed.textProperty().addListener((obs, oldv, newv) -> {
+                                for (char ch: newv.toCharArray()) {
+                                    if (!Character.isDigit(ch)) {
+                                        turnSpeed.setText(oldv);
+                                        return;
+                                    }
+                                }
+                            });
 
                             dialog.setResultConverter(b -> {
                                 if (b == applyType) {
@@ -549,11 +568,19 @@ public class Main extends Application {
                             Optional<Pair<Double, Double>> result = dialog.showAndWait();
 
                             result.ifPresent(res -> {
-                                System.out.println(res.getKey() + " : " + res.getValue());
+                                Simulation sim = Controller.getSimulation();
+                                if (sim != null) {
+                                    Agent tmp = sim.getAgent(va.getCenterX(), va.getCenterY());
+                                    if (tmp != null) {
+                                        //fix so that you can edit settings before start of simulation
+                                        System.out.println("Found agent");
+                                        tmp.setSpeed(res.getKey());
+                                        tmp.setTurnSpeed(res.getValue());
+                                    }
+                                }
                             });
                         });
 
-                        //not showing correctly
                         contextMenu.show(c, e.getScreenX(), e.getScreenY());
                     }
                 }
