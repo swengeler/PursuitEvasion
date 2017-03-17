@@ -4,16 +4,22 @@ import control.Controller;
 import conversion.GridConversion;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -22,6 +28,7 @@ import javafx.scene.shape.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.util.Pair;
 import simulation.RevealedMap;
 import simulation.Simulation;
 
@@ -386,107 +393,168 @@ public class Main extends Application {
             }
         });
         pane.setOnMousePressed(e -> {
-            if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {
-                if (!e.isPrimaryButtonDown() || (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY()))) {
-                    return;
-                }
-
-                Anchor a = null;
-                boolean connectedToOld = false;
-
-                for (Anchor oldAnchor : MapPolygon.getAllAnchors()) {
-                    if (Math.pow(oldAnchor.getCenterX() - e.getX(), 2) + Math.pow(oldAnchor.getCenterY() - e.getY(), 2) < Math.pow(oldAnchor.getRadius(), 2)) {
-                        a = oldAnchor;
-                        connectedToOld = true;
-                        if (!indicatorLine.isVisible()) {
-                            return;
-                        }
-                        break;
+            if (e.getButton() == MouseButton.PRIMARY) {
+                if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {
+                    if (!e.isPrimaryButtonDown() || (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY()))) {
+                        return;
                     }
-                }
 
-                if (!connectedToOld) {
-                    if (indicatorLine.isVisible()) {
-                        for (MapPolygon mp : mapPolygons) {
-                            if (mp.lineIntersects(indicatorLine)) {
+                    Anchor a = null;
+                    boolean connectedToOld = false;
+
+                    for (Anchor oldAnchor : MapPolygon.getAllAnchors()) {
+                        if (Math.pow(oldAnchor.getCenterX() - e.getX(), 2) + Math.pow(oldAnchor.getCenterY() - e.getY(), 2) < Math.pow(oldAnchor.getRadius(), 2)) {
+                            a = oldAnchor;
+                            connectedToOld = true;
+                            if (!indicatorLine.isVisible()) {
                                 return;
                             }
+                            break;
                         }
-                    } else {
-                        for (int i = 1; i < mapPolygons.size(); i++) {
-                            if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
-                                return;
+                    }
+
+                    if (!connectedToOld) {
+                        if (indicatorLine.isVisible()) {
+                            for (MapPolygon mp : mapPolygons) {
+                                if (mp.lineIntersects(indicatorLine)) {
+                                    return;
+                                }
+                            }
+                        } else {
+                            for (int i = 1; i < mapPolygons.size(); i++) {
+                                if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
+                                    return;
+                                }
                             }
                         }
-                    }
-                    DoubleProperty xProperty = new SimpleDoubleProperty(e.getX());
-                    DoubleProperty yProperty = new SimpleDoubleProperty(e.getY());
-                    a = new Anchor(Color.GOLD, xProperty, yProperty);
-                } else if (a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
-                    for (int i = 1; i < mapPolygons.size() - 1; i++) {
-                        if (mapPolygons.get(i) != currentMapPolygon && currentMapPolygon.contains(mapPolygons.get(i).getPoints().get(0), mapPolygons.get(i).getPoints().get(1))) {
-                            return;
-                        }
-                    }
-                }
-
-                currentMapPolygon.addAnchor(a);
-
-                if (!indicatorLine.isVisible()) {
-                    indicatorLine.setStartX(e.getX());
-                    indicatorLine.setStartY(e.getY());
-                    indicatorLine.setEndX(e.getX());
-                    indicatorLine.setEndY(e.getY());
-                    indicatorLine.setVisible(true);
-                } else {
-                    if (connectedToOld && a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
-                        for (int i = 1; i < mapPolygons.size(); i++) {
+                        DoubleProperty xProperty = new SimpleDoubleProperty(e.getX());
+                        DoubleProperty yProperty = new SimpleDoubleProperty(e.getY());
+                        a = new Anchor(Color.GOLD, xProperty, yProperty);
+                    } else if (a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
+                        for (int i = 1; i < mapPolygons.size() - 1; i++) {
                             if (mapPolygons.get(i) != currentMapPolygon && currentMapPolygon.contains(mapPolygons.get(i).getPoints().get(0), mapPolygons.get(i).getPoints().get(1))) {
                                 return;
                             }
                         }
+                    }
 
-                        System.out.println("Polygon created (with " + ((currentMapPolygon.getPoints().size() / 2) - 1) + " points)");
-                        System.out.println(mapPolygons.size());
+                    currentMapPolygon.addAnchor(a);
 
-                        // connected to first point to close the polygon
-                        Polygon robinsPolygon = currentMapPolygon.getPolygon();
-
-                        StrokeTransition st = new StrokeTransition(new Duration(500), currentMapPolygon, Color.BLUE, Color.ORANGE);
-                        st.play();
-                        currentMapPolygon = new MapPolygon(pane);
-                        pane.getChildren().add(currentMapPolygon);
-                        mapPolygons.add(currentMapPolygon);
-                        indicatorLine.setVisible(false);
-                    } else {
-                        // connected to other anchor or new anchor
+                    if (!indicatorLine.isVisible()) {
                         indicatorLine.setStartX(e.getX());
                         indicatorLine.setStartY(e.getY());
                         indicatorLine.setEndX(e.getX());
                         indicatorLine.setEndY(e.getY());
+                        indicatorLine.setVisible(true);
+                    } else {
+                        if (connectedToOld && a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
+                            for (int i = 1; i < mapPolygons.size(); i++) {
+                                if (mapPolygons.get(i) != currentMapPolygon && currentMapPolygon.contains(mapPolygons.get(i).getPoints().get(0), mapPolygons.get(i).getPoints().get(1))) {
+                                    return;
+                                }
+                            }
+
+                            System.out.println("Polygon created (with " + ((currentMapPolygon.getPoints().size() / 2) - 1) + " points)");
+                            System.out.println(mapPolygons.size());
+
+                            // connected to first point to close the polygon
+                            Polygon robinsPolygon = currentMapPolygon.getPolygon();
+
+                            StrokeTransition st = new StrokeTransition(new Duration(500), currentMapPolygon, Color.BLUE, Color.ORANGE);
+                            st.play();
+                            currentMapPolygon = new MapPolygon(pane);
+                            pane.getChildren().add(currentMapPolygon);
+                            mapPolygons.add(currentMapPolygon);
+                            indicatorLine.setVisible(false);
+                        } else {
+                            // connected to other anchor or new anchor
+                            indicatorLine.setStartX(e.getX());
+                            indicatorLine.setStartY(e.getY());
+                            indicatorLine.setEndX(e.getX());
+                            indicatorLine.setEndY(e.getY());
+                        }
+                    }
+                } else if (currentState == ProgramState.AGENT_PLACING) {
+                    if (mapPolygons.get(0).isClosed()) {
+                        boolean placedInHole = false;
+                        for (int i = 1; i < mapPolygons.size(); i++) {
+                            if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
+                                placedInHole = true;
+                            }
+                        }
+                        if (!placedInHole && e.isPrimaryButtonDown() && mapPolygons.get(0).contains(e.getX(), e.getY())) {
+                            VisualAgent visualAgent = new VisualAgent(e.getX(), e.getY());
+                            if (visualAgents == null) {
+                                visualAgents = new ArrayList<>();
+                            }
+                            visualAgents.add(visualAgent);
+                            pane.getChildren().add(visualAgent);
+
+                            // covering areas beyond the agent's vision
+                            for (Shape s : covers) {
+                                s.toFront();
+                            }
+                            mapPolygons.get(0).toFront();
+                        }
                     }
                 }
-            } else if (currentState == ProgramState.AGENT_PLACING) {
-                if (mapPolygons.get(0).isClosed()) {
-                    boolean placedInHole = false;
-                    for (int i = 1; i < mapPolygons.size(); i++) {
-                        if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
-                            placedInHole = true;
-                        }
-                    }
-                    if (!placedInHole && e.isPrimaryButtonDown() && mapPolygons.get(0).contains(e.getX(), e.getY())) {
-                        VisualAgent visualAgent = new VisualAgent(e.getX(), e.getY());
-                        if (visualAgents == null) {
-                            visualAgents = new ArrayList<>();
-                        }
-                        visualAgents.add(visualAgent);
-                        pane.getChildren().add(visualAgent);
+            } else if (e.getButton() == MouseButton.SECONDARY) {
+                if (visualAgents == null) return;
+                for (VisualAgent va: visualAgents) {
+                    Circle c = va.getAgentBody();
+                    if (c.contains(e.getX(), e.getY())) {
+                        //contains agent
+                        ContextMenu contextMenu = new ContextMenu();
+                        MenuItem editItem = new MenuItem("Edit");
+                        contextMenu.getItems().add(editItem);
 
-                        // covering areas beyond the agent's vision
-                        for (Shape s : covers) {
-                            s.toFront();
-                        }
-                        mapPolygons.get(0).toFront();
+                        editItem.setOnAction(ae -> {
+                            Dialog<Pair<Double, Double>> dialog = new Dialog<>();
+                            dialog.setTitle("Edit agent settings");
+                            ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(new Image(this.getClass().getResource("/rrr_icon.png").toString()));
+
+                            ButtonType applyType = new ButtonType("Set", ButtonBar.ButtonData.APPLY);
+                            dialog.getDialogPane().getButtonTypes().addAll(applyType, ButtonType.CANCEL);
+
+                            GridPane grid = new GridPane();
+                            grid.setHgap(10);
+                            grid.setVgap(10);
+                            grid.setPadding(new Insets(10, 10, 10, 10));
+
+                            TextField speed = new TextField();
+                            speed.setPromptText("Speed");
+                            TextField turnSpeed = new TextField();
+                            turnSpeed.setPromptText("Turn Speed");
+
+                            grid.add(new Label("Speed:"), 0, 0);
+                            grid.add(speed, 1, 0);
+                            grid.add(new Label("Turn Speed:"), 0, 1);
+                            grid.add(turnSpeed, 1, 1);
+
+                            Node applyButton = dialog.getDialogPane().lookupButton(applyType);
+                            //TODO: force doubles
+                            //give data to visual agent?
+
+                            dialog.getDialogPane().setContent(grid);
+
+                            Platform.runLater(() -> speed.requestFocus());
+
+                            dialog.setResultConverter(b -> {
+                                if (b == applyType) {
+                                    return new Pair<>(Double.valueOf(speed.getText()), Double.valueOf(turnSpeed.getText()));
+                                }
+                                return null;
+                            });
+
+                            Optional<Pair<Double, Double>> result = dialog.showAndWait();
+
+                            result.ifPresent(res -> {
+                                System.out.println(res.getKey() + " : " + res.getValue());
+                            });
+                        });
+
+                        //not showing correctly
+                        contextMenu.show(c, e.getScreenX(), e.getScreenY());
                     }
                 }
             }

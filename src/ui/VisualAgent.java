@@ -98,4 +98,8 @@ public class VisualAgent extends Group {
         return fieldOfViewRange;
     }
 
+    public Circle getAgentBody() {
+        return agentBody;
+    }
+
 }
