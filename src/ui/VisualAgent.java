@@ -5,12 +5,14 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
+import simulation.AgentSettings;
 
 public class VisualAgent extends Group {
 
     private DoubleProperty turnAngle;
     private DoubleProperty fieldOfViewAngle;
     private DoubleProperty fieldOfViewRange;
+    private AgentSettings settings;
 
     private Circle agentBody;
     private Arc fieldOfView;
@@ -35,6 +37,12 @@ public class VisualAgent extends Group {
 
         agentBody.centerXProperty().setValue(xPos);
         agentBody.centerYProperty().setValue(yPos);
+
+        settings = new AgentSettings(100, 40);
+        settings.setX(xPos);
+        settings.setY(yPos);
+        settings.setFieldOfViewAngle(fieldOfViewAngle.get());
+        settings.setFieldOfViewRange(fieldOfViewRange.get());
     }
 
     private void init() {
@@ -52,6 +60,14 @@ public class VisualAgent extends Group {
         fieldOfView.setType(ArcType.ROUND);
 
         getChildren().addAll(fieldOfView, agentBody);
+    }
+
+    public void setSettings(AgentSettings settings) {
+        this.settings = settings;
+    }
+
+    public AgentSettings getSettings() {
+        return settings;
     }
 
     public Arc getFieldOfView() {

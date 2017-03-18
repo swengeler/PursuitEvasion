@@ -30,6 +30,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.Pair;
 import simulation.Agent;
+import simulation.AgentSettings;
 import simulation.RevealedMap;
 import simulation.Simulation;
 
@@ -500,6 +501,13 @@ public class Main extends Application {
                     }
                 }
             } else if (e.getButton() == MouseButton.SECONDARY) {
+                /*
+                TODO:
+                Constrain textboxes (only doubles)
+                Better model..
+                Do not create all this over and over again
+                 */
+
                 if (visualAgents == null) return;
                 for (VisualAgent va: visualAgents) {
                     Circle c = va.getAgentBody();
@@ -510,7 +518,7 @@ public class Main extends Application {
                         contextMenu.getItems().add(editItem);
 
                         editItem.setOnAction(ae -> {
-                            Dialog<Pair<Double, Double>> dialog = new Dialog<>();
+                            Dialog<AgentSettings> dialog = new Dialog<>();
                             dialog.setTitle("Edit agent settings");
                             ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(new Image(this.getClass().getResource("/rrr_icon.png").toString()));
 
@@ -522,60 +530,75 @@ public class Main extends Application {
                             grid.setVgap(10);
                             grid.setPadding(new Insets(10, 10, 10, 10));
 
+                            TextField xpos = new TextField();
+                            xpos.setText(String.valueOf(va.getSettings().getX()));
+                            TextField ypos = new TextField();
+                            ypos.setText(String.valueOf(va.getSettings().getY()));
                             TextField speed = new TextField();
-                            speed.setPromptText("Speed");
+                            speed.setText(String.valueOf(va.getSettings().getSpeed()));
                             TextField turnSpeed = new TextField();
-                            turnSpeed.setPromptText("Turn Speed");
+                            turnSpeed.setText(String.valueOf(va.getSettings().getTurnSpeed()));
+                            TextField fovAngle = new TextField();
+                            fovAngle.setText(String.valueOf(va.getSettings().getFieldOfViewAngle()));
+                            TextField fovRange = new TextField();
+                            fovRange.setText(String.valueOf(va.getSettings().getFieldOfViewRange()));
 
-                            grid.add(new Label("Speed:"), 0, 0);
-                            grid.add(speed, 1, 0);
-                            grid.add(new Label("Turn Speed:"), 0, 1);
-                            grid.add(turnSpeed, 1, 1);
+                            grid.add(new Label("X:"), 0, 0);
+                            grid.add(xpos, 1, 0);
+                            grid.add(new Label("Y:"), 0, 1);
+                            grid.add(ypos, 1, 1);
+                            grid.add(new Label("Speed:"), 0, 2);
+                            grid.add(speed, 1, 2);
+                            grid.add(new Label("Turn Speed:"), 0, 3);
+                            grid.add(turnSpeed, 1, 3);
+                            grid.add(new Label("FOV Angle:"), 0, 4);
+                            grid.add(fovAngle, 1, 4);
+                            grid.add(new Label("FOV Range:"), 0, 5);
+                            grid.add(fovRange, 1, 5);
 
                             Node applyButton = dialog.getDialogPane().lookupButton(applyType);
-                            //give data to visual agent?
 
                             dialog.getDialogPane().setContent(grid);
 
-                            Platform.runLater(() -> speed.requestFocus());
-
-                            //In order to force integers, note that this does NOT allow for decimals
-                            speed.textProperty().addListener((obs, oldv, newv) -> {
-                                for (char ch: newv.toCharArray()) {
-                                    if (!Character.isDigit(ch)) {
-                                        speed.setText(oldv);
-                                        return;
-                                    }
-                                }
-                            });
-
-                            turnSpeed.textProperty().addListener((obs, oldv, newv) -> {
-                                for (char ch: newv.toCharArray()) {
-                                    if (!Character.isDigit(ch)) {
-                                        turnSpeed.setText(oldv);
-                                        return;
-                                    }
-                                }
-                            });
+                            Platform.runLater(() -> xpos.requestFocus());
 
                             dialog.setResultConverter(b -> {
                                 if (b == applyType) {
-                                    return new Pair<>(Double.valueOf(speed.getText()), Double.valueOf(turnSpeed.getText()));
+                                    if (xpos.getText().isEmpty() || ypos.getText().isEmpty() || speed.getText().isEmpty() || turnSpeed.getText().isEmpty() ||
+                                            fovAngle.getText().isEmpty() || fovRange.getText().isEmpty()) return null;
+                                    AgentSettings s = new AgentSettings(Double.valueOf(speed.getText()), Double.valueOf(turnSpeed.getText()));
+                                    s.setX(Double.valueOf(xpos.getText()));
+                                    s.setY(Double.valueOf(ypos.getText()));
+                                    s.setFieldOfViewAngle(Double.valueOf(fovAngle.getText()));
+                                    s.setFieldOfViewRange(Double.valueOf(fovRange.getText()));
+                                    return s;
                                 }
                                 return null;
                             });
 
-                            Optional<Pair<Double, Double>> result = dialog.showAndWait();
+                            Optional<AgentSettings> result = dialog.showAndWait();
 
                             result.ifPresent(res -> {
                                 Simulation sim = Controller.getSimulation();
                                 if (sim != null) {
-                                    Agent tmp = sim.getAgent(va.getCenterX(), va.getCenterY());
-                                    if (tmp != null) {
+                                    va.setSettings(res);
+                                    AgentSettings s = va.getSettings();
+                                    Agent a = sim.getAgent(va.getCenterX(), va.getCenterY());
+                                    if (s != null && a != null) {
                                         //fix so that you can edit settings before start of simulation
                                         System.out.println("Found agent");
-                                        tmp.setSpeed(res.getKey());
-                                        tmp.setTurnSpeed(res.getValue());
+
+                                        a.setSpeed(s.getSpeed());
+                                        a.setTurnSpeed(s.getTurnSpeed());
+                                        System.out.println("Set succesfully");
+                                    }
+                                } else {
+                                    //before start
+                                    AgentSettings s = va.getSettings();
+                                    if (s != null) {
+                                        va.setSettings(res);
+                                        System.out.println("Found agent pre sim");
+                                        System.out.println("Set agent pre sim");
                                     }
                                 }
                             });
