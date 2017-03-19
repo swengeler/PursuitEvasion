@@ -17,7 +17,7 @@ public class Simulation {
 
     private boolean simulationRunning;
 
-    private long timeStep = 1;
+    private long timeStep = 300;
 
     public Simulation(MapRepresentation map, ArrayList<Agent> agents) {
         this.map = map;
@@ -47,6 +47,24 @@ public class Simulation {
                 a.move(map, agents, timeStep);
                 // update UI
             }
+            // check whether any new evaders have been captured
+            /*for (Agent a : agents) {
+                if (a.isEvader()) {
+                    for (every pursuer) {
+                        if (a is in capture range of the current pursuer) {
+                            removeFromActiveAgents(a);
+                        }
+                    }
+                }
+            }*/
+            // check whether all evaders are captured
+            boolean simulationOver = false;
+            /*for (Agent a : agents) {
+                if (a.isEvader()) {
+                    simulationOver = true;
+                }
+            }*/
+
             /*boolean simulationOver = checkSimulationOver();
             if (simulationOver) {
                 // do things

@@ -5,34 +5,21 @@ import conversion.GridConversion;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.util.Pair;
-import simulation.Agent;
-import simulation.AgentSettings;
-import simulation.RevealedMap;
-import simulation.Simulation;
+import simulation.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -233,13 +220,6 @@ public class Main extends Application {
         startSimulationButton.setOnAction(ae -> {
             Simulation sim = Controller.getSimulation();
             if (sim == null) {
-                Polygon outer = new Polygon();
-
-                for (int i = 1; i < mapPolygons.size(); i++) {
-                    mapPolygons.get(i).setFill(Color.WHITE);
-                    mapPolygons.get(i).toFront();
-                }
-
                 if (mapPolygons == null || visualAgents == null || mapPolygons.isEmpty() || visualAgents.isEmpty()) {
                     System.out.println("Not enough data to construct simulation!");
                 } else {
@@ -357,17 +337,6 @@ public class Main extends Application {
         });
         menu.getChildren().add(unionTestButton);*/
 
-    }
-
-    private Shape polygonWithHoles;
-    private Shape union;
-
-    private void changePolygonWithHoles(Shape newSubtraction) {
-        polygonWithHoles = Shape.subtract(polygonWithHoles, newSubtraction);
-    }
-
-    private void changeUnion(Shape prevUnion, Shape newAddition) {
-        union = Shape.union(prevUnion, newAddition);
     }
 
     private void addListeners() {
@@ -508,8 +477,11 @@ public class Main extends Application {
                 Do not create all this over and over again
                  */
 
-                if (visualAgents == null) return;
-                for (VisualAgent va: visualAgents) {
+                if (visualAgents == null) {
+                    return;
+                }
+
+                for (VisualAgent va : visualAgents) {
                     Circle c = va.getAgentBody();
                     if (c.contains(e.getX(), e.getY())) {
                         //contains agent
@@ -565,7 +537,9 @@ public class Main extends Application {
                             dialog.setResultConverter(b -> {
                                 if (b == applyType) {
                                     if (xpos.getText().isEmpty() || ypos.getText().isEmpty() || speed.getText().isEmpty() || turnSpeed.getText().isEmpty() ||
-                                            fovAngle.getText().isEmpty() || fovRange.getText().isEmpty()) return null;
+                                            fovAngle.getText().isEmpty() || fovRange.getText().isEmpty()) {
+                                        return null;
+                                    }
                                     AgentSettings s = new AgentSettings(Double.valueOf(speed.getText()), Double.valueOf(turnSpeed.getText()));
                                     s.setX(Double.valueOf(xpos.getText()));
                                     s.setY(Double.valueOf(ypos.getText()));
