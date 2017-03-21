@@ -7,13 +7,15 @@ import java.util.ArrayList;
 
 public class Agent {
 
-    private double speed, turnSpeed, fieldOfViewAngle, fieldOfViewRange;
+    private double speed, turnSpeed, fieldOfViewAngle, fieldOfViewRange, captureRange = 10;
 
     private DoubleProperty xPos;
     private DoubleProperty yPos;
     private DoubleProperty turnAngle;
 
     private MovePolicy policy;
+
+    private boolean isActive = true;
 
     public Agent(double xPos, double yPos, double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange) {
         this.xPos = new SimpleDoubleProperty(xPos);
@@ -23,6 +25,17 @@ public class Agent {
         this.turnSpeed = turnSpeed;
         this.fieldOfViewAngle = fieldOfViewAngle;
         this.fieldOfViewRange = fieldOfViewRange;
+    }
+
+    public Agent(double xPos, double yPos, double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange, double captureRange) {
+        this.xPos = new SimpleDoubleProperty(xPos);
+        this.yPos = new SimpleDoubleProperty(yPos);
+        this.turnAngle = new SimpleDoubleProperty(0);
+        this.speed = speed;
+        this.turnSpeed = turnSpeed;
+        this.fieldOfViewAngle = fieldOfViewAngle;
+        this.fieldOfViewRange = fieldOfViewRange;
+        this.captureRange = captureRange;
     }
 
     public double getSpeed() {
@@ -101,8 +114,31 @@ public class Agent {
         this.policy = policy;
     }
 
-    public void move(MapRepresentation map, ArrayList<Agent> agents, long timeStep) {
-        Move nextMove = policy.getNextMove(map, agents, timeStep);
+    public boolean inRange(double x, double y) {
+        if (policy.evadingPolicy()) {
+            return false;
+        }
+        return Math.sqrt(Math.pow(xPos.get() - x, 2) + Math.pow(yPos.get() - y, 2)) <= captureRange;
+    }
+
+    public boolean isPursuer() {
+        return policy.pursuingPolicy();
+    }
+
+    public boolean isEvader() {
+        return policy.evadingPolicy();
+    }
+
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void move(MapRepresentation map, ArrayList<Agent> agents) {
+        Move nextMove = policy.getNextMove(map, agents);
         xPos.set(xPos.get() + nextMove.getXDelta());
         yPos.set(yPos.get() + nextMove.getYDelta());
         turnAngle.set(turnAngle.get() + nextMove.getTurnDelta());

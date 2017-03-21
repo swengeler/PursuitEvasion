@@ -44,32 +44,37 @@ public class Simulation {
                 // should probably also have stuff like time elapsed since last step
                 // so the agent knows how far they can move
                 // maybe better?: define a static delay between steps that is enforced
-                a.move(map, agents, timeStep);
+                if (a.isActive()) {
+                    a.move(map, agents);
+                }
                 // update UI
             }
+
             // check whether any new evaders have been captured
-            /*for (Agent a : agents) {
-                if (a.isEvader()) {
-                    for (every pursuer) {
-                        if (a is in capture range of the current pursuer) {
-                            removeFromActiveAgents(a);
+            for (Agent a1 : agents) {
+                if (a1.isEvader()) {
+                    for (Agent a2 : agents) {
+                        if (a2.isPursuer() && a2.inRange(a1.getXPos(), a1.getYPos())) {
+                            // remove captured agent
+                            a1.setActive(false);
                         }
                     }
                 }
-            }*/
-            // check whether all evaders are captured
-            boolean simulationOver = false;
-            /*for (Agent a : agents) {
-                if (a.isEvader()) {
-                    simulationOver = true;
-                }
-            }*/
+            }
 
-            /*boolean simulationOver = checkSimulationOver();
+            // check whether all evaders are captured
+            boolean simulationOver = true;
+            for (Agent a : agents) {
+                if (a.isEvader() && a.isActive()) {
+                    simulationOver = false;
+                }
+            }
+
             if (simulationOver) {
-                // do things
-                simulationRunning = false;
-            }*/
+                simulationTimer.stop();
+                // send message to UI
+                System.out.println("All evaders captured");
+            }
         });
     }
 

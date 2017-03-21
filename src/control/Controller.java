@@ -40,7 +40,7 @@ public class Controller {
         for (VisualAgent a : visualAgents) {
             AgentSettings s = a.getSettings();
             temp = new Agent(s.getX(), s.getY(), s.getSpeed(), s.getTurnSpeed(), s.getFieldOfViewAngle(), s.getFieldOfViewRange());
-            temp.setPolicy(new ShittyMovePolicy(temp, mapRepresentation));
+            temp.setPolicy(new ShittyMovePolicy(temp, s.isPursuing(), mapRepresentation));
             a.centerXProperty().bind(temp.xPosProperty());
             a.centerYProperty().bind(temp.yPosProperty());
             a.turnAngleProperty().bind(temp.turnAngleProperty());
@@ -66,14 +66,14 @@ public class Controller {
         Agent temp;
         for (Circle c : pursuers) {
             temp = new Agent(c.getCenterX(), c.getCenterY(), 100, 10, 10, 10);
-            temp.setPolicy(new ShittyMovePolicy(temp, mapRepresentation));
+            temp.setPolicy(new ShittyMovePolicy(temp, false, mapRepresentation));
             c.centerXProperty().bind(temp.xPosProperty());
             c.centerYProperty().bind(temp.yPosProperty());
             agents.add(temp);
         }
         for (Circle c : evaders) {
             temp = new Agent(c.getCenterX(), c.getCenterY(), 100, 10, 10, 10);
-            temp.setPolicy(new ShittyMovePolicy(temp, mapRepresentation));
+            temp.setPolicy(new ShittyMovePolicy(temp, false, mapRepresentation));
             c.centerXProperty().bind(temp.xPosProperty());
             c.centerYProperty().bind(temp.yPosProperty());
             agents.add(temp);

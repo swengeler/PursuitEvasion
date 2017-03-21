@@ -27,7 +27,7 @@ import java.util.Optional;
 
 public class Main extends Application {
 
-    enum ProgramState {
+    private enum ProgramState {
         MAP_EDITING, AGENT_PLACING, SIMULATION
     }
 
@@ -238,6 +238,16 @@ public class Main extends Application {
             } else {
                 sim.pause();
             }
+        });
+
+        Slider slider = new Slider(0, 200, 100);
+        slider.setShowTickMarks(true);
+        slider.setShowTickLabels(true);
+        slider.setMajorTickUnit(40);
+        menu.getChildren().add(slider);
+
+        slider.valueProperty().addListener((ov, oldValue, newValue) -> {
+            Controller.getSimulation().setTimeStep((int) (double) newValue);
         });
 
         pursuers = new ArrayList<>();
@@ -514,6 +524,9 @@ public class Main extends Application {
                             fovAngle.setText(String.valueOf(va.getSettings().getFieldOfViewAngle()));
                             TextField fovRange = new TextField();
                             fovRange.setText(String.valueOf(va.getSettings().getFieldOfViewRange()));
+                            ComboBox<String> agentType = new ComboBox<>();
+                            agentType.getItems().addAll("Pursuer", "Evader");
+                            agentType.setValue(va.getSettings().isPursuing() ? "Pursuer" : "Evader");
 
                             grid.add(new Label("X:"), 0, 0);
                             grid.add(xpos, 1, 0);
@@ -527,6 +540,8 @@ public class Main extends Application {
                             grid.add(fovAngle, 1, 4);
                             grid.add(new Label("FOV Range:"), 0, 5);
                             grid.add(fovRange, 1, 5);
+                            grid.add(new Label("Type:"), 0, 6);
+                            grid.add(agentType, 1, 6);
 
                             Node applyButton = dialog.getDialogPane().lookupButton(applyType);
 
@@ -545,6 +560,7 @@ public class Main extends Application {
                                     s.setY(Double.valueOf(ypos.getText()));
                                     s.setFieldOfViewAngle(Double.valueOf(fovAngle.getText()));
                                     s.setFieldOfViewRange(Double.valueOf(fovRange.getText()));
+                                    s.setPursuing(agentType.getValue().equals("Pursuer"));
                                     return s;
                                 }
                                 return null;
@@ -564,7 +580,7 @@ public class Main extends Application {
 
                                         a.setSpeed(s.getSpeed());
                                         a.setTurnSpeed(s.getTurnSpeed());
-                                        System.out.println("Set succesfully");
+                                        System.out.println("Set successfully");
                                     }
                                 } else {
                                     //before start

@@ -64,6 +64,19 @@ public class VisualAgent extends Group {
 
     public void setSettings(AgentSettings settings) {
         this.settings = settings;
+
+        agentBody.setCenterX(settings.getX());
+        agentBody.setCenterY(settings.getY());
+        fieldOfViewRange.set(settings.getFieldOfViewRange());
+        fieldOfViewAngle.set(settings.getFieldOfViewAngle());
+
+        if (settings.isPursuing()) {
+            agentBody.setFill(Color.PALEVIOLETRED);
+            fieldOfView.setFill(Color.ORANGERED.deriveColor(1, 1, 1, 0.3));
+        } else {
+            agentBody.setFill(Color.LIGHTBLUE);
+            fieldOfView.setFill(Color.AQUA.deriveColor(1, 1, 1, 0.3));
+        }
     }
 
     public AgentSettings getSettings() {

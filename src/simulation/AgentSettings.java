@@ -1,11 +1,10 @@
 package simulation;
 
-/**
- * Created by Jyr on 3/18/2017.
- */
 public class AgentSettings {
 
     private double x, y, speed, turnSpeed, fieldOfViewAngle, fieldOfViewRange;
+
+    private boolean pursuing;
 
     public AgentSettings(double speed, double turnSpeed) {
         this.speed = speed;
@@ -58,6 +57,14 @@ public class AgentSettings {
 
     public void setFieldOfViewRange(double fieldOfViewRange) {
         this.fieldOfViewRange = fieldOfViewRange;
+    }
+
+    public boolean isPursuing() {
+        return pursuing;
+    }
+
+    public void setPursuing(boolean pursuing) {
+        this.pursuing = pursuing;
     }
 
 }

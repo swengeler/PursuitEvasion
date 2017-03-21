@@ -8,10 +8,21 @@ public abstract class MovePolicy {
 
     protected Agent agent;
 
-    public MovePolicy(Agent agent) {
+    protected boolean pursuing;
+
+    public MovePolicy(Agent agent, boolean pursuing) {
         this.agent = agent;
+        this.pursuing = pursuing;
     }
 
-    abstract Move getNextMove(MapRepresentation map, ArrayList<Agent> agents, long timeStep);
+    public abstract Move getNextMove(MapRepresentation map, ArrayList<Agent> agents);
+
+    public boolean pursuingPolicy() {
+        return pursuing;
+    }
+
+    public boolean evadingPolicy() {
+        return !pursuing;
+    }
 
 }
