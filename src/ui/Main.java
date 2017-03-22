@@ -527,6 +527,9 @@ public class Main extends Application {
                             ComboBox<String> agentType = new ComboBox<>();
                             agentType.getItems().addAll("Pursuer", "Evader");
                             agentType.setValue(va.getSettings().isPursuing() ? "Pursuer" : "Evader");
+                            ComboBox<String> agentPolicy = new ComboBox<>();
+                            agentPolicy.getItems().addAll("Loser policy");
+                            agentPolicy.setValue("Loser policy");
 
                             grid.add(new Label("X:"), 0, 0);
                             grid.add(xpos, 1, 0);
@@ -542,6 +545,8 @@ public class Main extends Application {
                             grid.add(fovRange, 1, 5);
                             grid.add(new Label("Type:"), 0, 6);
                             grid.add(agentType, 1, 6);
+                            grid.add(new Label("Policy:"), 0, 7);
+                            grid.add(agentPolicy, 1, 7);
 
                             Node applyButton = dialog.getDialogPane().lookupButton(applyType);
 
