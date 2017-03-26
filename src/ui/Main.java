@@ -196,10 +196,10 @@ public class Main extends Application {
             RevealedMap.showMapDebug(pane);
         });
         //menu.getChildren().add(theBestTestButton);
-        Button simulationButton = new Button("Better simulation");
+        /*Button simulationButton = new Button("Better simulation");
         simulationButton.setOnAction(e -> {
             Controller.betterTest(mapPolygons, pursuers, evaders);
-        });
+        });*/
         Button convertButton = new Button("Print Grid");
         convertButton.setOnAction(e -> {
             GridConversion.convert(mapPolygons, pursuers, evaders, CELL_SIZE);
@@ -225,6 +225,7 @@ public class Main extends Application {
                 } else {
                     Controller.theBestTest(mapPolygons, visualAgents);
                     RevealedMap.showMapDebug(pane);
+                    currentState = ProgramState.SIMULATION;
                 }
             } else {
                 sim.unPause();
@@ -374,6 +375,10 @@ public class Main extends Application {
             }
         });
         pane.setOnMousePressed(e -> {
+            if (currentState == ProgramState.SIMULATION) {
+                return;
+            }
+            System.out.println("Not simulation");
             if (e.getButton() == MouseButton.PRIMARY) {
                 if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {
                     if (!e.isPrimaryButtonDown() || (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY()))) {
@@ -491,13 +496,19 @@ public class Main extends Application {
                     return;
                 }
 
-                for (VisualAgent va : visualAgents) {
+                /*for (IntegerProperty i = new SimpleIntegerProperty(0); i.get() < visualAgents.size(); i.set(i.get() + 1)) {
+
+                }*/
+
+                for (int i = 0; i < visualAgents.size(); i++) {
+                    VisualAgent va = visualAgents.get(i);
                     Circle c = va.getAgentBody();
                     if (c.contains(e.getX(), e.getY())) {
                         //contains agent
                         ContextMenu contextMenu = new ContextMenu();
                         MenuItem editItem = new MenuItem("Edit");
-                        contextMenu.getItems().add(editItem);
+                        MenuItem deleteItem = new MenuItem("Delete");
+                        contextMenu.getItems().addAll(editItem, deleteItem);
 
                         editItem.setOnAction(ae -> {
                             Dialog<AgentSettings> dialog = new Dialog<>();
@@ -513,9 +524,9 @@ public class Main extends Application {
                             grid.setPadding(new Insets(10, 10, 10, 10));
 
                             TextField xpos = new TextField();
-                            xpos.setText(String.valueOf(va.getSettings().getX()));
+                            xpos.setText(String.valueOf(va.getSettings().getXPos()));
                             TextField ypos = new TextField();
-                            ypos.setText(String.valueOf(va.getSettings().getY()));
+                            ypos.setText(String.valueOf(va.getSettings().getYPos()));
                             TextField speed = new TextField();
                             speed.setText(String.valueOf(va.getSettings().getSpeed()));
                             TextField turnSpeed = new TextField();
@@ -560,12 +571,15 @@ public class Main extends Application {
                                             fovAngle.getText().isEmpty() || fovRange.getText().isEmpty()) {
                                         return null;
                                     }
-                                    AgentSettings s = new AgentSettings(Double.valueOf(speed.getText()), Double.valueOf(turnSpeed.getText()));
-                                    s.setX(Double.valueOf(xpos.getText()));
-                                    s.setY(Double.valueOf(ypos.getText()));
+                                    AgentSettings s = new AgentSettings();
+                                    s.setSpeed(Double.valueOf(speed.getText()));
+                                    s.setTurnSpeed(Double.valueOf(turnSpeed.getText()));
+                                    s.setXPos(Double.valueOf(xpos.getText()));
+                                    s.setYPos(Double.valueOf(ypos.getText()));
                                     s.setFieldOfViewAngle(Double.valueOf(fovAngle.getText()));
                                     s.setFieldOfViewRange(Double.valueOf(fovRange.getText()));
                                     s.setPursuing(agentType.getValue().equals("Pursuer"));
+                                    s.setMovePolicy(agentPolicy.getValue());
                                     return s;
                                 }
                                 return null;
@@ -574,29 +588,13 @@ public class Main extends Application {
                             Optional<AgentSettings> result = dialog.showAndWait();
 
                             result.ifPresent(res -> {
-                                Simulation sim = Controller.getSimulation();
-                                if (sim != null) {
-                                    va.setSettings(res);
-                                    AgentSettings s = va.getSettings();
-                                    Agent a = sim.getAgent(va.getCenterX(), va.getCenterY());
-                                    if (s != null && a != null) {
-                                        //fix so that you can edit settings before start of simulation
-                                        System.out.println("Found agent");
-
-                                        a.setSpeed(s.getSpeed());
-                                        a.setTurnSpeed(s.getTurnSpeed());
-                                        System.out.println("Set successfully");
-                                    }
-                                } else {
-                                    //before start
-                                    AgentSettings s = va.getSettings();
-                                    if (s != null) {
-                                        va.setSettings(res);
-                                        System.out.println("Found agent pre sim");
-                                        System.out.println("Set agent pre sim");
-                                    }
-                                }
+                                va.adoptSettings(res);
                             });
+                        });
+
+                        deleteItem.setOnAction(ae -> {
+                            pane.getChildren().remove(va);
+                            visualAgents.remove(va);
                         });
 
                         contextMenu.show(c, e.getScreenX(), e.getScreenY());
@@ -638,6 +636,10 @@ public class Main extends Application {
         mapPolygons.add(currentMapPolygon);
         pane.getChildren().add(currentMapPolygon);
         MapPolygon.getAllAnchors().clear();
+        visualAgents.clear();
+        pursuers.clear();
+        evaders.clear();
+        Controller.setSimulation(null);
     }
 
     private void saveMapOnly() {
@@ -676,8 +678,15 @@ public class Main extends Application {
                     out.println();
                 }
                 out.println("agents");
+                AgentSettings s;
                 for (VisualAgent a : visualAgents) {
-                    out.println(a.getCenterX() + " " + a.getCenterY() + " " + a.getFieldOfViewAngle() + " " + a.getFieldOfViewRange());
+                    s = a.getSettings();
+                    out.print(s.getXPos() + " " + s.getYPos() + " ");
+                    out.print(s.getSpeed() + " " + s.getTurnSpeed() + " ");
+                    out.print(s.getTurnAngle() + " " + s.getFieldOfViewAngle() + " ");
+                    out.print(s.getFieldOfViewRange() + " ");
+                    out.print(s.isPursuing() + " ");
+                    out.println(s.getMovePolicy());
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();

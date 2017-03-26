@@ -25,6 +25,7 @@ public class Controller {
     }
 
     public static void theBestTest(ArrayList<MapPolygon> map, ArrayList<VisualAgent> visualAgents) {
+        // converting the map
         ArrayList<Polygon> polygons = new ArrayList<>();
         for (MapPolygon p : map) {
             polygons.add(p.getPolygon());
@@ -35,23 +36,27 @@ public class Controller {
         }
         MapRepresentation mapRepresentation = new GridMapRepresentation(polygons.get(0), subList);
 
+        // adding internal representations of the agents
         ArrayList<Agent> agents = new ArrayList<>();
         Agent temp;
         for (VisualAgent a : visualAgents) {
-            AgentSettings s = a.getSettings();
-            temp = new Agent(s.getX(), s.getY(), s.getSpeed(), s.getTurnSpeed(), s.getFieldOfViewAngle(), s.getFieldOfViewRange());
+            temp = new Agent(a.getSettings());
+            temp.setPolicy(mapRepresentation);
+            agents.add(temp);
+            /*AgentSettings s = a.getSettings();
+            temp = new Agent(s.getXPos(), s.getYPos(), s.getSpeed(), s.getTurnSpeed(), s.getFieldOfViewAngle(), s.getFieldOfViewRange());
             temp.setPolicy(new ShittyMovePolicy(temp, s.isPursuing(), mapRepresentation));
             a.centerXProperty().bind(temp.xPosProperty());
             a.centerYProperty().bind(temp.yPosProperty());
             a.turnAngleProperty().bind(temp.turnAngleProperty());
-            agents.add(temp);
+            agents.add(temp);*/
         }
 
         Simulation sim = new Simulation(mapRepresentation, agents);
         setSimulation(sim);
     }
 
-    public static void betterTest(ArrayList<MapPolygon> map, ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
+    /*public static void betterTest(ArrayList<MapPolygon> map, ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
         ArrayList<Polygon> polygons = new ArrayList<>();
         for (MapPolygon p : map) {
             polygons.add(p.getPolygon());
@@ -80,7 +85,7 @@ public class Controller {
         }
 
         Simulation sim = new Simulation(mapRepresentation, agents);
-    }
+    }*/
 
     public static void test(ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
         Simulation sim = new Simulation(pursuers, evaders);

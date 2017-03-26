@@ -71,8 +71,8 @@ public class Anchor extends Circle {
                     // check for intersection between lines
                     for (int i = 0; i < mp2.getPoints().size() - 2; i += 2) {
                         if (mp1.lineIntersects(new Line(mp2.getPoints().get(i), mp2.getPoints().get(i + 1), mp2.getPoints().get(i + 2), mp2.getPoints().get(i + 3)))) {
-                            System.out.println("e.getX() = " + e.getX() + ", lastLegalX = " + lastLegalX);
-                            System.out.println("e.getY() = " + e.getY() + ", lastLegalY = " + lastLegalY);
+                            System.out.println("e.getXPos() = " + e.getXPos() + ", lastLegalX = " + lastLegalX);
+                            System.out.println("e.getYPos() = " + e.getYPos() + ", lastLegalY = " + lastLegalY);
                             setCenterX(lastLegalX - dragDelta.x);
                             setCenterY(lastLegalY - dragDelta.y);
                             return;
@@ -88,10 +88,10 @@ public class Anchor extends Circle {
                     break;
                 }
             }
-            if (!anchorBelongsToBorder && !Main.mapPolygons.get(0).contains(e.getX(), e.getY())) {
-                //Point2D intersectionPoint = Main.mapPolygons.get(0).lineIntersectionPoint(new Line(getCenterX() - 0.1 * (e.getX() - getCenterX()), getCenterY() - 0.1 * (e.getY() - getCenterY()), e.getX(), e.getY()));
-                //setCenterX(intersectionPoint.getX());
-                //setCenterY(intersectionPoint.getY());
+            if (!anchorBelongsToBorder && !Main.mapPolygons.get(0).contains(e.getXPos(), e.getYPos())) {
+                //Point2D intersectionPoint = Main.mapPolygons.get(0).lineIntersectionPoint(new Line(getCenterX() - 0.1 * (e.getXPos() - getCenterX()), getCenterY() - 0.1 * (e.getYPos() - getCenterY()), e.getXPos(), e.getYPos()));
+                //setCenterX(intersectionPoint.getXPos());
+                //setCenterY(intersectionPoint.getYPos());
                 return;
             }*/
             double newX = e.getX() + dragDelta.x;

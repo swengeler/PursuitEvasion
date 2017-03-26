@@ -1,109 +1,75 @@
 package simulation;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-
 import java.util.ArrayList;
 
 public class Agent {
 
-    private double speed, turnSpeed, fieldOfViewAngle, fieldOfViewRange, captureRange = 10;
+    private double captureRange = 10;
 
-    private DoubleProperty xPos;
-    private DoubleProperty yPos;
-    private DoubleProperty turnAngle;
+    private AgentSettings settings;
 
     private MovePolicy policy;
 
     private boolean isActive = true;
 
-    public Agent(double xPos, double yPos, double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange) {
-        this.xPos = new SimpleDoubleProperty(xPos);
-        this.yPos = new SimpleDoubleProperty(yPos);
-        this.turnAngle = new SimpleDoubleProperty(0);
-        this.speed = speed;
-        this.turnSpeed = turnSpeed;
-        this.fieldOfViewAngle = fieldOfViewAngle;
-        this.fieldOfViewRange = fieldOfViewRange;
-    }
-
-    public Agent(double xPos, double yPos, double speed, double turnSpeed, double fieldOfViewAngle, double fieldOfViewRange, double captureRange) {
-        this.xPos = new SimpleDoubleProperty(xPos);
-        this.yPos = new SimpleDoubleProperty(yPos);
-        this.turnAngle = new SimpleDoubleProperty(0);
-        this.speed = speed;
-        this.turnSpeed = turnSpeed;
-        this.fieldOfViewAngle = fieldOfViewAngle;
-        this.fieldOfViewRange = fieldOfViewRange;
-        this.captureRange = captureRange;
+    public Agent(AgentSettings agentSettings) {
+        settings = agentSettings;
     }
 
     public double getSpeed() {
-        return speed;
+        return settings.getSpeed();
     }
 
     public void setSpeed(double speed) {
-        this.speed = speed;
+        settings.setSpeed(speed);
     }
 
     public double getTurnSpeed() {
-        return turnSpeed;
+        return settings.getTurnSpeed();
     }
 
     public void setTurnSpeed(double turnSpeed) {
-        this.turnSpeed = turnSpeed;
+        settings.setTurnSpeed(turnSpeed);
     }
 
     public double getTurnAngle() {
-        return turnAngle.get();
+        return settings.getTurnAngle();
     }
 
     public void setTurnAngle(double turnAngle) {
-        this.turnAngle.set(turnAngle);
+        settings.setTurnAngle(turnAngle);
     }
 
     public double getFieldOfViewAngle() {
-        return fieldOfViewAngle;
+        return settings.getFieldOfViewAngle();
     }
 
     public void setFieldOfViewAngle(double fieldOfViewAngle) {
-        this.fieldOfViewAngle = fieldOfViewAngle;
+        settings.setFieldOfViewAngle(fieldOfViewAngle);
     }
 
     public double getFieldOfViewRange() {
-        return fieldOfViewRange;
+        return settings.getFieldOfViewRange();
     }
 
     public void setFieldOfViewRange(double fieldOfViewRange) {
-        this.fieldOfViewRange = fieldOfViewRange;
+        settings.setFieldOfViewRange(fieldOfViewRange);
     }
 
     public double getXPos() {
-        return xPos.get();
+        return settings.getXPos();
     }
 
     public void setXPos(double xPos) {
-        this.xPos.set(xPos);
+        settings.setXPos(xPos);
     }
 
     public double getYPos() {
-        return yPos.get();
+        return settings.getYPos();
     }
 
     public void setYPos(double yPos) {
-        this.yPos.set(yPos);
-    }
-
-    public DoubleProperty xPosProperty() {
-        return xPos;
-    }
-
-    public DoubleProperty yPosProperty() {
-        return yPos;
-    }
-
-    public DoubleProperty turnAngleProperty() {
-        return turnAngle;
+        settings.setYPos(yPos);
     }
 
     public MovePolicy getPolicy() {
@@ -112,13 +78,18 @@ public class Agent {
 
     public void setPolicy(MovePolicy policy) {
         this.policy = policy;
+        settings.setMovePolicy(policy.toString());
+    }
+
+    public void setPolicy(MapRepresentation map) {
+        policy = new ShittyMovePolicy(this, settings.isPursuing(), map);
     }
 
     public boolean inRange(double x, double y) {
         if (policy.evadingPolicy()) {
             return false;
         }
-        return Math.sqrt(Math.pow(xPos.get() - x, 2) + Math.pow(yPos.get() - y, 2)) <= captureRange;
+        return Math.sqrt(Math.pow(getXPos() - x, 2) + Math.pow(getYPos() - y, 2)) <= captureRange;
     }
 
     public boolean isPursuer() {
@@ -139,9 +110,9 @@ public class Agent {
 
     public void move(MapRepresentation map, ArrayList<Agent> agents) {
         Move nextMove = policy.getNextMove(map, agents);
-        xPos.set(xPos.get() + nextMove.getXDelta());
-        yPos.set(yPos.get() + nextMove.getYDelta());
-        turnAngle.set(turnAngle.get() + nextMove.getTurnDelta());
+        setXPos(getXPos() + nextMove.getXDelta());
+        setYPos(getYPos() + nextMove.getYDelta());
+        setTurnAngle(getTurnAngle() + nextMove.getTurnDelta());
     }
 
 }
