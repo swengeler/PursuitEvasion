@@ -119,6 +119,7 @@ public class Main extends Application {
         pane.getChildren().add(currentMapPolygon);
         mapPolygons = new ArrayList<>();
         mapPolygons.add(currentMapPolygon);
+        visualAgents = new ArrayList<>();
         addListeners();
 
         Button clearMapButton = new Button("Clear map");
@@ -127,26 +128,7 @@ public class Main extends Application {
 
         Button placeAgentsButton = new Button("Start placing agents");
         placeAgentsButton.setOnAction(e -> {
-            if (currentState == ProgramState.MAP_EDITING && mapPolygons.size() > 0 && mapPolygons.get(0).isClosed()) {
-                currentState = ProgramState.AGENT_PLACING;
-                for (int i = 0; i < pane.getChildren().size(); i++) {
-                    if (pane.getChildren().get(i) instanceof Anchor) {
-                        pane.getChildren().remove(i);
-                        i--;
-                    }
-                }
-
-                Shape outerCover = new Rectangle(0, 0, 1920, 1080);
-                outerCover = Shape.subtract(outerCover, mapPolygons.get(0));
-                outerCover.setFill(Color.LIGHTGREY);
-                pane.getChildren().add(outerCover);
-
-                covers.add(outerCover);
-                for (int i = 1; i < mapPolygons.size(); i++) {
-                    mapPolygons.get(i).setFill(Color.LIGHTGREY);
-                    covers.add(mapPolygons.get(i));
-                }
-            }
+            initPlaceAgents();
         });
         menu.getChildren().add(placeAgentsButton);
 
@@ -350,6 +332,240 @@ public class Main extends Application {
 
     }
 
+    private void initPlaceAgents() {
+        if (currentState == ProgramState.MAP_EDITING && mapPolygons.size() > 0 && mapPolygons.get(0).isClosed()) {
+            currentState = ProgramState.AGENT_PLACING;
+            for (int i = 0; i < pane.getChildren().size(); i++) {
+                if (pane.getChildren().get(i) instanceof Anchor) {
+                    pane.getChildren().remove(i);
+                    i--;
+                }
+            }
+
+            Shape outerCover = new Rectangle(0, 0, 1920, 1080);
+            outerCover = Shape.subtract(outerCover, mapPolygons.get(0));
+            outerCover.setFill(Color.LIGHTGREY);
+            pane.getChildren().add(outerCover);
+
+            covers.add(outerCover);
+            for (int i = 1; i < mapPolygons.size(); i++) {
+                mapPolygons.get(i).setFill(Color.LIGHTGREY);
+                covers.add(mapPolygons.get(i));
+            }
+        }
+    }
+
+    private void clearMap() {
+        currentState = ProgramState.MAP_EDITING;
+        pane.getChildren().clear();
+        pane.getChildren().add(indicatorLine);
+        mapPolygons.clear();
+        currentMapPolygon = new MapPolygon(pane);
+        mapPolygons.add(currentMapPolygon);
+        pane.getChildren().add(currentMapPolygon);
+        MapPolygon.getAllAnchors().clear();
+        visualAgents.clear();
+        pursuers.clear();
+        evaders.clear();
+        Controller.setSimulation(null);
+    }
+
+    private void saveMapOnly() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save the current map");
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Map data only file", "*.mdo"));
+        File selectedFile = fileChooser.showSaveDialog(stage);
+        if (selectedFile != null) {
+            // write map to file
+            try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
+                for (int i = 0; i < mapPolygons.size() - 1; i++) {
+                    for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
+                        out.print(mapPolygons.get(i).getPoints().get(j) + " ");
+                    }
+                    out.println();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void saveMapAndAgents() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save the current map");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map and agent data file", "*.maa"));
+        File selectedFile = fileChooser.showSaveDialog(stage);
+        if (selectedFile != null) {
+            try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
+                // write map to file
+                out.println("map");
+                for (int i = 0; i < mapPolygons.size() - 1; i++) {
+                    for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
+                        out.print(mapPolygons.get(i).getPoints().get(j) + " ");
+                    }
+                    out.println();
+                }
+                out.println("agents");
+                AgentSettings s;
+                for (VisualAgent a : visualAgents) {
+                    s = a.getSettings();
+                    out.print(s.getXPos() + " " + s.getYPos() + " ");
+                    out.print(s.getSpeed() + " " + s.getTurnSpeed() + " ");
+                    out.print(s.getTurnAngle() + " " + s.getFieldOfViewAngle() + " ");
+                    out.print(s.getFieldOfViewRange() + " ");
+                    out.print(s.isPursuing() + " ");
+                    out.println(s.getMovePolicy());
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private void loadMap() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Load a map");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map data files", "*.mdo", "*.maa"));
+        File selectedFile = fileChooser.showOpenDialog(stage);
+        if (selectedFile != null) {
+            clearMap();
+            try (BufferedReader in = new BufferedReader(new FileReader(selectedFile))) {
+                // read in the map and file
+                String line = in.readLine();
+                if (line.contains("map")) {
+                    //currentState = ProgramState.AGENT_PLACING;
+                    // map data
+                    System.out.println(line);
+                    String[] coords;
+                    double[] coordsDouble;
+                    while ((line = in.readLine()) != null && !line.contains("agents")) {
+                        coords = line.split(" ");
+                        coordsDouble = new double[coords.length];
+                        for (int i = 0; i < coords.length; i++) {
+                            coordsDouble[i] = Double.parseDouble(coords[i]);
+                        }
+
+                        for (int i = 0; i < coords.length; i += 2) {
+                            // adding the polygons
+                            Anchor a = null;
+                            boolean connectedToOld = false;
+
+                            for (Anchor oldAnchor : MapPolygon.getAllAnchors()) {
+                                if (oldAnchor.getCenterX() == coordsDouble[i] && oldAnchor.getCenterY() == coordsDouble[i + 1]) {
+                                    a = oldAnchor;
+                                    connectedToOld = true;
+                                    break;
+                                }
+                            }
+
+                            if (!connectedToOld) {
+                                DoubleProperty xProperty = new SimpleDoubleProperty(coordsDouble[i]);
+                                DoubleProperty yProperty = new SimpleDoubleProperty(coordsDouble[i + 1]);
+                                a = new Anchor(Color.GOLD, xProperty, yProperty);
+                            }
+
+                            currentMapPolygon.addAnchor(a);
+
+                            if (connectedToOld && a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
+                                // connected to first point to close the polygon
+                                StrokeTransition st = new StrokeTransition(new Duration(100), currentMapPolygon, Color.BLUE, Color.ORANGE);
+                                st.play();
+                                currentMapPolygon = new MapPolygon(pane);
+                                mapPolygons.add(currentMapPolygon);
+                                pane.getChildren().add(currentMapPolygon);
+                            }
+                        }
+                    }
+                    initPlaceAgents();
+                    // read agent data
+                    String[] settings;
+                    while ((line = in.readLine()) != null) {
+                        settings = line.split(" ");
+                        if (settings.length != 9) {
+                            System.out.println("Failed to load agents.");
+                            return;
+                        }
+                        AgentSettings agentSettings = new AgentSettings();
+                        agentSettings.setXPos(Double.parseDouble(settings[0]));
+                        agentSettings.setYPos(Double.parseDouble(settings[1]));
+                        agentSettings.setSpeed(Double.parseDouble(settings[2]));
+                        agentSettings.setTurnSpeed(Double.parseDouble(settings[3]));
+                        agentSettings.setTurnAngle(Double.parseDouble(settings[4]));
+                        agentSettings.setFieldOfViewAngle(Double.parseDouble(settings[5]));
+                        agentSettings.setFieldOfViewRange(Double.parseDouble(settings[6]));
+                        agentSettings.setPursuing(Boolean.parseBoolean(settings[7]));
+                        agentSettings.setMovePolicy(settings[8]);
+
+                        VisualAgent visualAgent = new VisualAgent();
+                        visualAgent.adoptSettings(agentSettings);
+                        visualAgents.add(visualAgent);
+                        pane.getChildren().add(visualAgent);
+                    }
+                    for (MapPolygon p : mapPolygons) {
+                        p.toFront();
+                    }
+                    for (Shape c : covers) {
+                        c.toFront();
+                    }
+                } else {
+                    currentState = ProgramState.MAP_EDITING;
+                    // map data only
+                    String[] coords;
+                    double[] coordsDouble;
+                    do {
+                        coords = line.split(" ");
+                        coordsDouble = new double[coords.length];
+                        for (int i = 0; i < coords.length; i++) {
+                            coordsDouble[i] = Double.parseDouble(coords[i]);
+                        }
+
+                        for (int i = 0; i < coords.length; i += 2) {
+                            // adding the polygons
+                            Anchor a = null;
+                            boolean connectedToOld = false;
+
+                            for (Anchor oldAnchor : MapPolygon.getAllAnchors()) {
+                                if (oldAnchor.getCenterX() == coordsDouble[i] && oldAnchor.getCenterY() == coordsDouble[i + 1]) {
+                                    a = oldAnchor;
+                                    connectedToOld = true;
+                                    break;
+                                }
+                            }
+
+                            if (!connectedToOld) {
+                                DoubleProperty xProperty = new SimpleDoubleProperty(coordsDouble[i]);
+                                DoubleProperty yProperty = new SimpleDoubleProperty(coordsDouble[i + 1]);
+                                a = new Anchor(Color.GOLD, xProperty, yProperty);
+                            }
+
+                            currentMapPolygon.addAnchor(a);
+
+                            if (connectedToOld && a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
+                                // connected to first point to close the polygon
+                                StrokeTransition st = new StrokeTransition(new Duration(100), currentMapPolygon, Color.BLUE, Color.ORANGE);
+                                st.play();
+                                currentMapPolygon = new MapPolygon(pane);
+                                mapPolygons.add(currentMapPolygon);
+                                pane.getChildren().add(currentMapPolygon);
+                            }
+                        }
+                    } while ((line = in.readLine()) != null);
+
+                    indicatorLine.setVisible(false);
+                }
+                System.out.println("After loading: " + mapPolygons.size());
+                for (MapPolygon m : mapPolygons) {
+                    System.out.println("\nPolygon: ");
+                    for (int i = 0; i < m.getPoints().size(); i += 2) {
+                        System.out.println(m.getPoints().get(i) + " " + m.getPoints().get(i + 1));
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
     private void addListeners() {
         PaneEvents paneEvents = new PaneEvents(pane);
         outerLayout.addEventFilter(MouseEvent.MOUSE_PRESSED, paneEvents.getOnMousePressedEventHandler());
@@ -539,8 +755,8 @@ public class Main extends Application {
                             agentType.getItems().addAll("Pursuer", "Evader");
                             agentType.setValue(va.getSettings().isPursuing() ? "Pursuer" : "Evader");
                             ComboBox<String> agentPolicy = new ComboBox<>();
-                            agentPolicy.getItems().addAll("Loser policy");
-                            agentPolicy.setValue("Loser policy");
+                            agentPolicy.getItems().addAll("Random policy");
+                            agentPolicy.setValue("Random policy");
 
                             grid.add(new Label("X:"), 0, 0);
                             grid.add(xpos, 1, 0);
@@ -579,7 +795,7 @@ public class Main extends Application {
                                     s.setFieldOfViewAngle(Double.valueOf(fovAngle.getText()));
                                     s.setFieldOfViewRange(Double.valueOf(fovRange.getText()));
                                     s.setPursuing(agentType.getValue().equals("Pursuer"));
-                                    s.setMovePolicy(agentPolicy.getValue());
+                                    s.setMovePolicy("random_policy");
                                     return s;
                                 }
                                 return null;
@@ -625,148 +841,6 @@ public class Main extends Application {
                 indicatorLine.setEndY(e.getY());
             }
         });
-    }
-
-    private void clearMap() {
-        currentState = ProgramState.MAP_EDITING;
-        pane.getChildren().clear();
-        pane.getChildren().add(indicatorLine);
-        mapPolygons.clear();
-        currentMapPolygon = new MapPolygon(pane);
-        mapPolygons.add(currentMapPolygon);
-        pane.getChildren().add(currentMapPolygon);
-        MapPolygon.getAllAnchors().clear();
-        visualAgents.clear();
-        pursuers.clear();
-        evaders.clear();
-        Controller.setSimulation(null);
-    }
-
-    private void saveMapOnly() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save the current map");
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Map data only file", "*.mdo"));
-        File selectedFile = fileChooser.showSaveDialog(stage);
-        if (selectedFile != null) {
-            // write map to file
-            try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
-                for (int i = 0; i < mapPolygons.size() - 1; i++) {
-                    for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
-                        out.print(mapPolygons.get(i).getPoints().get(j) + " ");
-                    }
-                    out.println();
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
-    private void saveMapAndAgents() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save the current map");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map and agent data file", "*.maa"));
-        File selectedFile = fileChooser.showSaveDialog(stage);
-        if (selectedFile != null) {
-            try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
-                // write map to file
-                out.println("map");
-                for (int i = 0; i < mapPolygons.size() - 1; i++) {
-                    for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
-                        out.print(mapPolygons.get(i).getPoints().get(j) + " ");
-                    }
-                    out.println();
-                }
-                out.println("agents");
-                AgentSettings s;
-                for (VisualAgent a : visualAgents) {
-                    s = a.getSettings();
-                    out.print(s.getXPos() + " " + s.getYPos() + " ");
-                    out.print(s.getSpeed() + " " + s.getTurnSpeed() + " ");
-                    out.print(s.getTurnAngle() + " " + s.getFieldOfViewAngle() + " ");
-                    out.print(s.getFieldOfViewRange() + " ");
-                    out.print(s.isPursuing() + " ");
-                    out.println(s.getMovePolicy());
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
-    private void loadMap() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Load a map");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map data files", "*.mdo", "*.maa"));
-        File selectedFile = fileChooser.showOpenDialog(stage);
-        if (selectedFile != null) {
-            clearMap();
-            try (BufferedReader in = new BufferedReader(new FileReader(selectedFile))) {
-                // read in the map and file
-                String line = in.readLine();
-                if (line.contains("map")) {
-                    currentState = ProgramState.AGENT_PLACING;
-                    // map and agent data
-                    while ((line = in.readLine()) != null) {
-                        System.out.println(line);
-                    }
-                } else {
-                    currentState = ProgramState.MAP_EDITING;
-                    // map data only
-                    String[] coords;
-                    double[] coordsDouble;
-                    do {
-                        coords = line.split(" ");
-                        coordsDouble = new double[coords.length];
-                        for (int i = 0; i < coords.length; i++) {
-                            coordsDouble[i] = Double.parseDouble(coords[i]);
-                        }
-
-                        for (int i = 0; i < coords.length; i += 2) {
-                            // adding the polygons
-                            Anchor a = null;
-                            boolean connectedToOld = false;
-
-                            for (Anchor oldAnchor : MapPolygon.getAllAnchors()) {
-                                if (oldAnchor.getCenterX() == coordsDouble[i] && oldAnchor.getCenterY() == coordsDouble[i + 1]) {
-                                    a = oldAnchor;
-                                    connectedToOld = true;
-                                    break;
-                                }
-                            }
-
-                            if (!connectedToOld) {
-                                DoubleProperty xProperty = new SimpleDoubleProperty(coordsDouble[i]);
-                                DoubleProperty yProperty = new SimpleDoubleProperty(coordsDouble[i + 1]);
-                                a = new Anchor(Color.GOLD, xProperty, yProperty);
-                            }
-
-                            currentMapPolygon.addAnchor(a);
-
-                            if (connectedToOld && a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
-                                // connected to first point to close the polygon
-                                StrokeTransition st = new StrokeTransition(new Duration(100), currentMapPolygon, Color.BLUE, Color.ORANGE);
-                                st.play();
-                                currentMapPolygon = new MapPolygon(pane);
-                                mapPolygons.add(currentMapPolygon);
-                                pane.getChildren().add(currentMapPolygon);
-                            }
-                        }
-                    } while ((line = in.readLine()) != null);
-
-                    indicatorLine.setVisible(false);
-                }
-                System.out.println("After loading: " + mapPolygons.size());
-                for (MapPolygon m : mapPolygons) {
-                    System.out.println("\nPolygon: ");
-                    for (int i = 0; i < m.getPoints().size(); i += 2) {
-                        System.out.println(m.getPoints().get(i) + " " + m.getPoints().get(i + 1));
-                    }
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
     }
 
     public static void main(String[] args) {

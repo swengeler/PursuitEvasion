@@ -27,7 +27,7 @@ public class AgentSettings {
 
         pursuing = new SimpleBooleanProperty(false);
 
-        movePolicy = new SimpleStringProperty("Loser policy");
+        movePolicy = new SimpleStringProperty("random_policy");
     }
 
     public double getXPos() {
