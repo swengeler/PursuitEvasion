@@ -3,9 +3,9 @@ package simulation;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class ShittyMovePolicy extends MovePolicy {
+public class RandomMovePolicy extends MovePolicy {
 
-    public ShittyMovePolicy(Agent agent, boolean pursuing, MapRepresentation map) {
+    public RandomMovePolicy(Agent agent, boolean pursuing, MapRepresentation map) {
         super(agent, pursuing);
         revealedMap = new RevealedMap(map.getBorderPolygon(), map.getObstaclePolygons());
     }

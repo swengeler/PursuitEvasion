@@ -191,7 +191,7 @@ public class Main extends Application {
         CheckBox b = new CheckBox("To draw or\nnot to draw");
         addPoints.bind(b.selectedProperty());
         b.setSelected(true);
-        menu.getChildren().add(b);
+        //menu.getChildren().add(b);
 
         Button startSimulationButton = new Button("Start simulation");
         Button pauseSimulationButton = new Button("Pause simulation");
@@ -223,10 +223,11 @@ public class Main extends Application {
             }
         });
 
-        Slider slider = new Slider(0, 200, 100);
+        Slider slider = new Slider(0, 150, 100);
         slider.setShowTickMarks(true);
         slider.setShowTickLabels(true);
         slider.setMajorTickUnit(40);
+        slider.setMaxWidth(180);
         menu.getChildren().add(slider);
 
         slider.valueProperty().addListener((ov, oldValue, newValue) -> {

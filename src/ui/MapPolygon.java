@@ -102,8 +102,11 @@ public class MapPolygon extends Polyline {
 
     public Polygon getPolygon() {
         Polygon polygon = new Polygon();
-        polygon.getPoints().addAll(getPoints().subList(0, getPoints().size()));
-        return polygon;
+        if (getPoints().size() > 0) {
+            polygon.getPoints().addAll(getPoints().subList(0, getPoints().size() - 2));
+            return polygon;
+        }
+        return null;
     }
 
 }

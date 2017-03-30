@@ -82,7 +82,8 @@ public class Agent {
     }
 
     public void setPolicy(MapRepresentation map) {
-        policy = new ShittyMovePolicy(this, settings.isPursuing(), map);
+        //policy = new RandomMovePolicy(this, settings.isPursuing(), map);
+        policy = new FollowMovePolicy(this, settings.isPursuing(), map);
     }
 
     public boolean inRange(double x, double y) {

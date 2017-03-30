@@ -28,7 +28,9 @@ public class Controller {
         // converting the map
         ArrayList<Polygon> polygons = new ArrayList<>();
         for (MapPolygon p : map) {
-            polygons.add(p.getPolygon());
+            if (p.getPoints().size() > 0) {
+                polygons.add(p.getPolygon());
+            }
         }
         ArrayList<Polygon> subList = new ArrayList<>();
         for (int i = 1; i < map.size() - 1; i++) {
@@ -45,7 +47,7 @@ public class Controller {
             agents.add(temp);
             /*AgentSettings s = a.getSettings();
             temp = new Agent(s.getXPos(), s.getYPos(), s.getSpeed(), s.getTurnSpeed(), s.getFieldOfViewAngle(), s.getFieldOfViewRange());
-            temp.setPolicy(new ShittyMovePolicy(temp, s.isPursuing(), mapRepresentation));
+            temp.setPolicy(new RandomMovePolicy(temp, s.isPursuing(), mapRepresentation));
             a.centerXProperty().bind(temp.xPosProperty());
             a.centerYProperty().bind(temp.yPosProperty());
             a.turnAngleProperty().bind(temp.turnAngleProperty());
@@ -71,14 +73,14 @@ public class Controller {
         Agent temp;
         for (Circle c : pursuers) {
             temp = new Agent(c.getCenterX(), c.getCenterY(), 100, 10, 10, 10);
-            temp.setPolicy(new ShittyMovePolicy(temp, false, mapRepresentation));
+            temp.setPolicy(new RandomMovePolicy(temp, false, mapRepresentation));
             c.centerXProperty().bind(temp.xPosProperty());
             c.centerYProperty().bind(temp.yPosProperty());
             agents.add(temp);
         }
         for (Circle c : evaders) {
             temp = new Agent(c.getCenterX(), c.getCenterY(), 100, 10, 10, 10);
-            temp.setPolicy(new ShittyMovePolicy(temp, false, mapRepresentation));
+            temp.setPolicy(new RandomMovePolicy(temp, false, mapRepresentation));
             c.centerXProperty().bind(temp.xPosProperty());
             c.centerYProperty().bind(temp.yPosProperty());
             agents.add(temp);
