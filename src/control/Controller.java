@@ -43,7 +43,7 @@ public class Controller {
         Agent temp;
         for (VisualAgent a : visualAgents) {
             temp = new Agent(a.getSettings());
-            temp.setPolicy(mapRepresentation);
+            temp.setPolicy(mapRepresentation, a.getSettings().getMovePolicy());
             agents.add(temp);
             /*AgentSettings s = a.getSettings();
             temp = new Agent(s.getXPos(), s.getYPos(), s.getSpeed(), s.getTurnSpeed(), s.getFieldOfViewAngle(), s.getFieldOfViewRange());

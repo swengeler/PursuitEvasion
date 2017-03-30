@@ -53,7 +53,7 @@ public class VisualAgent extends Group {
         fieldOfView.radiusYProperty().bind(fieldOfViewRange);
         fieldOfView.lengthProperty().bind(fieldOfViewAngle);*/
 
-        getChildren().addAll(fieldOfView, agentBody);
+        getChildren().addAll(agentBody);
     }
 
     public void adoptSettings(AgentSettings agentSettings) {

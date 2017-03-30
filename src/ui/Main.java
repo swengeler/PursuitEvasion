@@ -756,7 +756,7 @@ public class Main extends Application {
                             agentType.getItems().addAll("Pursuer", "Evader");
                             agentType.setValue(va.getSettings().isPursuing() ? "Pursuer" : "Evader");
                             ComboBox<String> agentPolicy = new ComboBox<>();
-                            agentPolicy.getItems().addAll("Random policy");
+                            agentPolicy.getItems().addAll("Random policy", "Straight line policy");
                             agentPolicy.setValue("Random policy");
 
                             grid.add(new Label("X:"), 0, 0);
@@ -796,7 +796,12 @@ public class Main extends Application {
                                     s.setFieldOfViewAngle(Double.valueOf(fovAngle.getText()));
                                     s.setFieldOfViewRange(Double.valueOf(fovRange.getText()));
                                     s.setPursuing(agentType.getValue().equals("Pursuer"));
-                                    s.setMovePolicy("random_policy");
+                                    if (agentPolicy.getValue().equals("Random policy")) {
+                                        s.setMovePolicy("random_policy");
+                                    } else if (agentPolicy.getValue().equals("Straight line policy")) {
+                                        s.setMovePolicy("straight_line_policy");
+                                    }
+
                                     return s;
                                 }
                                 return null;

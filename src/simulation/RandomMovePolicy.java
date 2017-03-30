@@ -29,7 +29,7 @@ public class RandomMovePolicy extends MovePolicy {
             randAngle = (ThreadLocalRandom.current().nextInt(0, 360)) * agent.getTurnSpeed() /* * timeStep */ * 1 / 1000;
         }
         System.out.println(randDeltaX);
-        return new Move(randDeltaX, randDeltaY, randAngle);
+        return new Move(randDeltaX, randDeltaY, 0);
     }
 
 }

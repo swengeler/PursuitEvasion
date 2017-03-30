@@ -81,9 +81,14 @@ public class Agent {
         settings.setMovePolicy(policy.toString());
     }
 
-    public void setPolicy(MapRepresentation map) {
+    public void setPolicy(MapRepresentation map, String policyEncoding) {
+        if (policyEncoding.equals("random_policy")) {
+            policy = new RandomMovePolicy(this, settings.isPursuing(), map);
+        } else if (policyEncoding.equals("straight_line_policy")) {
+            policy = new StraightLineMovePolicy(this, settings.isPursuing(), map);
+        }
         //policy = new RandomMovePolicy(this, settings.isPursuing(), map);
-        policy = new FollowMovePolicy(this, settings.isPursuing(), map);
+        //policy = new FollowMovePolicy(this, settings.isPursuing(), map);
     }
 
     public boolean inRange(double x, double y) {
