@@ -32,6 +32,12 @@
             <artifactId>reactfx</artifactId>
             <version>2.0-M5</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.orbisgis/jdelaunay -->
+        <dependency>
+            <groupId>org.orbisgis</groupId>
+            <artifactId>jdelaunay</artifactId>
+            <version>0.5.2</version>
+        </dependency>
     </dependencies>
 
 </project>

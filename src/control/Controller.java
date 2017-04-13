@@ -89,12 +89,4 @@ public class Controller {
         Simulation sim = new Simulation(mapRepresentation, agents);
     }*/
 
-    public static void test(ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
-        Simulation sim = new Simulation(pursuers, evaders);
-    }
-
-    public static void testBack() {
-
-    }
-
 }

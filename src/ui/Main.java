@@ -19,11 +19,13 @@ import javafx.scene.shape.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.jdelaunay.delaunay.ConstrainedMesh;
+import org.jdelaunay.delaunay.error.DelaunayError;
+import org.jdelaunay.delaunay.geometries.*;
 import simulation.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.util.*;
 
 public class Main extends Application {
 
@@ -222,6 +224,42 @@ public class Main extends Application {
                 sim.pause();
             }
         });
+
+        Button triangulationButton = new Button("Show triangulation");
+        triangulationButton.setOnAction(e -> {
+            if (mapPolygons == null || mapPolygons.isEmpty()) {
+                System.out.println("Not enough data to construct simulation!");
+            } else {
+                try {
+                    ArrayList<DEdge> constraintEdges = new ArrayList<>();
+                    Polygon p;
+                    for (MapPolygon mp : mapPolygons) {
+                        p = mp.getPolygon();
+                        if (p != null) {
+                            for (int i = 0; i < p.getPoints().size(); i += 2) {
+                                constraintEdges.add(new DEdge(new DPoint(p.getPoints().get(i), p.getPoints().get(i + 1), 0), new DPoint(p.getPoints().get((i + 2) % p.getPoints().size()), p.getPoints().get((i + 3) % p.getPoints().size()), 0)));
+                            }
+                        }
+                    }
+                    ConstrainedMesh mesh = new ConstrainedMesh();
+                    mesh.setConstraintEdges(constraintEdges);
+                    mesh.processDelaunay();
+                    List<DTriangle> triangles = mesh.getTriangleList();
+
+                    for (DTriangle dt : triangles) {
+                        System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                        p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                        p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
+                        p.setFill(Color.WHITE.deriveColor(1, 1, 1, 0.1));
+                        p.setStrokeWidth(1);
+                        pane.getChildren().add(p);
+                    }
+                } catch (DelaunayError error) {
+                    error.printStackTrace();
+                }
+            }
+        });
+        menu.getChildren().add(triangulationButton);
 
         Slider slider = new Slider(0, 150, 100);
         slider.setShowTickMarks(true);
