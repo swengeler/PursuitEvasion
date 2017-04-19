@@ -1,8 +1,7 @@
 package simulation;
 
+import java.awt.*;
 import java.util.ArrayList;
-import java.awt.Point;
-import java.util.List;
 
 /**
  * Created by winstonnolten on 19/04/2017.
@@ -29,7 +28,7 @@ public class EvaderPolicy extends MovePolicy {
         Point evaderUp = new Point((int) agent.getXPos(), (int) agent.getYPos()-1);
         Point evaderDown = new Point((int) agent.getXPos(), (int) agent.getYPos()+1);
         Point evaderLeft = new Point((int) agent.getXPos()-1, (int) agent.getYPos());
-        Point evaderRight = new Point((int) agent.getXPos()+1, (int) agent.getYPos()-1);
+        Point evaderRight = new Point((int) agent.getXPos()+1, (int) agent.getYPos());
 
 
         Point[] evaderMoves = new Point[]{evaderUp, evaderDown, evaderLeft, evaderRight};
@@ -41,7 +40,7 @@ public class EvaderPolicy extends MovePolicy {
             double total = 0;
 
             for (Point pp: pursuerPoints) {
-                double dist = Math.sqrt(Math.pow(pp.getX() - p.getX(), 2), Math.pow(pp.getY() - p.getY(), 2);
+                double dist = Math.sqrt(Math.pow(pp.getX() - p.getX(), 2) + Math.pow(pp.getY() - p.getY(), 2));
                 total += dist;
             }
 
@@ -51,10 +50,19 @@ public class EvaderPolicy extends MovePolicy {
             }
         }
 
+        //check out of bounds
+
         if (winningPoint == 0) {
-
+            return new Move(0, agent.getSpeed() * 1/250, 0);
+        } else if (winningPoint == 1) {
+            return new Move(0, agent.getSpeed() * -1/250, 0);
+        } else if (winningPoint == 2) {
+            return new Move(agent.getSpeed() * -1/250, 0, 0);
+        } else if (winningPoint == 3) {
+            return new Move(agent.getSpeed() * 1/250, 0, 0);
+        } else {
+            System.out.println("No valid move found");
+            return null;
         }
-
-        return null;
     }
 }
