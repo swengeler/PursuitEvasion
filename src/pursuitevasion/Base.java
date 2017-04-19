@@ -74,6 +74,7 @@ public class Base extends Application {
 
             //add point
             points.add(c);
+            //System.out.println("New Point: " + c);
 
             //logic to add a new polygon -> remove possibleLine, points and lines, we start over again
             //only thing left over is the polygon
