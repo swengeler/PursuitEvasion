@@ -1,6 +1,7 @@
 package AdditionalOperations;
 
 
+import com.sun.javafx.geom.Vec2d;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Polygon;
@@ -78,6 +79,28 @@ public class VectorOperations {
                 return false; //Lines are parallel
             else {
 
+                //Find intersection
+                //q1 = q - p
+                //t = (q − p) × s / (r × s)
+                Point2D q1;
+                double rs, t;
+                rs = crossProduct(vec1.getDestination(), vec2.getDestination());
+                q1 = new Point2D(x3-x1, y3 - y1);
+
+                t = crossProduct(q1, vec1.getDestination()) / crossProduct(vec1.getDestination(), vec1.getDestination());
+
+
+                //p1 = p-q
+                //u =p1 × r / (r × s)
+                Point2D p1;
+                p1 = new Point2D(x1, y4-y2);
+                double u = crossProduct(p1, vec1.getDestination()) / crossProduct(vec2.getDestination(), vec1.getDestination());
+
+
+
+
+                //double t =
+
             }
         }
 
@@ -92,7 +115,23 @@ public class VectorOperations {
         return (v1.getX() * v2.getX()) + (v1.getY() * v2.getY());
     }
 
+    public static double crossProduct(Point2D p1, Point2D p2)    {
+        pointVector v1 = new pointVector(p1.getX(), p1.getY());
+        pointVector v2 = new pointVector(p2.getX(), p2.getY());
+        return crossProduct(v1,v2);
+    }
 
+    public static double crossProduct(pointVector v1, pointVector v2)    {
+        double a1,a2,b1,b2;
+
+        a1 = v1.getX();
+        a2 = v1.getY();
+
+        b1 = v2.getX();
+        b2 = v2.getY();
+
+        return a1*b2 - b1*a2;
+    }
 
 
 }
