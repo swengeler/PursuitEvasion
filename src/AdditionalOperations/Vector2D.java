@@ -28,6 +28,8 @@ public class Vector2D {
 
     public void setStart(Position start) {
         this.start = start;
+        this.x = dest.getxPos() - start.getxPos();
+        this.y = dest.getyPos() - start.getyPos();
     }
 
     public Position getDest() {
@@ -36,6 +38,8 @@ public class Vector2D {
 
     public void setDest(Position dest) {
         this.dest = dest;
+        this.x = dest.getxPos() - start.getxPos();
+        this.y = dest.getyPos() - start.getyPos();
     }
 
     public double getX() {
@@ -54,7 +58,5 @@ public class Vector2D {
         this.y = y;
     }
 
-    public double dotProduct(Vector2D v1, Vector2D v2)  {
-        return (v1.getX() * v2.getX()) + (v1.getY() * v2.getY());
-    }
+
 }
