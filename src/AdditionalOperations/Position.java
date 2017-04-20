@@ -1,9 +1,14 @@
 package AdditionalOperations;
 
+import javafx.geometry.Pos;
+
+import javax.vecmath.Vector2d;
+
 /**
  * Created by robin on 19.04.2017.
  */
 public class Position {
+
 
     private double xPos, yPos;
 
