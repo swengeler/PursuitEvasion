@@ -1,7 +1,5 @@
 package shadowPursuit;
 
-import AdditionalOperations.Position;
-
 import java.util.ArrayList;
 
 /**
