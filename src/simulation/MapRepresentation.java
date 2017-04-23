@@ -34,6 +34,12 @@ public abstract class MapRepresentation {
         return obstaclePolygons;
     }
 
+    public boolean isVisible(Agent lookingAgent, Agent otherAgent) {
+        // check whether the second agent is visible from the position of the first agent
+        // (given its field of view and the structure of the map)
+        return false;
+    }
+
     // methods for the agent to extract the knowledge it has access to
 
 }

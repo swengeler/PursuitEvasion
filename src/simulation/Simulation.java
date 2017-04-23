@@ -87,7 +87,7 @@ public class Simulation {
     }
 
     public Agent getAgent(double x, double y) {
-        for (Agent a: agents) {
+        for (Agent a : agents) {
             if (a.getXPos() == x && a.getYPos() == y) {
                 return a;
             }

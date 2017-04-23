@@ -88,6 +88,8 @@ public class Agent {
             policy = new StraightLineMovePolicy(this, settings.isPursuing(), map);
         } else if (policyEncoding.equals("evader_policy")) {
             policy = new EvaderPolicy(this, settings.isPursuing(), map);
+        } else if (policyEncoding.equals("dummy_policy")) {
+            policy = new DummyPolicy(this, settings.isPursuing());
         }
         //policy = new RandomMovePolicy(this, settings.isPursuing(), map);
         //policy = new FollowMovePolicy(this, settings.isPursuing(), map);

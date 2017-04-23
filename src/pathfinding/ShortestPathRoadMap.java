@@ -26,9 +26,9 @@ public class ShortestPathRoadMap {
             //b1 = currentPolygon.getPoints().get(i) - currentPolygon.getPoints().get((i + 2) % currentPolygon.getPoints().size()); // x
             //b2 = currentPolygon.getPoints().get(i + 1) - currentPolygon.getPoints().get((i + 3) % currentPolygon.getPoints().size()); // y
             //currentAngle = Math.acos((a1 * b1 + a2 * b2) / (Math.sqrt(Math.pow(a1, 2) + Math.pow(a2, 2)) * Math.sqrt(Math.pow(b1, 2) + Math.pow(b2, 2))));
-            inPolygon = currentPolygon.contains(currentPolygon.getPoints().get(i) + 0.0001 * a1,  currentPolygon.getPoints().get(i + 1) + 0.0001 * a2);
+            inPolygon = currentPolygon.contains(currentPolygon.getPoints().get(i) + 0.0001 * a1, currentPolygon.getPoints().get(i + 1) + 0.0001 * a2);
             if (inPolygon) {
-                graph.add(new Vertex(currentPolygon.getPoints().get(i) + 0.0001 * a1, currentPolygon.getPoints().get(i + 1) + + 0.0001 * a2));
+                graph.add(new Vertex(currentPolygon.getPoints().get(i) + 0.0001 * a1, currentPolygon.getPoints().get(i + 1) + +0.0001 * a2));
             }
         }
         System.out.println("---------");
@@ -39,9 +39,9 @@ public class ShortestPathRoadMap {
                 //b1 = p.getPoints().get(i) - p.getPoints().get((i + 2) % p.getPoints().size()); // x
                 //b2 = p.getPoints().get(i + 1) - p.getPoints().get((i + 3) % p.getPoints().size()); // y
                 //currentAngle = Math.acos((a1 * b1 + a2 * b2) / (Math.sqrt(Math.pow(a1, 2) + Math.pow(a2, 2)) * Math.sqrt(Math.pow(b1, 2) + Math.pow(b2, 2))));
-                inPolygon = p.contains(p.getPoints().get(i) + 0.0001 * a1,  p.getPoints().get(i + 1) + + 0.0001 * a2);
+                inPolygon = p.contains(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + +0.0001 * a2);
                 if (!inPolygon) {
-                    graph.add(new Vertex(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + + 0.0001 * a2));
+                    graph.add(new Vertex(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + +0.0001 * a2));
                     for (int j = 0; j < p.getPoints().size(); j += 2) {
                         if (i != j) {
 

@@ -131,20 +131,20 @@ public class Anchor extends Circle {
         double x, y;
     }
 
-    public void printAnchor()   {
+    public void printAnchor() {
         System.out.println(toString());
     }
 
 
-    public String toString()   {
+    public String toString() {
         return new String("X = " + this.getX() + "\tY = " + this.getY());
     }
 
-    public DoubleProperty getX()    {
+    public DoubleProperty getX() {
         return x;
     }
 
-    public DoubleProperty getY()    {
+    public DoubleProperty getY() {
         return y;
     }
 

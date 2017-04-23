@@ -1,11 +1,9 @@
 package AdditionalOperations;
 
 
-import com.sun.javafx.geom.Vec2d;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Polygon;
-import java.lang.Object.*;
 
 import java.util.ArrayList;
 
@@ -15,7 +13,7 @@ import java.util.ArrayList;
  */
 public class VectorOperations {
 
-    public static ArrayList<Point2D> polyToPoints(Polygon poly)    {
+    public static ArrayList<Point2D> polyToPoints(Polygon poly) {
 
         //Turn polygon into points
         double xPos, yPos;
@@ -23,24 +21,22 @@ public class VectorOperations {
         ObservableList<Double> vertices = poly.getPoints();
         ArrayList<Point2D> points = new ArrayList<>();
 
-        for(int i = 0; i < vertices.size() - 1; i+=2)  {
+        for (int i = 0; i < vertices.size() - 1; i += 2) {
             xPos = vertices.get(i);
-            yPos = vertices.get(i+1);
+            yPos = vertices.get(i + 1);
 
             points.add(new Point2D(xPos, yPos));
         }
 
-        return  points;
+        return points;
     }
-
-
 
 
     public boolean pointIntersect(ArrayList<pointVector> vectors, Point2D AgentPos, Point2D dest) {
 
         pointVector tarVector = new pointVector(AgentPos, dest);
 
-        for(pointVector vec : vectors) {
+        for (pointVector vec : vectors) {
 
         }
         return false;
@@ -71,8 +67,8 @@ public class VectorOperations {
         s1y = y2 - y1;
         s2y = y4 - y3;
 
-        s = (-s1y * (x1 - x3) + s1x * (y1 - y3))  / (- s2x * s1y + s1x * s2y);
-        t = (-s1x * (y1 - y3) - s2y * (x1 - x3))  / (- s2x * s1y + s1x * s2y);
+        s = (-s1y * (x1 - x3) + s1x * (y1 - y3)) / (-s2x * s1y + s1x * s2y);
+        t = (-s1x * (y1 - y3) - s2y * (x1 - x3)) / (-s2x * s1y + s1x * s2y);
 
         double xInt, yInt;
         xInt = x1 + (t * s1x);
@@ -83,35 +79,35 @@ public class VectorOperations {
 
     }
 
-    public static void main(String[] args0){
-        Point2D p,q,r,s;
+    public static void main(String[] args0) {
+        Point2D p, q, r, s;
 
-        p = new Point2D(1,1);
-        q = new Point2D(5,1);
+        p = new Point2D(1, 1);
+        q = new Point2D(5, 1);
 
         r = new Point2D(4.5, 5.5);
         s = new Point2D(-3.5, 3.5);
 
         pointVector v1, v2;
 
-        v1 = new pointVector(p,r);
-        v2 = new pointVector(q,s);
+        v1 = new pointVector(p, r);
+        v2 = new pointVector(q, s);
 
         System.out.println("intersect at = " + pointIntersect(v1, v2));
     }
 
-    public static double dotProduct(pointVector v1, pointVector v2)  {
+    public static double dotProduct(pointVector v1, pointVector v2) {
         return (v1.getX() * v2.getX()) + (v1.getY() * v2.getY());
     }
 
-    public static double crossProduct(Point2D p1, Point2D p2)    {
+    public static double crossProduct(Point2D p1, Point2D p2) {
         pointVector v1 = new pointVector(p1.getX(), p1.getY());
         pointVector v2 = new pointVector(p2.getX(), p2.getY());
-        return crossProduct(v1,v2);
+        return crossProduct(v1, v2);
     }
 
-    public static double crossProduct(pointVector v1, pointVector v2)    {
-        double a1,a2,b1,b2;
+    public static double crossProduct(pointVector v1, pointVector v2) {
+        double a1, a2, b1, b2;
 
         a1 = v1.getX();
         a2 = v1.getY();
@@ -119,7 +115,7 @@ public class VectorOperations {
         b1 = v2.getX();
         b2 = v2.getY();
 
-        return a1*b2 - b1*a2;
+        return a1 * b2 - b1 * a2;
     }
 
 

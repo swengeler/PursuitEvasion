@@ -23,7 +23,7 @@ public class pointVector {
     }
 
     public pointVector(double x, double y) {
-        this.origin = new Point2D(0,0);
+        this.origin = new Point2D(0, 0);
         this.destination = new Point2D(x, y);
         this.x = x;
         this.y = y;
@@ -47,7 +47,7 @@ public class pointVector {
         update();
     }
 
-    public void update()    {
+    public void update() {
         this.x = destination.getX() - origin.getX();
         this.y = destination.getY() - origin.getY();
     }

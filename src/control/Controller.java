@@ -1,6 +1,5 @@
 package control;
 
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
 import simulation.*;
 import ui.*;
