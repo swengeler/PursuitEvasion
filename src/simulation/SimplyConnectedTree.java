@@ -1,17 +1,19 @@
 package simulation;
 
+import javafx.scene.shape.Line;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DTriangle;
+import org.jdelaunay.delaunay.geometries.*;
 
 import java.util.ArrayList;
 
 public class SimplyConnectedTree {
 
+    private static final boolean PRINT_PATH_CONSTRUCT = false;
+
     private ArrayList<TGNode> nodes;
     private boolean[][] adjacencyMatrix;
 
-    private TPLine[][] adjacencyLineMatrix;
+    private Line[][] adjacencyLineMatrix;
 
     public SimplyConnectedTree(ArrayList<DTriangle> triangles) {
         init(triangles);
@@ -24,42 +26,37 @@ public class SimplyConnectedTree {
             nodes.add(new TGNode(dt));
         }
         adjacencyMatrix = new boolean[nodes.size()][nodes.size()];
-        adjacencyLineMatrix = new TPLine[nodes.size()][nodes.size()];
+        adjacencyLineMatrix = new Line[nodes.size()][nodes.size()];
 
         // checking for adjacency between nodes
         ArrayList<DEdge> checkedEdges = new ArrayList<>();
         DTriangle dt1, dt2;
-        DEdge de1, de2;
+        DEdge de;
         for (int i = 0; i < triangles.size(); i++) {
             dt1 = triangles.get(i);
             // go through the edges of each triangle
             for (int j = 0; j < 3; j++) {
-                de1 = dt1.getEdge(j);
-                if (!checkedEdges.contains(de1)) {
+                de = dt1.getEdge(j);
+                if (!checkedEdges.contains(de)) {
                     int neighbourIndex = -1;
                     for (int k = 0; neighbourIndex == -1 && k < triangles.size(); k++) {
                         dt2 = triangles.get(k);
-                        if (k != i) {
-                            for (int l = 0; neighbourIndex == -1 && l < 3; l++) {
-                                de2 = dt2.getEdge(l);
-                                // if the current triangle shares an edge with another triangle, they are neighbours in the graph
-                                if (de1 == de2) {
-                                    neighbourIndex = k;
-                                }
-                            }
+                        if (k != i && dt2.isEdgeOf(de)) {
+                            // if the current triangle shares an edge with another triangle, they are neighbours in the graph
+                            neighbourIndex = k;
                         }
                     }
                     if (neighbourIndex != -1) {
                         try {
                             adjacencyMatrix[i][neighbourIndex] = true;
                             adjacencyMatrix[neighbourIndex][i] = true;
-                            adjacencyLineMatrix[i][neighbourIndex] = new TPLine(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), triangles.get(neighbourIndex).getBarycenter().getX(), triangles.get(neighbourIndex).getBarycenter().getY());
-                            adjacencyLineMatrix[neighbourIndex][i] = new TPLine(triangles.get(neighbourIndex).getBarycenter().getX(), triangles.get(neighbourIndex).getBarycenter().getY(), dt1.getBarycenter().getX(), dt1.getBarycenter().getY());
+                            adjacencyLineMatrix[i][neighbourIndex] = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), triangles.get(neighbourIndex).getBarycenter().getX(), triangles.get(neighbourIndex).getBarycenter().getY());
+                            adjacencyLineMatrix[neighbourIndex][i] = new Line(triangles.get(neighbourIndex).getBarycenter().getX(), triangles.get(neighbourIndex).getBarycenter().getY(), dt1.getBarycenter().getX(), dt1.getBarycenter().getY());
                         } catch (DelaunayError e) {
                             e.printStackTrace();
                         }
                     }
-                    checkedEdges.add(de1);
+                    checkedEdges.add(de);
                 }
             }
         }
@@ -74,11 +71,11 @@ public class SimplyConnectedTree {
                 }
             }
             if (count == 1) {
-                try {
-                    System.out.println("Returning leaf of simply connected tree - Index: " + i + ", Middle: (" + nodes.get(i).getTriangle().getBarycenter().getX() + "|" + nodes.get(i).getTriangle().getBarycenter().getY() + ")");
+                /*try {
+                    System.out.println("\nReturning leaf of simply connected tree - Index: " + i + ", Middle: (" + nodes.get(i).getTriangle().getBarycenter().getX() + "|" + nodes.get(i).getTriangle().getBarycenter().getY() + ")");
                 } catch (DelaunayError e) {
                     e.printStackTrace();
-                }
+                }*/
                 return nodes.get(i);
             }
         }
@@ -99,10 +96,48 @@ public class SimplyConnectedTree {
         return count == 1;
     }
 
-    public Object getRandomTraversal(TGNode startLeaf) {
+    public TGNode getLeafNeighbour(TGNode leaf) {
+        if (isLeaf(leaf)) {
+            for (int i = 0; i < adjacencyMatrix[0].length; i++) {
+                if (adjacencyMatrix[nodes.indexOf(leaf)][i]) {
+                    return nodes.get(i);
+                }
+            }
+        }
+        return null;
+    }
+
+    public TGNode getNode(double xCoord, double yCoord) {
+        try {
+            for (TGNode n : nodes) {
+                if (n.getTriangle().contains(new DPoint(xCoord, yCoord, 0))) {
+                    return n;
+                }
+            }
+        } catch (DelaunayError e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public int getNodeIndex(double xCoord, double yCoord) {
+        return nodes.indexOf(getNode(xCoord, yCoord));
+    }
+
+    public ArrayList<TGNode> getNodes() {
+        return getNodes();
+    }
+
+    public PlannedPath getRandomTraversal(TGNode startLeaf) {
+        return getRandomTraversal(nodes.indexOf(startLeaf));
+    }
+
+    public PlannedPath getRandomTraversal(int startInd) {
         // chooses a path through the tree/map according to the random selection described in the paper
         ArrayList<Integer> path = new ArrayList<>();
-        int startIndex = nodes.indexOf(startLeaf);
+        PlannedPath plannedPath = new PlannedPath();
+        plannedPath.setStartIndex(startInd);
+        int startIndex = startInd;
         int currentIndex = startIndex;
         int lastIndex = currentIndex;
         ArrayList<Integer> childIndeces = new ArrayList<>();
@@ -115,23 +150,29 @@ public class SimplyConnectedTree {
                     childIndeces.add(i);
                 }
             }
-            System.out.println("\nChildren on iteration " + counter++);
-            for (Integer i : childIndeces) {
-                System.out.print("Index: " + i + ", ");
-                nodes.get(i).print();
+            if (PRINT_PATH_CONSTRUCT) {
+                System.out.println("\nChildren on iteration " + counter++);
+                for (Integer i : childIndeces) {
+                    System.out.print("Index: " + i + ", ");
+                    nodes.get(i).print();
+                }
             }
             // get new node to visit
             lastIndex = currentIndex;
-            currentIndex = childIndeces.get((int) (Math.random() * childIndeces.size()));
+            currentIndex = childIndeces.get((int) (Math.random() * childIndeces.size())); // needs proper probability distribution
+            plannedPath.addLine(adjacencyLineMatrix[lastIndex][currentIndex]);
             path.add(currentIndex);
             childIndeces.clear();
         }
-        System.out.println("\nFinal path:");
-        for (Integer i : path) {
-            System.out.print("Index: " + i + ", ");
-            nodes.get(i).print();
+        plannedPath.setEndIndex(currentIndex);
+        if (PRINT_PATH_CONSTRUCT) {
+            System.out.println("\nFinal path:");
+            for (Integer i : path) {
+                System.out.print("Index: " + i + ", ");
+                nodes.get(i).print();
+            }
         }
-        return null;
+        return plannedPath;
     }
 
     public void printAdjacencyMatrix() {

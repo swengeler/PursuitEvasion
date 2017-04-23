@@ -261,7 +261,7 @@ public class Main extends Application {
                             }
                         }
                         if (inPolygon) {
-                            System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                            //System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
                             p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
                             p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
                             p.setFill(Color.WHITE.deriveColor(1, 1, 1, 0.1));
@@ -306,10 +306,13 @@ public class Main extends Application {
                         }
                     }
 
-                    // randomised walkthrough test
+                    /*// randomised walkthrough test
                     SimplyConnectedTree tree = new SimplyConnectedTree((ArrayList<DTriangle>) includedTriangles);
                     //tree.printAdjacencyMatrix();
                     tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());*/
                 } catch (DelaunayError error) {
                     error.printStackTrace();
                 }
@@ -689,7 +692,6 @@ public class Main extends Application {
             if (currentState == ProgramState.SIMULATION) {
                 return;
             }
-            System.out.println("Not simulation");
             if (e.getButton() == MouseButton.PRIMARY) {
                 if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {
                     if (!e.isPrimaryButtonDown() || (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY()))) {

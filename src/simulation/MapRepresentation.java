@@ -9,9 +9,14 @@ public abstract class MapRepresentation {
     protected Polygon borderPolygon;
     protected ArrayList<Polygon> obstaclePolygons;
 
+    protected ArrayList<Polygon> allPolygons;
+
     public MapRepresentation(Polygon borderPolygon, ArrayList<Polygon> obstaclePolygons) {
         this.borderPolygon = borderPolygon;
         this.obstaclePolygons = obstaclePolygons;
+        allPolygons = new ArrayList<>();
+        allPolygons.add(borderPolygon);
+        allPolygons.addAll(obstaclePolygons);
     }
 
     public boolean legalPosition(double xPos, double yPos) {
@@ -32,6 +37,10 @@ public abstract class MapRepresentation {
 
     public ArrayList<Polygon> getObstaclePolygons() {
         return obstaclePolygons;
+    }
+
+    public ArrayList<Polygon> getAllPolygons() {
+        return allPolygons;
     }
 
     public boolean isVisible(Agent lookingAgent, Agent otherAgent) {
