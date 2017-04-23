@@ -651,13 +651,12 @@ public class Main extends Application {
 
                     indicatorLine.setVisible(false);
                 }
-                System.out.println("After loading: " + mapPolygons.size());
-                for (MapPolygon m : mapPolygons) {
+                /*for (MapPolygon m : mapPolygons) {
                     System.out.println("\nPolygon: ");
                     for (int i = 0; i < m.getPoints().size(); i += 2) {
                         System.out.println(m.getPoints().get(i) + " " + m.getPoints().get(i + 1));
                     }
-                }
+                }*/
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

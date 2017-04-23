@@ -48,8 +48,17 @@ public class DummyPolicy extends MovePolicy {
         }
 
         // move along path
-        Move result = new Move(test.get(testCounter).getEndX() - agent.getXPos(), test.get(testCounter).getEndY() - agent.getYPos(), 0);
-        testCounter++;
+        Move result;
+        double length = Math.sqrt(Math.pow(test.get(testCounter).getEndX() - test.get(testCounter).getStartX(), 2) + Math.pow(test.get(testCounter).getEndY() - test.get(testCounter).getStartY(), 2));
+        double deltaX = (test.get(testCounter).getEndX() - test.get(testCounter).getStartX()) / length * agent.getSpeed() / 50;
+        double deltaY = (test.get(testCounter).getEndY() - test.get(testCounter).getStartY()) / length * agent.getSpeed() / 50;
+        if (test.get(testCounter).contains(agent.getXPos() + deltaX, agent.getYPos() + deltaY)) {
+            // move along line
+            result = new Move(deltaX, deltaY, 0);
+        } else {
+            result = new Move(test.get(testCounter).getEndX() - agent.getXPos(), test.get(testCounter).getEndY() - agent.getYPos(), 0);
+            testCounter++;
+        }
         return result;
         //return new Move(0, 0, 0);
     }

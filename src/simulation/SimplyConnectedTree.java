@@ -184,18 +184,5 @@ public class SimplyConnectedTree {
         }
     }
 
-    class TPLine {
-
-        double startX, startY, endX, endY;
-
-        TPLine(double startX, double startY, double endX, double endY) {
-            this.startX = startX;
-            this.startY = startY;
-            this.endX = endX;
-            this.endY = endY;
-        }
-
-    }
-
 }
 
