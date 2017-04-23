@@ -33,11 +33,11 @@ public class SimplyConnectedTree {
         for (int i = 0; i < triangles.size(); i++) {
             dt1 = triangles.get(i);
             // go through the edges of each triangle
-            for (int j = 0; j < dt1.getEdges().length; j++) {
+            for (int j = 0; j < 3; j++) {
                 de1 = dt1.getEdge(j);
                 if (!checkedEdges.contains(de1)) {
                     int neighbourIndex = -1;
-                    for (int k = 0; neighbourIndex == -1 && k < 3; k++) {
+                    for (int k = 0; neighbourIndex == -1 && k < triangles.size(); k++) {
                         dt2 = triangles.get(k);
                         if (k != i) {
                             for (int l = 0; neighbourIndex == -1 && l < 3; l++) {
@@ -74,15 +74,73 @@ public class SimplyConnectedTree {
                 }
             }
             if (count == 1) {
+                try {
+                    System.out.println("Returning leaf of simply connected tree - Index: " + i + ", Middle: (" + nodes.get(i).getTriangle().getBarycenter().getX() + "|" + nodes.get(i).getTriangle().getBarycenter().getY() + ")");
+                } catch (DelaunayError e) {
+                    e.printStackTrace();
+                }
                 return nodes.get(i);
             }
         }
         return null;
     }
 
+    public boolean isLeaf(TGNode node) {
+        return isLeaf(nodes.indexOf(node));
+    }
+
+    public boolean isLeaf(int index) {
+        int count = 0;
+        for (int i = 0; i < adjacencyMatrix.length; i++) {
+            if (adjacencyMatrix[index][i]) {
+                count++;
+            }
+        }
+        return count == 1;
+    }
+
     public Object getRandomTraversal(TGNode startLeaf) {
         // chooses a path through the tree/map according to the random selection described in the paper
+        ArrayList<Integer> path = new ArrayList<>();
+        int startIndex = nodes.indexOf(startLeaf);
+        int currentIndex = startIndex;
+        int lastIndex = currentIndex;
+        ArrayList<Integer> childIndeces = new ArrayList<>();
+        path.add(startIndex);
+        int counter = 1;
+        while (currentIndex == startIndex || !isLeaf(currentIndex)) {
+            // collect the children (not going back)
+            for (int i = 0; i < adjacencyMatrix[0].length; i++) {
+                if (i != currentIndex && i != lastIndex && adjacencyMatrix[currentIndex][i]) {
+                    childIndeces.add(i);
+                }
+            }
+            System.out.println("\nChildren on iteration " + counter++);
+            for (Integer i : childIndeces) {
+                System.out.print("Index: " + i + ", ");
+                nodes.get(i).print();
+            }
+            // get new node to visit
+            lastIndex = currentIndex;
+            currentIndex = childIndeces.get((int) (Math.random() * childIndeces.size()));
+            path.add(currentIndex);
+            childIndeces.clear();
+        }
+        System.out.println("\nFinal path:");
+        for (Integer i : path) {
+            System.out.print("Index: " + i + ", ");
+            nodes.get(i).print();
+        }
         return null;
+    }
+
+    public void printAdjacencyMatrix() {
+        for (int i = 0; i < adjacencyMatrix.length; i++) {
+            for (int j = 0; j < adjacencyMatrix[0].length; j++) {
+                System.out.print(adjacencyMatrix[i][j] ? "1  " : "0  ");
+            }
+            System.out.println();
+        }
     }
 
     class TPLine {

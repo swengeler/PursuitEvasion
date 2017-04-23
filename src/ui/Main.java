@@ -269,23 +269,17 @@ public class Main extends Application {
 
                             Circle c = new Circle(dt.getBarycenter().getX(), dt.getBarycenter().getY(), 5);
                             c.setFill(Color.BLUE);
-                            pane.getChildren().addAll(p, c);
+
+                            Label index = new Label(includedTriangles.size() + "");
+                            index.setTranslateX(c.getCenterX() + 10);
+                            index.setTranslateY(c.getCenterY() + 10);
+
+                            pane.getChildren().addAll(p, c, index);
                             includedTriangles.add(dt);
                         }
                     }
 
-                    System.out.println("Triangulation size: " + includedTriangles.size());
-
                     ArrayList<DEdge> checkedEdges = new ArrayList<>();
-
-                    /*Line l1 = new Line(includedTriangles.get(0).getBarycenter().getX(), includedTriangles.get(0).getBarycenter().getY(), includedTriangles.get(1).getBarycenter().getX(), includedTriangles.get(1).getBarycenter().getY());
-                    l1.setStroke(Color.RED);
-                    l1.setStrokeWidth(2);
-                    Line l2 = new Line(includedTriangles.get(1).getBarycenter().getX(), includedTriangles.get(1).getBarycenter().getY(), includedTriangles.get(2).getBarycenter().getX(), includedTriangles.get(2).getBarycenter().getY());
-                    l2.setStroke(Color.RED);
-                    l2.setStrokeWidth(2);
-                    pane.getChildren().addAll(l1, l2);*/
-
                     for (DTriangle dt1 : includedTriangles) {
                         for (DEdge de1 : dt1.getEdges()) {
                             if (!checkedEdges.contains(de1)) {
@@ -312,6 +306,10 @@ public class Main extends Application {
                         }
                     }
 
+                    // randomised walkthrough test
+                    SimplyConnectedTree tree = new SimplyConnectedTree((ArrayList<DTriangle>) includedTriangles);
+                    //tree.printAdjacencyMatrix();
+                    tree.getRandomTraversal(tree.getLeaf());
                 } catch (DelaunayError error) {
                     error.printStackTrace();
                 }

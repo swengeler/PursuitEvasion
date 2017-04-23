@@ -1,5 +1,6 @@
 package simulation;
 
+import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.DTriangle;
 
 import java.util.ArrayList;
@@ -32,6 +33,14 @@ public class TGNode {
 
     public ArrayList<TGNode> getNeighbours() {
         return neighbours;
+    }
+
+    public void print() {
+        try {
+            System.out.println("Node with middle: (" + triangle.getBarycenter().getX() + "|" + triangle.getBarycenter().getY() + ")");
+        } catch (DelaunayError delaunayError) {
+            delaunayError.printStackTrace();
+        }
     }
 
 }
