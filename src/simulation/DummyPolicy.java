@@ -47,6 +47,18 @@ public class DummyPolicy extends MovePolicy {
             testCounter = 0;
         }
 
+        boolean agentVisible = false;
+        for (Agent a : agents) {
+            if (a != agent && a.isEvader() && map.isVisible(agent.getXPos(), agent.getYPos(), a.getXPos(), a.getYPos())) {
+                System.out.println("Evader is visible!");
+                agentVisible = true;
+                break;
+            }
+        }
+        if (!agentVisible) {
+            System.out.println("Evader is not visible.");
+        }
+
         // move along path
         Move result;
         double length = Math.sqrt(Math.pow(test.get(testCounter).getEndX() - test.get(testCounter).getStartX(), 2) + Math.pow(test.get(testCounter).getEndY() - test.get(testCounter).getStartY(), 2));

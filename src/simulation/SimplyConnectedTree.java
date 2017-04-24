@@ -14,6 +14,7 @@ public class SimplyConnectedTree {
     private boolean[][] adjacencyMatrix;
 
     private Line[][] adjacencyLineMatrix;
+    private DEdge[][] adjacencyEdgeMatrix;
 
     public SimplyConnectedTree(ArrayList<DTriangle> triangles) {
         init(triangles);
@@ -27,6 +28,7 @@ public class SimplyConnectedTree {
         }
         adjacencyMatrix = new boolean[nodes.size()][nodes.size()];
         adjacencyLineMatrix = new Line[nodes.size()][nodes.size()];
+        adjacencyEdgeMatrix = new DEdge[nodes.size()][nodes.size()];
 
         // checking for adjacency between nodes
         ArrayList<DEdge> checkedEdges = new ArrayList<>();
@@ -52,6 +54,8 @@ public class SimplyConnectedTree {
                             adjacencyMatrix[neighbourIndex][i] = true;
                             adjacencyLineMatrix[i][neighbourIndex] = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), triangles.get(neighbourIndex).getBarycenter().getX(), triangles.get(neighbourIndex).getBarycenter().getY());
                             adjacencyLineMatrix[neighbourIndex][i] = new Line(triangles.get(neighbourIndex).getBarycenter().getX(), triangles.get(neighbourIndex).getBarycenter().getY(), dt1.getBarycenter().getX(), dt1.getBarycenter().getY());
+                            adjacencyEdgeMatrix[i][neighbourIndex] = de;
+                            adjacencyEdgeMatrix[neighbourIndex][i] = de;
                         } catch (DelaunayError e) {
                             e.printStackTrace();
                         }
@@ -160,11 +164,21 @@ public class SimplyConnectedTree {
             // get new node to visit
             lastIndex = currentIndex;
             currentIndex = childIndeces.get((int) (Math.random() * childIndeces.size())); // needs proper probability distribution
-            plannedPath.addLine(adjacencyLineMatrix[lastIndex][currentIndex]);
+            //plannedPath.addLine(adjacencyLineMatrix[lastIndex][currentIndex]);
+            Line l1 = null, l2 = null;
+            try {
+                l1 = new Line(nodes.get(lastIndex).getTriangle().getBarycenter().getX(), nodes.get(lastIndex).getTriangle().getBarycenter().getY(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getX(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getY());
+                l2 = new Line(adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getX(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getY(), nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY());
+            } catch (DelaunayError delaunayError) {
+                delaunayError.printStackTrace();
+            }
+            plannedPath.addLine(l1);
+            plannedPath.addLine(l2);
             path.add(currentIndex);
             childIndeces.clear();
         }
         plannedPath.setEndIndex(currentIndex);
+        plannedPath.getPathLines().remove(0);
         if (PRINT_PATH_CONSTRUCT) {
             System.out.println("\nFinal path:");
             for (Integer i : path) {

@@ -606,6 +606,7 @@ public class Main extends Application {
                         VisualAgent visualAgent = new VisualAgent();
                         visualAgent.adoptSettings(agentSettings);
                         visualAgents.add(visualAgent);
+                        //System.out.println("Pursuer loaded: " + visualAgent.getSettings().getXPos() + " " + visualAgent.getSettings().getYPos());
                         pane.getChildren().add(visualAgent);
                     }
                     for (MapPolygon p : mapPolygons) {
