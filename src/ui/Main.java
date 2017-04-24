@@ -284,10 +284,12 @@ public class Main extends Application {
                         for (DEdge de1 : dt1.getEdges()) {
                             if (!checkedEdges.contains(de1)) {
                                 DTriangle otherTriangle = null;
+                                DEdge connectingEdge = null;
                                 for (DTriangle dt2 : includedTriangles) {
                                     for (DEdge de2 : dt2.getEdges()) {
                                         if (dt2 != dt1 && de1 == de2) {
                                             otherTriangle = dt2;
+                                            connectingEdge = de2;
                                             break;
                                         }
                                     }
@@ -296,10 +298,17 @@ public class Main extends Application {
                                     }
                                 }
                                 if (otherTriangle != null) {
-                                    Line l = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), otherTriangle.getBarycenter().getX(), otherTriangle.getBarycenter().getY());
+                                    /*Line l = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), otherTriangle.getBarycenter().getX(), otherTriangle.getBarycenter().getY());
                                     l.setStroke(Color.RED);
                                     l.setStrokeWidth(2);
-                                    pane.getChildren().add(l);
+                                    pane.getChildren().add(l);*/
+                                    Line l1 = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), connectingEdge.getBarycenter().getX(), connectingEdge.getBarycenter().getY());
+                                    l1.setStroke(Color.RED);
+                                    l1.setStrokeWidth(2);
+                                    Line l2 = new Line(connectingEdge.getBarycenter().getX(), connectingEdge.getBarycenter().getY(), otherTriangle.getBarycenter().getX(), otherTriangle.getBarycenter().getY());
+                                    l2.setStroke(Color.RED);
+                                    l2.setStrokeWidth(2);
+                                    pane.getChildren().addAll(l1, l2);
                                 }
                                 checkedEdges.add(de1);
                             }
