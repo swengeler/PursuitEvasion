@@ -2,10 +2,12 @@ package shadowPursuit;
 
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 
 import java.util.ArrayList;
 
+import static AdditionalOperations.GeometryOperations.lineIntersectInPoly;
 
 
 /**
@@ -38,6 +40,12 @@ public class ShadowTest {
         453.0,
         785.0,
         345.0);
+
+        Point2D vec = new Point2D(785, 345);
+        Point2D pu = new Point2D(780, 340);
+
+        //System.out.println("Intersect?" + lineIntersectInPoly(poly, new Line(vec.getX(), vec.getY(), pu.getX(), pu.getY())) );
+
         /*
         ArrayList<Point2D> points = polyToPoints(poly);
 

@@ -35,6 +35,13 @@ public class GeometryOperations {
     }
 
 
+    /*
+
+    public static ArrayList<Point2D> getX2Points(ArrayList<Point2D> cat1, Polgon env, ArrayList<Polygon> obstacles, )  {
+
+    }
+*/
+
 
     public static ArrayList<Point2D> getX1Points(Polygon environment, ArrayList<Polygon> obstacles, ArrayList<Agent> agents)  {
 
@@ -43,7 +50,7 @@ public class GeometryOperations {
 
 
         ArrayList<Point2D> all = polyToPoints(environment);
-        ArrayList<Point2D> vis = new ArrayList<>();
+        ArrayList<Point2D> Vis = new ArrayList<>();
          for(Polygon poly : obstacles)   {
             all.addAll(polyToPoints(poly));
         }
@@ -57,25 +64,31 @@ public class GeometryOperations {
 
         Line temp;
         double agentX, agentY, x2, y2;
+        x2 = 0;
+        y2 = 0;
 
-        for(Agent agent: agents)    {
-            agentX = agent.getXPos();
-            agentY = agent.getYPos();
+        int revIterator = 0;
+        int i = 0;
+        boolean intersect = false;
 
-            for(Point2D point : all)    {
-                x2 = point.getX();
-                y2 = point.getY();
+        while(i < all.size) {
+            x2 =  all.get(i).getX();
+            y2 =  all.get(i).getY();
 
-                temp = new Line(agentX, agentY, x2, y2);
-                //For environment
-                if(!(lineIntersectInPoly(environment, temp)))    {
+            for(Agent agent : agents)   {
+                agentX = agent.getXPos();
+                agentY = agent.getYPos();
 
-                }
+                temp = new Line(x2,y2,agentX,agentY);
+
+
+
             }
         }
 
 
         return null;
+
     }
 
 
@@ -91,13 +104,6 @@ public class GeometryOperations {
     public static boolean lineIntersectInPoly(ArrayList<Point2D> points, Line current) {
         // current = Line between Pursuer and a Point
 
-        double sx, sy, ex, ey;
-
-        sx = current.getStartX();
-        sy = current.getStartY();
-
-        ex = current.getEndX();
-        ey = current.getEndY();
 
         Line temp;
         double x1,x2;
