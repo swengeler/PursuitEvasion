@@ -18,12 +18,24 @@ public class pointVector {
         this.y = destination.getY() - origin.getY();
     }
 
+    public pointVector(Point2D p1) {
+        new pointVector(p1.getX(), p1.getY());
+    }
+
+    public pointVector(double x, double y) {
+        this.origin = new Point2D(0, 0);
+        this.destination = new Point2D(x, y);
+        this.x = x;
+        this.y = y;
+    }
+
     public pointVector() {
         this.origin = null;
         this.destination = null;
         this.x = 0;
         this.y = 0;
     }
+
 
     public void setOrigin(Point2D origin) {
         this.origin = origin;
@@ -35,7 +47,7 @@ public class pointVector {
         update();
     }
 
-    public void update()    {
+    public void update() {
         this.x = destination.getX() - origin.getX();
         this.y = destination.getY() - origin.getY();
     }

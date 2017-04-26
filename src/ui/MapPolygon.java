@@ -90,9 +90,9 @@ public class MapPolygon extends Polyline {
         }
     }
 
-    public void printPoints()   {
+    public void printPoints() {
         Anchor temp;
-        for(Anchor A : allAnchors)  {
+        for (Anchor A : allAnchors) {
             temp = A;
             System.out.println("X = " + temp.getX().doubleValue() + "\tY = " + temp.getY().doubleValue());
         }

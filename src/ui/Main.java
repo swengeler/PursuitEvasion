@@ -245,15 +245,83 @@ public class Main extends Application {
                     mesh.setConstraintEdges(constraintEdges);
                     mesh.processDelaunay();
                     List<DTriangle> triangles = mesh.getTriangleList();
+                    List<DTriangle> includedTriangles = new ArrayList<>();
 
                     for (DTriangle dt : triangles) {
-                        System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                        p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                        p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
-                        p.setFill(Color.WHITE.deriveColor(1, 1, 1, 0.1));
-                        p.setStrokeWidth(1);
-                        pane.getChildren().add(p);
+                        // check if triangle in polygon
+                        double centerX = dt.getBarycenter().getX();
+                        double centerY = dt.getBarycenter().getY();
+                        boolean inPolygon = true;
+                        if (!mapPolygons.get(0).contains(centerX, centerY)) {
+                            inPolygon = false;
+                        }
+                        for (int i = 1; inPolygon && i < mapPolygons.size() - 1; i++) {
+                            if (mapPolygons.get(i).contains(centerX, centerY)) {
+                                inPolygon = false;
+                            }
+                        }
+                        if (inPolygon) {
+                            //System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                            p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                            p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
+                            p.setFill(Color.WHITE.deriveColor(1, 1, 1, 0.1));
+                            p.setStrokeWidth(1);
+
+                            Circle c = new Circle(dt.getBarycenter().getX(), dt.getBarycenter().getY(), 5);
+                            c.setFill(Color.BLUE);
+
+                            Label index = new Label(includedTriangles.size() + "");
+                            index.setTranslateX(c.getCenterX() + 10);
+                            index.setTranslateY(c.getCenterY() + 10);
+
+                            pane.getChildren().addAll(p, c, index);
+                            includedTriangles.add(dt);
+                        }
                     }
+
+                    ArrayList<DEdge> checkedEdges = new ArrayList<>();
+                    for (DTriangle dt1 : includedTriangles) {
+                        for (DEdge de1 : dt1.getEdges()) {
+                            if (!checkedEdges.contains(de1)) {
+                                DTriangle otherTriangle = null;
+                                DEdge connectingEdge = null;
+                                for (DTriangle dt2 : includedTriangles) {
+                                    for (DEdge de2 : dt2.getEdges()) {
+                                        if (dt2 != dt1 && de1 == de2) {
+                                            otherTriangle = dt2;
+                                            connectingEdge = de2;
+                                            break;
+                                        }
+                                    }
+                                    if (otherTriangle != null) {
+                                        break;
+                                    }
+                                }
+                                if (otherTriangle != null) {
+                                    /*Line l = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), otherTriangle.getBarycenter().getX(), otherTriangle.getBarycenter().getY());
+                                    l.setStroke(Color.RED);
+                                    l.setStrokeWidth(2);
+                                    pane.getChildren().add(l);*/
+                                    Line l1 = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), connectingEdge.getBarycenter().getX(), connectingEdge.getBarycenter().getY());
+                                    l1.setStroke(Color.RED);
+                                    l1.setStrokeWidth(2);
+                                    Line l2 = new Line(connectingEdge.getBarycenter().getX(), connectingEdge.getBarycenter().getY(), otherTriangle.getBarycenter().getX(), otherTriangle.getBarycenter().getY());
+                                    l2.setStroke(Color.RED);
+                                    l2.setStrokeWidth(2);
+                                    pane.getChildren().addAll(l1, l2);
+                                }
+                                checkedEdges.add(de1);
+                            }
+                        }
+                    }
+
+                    /*// randomised walkthrough test
+                    SimplyConnectedTree tree = new SimplyConnectedTree((ArrayList<DTriangle>) includedTriangles);
+                    //tree.printAdjacencyMatrix();
+                    tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());*/
                 } catch (DelaunayError error) {
                     error.printStackTrace();
                 }
@@ -538,6 +606,7 @@ public class Main extends Application {
                         VisualAgent visualAgent = new VisualAgent();
                         visualAgent.adoptSettings(agentSettings);
                         visualAgents.add(visualAgent);
+                        //System.out.println("Pursuer loaded: " + visualAgent.getSettings().getXPos() + " " + visualAgent.getSettings().getYPos());
                         pane.getChildren().add(visualAgent);
                     }
                     for (MapPolygon p : mapPolygons) {
@@ -592,13 +661,12 @@ public class Main extends Application {
 
                     indicatorLine.setVisible(false);
                 }
-                System.out.println("After loading: " + mapPolygons.size());
-                for (MapPolygon m : mapPolygons) {
+                /*for (MapPolygon m : mapPolygons) {
                     System.out.println("\nPolygon: ");
                     for (int i = 0; i < m.getPoints().size(); i += 2) {
                         System.out.println(m.getPoints().get(i) + " " + m.getPoints().get(i + 1));
                     }
-                }
+                }*/
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -633,7 +701,6 @@ public class Main extends Application {
             if (currentState == ProgramState.SIMULATION) {
                 return;
             }
-            System.out.println("Not simulation");
             if (e.getButton() == MouseButton.PRIMARY) {
                 if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {
                     if (!e.isPrimaryButtonDown() || (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY()))) {
@@ -794,7 +861,7 @@ public class Main extends Application {
                             agentType.getItems().addAll("Pursuer", "Evader");
                             agentType.setValue(va.getSettings().isPursuing() ? "Pursuer" : "Evader");
                             ComboBox<String> agentPolicy = new ComboBox<>();
-                            agentPolicy.getItems().addAll("Random policy", "Straight line policy", "Evader policy");
+                            agentPolicy.getItems().addAll("Random policy", "Straight line policy", "Evader policy", "Dummy policy");
                             agentPolicy.setValue("Random policy");
 
                             grid.add(new Label("X:"), 0, 0);
@@ -840,6 +907,8 @@ public class Main extends Application {
                                         s.setMovePolicy("straight_line_policy");
                                     } else if (agentPolicy.getValue().equals("Evader policy")) {
                                         s.setMovePolicy("evader_policy");
+                                    } else if (agentPolicy.getValue().equals("Dummy policy")) {
+                                        s.setMovePolicy("dummy_policy");
                                     }
 
                                     return s;

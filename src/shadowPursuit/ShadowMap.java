@@ -1,16 +1,10 @@
 package shadowPursuit;
 
-import java.util.ArrayList;
-
 /**
  * Created by robin on 19.04.2017.
  */
 public class ShadowMap {
 
-    ArrayList<Position> cat1, cat2, cat3, cat4;
-
-
-
-
+    //ArrayList<Position> cat1, cat2, cat3, cat4;
 
 }
