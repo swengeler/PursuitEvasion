@@ -1,6 +1,7 @@
 package simulation;
 
 import AdditionalOperations.GeometryOperations;
+import javafx.collections.ObservableList;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 
@@ -24,11 +25,14 @@ public abstract class MapRepresentation {
         polygonBorders = new ArrayList<>();
         Line l = null;
         for (Polygon p : allPolygons) {
+
             for (int i = 0; i < p.getPoints().size(); i += 2) {
                 l = new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size())));
                 polygonBorders.add(l);
             }
         }
+
+
     }
 
     public boolean legalPosition(double xPos, double yPos) {

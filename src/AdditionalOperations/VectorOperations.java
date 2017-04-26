@@ -13,23 +13,7 @@ import java.util.ArrayList;
  */
 public class VectorOperations {
 
-    public static ArrayList<Point2D> polyToPoints(Polygon poly) {
 
-        //Turn polygon into points
-        double xPos, yPos;
-
-        ObservableList<Double> vertices = poly.getPoints();
-        ArrayList<Point2D> points = new ArrayList<>();
-
-        for (int i = 0; i < vertices.size() - 1; i += 2) {
-            xPos = vertices.get(i);
-            yPos = vertices.get(i + 1);
-
-            points.add(new Point2D(xPos, yPos));
-        }
-
-        return points;
-    }
 
 
     public boolean pointIntersect(ArrayList<pointVector> vectors, Point2D AgentPos, Point2D dest) {
