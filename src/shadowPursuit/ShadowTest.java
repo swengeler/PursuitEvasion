@@ -6,7 +6,7 @@ import javafx.scene.shape.Polygon;
 
 import java.util.ArrayList;
 
-import static AdditionalOperations.VectorOperations.polyToPoints;
+
 
 /**
  * Created by Robins on 26.04.2017.
@@ -38,11 +38,12 @@ public class ShadowTest {
         453.0,
         785.0,
         345.0);
+        /*
         ArrayList<Point2D> points = polyToPoints(poly);
 
         for(Point2D p: points)  {
             System.out.print(p + "\t");
-        }
+        }*/
 
     }
 
