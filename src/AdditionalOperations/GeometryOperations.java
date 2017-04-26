@@ -71,7 +71,7 @@ public class GeometryOperations {
         int i = 0;
         boolean intersect = false;
 
-        while(i < all.size) {
+        while(i < all.size()) {
             x2 =  all.get(i).getX();
             y2 =  all.get(i).getY();
 
