@@ -38,6 +38,15 @@ public class DummyPolicy extends MovePolicy {
             //return new Move(currentPath.getStartX() - agent.getXPos(), currentPath.getStartY() - agent.getYPos(), 0);
         }
 
+        if (tree == null) {
+            System.exit(-1);
+        }
+        if (agent == null) {
+            System.exit(-2);
+        }
+        if (currentPath == null) {
+            System.exit(-3);
+        }
         if (tree.getNodeIndex(agent.getXPos(), agent.getYPos()) == currentPath.getEndIndex()) {
             // TODO: there should probably be a better check that takes into account that an entire branch might be cleared if there is vision of it
             // end of path reached, compute new path

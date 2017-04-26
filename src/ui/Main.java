@@ -337,6 +337,7 @@ public class Main extends Application {
         menu.getChildren().add(slider);
 
         slider.valueProperty().addListener((ov, oldValue, newValue) -> {
+            System.out.println("val = " + newValue);
             Controller.getSimulation().setTimeStep((int) (double) newValue);
         });
 
@@ -961,5 +962,4 @@ public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
 }
