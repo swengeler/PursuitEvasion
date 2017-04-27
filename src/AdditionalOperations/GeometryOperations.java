@@ -57,21 +57,41 @@ public class GeometryOperations {
 
         Line temp;
         double agentX, agentY, x2, y2;
+        int i = 0;
+        boolean visib = true;
 
-        for(Agent agent: agents)    {
-            agentX = agent.getXPos();
-            agentY = agent.getYPos();
+        while(i < all.size())   {
+            x2 = all.get(i).getX();
+            y2 = all.get(i).getY();
 
-            for(Point2D point : all)    {
-                x2 = point.getX();
-                y2 = point.getY();
+
+
+            for(Agent agent : agents)   {
+                agentX = agent.getXPos();
+                agentY = agent.getYPos();
 
                 temp = new Line(agentX, agentY, x2, y2);
-                //For environment
-                if(!(lineIntersectInPoly(environment, temp)))    {
 
+                visib = true;
+                //Not blocked by environment
+                if(!lineIntersectInPoly(environment, temp)) {
+
+                    for(int j = 0; j < obstacles.size(); j++)   {
+                        //And if just one obstacle blocks ths view for the agent this agent cannnot see the point
+                        if(lineIntersectInPoly(obstacles.get(j), temp)) {
+                            visib = false;
+                            break;
+                        }
+                    }
                 }
             }
+            if(visib == false)   {
+                all.remove(i);
+            }
+            else {
+                i++;
+            }
+
         }
 
 
