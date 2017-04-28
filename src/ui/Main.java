@@ -501,7 +501,7 @@ public class Main extends Application {
     private void saveMapAndAgents() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save the current map");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map and agent data file", "*.maa"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map and controlledAgents data file", "*.maa"));
         File selectedFile = fileChooser.showSaveDialog(stage);
         if (selectedFile != null) {
             try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
@@ -585,7 +585,7 @@ public class Main extends Application {
                         }
                     }
                     initPlaceAgents();
-                    // read agent data
+                    // read controlledAgents data
                     String[] settings;
                     while ((line = in.readLine()) != null) {
                         settings = line.split(" ");
@@ -799,7 +799,7 @@ public class Main extends Application {
                             visualAgents.add(visualAgent);
                             pane.getChildren().add(visualAgent);
 
-                            // covering areas beyond the agent's vision
+                            // covering areas beyond the controlledAgents's vision
                             for (Shape s : covers) {
                                 s.toFront();
                             }
@@ -827,7 +827,7 @@ public class Main extends Application {
                     VisualAgent va = visualAgents.get(i);
                     Circle c = va.getAgentBody();
                     if (c.contains(e.getX(), e.getY())) {
-                        //contains agent
+                        //contains controlledAgents
                         ContextMenu contextMenu = new ContextMenu();
                         MenuItem editItem = new MenuItem("Edit");
                         MenuItem deleteItem = new MenuItem("Delete");
@@ -835,7 +835,7 @@ public class Main extends Application {
 
                         editItem.setOnAction(ae -> {
                             Dialog<AgentSettings> dialog = new Dialog<>();
-                            dialog.setTitle("Edit agent settings");
+                            dialog.setTitle("Edit controlledAgents settings");
                             ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(new Image(this.getClass().getResource("/rrr_icon.png").toString()));
 
                             ButtonType applyType = new ButtonType("Set", ButtonBar.ButtonData.APPLY);

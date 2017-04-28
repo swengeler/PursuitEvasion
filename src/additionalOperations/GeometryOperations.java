@@ -1,4 +1,4 @@
-package AdditionalOperations;
+package additionalOperations;
 
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
@@ -6,8 +6,6 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import simulation.Agent;
 
-import java.awt.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -77,7 +75,7 @@ public class GeometryOperations {
                 if(!lineIntersectInPoly(environment, temp)) {
 
                     for(int j = 0; j < obstacles.size(); j++)   {
-                        //And if just one obstacle blocks ths view for the agent this agent cannnot see the point
+                        //And if just one obstacle blocks ths view for the controlledAgents this controlledAgents cannnot see the point
                         if(lineIntersectInPoly(obstacles.get(j), temp)) {
                             visib = false;
                             break;

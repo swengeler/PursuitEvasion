@@ -32,7 +32,7 @@ public class RevealedMap {
     // TODO: DISTRIBUTE THIS ON SOMEBODY OTHER THAN MYSELF (RASHEED)
 
     public void update(double xPos, double yPos, double turnAngle, double fieldOfViewAngle, double fieldOfViewRange) {
-        // constructing the shape of the field of vision that the agent has
+        // constructing the shape of the field of vision that the controlledAgents has
         Arc arc = new Arc();
         arc.setCenterX(xPos);
         arc.setCenterY(yPos);
@@ -43,7 +43,7 @@ public class RevealedMap {
         arc.setType(ArcType.ROUND);
         arc.setFill(Color.BLACK);
 
-        // getting the shape of the area that the agent has vision of which is actually on the map
+        // getting the shape of the area that the controlledAgents has vision of which is actually on the map
         Shape addition = arc;
         for (Polygon h : holes) {
             addition = Shape.subtract(addition, h);

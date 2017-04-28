@@ -1,6 +1,5 @@
 package simulation;
 
-import com.sun.xml.internal.bind.v2.TODO;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
@@ -31,34 +30,34 @@ public class DummyPolicy extends MovePolicy {
         if (tree == null) {
             // initialise the tree and get an initial path to move to a leaf node
             initTree(map);
-            currentPath = tree.getRandomTraversal(tree.getNode(agent.getXPos(), agent.getYPos()));
-            currentPath.addInitLine(new Line(agent.getXPos(), agent.getYPos(), currentPath.getStartX(), currentPath.getStartY()));
+            currentPath = tree.getRandomTraversal(tree.getNode(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
+            currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));
             test = currentPath.getPathLines();
             testCounter = 0;
-            //return new Move(currentPath.getStartX() - agent.getXPos(), currentPath.getStartY() - agent.getYPos(), 0);
+            //return new Move(currentPath.getStartX() - getSingleAgent().getXPos(), currentPath.getStartY() - getSingleAgent().getYPos(), 0);
         }
 
         if (tree == null) {
             System.exit(-1);
         }
-        if (agent == null) {
+        if (getSingleAgent() == null) {
             System.exit(-2);
         }
         if (currentPath == null) {
             System.exit(-3);
         }
-        if (tree.getNodeIndex(agent.getXPos(), agent.getYPos()) == currentPath.getEndIndex()) {
+        if (tree.getNodeIndex(getSingleAgent().getXPos(), getSingleAgent().getYPos()) == currentPath.getEndIndex()) {
             // TODO: there should probably be a better check that takes into account that an entire branch might be cleared if there is vision of it
             // end of path reached, compute new path
-            currentPath = tree.getRandomTraversal(tree.getNode(agent.getXPos(), agent.getYPos()));
-            currentPath.addInitLine(new Line(agent.getXPos(), agent.getYPos(), currentPath.getStartX(), currentPath.getStartY()));
+            currentPath = tree.getRandomTraversal(tree.getNode(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
+            currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));
             test = currentPath.getPathLines();
             testCounter = 0;
         }
 
         boolean agentVisible = false;
         for (Agent a : agents) {
-            if (a != agent && a.isEvader() && map.isVisible(agent.getXPos(), agent.getYPos(), a.getXPos(), a.getYPos())) {
+            if (a != getSingleAgent() && a.isEvader() && map.isVisible(getSingleAgent().getXPos(), getSingleAgent().getYPos(), a.getXPos(), a.getYPos())) {
                 System.out.println("Evader is visible!");
                 agentVisible = true;
                 break;
@@ -71,13 +70,13 @@ public class DummyPolicy extends MovePolicy {
         // move along path
         Move result;
         double length = Math.sqrt(Math.pow(test.get(testCounter).getEndX() - test.get(testCounter).getStartX(), 2) + Math.pow(test.get(testCounter).getEndY() - test.get(testCounter).getStartY(), 2));
-        double deltaX = (test.get(testCounter).getEndX() - test.get(testCounter).getStartX()) / length * agent.getSpeed() / 50;
-        double deltaY = (test.get(testCounter).getEndY() - test.get(testCounter).getStartY()) / length * agent.getSpeed() / 50;
-        if (test.get(testCounter).contains(agent.getXPos() + deltaX, agent.getYPos() + deltaY)) {
+        double deltaX = (test.get(testCounter).getEndX() - test.get(testCounter).getStartX()) / length * getSingleAgent().getSpeed() / 50;
+        double deltaY = (test.get(testCounter).getEndY() - test.get(testCounter).getStartY()) / length * getSingleAgent().getSpeed() / 50;
+        if (test.get(testCounter).contains(getSingleAgent().getXPos() + deltaX, getSingleAgent().getYPos() + deltaY)) {
             // move along line
             result = new Move(deltaX, deltaY, 0);
         } else {
-            result = new Move(test.get(testCounter).getEndX() - agent.getXPos(), test.get(testCounter).getEndY() - agent.getYPos(), 0);
+            result = new Move(test.get(testCounter).getEndX() - getSingleAgent().getXPos(), test.get(testCounter).getEndY() - getSingleAgent().getYPos(), 0);
             testCounter++;
         }
         return result;

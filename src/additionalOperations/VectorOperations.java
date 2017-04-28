@@ -1,9 +1,7 @@
-package AdditionalOperations;
+package additionalOperations;
 
 
-import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
-import javafx.scene.shape.Polygon;
 
 import java.util.ArrayList;
 
@@ -16,17 +14,17 @@ public class VectorOperations {
 
 
 
-    public boolean pointIntersect(ArrayList<pointVector> vectors, Point2D AgentPos, Point2D dest) {
+    public boolean pointIntersect(ArrayList<PointVector> vectors, Point2D AgentPos, Point2D dest) {
 
-        pointVector tarVector = new pointVector(AgentPos, dest);
+        PointVector tarVector = new PointVector(AgentPos, dest);
 
-        for (pointVector vec : vectors) {
+        for (PointVector vec : vectors) {
 
         }
         return false;
     }
 
-    public static Point2D pointIntersect(pointVector vec1, pointVector vec2) {
+    public static Point2D pointIntersect(PointVector vec1, PointVector vec2) {
 
 
         double x1, x2, x3, x4;
@@ -72,25 +70,25 @@ public class VectorOperations {
         r = new Point2D(4.5, 5.5);
         s = new Point2D(-3.5, 3.5);
 
-        pointVector v1, v2;
+        PointVector v1, v2;
 
-        v1 = new pointVector(p, r);
-        v2 = new pointVector(q, s);
+        v1 = new PointVector(p, r);
+        v2 = new PointVector(q, s);
 
         System.out.println("intersect at = " + pointIntersect(v1, v2));
     }
 
-    public static double dotProduct(pointVector v1, pointVector v2) {
+    public static double dotProduct(PointVector v1, PointVector v2) {
         return (v1.getX() * v2.getX()) + (v1.getY() * v2.getY());
     }
 
     public static double crossProduct(Point2D p1, Point2D p2) {
-        pointVector v1 = new pointVector(p1.getX(), p1.getY());
-        pointVector v2 = new pointVector(p2.getX(), p2.getY());
+        PointVector v1 = new PointVector(p1.getX(), p1.getY());
+        PointVector v2 = new PointVector(p2.getX(), p2.getY());
         return crossProduct(v1, v2);
     }
 
-    public static double crossProduct(pointVector v1, pointVector v2) {
+    public static double crossProduct(PointVector v1, PointVector v2) {
         double a1, a2, b1, b2;
 
         a1 = v1.getX();

@@ -1,7 +1,6 @@
 package simulation;
 
-import AdditionalOperations.GeometryOperations;
-import javafx.collections.ObservableList;
+import additionalOperations.GeometryOperations;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 
@@ -60,7 +59,7 @@ public abstract class MapRepresentation {
     }
 
     public boolean isVisible(double x1, double y1, double x2, double y2) {
-        // check whether the second agent is visible from the position of the first agent
+        // check whether the second controlledAgents is visible from the position of the first controlledAgents
         // (given its field of view and the structure of the map)
         for (Line l : polygonBorders) {
             if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
@@ -70,6 +69,6 @@ public abstract class MapRepresentation {
         return true;
     }
 
-    // methods for the agent to extract the knowledge it has access to
+    // methods for the controlledAgents to extract the knowledge it has access to
 
 }
