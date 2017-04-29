@@ -7,10 +7,15 @@ import java.util.ArrayList;
 
 public abstract class CentralisedEntity extends Entity {
 
-    protected ArrayList<Agent> controlledAgents;
+    protected ArrayList<Agent> availableAgents;
+    protected int requiredAgents;
 
-    public CentralisedEntity(MapRepresentation map) {
+    protected CentralisedEntity(MapRepresentation map) {
         super(map);
     }
+
+    public abstract int totalRequiredAgents();
+    public abstract int remainingRequiredAgents();
+    public abstract void addAgent(Agent a);
 
 }

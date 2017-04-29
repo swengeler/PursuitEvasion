@@ -4,19 +4,26 @@ import control.Controller;
 import conversion.GridConversion;
 import entities.CentralisedEntity;
 import entities.DCREntity;
-import entities.Entity;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.*;
-import javafx.scene.layout.*;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.FileChooser;
@@ -24,13 +31,20 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.*;
-import simulation.*;
+import org.jdelaunay.delaunay.geometries.DEdge;
+import org.jdelaunay.delaunay.geometries.DPoint;
+import org.jdelaunay.delaunay.geometries.DTriangle;
+import simulation.AgentSettings;
+import simulation.MapRepresentation;
+import simulation.RevealedMap;
+import simulation.Simulation;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-public class Main extends Application {
+public class AltMain extends Application {
 
     private enum ProgramState {
         MAP_EDITING, AGENT_PLACING, SIMULATION
@@ -72,18 +86,6 @@ public class Main extends Application {
 
         // zoomable drawing pane
         pane = new ZoomablePane();
-        /*pane.setOnKeyTyped(e -> {
-            System.out.println("df");
-            if (e.isControlDown()) {
-                if (e.isShiftDown() && e.getCode() == KeyCode.S) {
-                    saveMapAndAgents();
-                } else if (e.getCode() == KeyCode.S) {
-                    saveMapOnly();
-                } else if (e.getCode() == KeyCode.O) {
-                    loadMap();
-                }
-            }
-        });*/
 
         // top-level container, partitions window into drawing pane and menu
         outerLayout = new HBox();
@@ -328,14 +330,6 @@ public class Main extends Application {
                             }
                         }
                     }
-
-                    /*// randomised walkthrough test
-                    SimplyConnectedTree tree = new SimplyConnectedTree((ArrayList<DTriangle>) includedTriangles);
-                    //tree.printAdjacencyMatrix();
-                    tree.getRandomTraversal(tree.getLeaf());
-                    tree.getRandomTraversal(tree.getLeaf());
-                    tree.getRandomTraversal(tree.getLeaf());
-                    tree.getRandomTraversal(tree.getLeaf());*/
                 } catch (DelaunayError error) {
                     error.printStackTrace();
                 }
@@ -362,96 +356,9 @@ public class Main extends Application {
         primaryStage.setTitle("Coded by Winston v5.76.002 build 42 alpha");
 
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/rrr_icon.png")));
-        //pane.getChildren().add(new ImageView(new Image(getClass().getResourceAsStream("/like-3.png"))));
 
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        /*Polygon arcTestPolygon = new Polygon();
-        arcTestPolygon.getPoints().addAll(
-                20.0, 30.0,
-                30.0, 90.0,
-                200.0, 150.0,
-                200.0, 80.0
-        );
-        arcTestPolygon.setFill(Color.LIGHTGREEN);
-        pane.getChildren().add(arcTestPolygon);
-
-        Arc arc = new Arc();
-        arc.setCenterX(100.0f);
-        arc.setCenterY(80.0f);
-        arc.setRadiusX(100.0f);
-        arc.setRadiusY(100.0f);
-        arc.setStartAngle(0.0f);
-        arc.setLength(60.0f);
-        arc.setType(ArcType.ROUND);
-        arc.setFill(Color.BLACK.deriveColor(1, 1, 1, 0.3));
-        arc.setStroke(Color.BLACK);
-        arc.setStrokeWidth(1);
-        pane.getChildren().add(arc);
-
-        Polygon testPolygon = new Polygon();
-        testPolygon.getPoints().addAll(
-                20.0, 30.0,
-                0.0, 0.0,
-                0.0, pane.getHeight(),
-                pane.getWidth(), pane.getHeight(),
-                pane.getWidth(), 0.0,
-                0.0, 0.0,
-                20.0, 30.0,
-                200.0, 80.0,
-                200.0, 150.0,
-                30.0, 90.0
-        );
-        testPolygon.setFill(Color.WHITE);
-        //pane.getChildren().add(testPolygon);
-
-        Button arcTestButton = new Button("Arc test");
-        arcTestButton.setOnAction(e -> {
-            arc.setStartAngle(arc.getStartAngle() + 30.0f);
-        });
-        menu.getChildren().add(arcTestButton);
-
-        VisualAgent visualAgent = new VisualAgent();
-        visualAgent.setTranslateX(300);
-        visualAgent.setTranslateY(300);
-        pane.getChildren().add(visualAgent);
-
-        Timeline timeLine = new Timeline();
-        timeLine.setCycleCount(Timeline.INDEFINITE);
-        timeLine.setAutoReverse(true);
-        KeyValue kv = new KeyValue(arc.startAngleProperty(), 360.0f);
-        KeyFrame kf = new KeyFrame(Duration.millis(4000), kv);
-        timeLine.getKeyFrames().add(kf);
-        timeLine.play();
-
-        Timeline timeLine2 = new Timeline();
-        timeLine2.setCycleCount(Timeline.INDEFINITE);
-        timeLine2.setAutoReverse(true);
-        KeyValue kv2 = new KeyValue(visualAgent.turnAngleProperty(), 360.0);
-        KeyFrame kf2 = new KeyFrame(Duration.millis(2000), kv2);
-        timeLine2.getKeyFrames().add(kf2);
-        timeLine2.play();
-
-        union = new Rectangle(250, 250, 100, 100);
-        //union = Shape.union(union, visualAgent.getFieldOfView());
-        union.setFill(Color.GREEN);
-        union.toFront();
-
-        System.out.println(union.getBoundsInParent().getMinX() + " " + union.getBoundsInParent().getMaxX() + " - " + union.getBoundsInParent().getMinY() + " " + union.getBoundsInParent().getMaxY());
-        pane.getChildren().add(union);
-
-        Button unionTestButton = new Button("Union test");
-        unionTestButton.setOnAction(e -> {
-            pane.getChildren().remove(union);
-            changeUnion(union, visualAgent.getFieldOfView());
-            pane.getChildren().add(union);
-            //union.toBack();
-            union.setFill(Color.BLACK);
-            System.out.println("Hello");
-        });
-        menu.getChildren().add(unionTestButton);*/
-
     }
 
     private void initPlaceAgents() {
@@ -676,12 +583,6 @@ public class Main extends Application {
 
                     indicatorLine.setVisible(false);
                 }
-                /*for (MapPolygon m : mapPolygons) {
-                    System.out.println("\nPolygon: ");
-                    for (int i = 0; i < m.getPoints().size(); i += 2) {
-                        System.out.println(m.getPoints().get(i) + " " + m.getPoints().get(i + 1));
-                    }
-                }*/
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

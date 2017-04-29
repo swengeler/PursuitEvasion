@@ -3,35 +3,35 @@ package simulation;
 import additionalOperations.GeometryOperations;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import ui.MapPolygon;
 
 import java.util.ArrayList;
 
-public abstract class MapRepresentation {
+public class MapRepresentation {
 
-    protected Polygon borderPolygon;
-    protected ArrayList<Polygon> obstaclePolygons;
+    private Polygon borderPolygon;
+    private ArrayList<Polygon> obstaclePolygons;
+    private ArrayList<Polygon> allPolygons;
+    private ArrayList<Line> polygonEdges;
 
-    protected ArrayList<Polygon> allPolygons;
-
-    protected ArrayList<Line> polygonBorders;
-
-    public MapRepresentation(Polygon borderPolygon, ArrayList<Polygon> obstaclePolygons) {
-        this.borderPolygon = borderPolygon;
-        this.obstaclePolygons = obstaclePolygons;
+    public MapRepresentation(ArrayList<MapPolygon> map) {
         allPolygons = new ArrayList<>();
-        allPolygons.add(borderPolygon);
-        allPolygons.addAll(obstaclePolygons);
-        polygonBorders = new ArrayList<>();
-        Line l = null;
-        for (Polygon p : allPolygons) {
-
-            for (int i = 0; i < p.getPoints().size(); i += 2) {
-                l = new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size())));
-                polygonBorders.add(l);
+        obstaclePolygons = new ArrayList<>();
+        for (MapPolygon p : map) {
+            if (p.getPoints().size() > 0) {
+                allPolygons.add(p.getPolygon());
+                obstaclePolygons.add(allPolygons.get(allPolygons.size() - 1));
             }
         }
+        borderPolygon = allPolygons.get(0);
+        obstaclePolygons.remove(0);
 
-
+        polygonEdges = new ArrayList<>();
+        for (Polygon p : allPolygons) {
+            for (int i = 0; i < p.getPoints().size(); i += 2) {
+                polygonEdges.add(new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size()))));
+            }
+        }
     }
 
     public boolean legalPosition(double xPos, double yPos) {
@@ -58,10 +58,14 @@ public abstract class MapRepresentation {
         return allPolygons;
     }
 
+    public ArrayList<Line> getPolygonEdges() {
+        return polygonEdges;
+    }
+
     public boolean isVisible(double x1, double y1, double x2, double y2) {
         // check whether the second controlledAgents is visible from the position of the first controlledAgents
         // (given its field of view and the structure of the map)
-        for (Line l : polygonBorders) {
+        for (Line l : polygonEdges) {
             if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
                 return false;
             }

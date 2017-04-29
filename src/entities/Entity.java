@@ -8,7 +8,7 @@ public abstract class Entity {
     protected MapRepresentation map;
     protected ShortestPathRoadMap paths;
 
-    public Entity(MapRepresentation map) {
+    protected Entity(MapRepresentation map) {
         this.map = map;
         paths = new ShortestPathRoadMap(map);
     }

@@ -86,13 +86,10 @@ public class DummyPolicy extends MovePolicy {
     private void initTree(MapRepresentation map) {
         try {
             ArrayList<DEdge> constraintEdges = new ArrayList<>();
+            ArrayList<Line> polygonEdges = map.getPolygonEdges();
             ArrayList<Polygon> polygons = map.getAllPolygons();
-            for (Polygon p : polygons) {
-                if (p != null) {
-                    for (int i = 0; i < p.getPoints().size(); i += 2) {
-                        constraintEdges.add(new DEdge(new DPoint(p.getPoints().get(i), p.getPoints().get(i + 1), 0), new DPoint(p.getPoints().get((i + 2) % p.getPoints().size()), p.getPoints().get((i + 3) % p.getPoints().size()), 0)));
-                    }
-                }
+            for (Line l : polygonEdges) {
+                constraintEdges.add(new DEdge(new DPoint(l.getStartX(), l.getStartY(), 0), new DPoint(l.getEndX(), l.getEndY(), 0)));
             }
 
             ConstrainedMesh mesh = new ConstrainedMesh();
