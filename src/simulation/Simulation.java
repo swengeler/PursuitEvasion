@@ -1,5 +1,6 @@
 package simulation;
 
+import entities.CentralisedEntity;
 import javafx.scene.shape.Circle;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
@@ -14,8 +15,6 @@ public class Simulation {
 
     private MapRepresentation map;
     private ArrayList<Agent> agents;
-
-    private boolean simulationRunning;
 
     private long timeStep = 300;
 
@@ -48,6 +47,10 @@ public class Simulation {
                     a.move(map, agents);
                 }
                 // update UI
+            }
+
+            if (testCentralisedEntity != null) {
+                testCentralisedEntity.move();
             }
 
             // check whether any new evaders have been captured
@@ -101,8 +104,6 @@ public class Simulation {
         timerSetup();
     }
 
-    public boolean checkSimulationOver() {
-        return false;
-    }
+    public static CentralisedEntity testCentralisedEntity;
 
 }

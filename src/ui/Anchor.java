@@ -43,6 +43,9 @@ public class Anchor extends Circle {
         });
         setOnMouseReleased(e -> {
             getScene().setCursor(Cursor.HAND);
+            if (Main.mapPolygons == null) {
+                return;
+            }
             for (MapPolygon mp1 : Main.mapPolygons) {
                 for (MapPolygon mp2 : Main.mapPolygons) {
                     // check for intersection between lines

@@ -173,7 +173,6 @@ public class Main extends Application {
 
             Polygon outer = new Polygon();
 
-
             for (int i = 1; i < mapPolygons.size(); i++) {
                 mapPolygons.get(i).setFill(Color.WHITE);
                 mapPolygons.get(i).toFront();
@@ -233,6 +232,7 @@ public class Main extends Application {
             MapRepresentation map = new MapRepresentation(mapPolygons);
             CentralisedEntity entity = new DCREntity(map);
             int requiredAgents = entity.remainingRequiredAgents();
+            System.out.println("Required agents: " + requiredAgents);
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed

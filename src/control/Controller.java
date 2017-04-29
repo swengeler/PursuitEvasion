@@ -1,5 +1,6 @@
 package control;
 
+import entities.DCREntity;
 import javafx.scene.shape.Polygon;
 import simulation.*;
 import ui.*;
@@ -56,6 +57,7 @@ public class Controller {
 
         Simulation sim = new Simulation(mapRepresentation, agents);
         setSimulation(sim);
+        DCREntity.testTarget = agents.get(0);
     }
 
     /*public static void betterTest(ArrayList<MapPolygon> map, ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {

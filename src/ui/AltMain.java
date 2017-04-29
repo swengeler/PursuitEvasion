@@ -34,10 +34,7 @@ import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DPoint;
 import org.jdelaunay.delaunay.geometries.DTriangle;
-import simulation.AgentSettings;
-import simulation.MapRepresentation;
-import simulation.RevealedMap;
-import simulation.Simulation;
+import simulation.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -71,6 +68,15 @@ public class AltMain extends Application {
     private BooleanProperty addPoints;
 
     private ProgramState currentState;
+
+    // ************************************************************************************************************** //
+    // Test stuff for centralised algorithm
+    // ************************************************************************************************************** //
+    private boolean testCentralised;
+    private CentralisedEntity testCentralisedEntity;
+    // ************************************************************************************************************** //
+    // Test stuff for centralised algorithm
+    // ************************************************************************************************************** //
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -233,13 +239,32 @@ public class AltMain extends Application {
         Button testCentralisedButton = new Button("Test centralised policy");
         testCentralisedButton.setOnAction(e -> {
             MapRepresentation map = new MapRepresentation(mapPolygons);
-            CentralisedEntity entity = new DCREntity(map);
-            int requiredAgents = entity.remainingRequiredAgents();
+            testCentralisedEntity = new DCREntity(map);
+            testCentralised = true;
+            int requiredAgents = testCentralisedEntity.remainingRequiredAgents();
+            System.out.println("Required agents: " + requiredAgents);
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
         menu.getChildren().add(testCentralisedButton);
+
+        Button startTestCentralisedButton = new Button("Start centralised test");
+        startTestCentralisedButton.setOnAction(e -> {
+            Simulation.testCentralisedEntity = this.testCentralisedEntity;
+            Simulation sim = Controller.getSimulation();
+            if (sim == null) {
+                if (mapPolygons == null || visualAgents == null || mapPolygons.isEmpty() || visualAgents.isEmpty()) {
+                    System.out.println("Not enough data to construct simulation!");
+                } else {
+                    Controller.theBestTest(mapPolygons, visualAgents);
+                    currentState = ProgramState.SIMULATION;
+                }
+            } else {
+                sim.unPause();
+            }
+        });
+        menu.getChildren().add(startTestCentralisedButton);
 
         Button triangulationButton = new Button("Show triangulation");
         triangulationButton.setOnAction(e -> {
@@ -707,18 +732,28 @@ public class AltMain extends Application {
                             }
                         }
                         if (!placedInHole && e.isPrimaryButtonDown() && mapPolygons.get(0).contains(e.getX(), e.getY())) {
-                            VisualAgent visualAgent = new VisualAgent(e.getX(), e.getY());
                             if (visualAgents == null) {
                                 visualAgents = new ArrayList<>();
                             }
-                            visualAgents.add(visualAgent);
-                            pane.getChildren().add(visualAgent);
+                            if (!testCentralised) {
+                                VisualAgent visualAgent = new VisualAgent(e.getX(), e.getY());
+                                visualAgents.add(visualAgent);
+                                pane.getChildren().add(visualAgent);
 
-                            // covering areas beyond the controlledAgents's vision
-                            for (Shape s : covers) {
-                                s.toFront();
+                                // covering areas beyond the controlledAgents's vision
+                                for (Shape s : covers) {
+                                    s.toFront();
+                                }
+                                mapPolygons.get(0).toFront();
+                            } else {
+                                VisualAgent va1 = new VisualAgent(e.getX(), e.getY());
+                                va1.getAgentBody().setFill(Color.LAWNGREEN);
+                                VisualAgent va2 = new VisualAgent(e.getX(), e.getY());
+                                va2.getAgentBody().setFill(Color.LAWNGREEN);
+                                pane.getChildren().addAll(va1, va2);
+                                testCentralisedEntity.addAgent(new Agent(va1.getSettings()));
+                                testCentralisedEntity.addAgent(new Agent(va2.getSettings()));
                             }
-                            mapPolygons.get(0).toFront();
                         }
                     }
                 }

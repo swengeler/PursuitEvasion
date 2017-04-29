@@ -18,7 +18,10 @@ public class DCREntity extends CentralisedEntity {
 
     @Override
     public void move() {
-
+        // TODO: For now implement the 2 agent randomised approach for a simply-connected environment
+        // if the evader is not visible, use the 2 agents to search for the pursuer together
+        // if the evader was located before and just needs to be followed and caught:
+        // use one agent as searcher and the other as catcher
     }
 
     @Override
@@ -40,5 +43,7 @@ public class DCREntity extends CentralisedEntity {
         // build needed data structures and analyse map to see how many agents are required
         requiredAgents = 2;
     }
+
+    public static Agent testTarget;
 
 }
