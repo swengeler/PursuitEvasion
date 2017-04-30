@@ -34,68 +34,6 @@ public class GeometryOperations {
 
 
 
-    public static ArrayList<Point2D> getX1Points(Polygon environment, ArrayList<Polygon> obstacles, ArrayList<Agent> agents)  {
-
-
-        //First you add all points
-
-
-        ArrayList<Point2D> all = polyToPoints(environment);
-        ArrayList<Point2D> vis = new ArrayList<>();
-         for(Polygon poly : obstacles)   {
-            all.addAll(polyToPoints(poly));
-        }
-
-        /* Possible cases for a type1 vertex:
-        *   1. environment Vertex is blocked by environment itself
-        *   2. environment Vertex is blocked by an obstacle
-        *   3. Obstacle Vertex is blocked by enironment
-        *   4. Obstacle vertex is blocked by obstacle
-         */
-
-        Line temp;
-        double agentX, agentY, x2, y2;
-        int i = 0;
-        boolean visib = true;
-
-        while(i < all.size())   {
-            x2 = all.get(i).getX();
-            y2 = all.get(i).getY();
-
-
-
-            for(Agent agent : agents)   {
-                agentX = agent.getXPos();
-                agentY = agent.getYPos();
-
-                temp = new Line(agentX, agentY, x2, y2);
-
-                visib = true;
-                //Not blocked by environment
-                if(!lineIntersectInPoly(environment, temp)) {
-
-                    for(int j = 0; j < obstacles.size(); j++)   {
-                        //And if just one obstacle blocks ths view for the controlledAgents this controlledAgents cannnot see the point
-                        if(lineIntersectInPoly(obstacles.get(j), temp)) {
-                            visib = false;
-                            break;
-                        }
-                    }
-                }
-            }
-            if(visib == false)   {
-                all.remove(i);
-            }
-            else {
-                i++;
-            }
-
-        }
-
-
-        return null;
-    }
-
 
 
     /*
