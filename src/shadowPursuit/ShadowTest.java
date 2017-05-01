@@ -1,11 +1,12 @@
 package shadowPursuit;
 
-import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Polygon;
+import simulation.Agent;
 
 import java.util.ArrayList;
 
+import static shadowPursuit.shadowOperations.getX1Points;
 
 
 /**
@@ -16,28 +17,20 @@ public class ShadowTest {
     Polygon poly;
 
     public ShadowTest() {
-        poly = new Polygon(704.0,
-        179.0,
-        415.0,
-        172.0,
-        380.0,
-        230.0,
-        275.0,
-        300.0,
-        226.0,
-        197.0,
-        131.0,
-        301.0,
-        156.0,
-        498.0,
-        378.0,
-        491.0,
-        410.0,
-        339.0,
-        678.0,
-        453.0,
-        785.0,
-        345.0);
+        poly = new Polygon(204, 216, 351, 215, 390, 316, 439, 214, 544, 213, 544, 368, 196, 371);
+
+        Point2D agentPos = new Point2D(500, 230);
+        ArrayList<Point2D> agents = new ArrayList<>();
+        agents.add(agentPos);
+
+        ArrayList<Polygon> obstacles = new ArrayList<>();
+
+        //ToDO someting goes wrong here
+        ArrayList<Point2D> type1 = getX1Points(poly, obstacles, agents);
+        for(Point2D point : type1)  {
+            System.out.println(point);
+        }
+
         /*
         ArrayList<Point2D> points = polyToPoints(poly);
 

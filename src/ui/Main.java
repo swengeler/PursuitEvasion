@@ -11,6 +11,7 @@ import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -29,6 +30,8 @@ import simulation.*;
 
 import java.io.*;
 import java.util.*;
+
+import static additionalOperations.GeometryOperations.polyToPoints;
 
 public class Main extends Application {
 
@@ -778,6 +781,17 @@ public class Main extends Application {
                             }
 
                             System.out.println("Polygon created (with " + ((currentMapPolygon.getPoints().size() / 2) - 1) + " points)");
+
+                            Polygon poly = currentMapPolygon.getPolygon();
+
+                            //Robin = added here to get coordinates ,of a polygon to check if points are detected correctly
+                            /*
+                            ArrayList<Point2D> points = polyToPoints(poly);
+                            for(Point2D point : points) {
+                                System.out.println(point);
+                            }
+                            */
+
                             System.out.println(mapPolygons.size());
 
                             // connected to first point to close the polygon

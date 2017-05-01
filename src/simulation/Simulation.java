@@ -1,13 +1,17 @@
 package simulation;
 
 import entities.CentralisedEntity;
+import javafx.geometry.Point2D;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Polygon;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static additionalOperations.GeometryOperations.polyToPoints;
 
 public class Simulation {
 
@@ -22,6 +26,8 @@ public class Simulation {
         this.map = map;
         this.agents = agents;
         timerSetup();
+
+
     }
 
     public Simulation(ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {

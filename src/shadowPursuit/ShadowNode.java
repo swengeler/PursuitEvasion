@@ -32,9 +32,9 @@ public class ShadowNode {
     //Type1 Node
     public ShadowNode(Point2D position) {
         this.position = position;
-
         type = type1;
     }
+
 
     //Type2 Node()
     public ShadowNode(Point2D position, ShadowNode neighbor1) {
@@ -92,6 +92,14 @@ public class ShadowNode {
         return next;
     }
 
+    public void addnextType1(ShadowNode newNeighbor) {
+        this.next = newNeighbor;
+        newNeighbor.prev = this;
+    }
+
+    public String toString(){
+        return new String(this.getPosition().toString());
+    }
 
 
 

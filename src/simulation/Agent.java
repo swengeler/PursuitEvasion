@@ -16,6 +16,7 @@ public class Agent {
         settings = agentSettings;
     }
 
+
     public double getSpeed() {
         return settings.getSpeed();
     }

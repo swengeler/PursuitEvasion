@@ -19,7 +19,7 @@ public class shadowOperations {
 
 
 
-    public static ArrayList<Point2D> getX1Points(Polygon environment, ArrayList<Polygon> obstacles, ArrayList<Agent> agents)  {
+    public static ArrayList<Point2D> getX1Points(Polygon environment, ArrayList<Polygon> obstacles, ArrayList<Point2D> agents)  {
 
 
         //First you add all points
@@ -27,8 +27,10 @@ public class shadowOperations {
 
         ArrayList<Point2D> all = polyToPoints(environment);
         ArrayList<Point2D> vis = new ArrayList<>();
-        for(Polygon poly : obstacles)   {
-            all.addAll(polyToPoints(poly));
+        if(obstacles.size() > 0) {
+            for (Polygon poly : obstacles) {
+                all.addAll(polyToPoints(poly));
+            }
         }
 
         /* Possible cases for a type1 vertex:
@@ -43,15 +45,17 @@ public class shadowOperations {
         int i = 0;
         boolean visib = true;
 
+
+
         while(i < all.size())   {
             x2 = all.get(i).getX();
             y2 = all.get(i).getY();
 
 
 
-            for(Agent agent : agents)   {
-                agentX = agent.getXPos();
-                agentY = agent.getYPos();
+            for(Point2D agent : agents)   {
+                agentX = agent.getX();
+                agentY = agent.getY();
 
                 temp = new Line(agentX, agentY, x2, y2);
 
@@ -74,7 +78,7 @@ public class shadowOperations {
             else {
                 all.remove(i);
             }
-
+            System.out.println("New i = " + i);
         }
 
         return all;
@@ -255,7 +259,7 @@ public class shadowOperations {
             connected.add(temp);
             j = i + 1;
             if(directConnectInPoly(temp, type1.get(j), environment)) {
-                while (directConnectInPoly(temp, type1.get(j), environment)) {
+                while(directConnectInPoly(temp, type1.get(j), environment)) {
                     i = j;
                     j = i + 1;
                     temp = type1.get(i);
@@ -264,12 +268,22 @@ public class shadowOperations {
             }
             else    {
                 //Find obstacle in question
-                //TODO continue here
-
+                for(Polygon obst : obstacles)   {
+                    if(directConnectInPoly(temp, type1.get(j), obst)) {
+                        while (directConnectInPoly(temp, type1.get(j), obst)) {
+                            i = j;
+                            j = i + 1;
+                            temp = type1.get(i);
+                            connected.add(temp);
+                        }
+                        break;
+                    }
+                }
+                overviewConnected.add(connected);
             }
 
         }
-        return  null;
+        return  overviewConnected;
 
     }
 
