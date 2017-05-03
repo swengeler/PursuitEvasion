@@ -2,10 +2,12 @@ package shadowPursuit;
 
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.shape.Polygon;
+import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 
-import static shadowPursuit.shadowOperations.inPolygon;
+import static shadowPursuit.shadowOperations.*;
 
 /**
  * Created by Robins on 30.04.2017.
@@ -15,69 +17,72 @@ public class ShadowGraph {
 
     ArrayList<ShadowNode> Nodes;
 
-    public ShadowGraph()    {
-        Nodes = new ArrayList<>();
+    private Polygon environment;
+    private ArrayList<Polygon> obstacles;
+    private ArrayList<Polygon> allPolygons;
+
+    private ArrayList<Point2D> agents;
+
+
+    public ShadowGraph(MapRepresentation map, ArrayList<Point2D> agents)    {
+        environment = map.getBorderPolygon();
+        obstacles = map.getObstaclePolygons();
+
+        allPolygons = map.getAllPolygons();
+        this.agents = agents;
+
 
     }
 
 
-    public void addType1(Point2D type1)   {
-        ShadowNode newNode = new ShadowNode(type1);
-        if(Nodes.size() == 0)   {
-            Nodes.add(newNode);
-        }
-        else    {
+    public void generateType1() {
+        ArrayList<Point2D> t1 = getX1Points(environment, obstacles, agents);
 
+        ShadowNode temp;
+        for(Point2D point : t1) {
+            temp = new ShadowNode(point);
+            Nodes.add(temp);
         }
+
+
     }
 
-    public void addConnectedType1(ArrayList<Point2D> connectedType1){
 
+    public void generateT1Connections() {
+        ShadowNode start, left, right;
+        Polygon tempPoly;
+        Point2D leftP, rightP;
+        ArrayList<Point2D> tempPoints;
 
-        boolean alreadyAdded =false;
-        //Check first if not already in lIst
+        for(int i = 0; i < Nodes.size(); i++)   {
+            start = Nodes.get(i);
 
-        if(Nodes.size() != 0) {
-            for (ShadowNode node : Nodes) {
-                if (inPolygon(node.getPosition(), connectedType1)) {
-                    //Means that this list also in the list of all nodes - so not interesting
-                    alreadyAdded = true;
-                    break;
+            //Get adjacent points
+            if(start.prev == null || start.next != null) {
+                tempPoints = getAdjacentPoints(start.getPosition(), allPolygons);
+                if (tempPoints.size() == 0) {
+                    System.exit(234567);
+                } else {
+                    leftP = tempPoints.get(0);
+                    rightP = tempPoints.get(1);
+                    for(ShadowNode node : Nodes)    {
+                        if(node.getPosition() == leftP) {
+                            start.prev = node;
+                        }
+                        else if(node.getPosition() == rightP)   {
+                            start.next = node;
+                        }
+                        if(start.next != null && start.prev != null) {
+                            break;
+                        }
+                    }
+
                 }
             }
-            if(!alreadyAdded)   {
-                addNodesToList(connectedType1);
-            }
-
-        }
-        else    {
-            addNodesToList(connectedType1);
         }
     }
 
 
-    public void addNodesToList(ArrayList<Point2D> points)    {
-        ShadowNode temp;
-        for(int i = 0; i < points.size(); i++) {
-            temp = new ShadowNode(points.get(i));
-            if(i > 0)   {
-                Nodes.get(i-1).addnextType1(temp);
-            }
-        }
-    }
-
-    public void printGraph()    {
-        ShadowNode temp, start;
-        for(int i = 0; i < Nodes.size(); i++) {
-            start = Nodes.get(i);
-            temp = Nodes.get(i);
-            while (temp.next != null && temp.next != start)   {
-                System.out.print(temp + "\t");
-                temp = Nodes.get(++i);
-            }
-            System.out.println();
-        }
-    }
 
 
 }
