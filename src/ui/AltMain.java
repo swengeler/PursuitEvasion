@@ -35,8 +35,7 @@ import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DPoint;
 import org.jdelaunay.delaunay.geometries.DTriangle;
-import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.graph.SimpleGraph;
+import org.jgrapht.graph.*;
 import simulation.*;
 
 import java.io.*;
@@ -554,7 +553,7 @@ public class AltMain extends Application {
         menu.getChildren().add(slider);
 
         slider.valueProperty().addListener((ov, oldValue, newValue) -> {
-            System.out.println("val = " + newValue);
+            //System.out.println("val = " + newValue);
             Controller.getSimulation().setTimeStep((int) (double) newValue);
         });
 

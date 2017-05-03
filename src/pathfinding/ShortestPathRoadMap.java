@@ -50,7 +50,7 @@ public class ShortestPathRoadMap {
                 //currentAngle = Math.acos((a1 * b1 + a2 * b2) / (Math.sqrt(Math.pow(a1, 2) + Math.pow(a2, 2)) * Math.sqrt(Math.pow(b1, 2) + Math.pow(b2, 2))));
                 inPolygon = p.contains(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + +0.0001 * a2);
                 if (!inPolygon) {
-                    graph.add(new Vertex(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + +0.0001 * a2));
+                    graph.add(new Vertex(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + 0.0001 * a2));
                     for (int j = 0; j < p.getPoints().size(); j += 2) {
                         if (i != j) {
 
@@ -96,16 +96,20 @@ public class ShortestPathRoadMap {
 
         for (int j = 0; j < list.length; j++) {
             if (j % 2 == 0) {
-                if (list[j] > maxx)
+                if (list[j] > maxx) {
                     maxx = list[j];
-                if (list[j] < minx)
+                }
+                if (list[j] < minx) {
                     minx = list[j];
+                }
 
             } else {
-                if (list[j] > maxy)
+                if (list[j] > maxy) {
                     maxy = list[j];
-                if (list[j] < miny)
+                }
+                if (list[j] < miny) {
                     miny = list[j];
+                }
             }
         }
 
@@ -140,17 +144,14 @@ public class ShortestPathRoadMap {
         }
         DijkstraShortestPath test = new DijkstraShortestPath(graph1);
         return test.getPath(source, sink);
-
-
     }
 
     public ArrayList<javafx.geometry.Point2D> findReflex(MapRepresentation map) {
-
         ArrayList<Polygon> polygons = map.getAllPolygons();
 
         GeometryOperations geometryOperations = new GeometryOperations();
-        ArrayList<javafx.geometry.Point2D> reflex= new ArrayList<>();
-        int reflexIndex=0;
+        ArrayList<javafx.geometry.Point2D> reflex = new ArrayList<>();
+        int reflexIndex = 0;
         //  ArrayList<javafx.geometry.Point2D> polygon= geometryOperations.polyToPoints(polygons);
 
         for (int i = 0; i < polygons.size(); i++) {
@@ -161,17 +162,17 @@ public class ShortestPathRoadMap {
                     javafx.geometry.Point2D left = polygon.get(j - 1);
                     javafx.geometry.Point2D right = polygon.get(j + 1);
 
-                    double leftvector = Math.toDegrees(Math.atan2(left.getX() - polygon.get(j).getX(), left.getY() - polygon.get(j).getY()))
-                    double rightvector = Math.toDegrees(Math.atan2(right.getX() - polygon.get(j).getX(), right.getY() - polygon.get(j).getY()))
+                    double leftvector = Math.toDegrees(Math.atan2(left.getX() - polygon.get(j).getX(), left.getY() - polygon.get(j).getY()));
+                    double rightvector = Math.toDegrees(Math.atan2(right.getX() - polygon.get(j).getX(), right.getY() - polygon.get(j).getY()));
 
-                    if(rightvector < 0){
+                    if (rightvector < 0) {
                         rightvector += 360;
                     }
-                    if(leftvector < 0){
+                    if (leftvector < 0) {
                         leftvector += 360;
                     }
 
-                    if((leftvector+rightvector)%360 >180){
+                    if ((leftvector + rightvector) % 360 > 180) {
                         reflex.add(reflexIndex, polygon.get(j));
                         reflexIndex++;
                     }
@@ -182,22 +183,17 @@ public class ShortestPathRoadMap {
             }
         }
         return reflex;
-
-
     }
 
 
-
-    public void reflexInlineofsight(MapRepresentation map, ArrayList<Point2D> reflexs){
-
-        for(int i=0; i<reflexs.size(); i++){
-            for(int j=0; j<reflexs.size(); i++){
-                if(i!=j){
-                    if(map.isVisible(reflexs.get(i).getX(),reflexs.get(i).getY(),reflexs.get(j).getX(),reflexs.get(j).getY());
+    public void reflexInlineofsight(MapRepresentation map, ArrayList<Point2D> reflexs) {
+        for (int i = 0; i < reflexs.size(); i++) {
+            for (int j = 0; j < reflexs.size(); i++) {
+                if (i != j) {
+                    if (map.isVisible(reflexs.get(i).getX(), reflexs.get(i).getY(), reflexs.get(j).getX(), reflexs.get(j).getY()));
                 }
             }
         }
-
     }
 
 
