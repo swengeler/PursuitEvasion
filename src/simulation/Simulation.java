@@ -1,6 +1,7 @@
 package simulation;
 
 import entities.CentralisedEntity;
+import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polygon;
@@ -22,11 +23,28 @@ public class Simulation {
 
     private long timeStep = 300;
 
+
+    //extra boolean to printout polygons for shadowtests
+    private final boolean polyPrint = false;
+
     public Simulation(MapRepresentation map, ArrayList<Agent> agents) {
         this.map = map;
         this.agents = agents;
         timerSetup();
 
+
+        //Want to print out certai polygosns to know whether shadowpoins are calulated correctly
+        if(polyPrint)   {
+            ObservableList<Double> envPoints = map.getBorderPolygon().getPoints();
+            for(Double entry: envPoints)   {
+                System.out.print(entry + ",");
+            }
+            System.out.println();
+            for(Agent agent: agents)    {
+                System.out.println("Agent -> X = " + agent.getXPos() + "\t Y = " + agent.getYPos());
+            }
+
+        }
 
     }
 

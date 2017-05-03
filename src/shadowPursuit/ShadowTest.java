@@ -6,6 +6,7 @@ import simulation.Agent;
 
 import java.util.ArrayList;
 
+import static additionalOperations.GeometryOperations.polyToPoints;
 import static shadowPursuit.shadowOperations.getX1Points;
 
 
@@ -17,26 +18,22 @@ public class ShadowTest {
     Polygon poly;
 
     public ShadowTest() {
-        poly = new Polygon(204, 216, 351, 215, 390, 316, 439, 214, 544, 213, 544, 368, 196, 371);
+        poly = new Polygon(682.0,281.0,657.0,281.0,650.0,300.0,642.0,285.0,639.0,264.0,656.0,252.0,675.0,236.0,694.0,240.0,713.0,242.0,718.0,227.0,713.0,214.0,697.0,202.0,676.0,199.0,658.0,203.0,645.0,209.0,615.0,227.0,601.0,241.0,598.0,267.0,604.0,298.0,613.0,318.0,627.0,328.0,652.0,332.0,671.0,324.0,677.0,303.0);
 
-        Point2D agentPos = new Point2D(500, 230);
+        Point2D agentPos = new Point2D(670, 291);
         ArrayList<Point2D> agents = new ArrayList<>();
         agents.add(agentPos);
 
         ArrayList<Polygon> obstacles = new ArrayList<>();
 
-        //ToDO someting goes wrong here
+
         ArrayList<Point2D> type1 = getX1Points(poly, obstacles, agents);
         for(Point2D point : type1)  {
             System.out.println(point);
         }
 
-        /*
+        System.out.println();
         ArrayList<Point2D> points = polyToPoints(poly);
-
-        for(Point2D p: points)  {
-            System.out.print(p + "\t");
-        }*/
 
     }
 
