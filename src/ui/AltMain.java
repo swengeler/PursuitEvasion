@@ -442,53 +442,6 @@ public class AltMain extends Application {
                     }
                     // loop above fills the adjacency matrix
 
-                    // 2. merge all vertices of degree 2
-                    boolean degreeTwoRemaining = true;
-                    while (degreeTwoRemaining) {
-                        degreeTwoRemaining = false;
-                        for (int i = 0; i < nodes.size(); i++) {
-                            int adjCount = 0;
-                            int mergeNeighbourIndex = -1;
-                            int otherNeighbourIndex = -1;
-                            for (int j = 0; j < nodes.size(); j++) {
-                                if (adjacencyMatrix[i][j] == 1) {
-                                    adjCount++;
-                                    if (adjCount == 1) {
-                                        mergeNeighbourIndex = j;
-                                    } else {
-                                        otherNeighbourIndex = j;
-                                    }
-                                }
-                            }
-                            int mergeNeighbourDegree = 0;
-                            for (int j = 0; j < nodes.size(); j++) {
-                                if (adjacencyMatrix[mergeNeighbourDegree][j] == 1) {
-                                    mergeNeighbourDegree++;
-                                }
-                            }
-                            if (mergeNeighbourDegree > 2) {
-                                int store = mergeNeighbourIndex;
-                                mergeNeighbourIndex = otherNeighbourIndex;
-                                otherNeighbourIndex = store;
-                            }
-                            if (adjCount == 2) {
-                                System.out.println("Merge " + i + " into " + mergeNeighbourIndex);
-                                // add triangles to neighbour which is not deleted
-                                nodes.get(mergeNeighbourIndex).addAll(nodes.get(i));
-                                nodes.get(i).clear();
-                                // connect the merged and the other adjacent vertex
-                                adjacencyMatrix[mergeNeighbourIndex][otherNeighbourIndex] = 1;
-                                adjacencyMatrix[otherNeighbourIndex][mergeNeighbourIndex] = 1;
-                                // "delete" this vertex
-                                for (int j = 0; j < nodes.size(); j++) {
-                                    adjacencyMatrix[i][j] = -1;
-                                    adjacencyMatrix[j][i] = -1;
-                                }
-                                degreeTwoRemaining = true;
-                            }
-                        }
-                    }
-
                     // 1. delete all vertices of degree 1
                     boolean degreeOneRemaining = true;
                     while (degreeOneRemaining) {
@@ -517,6 +470,56 @@ public class AltMain extends Application {
                         }
                     }
 
+                    // 2. merge all vertices of degree 2
+                    boolean degreeTwoRemaining = true;
+                    while (degreeTwoRemaining) {
+                        degreeTwoRemaining = false;
+                        for (int i = 0; i < nodes.size(); i++) {
+                            int adjCount = 0;
+                            int mergeNeighbourIndex = -1;
+                            int otherNeighbourIndex = -1;
+                            for (int j = 0; j < nodes.size(); j++) {
+                                if (adjacencyMatrix[i][j] == 1) {
+                                    adjCount++;
+                                    if (adjCount == 1) {
+                                        mergeNeighbourIndex = j;
+                                    } else {
+                                        otherNeighbourIndex = j;
+                                    }
+                                }
+                            }
+                            if (mergeNeighbourIndex != -1) {
+                                int mergeNeighbourDegree = 0;
+                                for (int j = 0; j < nodes.size(); j++) {
+                                    if (adjacencyMatrix[mergeNeighbourIndex][j] == 1) {
+                                        mergeNeighbourDegree++;
+                                    }
+                                }
+                                if (mergeNeighbourDegree > 2) {
+                                    int store = mergeNeighbourIndex;
+                                    mergeNeighbourIndex = otherNeighbourIndex;
+                                    otherNeighbourIndex = store;
+                                    continue;
+                                }
+                            }
+                            if (adjCount == 2) {
+                                System.out.println("Merge " + i + " into " + mergeNeighbourIndex);
+                                // add triangles to neighbour which is not deleted
+                                nodes.get(mergeNeighbourIndex).addAll(nodes.get(i));
+                                nodes.get(i).clear();
+                                // connect the merged and the other adjacent vertex
+                                adjacencyMatrix[mergeNeighbourIndex][otherNeighbourIndex] = 1;
+                                adjacencyMatrix[otherNeighbourIndex][mergeNeighbourIndex] = 1;
+                                // "delete" this vertex
+                                for (int j = 0; j < nodes.size(); j++) {
+                                    adjacencyMatrix[i][j] = -1;
+                                    adjacencyMatrix[j][i] = -1;
+                                }
+                                degreeTwoRemaining = true;
+                            }
+                        }
+                    }
+
                     Polygon tempTriangle;
                     Color currentColor;
                     for (ArrayList<DTriangle> node : nodes) {
@@ -524,6 +527,7 @@ public class AltMain extends Application {
                         for (DTriangle dt : node) {
                             tempTriangle = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(),dt.getPoint(1).getX(), dt.getPoint(1).getY(),dt.getPoint(2).getX(), dt.getPoint(2).getY());
                             tempTriangle.setFill(currentColor);
+                            tempTriangle.setStroke(Color.BLACK);
                             pane.getChildren().add(tempTriangle);
                         }
                     }
