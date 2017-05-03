@@ -1,11 +1,15 @@
 package simulation;
 
 import additionalOperations.GeometryOperations;
+import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import ui.MapPolygon;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+
+import static additionalOperations.GeometryOperations.polyToPoints;
 
 public class MapRepresentation {
 
@@ -13,6 +17,7 @@ public class MapRepresentation {
     private ArrayList<Polygon> obstaclePolygons;
     private ArrayList<Polygon> allPolygons;
     private ArrayList<Line> polygonEdges;
+
 
     public MapRepresentation(ArrayList<MapPolygon> map) {
         allPolygons = new ArrayList<>();
@@ -32,6 +37,9 @@ public class MapRepresentation {
                 polygonEdges.add(new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size()))));
             }
         }
+
+
+
     }
 
     public boolean legalPosition(double xPos, double yPos) {

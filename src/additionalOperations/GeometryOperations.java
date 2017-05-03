@@ -95,6 +95,7 @@ public class GeometryOperations {
 
 
     public static boolean lineIntersect(Line l1, Line l2) {
+        //System.out.println("Comparing = " + l1 + "\nAND = " + l2 + "\n");
         return lineIntersect(l1, l2.getStartX(), l2.getStartY(), l2.getEndX(), l2.getEndY());
     }
 
