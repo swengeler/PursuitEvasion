@@ -16,6 +16,5 @@
     <orderEntry type="library" name="Maven: com.vividsolutions:jts:1.12" level="project" />
     <orderEntry type="library" name="Maven: xerces:xercesImpl:2.4.0" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.16" level="project" />
-    <orderEntry type="library" name="Maven: org.jgrapht:jgrapht-jdk1.5:0.7.3" level="project" />
   </component>
 </module>
