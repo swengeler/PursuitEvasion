@@ -62,6 +62,10 @@ public class MapRepresentation {
         return polygonEdges;
     }
 
+    public boolean isVisible(Agent a1, Agent a2) {
+        return isVisible(a1.getXPos(), a1.getYPos(), a2.getXPos(), a2.getYPos());
+    }
+
     public boolean isVisible(double x1, double y1, double x2, double y2) {
         // check whether the second controlledAgents is visible from the position of the first controlledAgents
         // (given its field of view and the structure of the map)

@@ -38,6 +38,12 @@
             <artifactId>jdelaunay</artifactId>
             <version>0.5.2</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/jgrapht/jgrapht -->
+        <dependency>
+            <groupId>jgrapht</groupId>
+            <artifactId>jgrapht</artifactId>
+            <version>0.7.3</version>
+        </dependency>
         <dependency>
             <groupId>groupId</groupId>
             <artifactId>RobinsRuthlessRobbers</artifactId>
