@@ -14,6 +14,22 @@ import java.util.ArrayList;
 public class GeometryOperations {
 
 
+    public static ArrayList<Point2D> polyToPoints(ArrayList<Polygon> allPoly) {
+
+        //Turn polygon into points
+        double xPos, yPos;
+
+
+        ArrayList<Point2D> allPoints = new ArrayList<>();
+
+        for(Polygon poly : allPoly) {
+            allPoints.addAll(polyToPoints(poly));
+        }
+
+        return allPoints;
+    }
+
+
     public static ArrayList<Point2D> polyToPoints(Polygon poly) {
 
         //Turn polygon into points
