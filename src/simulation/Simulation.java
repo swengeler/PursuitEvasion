@@ -36,10 +36,20 @@ public class Simulation {
         //Want to print out certai polygosns to know whether shadowpoins are calulated correctly
         if(polyPrint)   {
             ObservableList<Double> envPoints = map.getBorderPolygon().getPoints();
+            System.out.println("Environment points");
             for(Double entry: envPoints)   {
                 System.out.print(entry + ",");
             }
-            System.out.println();
+            System.out.println("\n");
+
+            for(int i = 0; i < map.getObstaclePolygons().size(); i++)    {
+                System.out.println("Obstacle: " + (i+1));
+                ObservableList<Double> obstpoints = map.getObstaclePolygons().get(i).getPoints();
+                for(Double entry: obstpoints)   {
+                    System.out.print(entry + " ,");
+                }
+            }
+            System.out.println("\n");
             for(Agent agent: agents)    {
                 System.out.println("Agent -> X = " + agent.getXPos() + "\t Y = " + agent.getYPos());
             }
