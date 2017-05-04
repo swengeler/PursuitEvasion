@@ -26,12 +26,14 @@ public class shadowOperations {
 
 
         ArrayList<Point2D> all = polyToPoints(environment);
+
         ArrayList<Point2D> vis = new ArrayList<>();
         if(obstacles.size() > 0) {
             for (Polygon poly : obstacles) {
                 all.addAll(polyToPoints(poly));
             }
         }
+
 
         /* Possible cases for a type1 vertex:
         *   1. environment Vertex is blocked by environment itself
@@ -51,13 +53,17 @@ public class shadowOperations {
             x2 = all.get(i).getX();
             y2 = all.get(i).getY();
 
+            //System.out.println("\nFor point: \tX = " + x2 + "\tY = " + y2);
 
 
             for(Point2D agent : agents)   {
                 agentX = agent.getX();
                 agentY = agent.getY();
 
+
                 temp = new Line(agentX, agentY, x2, y2);
+                //System.out.println("Line => " + temp);
+
 
                 visib = true;
                 //Not blocked by environment
@@ -71,6 +77,9 @@ public class shadowOperations {
                         }
                     }
                 }
+                else    {
+                    visib = false;
+                }
             }
             if(visib == false)   {
                 i++;
@@ -78,7 +87,7 @@ public class shadowOperations {
             else {
                 all.remove(i);
             }
-            System.out.println("New i = " + i);
+            //System.out.println("New i = " + i);
         }
 
         return all;
@@ -285,6 +294,53 @@ public class shadowOperations {
         }
         return  overviewConnected;
 
+    }
+
+    public static ArrayList<Point2D> getAdjacentPoints(Point2D point, ArrayList<Polygon> allPolys)   {
+
+        ArrayList<Point2D> tempPoints, retPoints;
+        retPoints = new ArrayList<>();
+
+        for(Polygon poly : allPolys)    {
+            tempPoints = polyToPoints(poly);
+            if(inPolygon(point, poly))  {
+                for(int i = 0; i < tempPoints.size(); i++)  {
+                    if(tempPoints.get(i) == point)  {
+                        if(i== 0)   {
+                            retPoints.add(tempPoints.get(tempPoints.size()-1));
+                            retPoints.add(tempPoints.get(1));
+                        }
+                        else if(i == tempPoints.size()-1)   {
+                            retPoints.add(tempPoints.get(i-1));
+                            retPoints.add(tempPoints.get(0));
+                        }
+                        else    {
+                            retPoints.add(tempPoints.get(i-1));
+                            retPoints.add(tempPoints.get(1+1));
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        return retPoints;
+    }
+
+    public static Polygon getSharedPolygon(Point2D point1, Point2D point2, ArrayList<Polygon> allPoly) {
+        for(Polygon poly : allPoly) {
+            if (inPolygon(point1,poly) && inPolygon(point2, poly))
+                return poly;
+        }
+        return null;
+    }
+
+    public static boolean inSamePolygon(Point2D point1, Point2D point2, ArrayList<Polygon> allPoly)   {
+        for(Polygon poly : allPoly) {
+            if (inPolygon(point1,poly) && inPolygon(point2, poly))
+                return true;
+        }
+        return false;
     }
 
     public static boolean directConnectInPoly(Point2D point1, Point2D point2, Polygon poly)    {

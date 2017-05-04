@@ -14,6 +14,22 @@ import java.util.ArrayList;
 public class GeometryOperations {
 
 
+    public static ArrayList<Point2D> polyToPoints(ArrayList<Polygon> allPoly) {
+
+        //Turn polygon into points
+        double xPos, yPos;
+
+
+        ArrayList<Point2D> allPoints = new ArrayList<>();
+
+        for(Polygon poly : allPoly) {
+            allPoints.addAll(polyToPoints(poly));
+        }
+
+        return allPoints;
+    }
+
+
     public static ArrayList<Point2D> polyToPoints(Polygon poly) {
 
         //Turn polygon into points
@@ -95,6 +111,7 @@ public class GeometryOperations {
 
 
     public static boolean lineIntersect(Line l1, Line l2) {
+        //System.out.println("Comparing = " + l1 + "\nAND = " + l2 + "\n");
         return lineIntersect(l1, l2.getStartX(), l2.getStartY(), l2.getEndX(), l2.getEndY());
     }
 

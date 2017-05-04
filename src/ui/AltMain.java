@@ -25,6 +25,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -34,6 +35,7 @@ import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DPoint;
 import org.jdelaunay.delaunay.geometries.DTriangle;
+import org.jgrapht.graph.*;
 import simulation.*;
 
 import java.io.*;
@@ -362,6 +364,187 @@ public class AltMain extends Application {
         });
         menu.getChildren().add(triangulationButton);
 
+        Button simpleComponentButton = new Button("Show simply connected\ncomponents");
+        simpleComponentButton.setOnAction(e -> {
+            if (mapPolygons == null || mapPolygons.isEmpty()) {
+                System.out.println("Not enough data to construct simulation!");
+            } else {
+                try {
+                    ArrayList<DEdge> constraintEdges = new ArrayList<>();
+                    Polygon p;
+                    for (MapPolygon mp : mapPolygons) {
+                        p = mp.getPolygon();
+                        if (p != null) {
+                            for (int i = 0; i < p.getPoints().size(); i += 2) {
+                                constraintEdges.add(new DEdge(new DPoint(p.getPoints().get(i), p.getPoints().get(i + 1), 0), new DPoint(p.getPoints().get((i + 2) % p.getPoints().size()), p.getPoints().get((i + 3) % p.getPoints().size()), 0)));
+                            }
+                        }
+                    }
+                    ConstrainedMesh mesh = new ConstrainedMesh();
+                    mesh.setConstraintEdges(constraintEdges);
+                    mesh.processDelaunay();
+                    List<DTriangle> triangles = mesh.getTriangleList();
+                    List<DTriangle> includedTriangles = new ArrayList<>();
+
+                    for (DTriangle dt : triangles) {
+                        // check if triangle in polygon
+                        double centerX = dt.getBarycenter().getX();
+                        double centerY = dt.getBarycenter().getY();
+                        boolean inPolygon = true;
+                        if (!mapPolygons.get(0).contains(centerX, centerY)) {
+                            inPolygon = false;
+                        }
+                        for (int i = 1; inPolygon && i < mapPolygons.size() - 1; i++) {
+                            if (mapPolygons.get(i).contains(centerX, centerY)) {
+                                inPolygon = false;
+                            }
+                        }
+                        if (inPolygon) {
+                            includedTriangles.add(dt);
+                        }
+                    }
+
+                    ArrayList<ArrayList<DTriangle>> nodes = new ArrayList<>(includedTriangles.size());
+                    ArrayList<DTriangle> temp;
+                    for (DTriangle dt : includedTriangles) {
+                        temp = new ArrayList<>();
+                        temp.add(dt);
+                        nodes.add(temp);
+                    }
+                    int[][] adjacencyMatrix = new int[nodes.size()][nodes.size()];
+
+                    // checking for adjacency between nodes
+                    ArrayList<DEdge> checkedEdges = new ArrayList<>();
+                    DTriangle dt1, dt2;
+                    DEdge de;
+                    for (int i = 0; i < includedTriangles.size(); i++) {
+                        dt1 = includedTriangles.get(i);
+                        // go through the edges of each triangle
+                        for (int j = 0; j < 3; j++) {
+                            de = dt1.getEdge(j);
+                            if (!checkedEdges.contains(de)) {
+                                int neighbourIndex = -1;
+                                for (int k = 0; neighbourIndex == -1 && k < includedTriangles.size(); k++) {
+                                    dt2 = includedTriangles.get(k);
+                                    if (k != i && dt2.isEdgeOf(de)) {
+                                        // if the current triangle shares an edge with another triangle, they are neighbours in the graph
+                                        neighbourIndex = k;
+                                    }
+                                }
+                                if (neighbourIndex != -1) {
+                                    adjacencyMatrix[i][neighbourIndex] = 1;
+                                    adjacencyMatrix[neighbourIndex][i] = 1;
+                                }
+                                checkedEdges.add(de);
+                            }
+                        }
+                    }
+                    // loop above fills the adjacency matrix
+
+                    // 1. delete all vertices of degree 1
+                    boolean degreeOneRemaining = true;
+                    while (degreeOneRemaining) {
+                        degreeOneRemaining = false;
+                        for (int i = 0; i < nodes.size(); i++) {
+                            int adjCount = 0;
+                            int neighbourIndex = -1;
+                            for (int j = 0; j < nodes.size(); j++) {
+                                if (adjacencyMatrix[i][j] == 1) {
+                                    adjCount++;
+                                    neighbourIndex = j;
+                                }
+                            }
+                            if (adjCount == 1) {
+                                System.out.println("Delete " + i + " and add to " + neighbourIndex);
+                                // add triangle to neighbour which is not deleted
+                                nodes.get(neighbourIndex).addAll(nodes.get(i));
+                                nodes.get(i).clear();
+                                // "delete" this vertex
+                                for (int j = 0; j < nodes.size(); j++) {
+                                    adjacencyMatrix[i][j] = -1;
+                                    adjacencyMatrix[j][i] = -1;
+                                }
+                                degreeOneRemaining = true;
+                            }
+                        }
+                    }
+
+                    // 2. merge all vertices of degree 2
+                    boolean degreeTwoRemaining = true;
+                    while (degreeTwoRemaining) {
+                        degreeTwoRemaining = false;
+                        for (int i = 0; i < nodes.size(); i++) {
+                            int adjCount = 0;
+                            int mergeNeighbourIndex = -1;
+                            int otherNeighbourIndex = -1;
+                            for (int j = 0; j < nodes.size(); j++) {
+                                if (adjacencyMatrix[i][j] == 1) {
+                                    adjCount++;
+                                    if (adjCount == 1) {
+                                        mergeNeighbourIndex = j;
+                                    } else {
+                                        otherNeighbourIndex = j;
+                                    }
+                                }
+                            }
+                            if (mergeNeighbourIndex != -1) {
+                                int mergeNeighbourDegree = 0;
+                                for (int j = 0; j < nodes.size(); j++) {
+                                    if (adjacencyMatrix[mergeNeighbourIndex][j] == 1) {
+                                        mergeNeighbourDegree++;
+                                    }
+                                }
+                                if (mergeNeighbourDegree > 2) {
+                                    int store = mergeNeighbourIndex;
+                                    mergeNeighbourIndex = otherNeighbourIndex;
+                                    otherNeighbourIndex = store;
+                                    continue;
+                                }
+                            }
+                            if (adjCount == 2) {
+                                System.out.println("Merge " + i + " into " + mergeNeighbourIndex);
+                                // add triangles to neighbour which is not deleted
+                                nodes.get(mergeNeighbourIndex).addAll(nodes.get(i));
+                                nodes.get(i).clear();
+                                // connect the merged and the other adjacent vertex
+                                adjacencyMatrix[mergeNeighbourIndex][otherNeighbourIndex] = 1;
+                                adjacencyMatrix[otherNeighbourIndex][mergeNeighbourIndex] = 1;
+                                // "delete" this vertex
+                                for (int j = 0; j < nodes.size(); j++) {
+                                    adjacencyMatrix[i][j] = -1;
+                                    adjacencyMatrix[j][i] = -1;
+                                }
+                                degreeTwoRemaining = true;
+                            }
+                        }
+                    }
+
+                    Polygon tempTriangle;
+                    Color currentColor;
+                    for (ArrayList<DTriangle> node : nodes) {
+                        currentColor = new Color(Math.random(), Math.random(), Math.random(), 0.2);
+                        for (DTriangle dt : node) {
+                            tempTriangle = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(),dt.getPoint(1).getX(), dt.getPoint(1).getY(),dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                            tempTriangle.setFill(currentColor);
+                            tempTriangle.setStroke(Color.BLACK);
+                            pane.getChildren().add(tempTriangle);
+                        }
+                    }
+
+                    for (int i = 0; i < nodes.size(); i++) {
+                        for (int j = 0; j < nodes.size(); j++) {
+                            System.out.print((adjacencyMatrix[i][j] < 0 ? "" : " ") + adjacencyMatrix[i][j] + " ");
+                        }
+                        System.out.println();
+                    }
+
+                } catch (DelaunayError error) {
+                    error.printStackTrace();
+                }
+            }
+        });
+        menu.getChildren().add(simpleComponentButton);
+
         Slider slider = new Slider(0, 150, 100);
         slider.setShowTickMarks(true);
         slider.setShowTickLabels(true);
@@ -370,7 +553,7 @@ public class AltMain extends Application {
         menu.getChildren().add(slider);
 
         slider.valueProperty().addListener((ov, oldValue, newValue) -> {
-            System.out.println("val = " + newValue);
+            //System.out.println("val = " + newValue);
             Controller.getSimulation().setTimeStep((int) (double) newValue);
         });
 
