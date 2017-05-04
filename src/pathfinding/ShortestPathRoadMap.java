@@ -146,6 +146,7 @@ public class ShortestPathRoadMap {
         return test.getPath(source, sink);
     }
 
+
     public ArrayList<javafx.geometry.Point2D> findReflex(MapRepresentation map) {
         ArrayList<Polygon> polygons = map.getAllPolygons();
 
@@ -153,47 +154,104 @@ public class ShortestPathRoadMap {
         ArrayList<javafx.geometry.Point2D> reflex = new ArrayList<>();
         int reflexIndex = 0;
         //  ArrayList<javafx.geometry.Point2D> polygon= geometryOperations.polyToPoints(polygons);
-
+        Point2D left;
+        Point2D right;
         for (int i = 0; i < polygons.size(); i++) {
             ArrayList<javafx.geometry.Point2D> polygon = geometryOperations.polyToPoints(polygons.get(i));
 
             for (int j = 0; j < polygon.size(); j++) {
                 if (j != 0 && j != polygon.size() - 1) {
-                    javafx.geometry.Point2D left = polygon.get(j - 1);
-                    javafx.geometry.Point2D right = polygon.get(j + 1);
+                    left = polygon.get(j - 1);
+                    right = polygon.get(j + 1);
 
-                    double leftvector = Math.toDegrees(Math.atan2(left.getX() - polygon.get(j).getX(), left.getY() - polygon.get(j).getY()));
-                    double rightvector = Math.toDegrees(Math.atan2(right.getX() - polygon.get(j).getX(), right.getY() - polygon.get(j).getY()));
+                } else if (j == 0) {
+                    left = polygon.get(polygon.size() - 1);
+                    right = polygon.get(j + 1);
+                } else {
 
-                    if (rightvector < 0) {
-                        rightvector += 360;
-                    }
-                    if (leftvector < 0) {
-                        leftvector += 360;
-                    }
-
-                    if ((leftvector + rightvector) % 360 > 180) {
-                        reflex.add(reflexIndex, polygon.get(j));
-                        reflexIndex++;
-                    }
+                    left = polygon.get(j - 1);
+                    right = polygon.get(0);
 
                 }
+                double leftvector = Math.toDegrees(Math.atan2(left.getX() - polygon.get(j).getX(), left.getY() - polygon.get(j).getY()));
+                double rightvector = Math.toDegrees(Math.atan2(right.getX() - polygon.get(j).getX(), right.getY() - polygon.get(j).getY()));
 
+                if (rightvector < 0) {
+                    rightvector += 360;
+                }
+                if (leftvector < 0) {
+                    leftvector += 360;
+                }
+
+                if ((leftvector + rightvector) % 360 > 180) {
+                    reflex.add(reflexIndex, (Point2D) polygon.get(j));
+                    reflexIndex++;
+                }
 
             }
+
+
         }
+
         return reflex;
     }
 
 
-    public void reflexInlineofsight(MapRepresentation map, ArrayList<Point2D> reflexs) {
+    public SimpleWeightedGraph<Vertex, DefaultWeightedEdge> reflexInlineofsight(MapRepresentation map, ArrayList<Point2D> reflexs) {
+        double eps = 0.0001;
+        double angle;
+        SimpleWeightedGraph<Vertex, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+
         for (int i = 0; i < reflexs.size(); i++) {
-            for (int j = 0; j < reflexs.size(); i++) {
+            for (int j = 9; j >= i; j--) {
                 if (i != j) {
-                    if (map.isVisible(reflexs.get(i).getX(), reflexs.get(i).getY(), reflexs.get(j).getX(), reflexs.get(j).getY()));
+                    if (map.isVisible(reflexs.get(i).getX(), reflexs.get(i).getY(), reflexs.get(j).getX(), reflexs.get(j).getY())) {
+                        angle = Math.toDegrees(Math.atan2(reflexs.get(i).getY() - reflexs.get(j).getY(), reflexs.get(i).getX() - reflexs.get(j).getX()));
+                        Point2D above, below, inside1, inside2;
+                        above = new Point2D(reflexs.get(i).getX() + eps, reflexs.get(i).getY() + eps * angle);
+                        below = new Point2D(reflexs.get(j).getX() - eps, reflexs.get(j).getY() - eps * angle);
+                        inside1 = new Point2D(reflexs.get(i).getX() - eps, reflexs.get(i).getY() - eps * angle);
+                        inside2 = new Point2D(reflexs.get(j).getX() + eps, reflexs.get(j).getY() + eps * angle);
+                        if (map.legalPosition(above.getX(), above.getY()) && map.legalPosition(below.getX(), below.getY()) && map.legalPosition(inside1.getX(), inside1.getY()) && map.legalPosition(inside2.getX(), inside2.getY()))
+                            ;
+                        graph1.addVertex(reflexs.get(i));
+                        graph1.addVertex(reflexs.get(j));
+                        double differencesquare = (reflexs.get(i).getX() - reflexs.get(j).getX()) * (reflexs.get(i).getX() - reflexs.get(j).getX()) + (reflexs.get(i).getY() - reflexs.get(j).getY()) * (reflexs.get(i).getY() - reflexs.get(j).getY());
+                        graph1.addWeightedEdge(reflexs.get(i), reflexs.get(j), Math.sqrt(differencesquare));
+                    }
                 }
             }
         }
+        return graph1;
+    }
+
+
+    public  GraphPath calculateShortestPath(MapRepresentation map, ArrayList<Point2D> sightList, Point2D source, Point2D sink) {
+
+
+        ArrayList<Polygon> polygons = map.getAllPolygons();
+        sightList.addVertex(sink);
+        sightList.addVertex(source);
+        ArrayList<Point2D> reflexpoints = findReflex(map);
+
+        for (int i = 0; i < reflexpoints.size(); i++) {
+            if (map.isVisible(source.getX(), source.getY(), reflexpoints.get(i).getX(), reflexpoints.get(i).getY())) {
+
+                double differencesquare = (reflexpoints.get(i).getX() - source.getX()) * (reflexpoints.get(i).getX() - source.getX()) + (reflexpoints.get(i).getY() - source.getY()) * (reflexpoints.get(i).getY() - source.getY());
+
+                sightList.addWeightedEdge(source, reflexpoints.get(i), Math.sqrt(differencesquare));
+            }
+        }
+        for (int i = 0; i < reflexpoints.size(); i++) {
+            if (map.isVisible(sink.getX(), sink.getY(), reflexpoints.get(i).getX(), reflexpoints.get(i).getY())) {
+
+                double differencesquare = (reflexpoints.get(i).getX() - sink.getX()) * (reflexpoints.get(i).getX() - sink.getX()) + (reflexpoints.get(i).getY() - sink.getY()) * (reflexpoints.get(i).getY() - sink.getY());
+
+                sightList.addWeightedEdge(sink, reflexpoints.get(i), Math.sqrt(differencesquare));
+            }
+        }
+        DijkstraShortestPath test = new DijkstraShortestPath(sightList);
+        return test.getPath(source, sink);
     }
 
 
