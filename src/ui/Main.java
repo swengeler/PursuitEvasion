@@ -4,14 +4,12 @@ import control.Controller;
 import conversion.GridConversion;
 import entities.CentralisedEntity;
 import entities.DCREntity;
-import entities.Entity;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -30,8 +28,6 @@ import simulation.*;
 
 import java.io.*;
 import java.util.*;
-
-import static additionalOperations.GeometryOperations.polyToPoints;
 
 public class Main extends Application {
 

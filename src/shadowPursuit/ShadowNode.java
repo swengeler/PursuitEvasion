@@ -25,7 +25,6 @@ public class ShadowNode {
     ShadowNode prev, next;
 
 
-
     private Point2D position;
 
 
@@ -46,7 +45,7 @@ public class ShadowNode {
     }
 
     //For Type3
-    public ShadowNode(Point2D position, ShadowNode type2Neighbor, Line placedOn)    {
+    public ShadowNode(Point2D position, ShadowNode type2Neighbor, Line placedOn) {
         this.position = position;
         this.prev = type2Neighbor;
         this.next = null;
@@ -56,7 +55,7 @@ public class ShadowNode {
     }
 
     //For Type4
-    public ShadowNode(Point2D position, ShadowNode type2Neighbor1, ShadowNode type2Neighbor2)    {
+    public ShadowNode(Point2D position, ShadowNode type2Neighbor1, ShadowNode type2Neighbor2) {
         this.position = position;
 
 
@@ -65,30 +64,29 @@ public class ShadowNode {
 
         this.occLine =
 
-        this.placedOn = placedOn;
+                this.placedOn = placedOn;
         this.occLeft = new Line(position.getX(), position.getY(), type2Neighbor1.getPosition().getX(), type2Neighbor1.getPosition().getY());
         this.occRight = new Line(position.getX(), position.getY(), type2Neighbor2.getPosition().getX(), type2Neighbor2.getPosition().getY());
     }
 
 
-
-    public int getType()    {
+    public int getType() {
         return type;
     }
 
-    public Point2D getPosition()    {
+    public Point2D getPosition() {
         return position;
     }
 
-    public Line getPlacedOn()   {
+    public Line getPlacedOn() {
         return placedOn;
     }
 
-    public ShadowNode getPrev()    {
+    public ShadowNode getPrev() {
         return prev;
     }
 
-    public ShadowNode getNext()    {
+    public ShadowNode getNext() {
         return next;
     }
 
@@ -97,11 +95,9 @@ public class ShadowNode {
         newNeighbor.prev = this;
     }
 
-    public String toString(){
+    public String toString() {
         return new String(this.getPosition().toString());
     }
-
-
 
 
 }

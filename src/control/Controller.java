@@ -1,7 +1,6 @@
 package control;
 
 import entities.DCREntity;
-import javafx.scene.shape.Polygon;
 import simulation.*;
 import ui.*;
 

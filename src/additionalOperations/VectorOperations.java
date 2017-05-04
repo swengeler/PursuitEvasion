@@ -12,8 +12,6 @@ import java.util.ArrayList;
 public class VectorOperations {
 
 
-
-
     public boolean pointIntersect(ArrayList<PointVector> vectors, Point2D AgentPos, Point2D dest) {
 
         PointVector tarVector = new PointVector(AgentPos, dest);

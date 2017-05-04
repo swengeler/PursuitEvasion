@@ -1,9 +1,6 @@
 package simulation;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.Vector;
 
 public class SimpleEvaderPolicy extends MovePolicy {
 
@@ -37,13 +34,13 @@ public class SimpleEvaderPolicy extends MovePolicy {
         }
 
         //check out of bounds
-        if (!map.legalPosition(getSingleAgent().getXPos() - deltaX/numberOfPursuers * getSingleAgent().getSpeed() * 1/4000, getSingleAgent().getYPos() -deltaY/numberOfPursuers * getSingleAgent().getSpeed() * 1/4000)) {
+        if (!map.legalPosition(getSingleAgent().getXPos() - deltaX / numberOfPursuers * getSingleAgent().getSpeed() * 1 / 4000, getSingleAgent().getYPos() - deltaY / numberOfPursuers * getSingleAgent().getSpeed() * 1 / 4000)) {
             System.out.println("Move impossible: out of bounds");
             return new Move(0, 0, 0);
             //TODO: fix
         }
 
         //is 1/250, 1/4000 etc just a parameter we can set?
-        return new Move(-deltaX/numberOfPursuers * getSingleAgent().getSpeed() * 1/4000, -deltaY/numberOfPursuers * getSingleAgent().getSpeed() * 1/4000, 0);
+        return new Move(-deltaX / numberOfPursuers * getSingleAgent().getSpeed() * 1 / 4000, -deltaY / numberOfPursuers * getSingleAgent().getSpeed() * 1 / 4000, 0);
     }
 }

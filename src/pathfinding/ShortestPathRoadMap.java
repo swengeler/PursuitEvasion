@@ -190,7 +190,9 @@ public class ShortestPathRoadMap {
         for (int i = 0; i < reflexs.size(); i++) {
             for (int j = 0; j < reflexs.size(); i++) {
                 if (i != j) {
-                    if (map.isVisible(reflexs.get(i).getX(), reflexs.get(i).getY(), reflexs.get(j).getX(), reflexs.get(j).getY()));
+                    if (map.isVisible(reflexs.get(i).getX(), reflexs.get(i).getY(), reflexs.get(j).getX(), reflexs.get(j).getY())) {
+                        ;
+                    }
                 }
             }
         }

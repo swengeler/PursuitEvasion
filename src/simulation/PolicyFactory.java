@@ -8,7 +8,8 @@ public class PolicyFactory {
         return instance;
     }
 
-    private PolicyFactory() {}
+    private PolicyFactory() {
+    }
 
     public MovePolicy getPolicy(String policyType, Agent agent) {
         return null;
