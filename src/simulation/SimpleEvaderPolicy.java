@@ -4,10 +4,12 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SimpleEvaderPolicy extends MovePolicy {
 
     /*This simple evader policy steers evaders away from pursuers within a certain range (set by maxSeparationDistance)
+    it also steers evaders towards the center of the pursuers if they are in a wider range (set by maxCohesionDistance) (not working perfectly yet)
 
     TODO:
     Come up with a way to handle bounds
@@ -20,30 +22,82 @@ public class SimpleEvaderPolicy extends MovePolicy {
 
     @Override
     public Move getNextMove(MapRepresentation map, ArrayList<Agent> agents) {
-        double maxSeperationDistance = 150;
+        double maxSeperationDistance = 100;
+        //separation -> move 180 degrees from the average position of the pursuers within maxSeperationDistance
+
+        double maxCohesionDistance = 250;
+        //cohesion -> move towards the center of the pursuers within maxCohesionDistance but not within maxSeperationDistance
+
         double deltaX = 0;
         double deltaY = 0;
-        int numberOfPursuers = 0;
+        //the x and y position to go to
 
-        for (Agent agent : agents) {
-            if (agent.isPursuer()) {
-                double dist = Math.sqrt(Math.pow(agent.getXPos() - getSingleAgent().getXPos(), 2) + Math.pow(agent.getYPos() - getSingleAgent().getYPos(), 2));
-                if (dist < maxSeperationDistance) {
-                    deltaX += (agent.getXPos() - getSingleAgent().getXPos());
-                    deltaY += (agent.getYPos() - getSingleAgent().getYPos());
+        int numberOfSeparationPursuers = 0;
+        //number of pursuers within maxSeperationDistance
+
+        int numberOfCohesionPursuers = 0;
+        //number of pursuer within maxCohesionDistance but not within maxSeperationDistance
+
+        Agent evader = getSingleAgent();
+        //to make things clearer
+
+        for (Agent pursuer : agents) {
+            //cycle through all agents
+
+            if (pursuer.isPursuer()) {
+                //if it is a pursuer
+
+                double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
+                //calculate euclidean distance
+
+                if (dist <= maxSeperationDistance) {
+                    //if distance is within maxSeperationDistance, do seperation calculations
+
+                    deltaX += (pursuer.getXPos() - evader.getXPos());
+                    deltaY += (pursuer.getYPos() - evader.getYPos());
+                    numberOfSeparationPursuers++;
+                } else if (dist <= maxCohesionDistance) {
+                    //if distance is within maxCohesionDistance, do cohesion calculations
+
+                    deltaX += pursuer.getXPos();
+                    deltaY += pursuer.getYPos();
+                    numberOfCohesionPursuers++;
                 }
-                numberOfPursuers++;
+
             }
+
         }
 
-        //check out of bounds
-        if (!map.legalPosition(getSingleAgent().getXPos() - deltaX/numberOfPursuers * getSingleAgent().getSpeed() * 1/4000, getSingleAgent().getYPos() -deltaY/numberOfPursuers * getSingleAgent().getSpeed() * 1/4000)) {
+        if (numberOfSeparationPursuers != 0) {
+            //if there are seperation pursuers, do further calculations (normalizing, reversing (180 degrees))
+
+            deltaX = -deltaX/numberOfSeparationPursuers;
+            deltaY = -deltaY/numberOfSeparationPursuers;
+        }
+
+        if (numberOfCohesionPursuers != 0) {
+            //if there are cohesion pursuers, do further calculations (normalizing, ??)
+
+            deltaX /= numberOfCohesionPursuers;
+            deltaY /= numberOfCohesionPursuers;
+
+            deltaX = (deltaX - evader.getXPos());
+            deltaY = (deltaY - evader.getYPos());
+        }
+
+        //check out of bounds, for now we just don't do anything if the move would be out of bounds
+        if (!map.legalPosition(evader.getXPos() + deltaX * evader.getSpeed() * 1/4000, evader.getYPos() + deltaY * evader.getSpeed() * 1/4000)) {
             System.out.println("Move impossible: out of bounds");
             return new Move(0, 0, 0);
             //TODO: fix
         }
 
-        //is 1/250, 1/4000 etc just a parameter we can set?
-        return new Move(-deltaX/numberOfPursuers * getSingleAgent().getSpeed() * 1/4000, -deltaY/numberOfPursuers * getSingleAgent().getSpeed() * 1/4000, 0);
+        //if there are no seperation and no cohesion pursuers near, do nothing (for now)
+        //we could do straightlinepolicy, randommovepolicy or something like that here
+        if (deltaX == 0 && deltaY == 0) {
+            return new Move(0, 0, 0);
+        } else {
+            return new Move(deltaX * evader.getSpeed() * 1 / 4000, deltaY * evader.getSpeed() * 1 / 4000, 0);
+        }
     }
 }
