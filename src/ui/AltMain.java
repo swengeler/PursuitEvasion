@@ -8,12 +8,14 @@ import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -26,6 +28,8 @@ import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import simulation.*;
 
+import javax.imageio.ImageIO;
+import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.*;
 
@@ -648,70 +652,325 @@ public class AltMain extends Application {
                         }
                     }
 
-                    int[][] spanningTreeAdjacencyMatrix = new int[nodes.size()][nodes.size()];
-                    boolean[] visitedNodes = new boolean[nodes.size()];
-                    int[] parentNodes = new int[nodes.size()];
+                    for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++) {
+                        int[][] spanningTreeAdjacencyMatrix = new int[nodes.size()][nodes.size()];
+                        boolean[] visitedNodes = new boolean[nodes.size()];
+                        int[] parentNodes = new int[nodes.size()];
 
-                    ArrayList<Integer> nextLayer;
-                    ArrayList<Integer> currentLayer = new ArrayList<>();
-                    currentLayer.add(0);
-                    boolean unexploredLeft = true;
+                        ArrayList<Integer> nextLayer;
+                        ArrayList<Integer> currentLayer = new ArrayList<>();
+                        currentLayer.add(nodeIndex);
+                        parentNodes[nodeIndex] = -1;
+                        boolean unexploredLeft = true;
 
-                    ArrayList<Line> tree = new ArrayList<>();
-                    Line temp;
-                    while (unexploredLeft) {
-                        nextLayer = new ArrayList<>();
-                        for (int i : currentLayer) {
+                        ArrayList<Line> tree = new ArrayList<>();
+                        Line temp;
+                        while (unexploredLeft) {
+                            nextLayer = new ArrayList<>();
+                            for (int i : currentLayer) {
+                                visitedNodes[i] = true;
+                                for (int j = 0; j < nodes.size(); j++) {
+                                    if (originalAdjacencyMatrix[i][j] == 1 && j != parentNodes[i] && !visitedNodes[j]) {
+                                        spanningTreeAdjacencyMatrix[i][j] = 1;
+                                        spanningTreeAdjacencyMatrix[j][i] = 1;
+                                        nextLayer.add(j);
+                                        parentNodes[j] = i;
+                                        visitedNodes[j] = true;
+
+                                        temp = new Line(nodes.get(i).getBarycenter().getX(), nodes.get(i).getBarycenter().getY(), nodes.get(j).getBarycenter().getX(), nodes.get(j).getBarycenter().getY());
+                                        temp.setStroke(Color.RED);
+                                        temp.setStrokeWidth(4);
+                                        tree.add(temp);
+                                    }
+                                }
+                            }
+                            currentLayer = nextLayer;
+                            if (nextLayer.size() == 0) {
+                                unexploredLeft = false;
+                            }
+                        }
+
+                        ArrayList<DTriangle> separatingTriangles = new ArrayList<>();
+                        ArrayList<Integer> separatingIndeces = new ArrayList<>();
+                        for (int i = 0; i < nodes.size(); i++) {
+                            boolean difference = false;
+                            int degree = 0;
+                            int adjacentIndex = -1;
                             for (int j = 0; j < nodes.size(); j++) {
-                                if (originalAdjacencyMatrix[i][j] == 1 && j != parentNodes[i] && !visitedNodes[j]) {
-                                    spanningTreeAdjacencyMatrix[i][j] = 1;
-                                    spanningTreeAdjacencyMatrix[j][i] = 1;
-                                    nextLayer.add(j);
-                                    parentNodes[j] = i;
-                                    visitedNodes[j] = true;
+                                if (spanningTreeAdjacencyMatrix[i][j] == 1) {
+                                    degree++;
+                                }
+                                if (originalAdjacencyMatrix[i][j] == 1 && spanningTreeAdjacencyMatrix[i][j] != 1) {
+                                    difference = true;
+                                    adjacentIndex = j;
+                                }
+                            }
+                            // that means it's a leaf node in the spanning tree but was previously connected to some other node
+                            if (difference && !separatingTriangles.contains(nodes.get(adjacentIndex))) {
+                                separatingTriangles.add(nodes.get(i));
+                                separatingIndeces.add(i);
+                            }
+                        }
 
-                                    temp = new Line(nodes.get(i).getBarycenter().getX(), nodes.get(i).getBarycenter().getY(), nodes.get(j).getBarycenter().getX(), nodes.get(j).getBarycenter().getY());
-                                    temp.setStroke(Color.RED);
-                                    temp.setStrokeWidth(4);
-                                    tree.add(temp);
+                        boolean properTree = true;
+                        for (int i = 0; properTree && i < separatingIndeces.size(); i++) {
+                            int adjacencyCount = 0;
+                            for (int j = 0; j < nodes.size(); j++) {
+                                if (spanningTreeAdjacencyMatrix[separatingIndeces.get(i)][j] == 1) {
+                                    adjacencyCount++;
+                                }
+                            }
+                            if (adjacencyCount > 1) {
+                                properTree = false;
+                            }
+                        }
+
+                        Rectangle frame = new Rectangle(0, 0, pane.getWidth(), pane.getHeight());
+                        frame.setStroke(Color.RED);
+                        frame.setFill(Color.TRANSPARENT);
+                        frame.setStrokeWidth(10);
+                        if (properTree) {
+                            frame.setStroke(Color.FORESTGREEN);
+                        }
+                        pane.getChildren().add(frame);
+
+                        // breadth-first search:
+                        // go through list of nodes in current layer
+                        // go through their children (not parents!) and check if they have been visited
+                        // if no: add them to a list of nodes which are in the next layer
+                        // if yes: mark current node as "special" leaf
+                        // continue with next layer
+
+                        ArrayList<Polygon> showTriangles = new ArrayList<>(nodes.size());
+                        Polygon tempTriangle;
+                        Color currentColor;
+                        for (DTriangle dt : nodes) {
+                            if (separatingTriangles.contains(dt)) {
+                                currentColor = Color.LIGHTBLUE.deriveColor(1, 1, 1, 0.7);
+                            } else {
+                                currentColor = Color.LAWNGREEN.deriveColor(1, 1, 1, 0.7);
+                            }
+                            tempTriangle = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                            tempTriangle.setFill(currentColor);
+                            tempTriangle.setStroke(Color.BLACK);
+                            showTriangles.add(tempTriangle);
+                            //pane.getChildren().add(tempTriangle);
+                        }
+                        pane.getChildren().addAll(showTriangles);
+                        pane.getChildren().addAll(tree);
+
+                        Circle rootIndicator = new Circle(nodes.get(nodeIndex).getBarycenter().getX(), nodes.get(nodeIndex).getBarycenter().getY(), 5, Color.BLACK);
+                        pane.getChildren().add(rootIndicator);
+
+                        try {
+                            //File file = new File("E:\\Simon\\Desktop\\Screenshots\\" + (int) (Math.random() * 1000) + "_screenshot.png");
+                            File file = new File("E:\\Simon\\Desktop\\Screenshots\\" + nodeIndex + "_screenshot.png");
+                            // Pad the capture area
+                            WritableImage writableImage = new WritableImage((int) pane.getWidth() + 20, (int) pane.getHeight() + 20);
+                            pane.snapshot(null, writableImage);
+                            RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
+                            // Write the snapshot to the chosen file
+                            ImageIO.write(renderedImage, "png", file);
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                        pane.getChildren().remove(frame);
+                        pane.getChildren().removeAll(showTriangles);
+                        pane.getChildren().removeAll(tree);
+                        pane.getChildren().remove(rootIndicator);
+                        System.out.println("Screenshot with node " + nodeIndex + " as root taken.");
+                    }
+                } catch (DelaunayError error) {
+                    error.printStackTrace();
+                }
+            }
+        });
+        menu.getChildren().add(spanningTreeButton);
+
+        Button loopBreakingButton = new Button("Show loop breaking");
+        loopBreakingButton.setOnAction(e -> {
+            if (mapPolygons == null || mapPolygons.isEmpty()) {
+                System.out.println("Not enough data to construct simulation!");
+            } else {
+                try {
+                    ArrayList<DEdge> constraintEdges = new ArrayList<>();
+                    Polygon p;
+                    for (MapPolygon mp : mapPolygons) {
+                        p = mp.getPolygon();
+                        if (p != null) {
+                            for (int i = 0; i < p.getPoints().size(); i += 2) {
+                                constraintEdges.add(new DEdge(new DPoint(p.getPoints().get(i), p.getPoints().get(i + 1), 0), new DPoint(p.getPoints().get((i + 2) % p.getPoints().size()), p.getPoints().get((i + 3) % p.getPoints().size()), 0)));
+                            }
+                        }
+                    }
+                    ConstrainedMesh mesh = new ConstrainedMesh();
+                    mesh.setConstraintEdges(constraintEdges);
+                    mesh.processDelaunay();
+                    List<DTriangle> triangles = mesh.getTriangleList();
+                    List<DTriangle> includedTriangles = new ArrayList<>();
+                    List<DTriangle> holeTriangles = new ArrayList<>();
+
+                    for (DTriangle dt : triangles) {
+                        // check if triangle in polygon
+                        double centerX = dt.getBarycenter().getX();
+                        double centerY = dt.getBarycenter().getY();
+                        boolean inPolygon = true;
+                        boolean inHole = false;
+                        if (!mapPolygons.get(0).contains(centerX, centerY)) {
+                            inPolygon = false;
+                        }
+                        for (int i = 1; inPolygon && i < mapPolygons.size() - 1; i++) {
+                            if (mapPolygons.get(i).contains(centerX, centerY)) {
+                                inPolygon = false;
+                                inHole = true;
+                            }
+                        }
+                        if (Math.abs(dt.getAngle(0) + dt.getAngle(1) + dt.getAngle(2)) < 5) {
+                            inPolygon = false;
+                        }
+                        if (inPolygon) {
+                            includedTriangles.add(dt);
+                        }
+                        if (inHole) {
+                            holeTriangles.add(dt);
+                        }
+                    }
+
+                    System.out.println("Nr. hole triangles: " + holeTriangles.size());
+
+                    ArrayList<DTriangle> nodes = new ArrayList<>(includedTriangles.size());
+                    nodes.addAll(includedTriangles);
+                    int[][] adjacencyMatrix = new int[nodes.size()][nodes.size()];
+
+                    // checking for adjacency between nodes
+                    ArrayList<DEdge> checkedEdges = new ArrayList<>();
+                    DTriangle dt1, dt2;
+                    DEdge de;
+                    for (int i = 0; i < includedTriangles.size(); i++) {
+                        dt1 = includedTriangles.get(i);
+                        // go through the edges of each triangle
+                        for (int j = 0; j < 3; j++) {
+                            de = dt1.getEdge(j);
+                            if (!checkedEdges.contains(de)) {
+                                int neighbourIndex = -1;
+                                for (int k = 0; neighbourIndex == -1 && k < includedTriangles.size(); k++) {
+                                    dt2 = includedTriangles.get(k);
+                                    if (k != i && dt2.isEdgeOf(de)) {
+                                        // if the current triangle shares an edge with another triangle, they are neighbours in the graph
+                                        neighbourIndex = k;
+                                    }
+                                }
+                                if (neighbourIndex != -1) {
+                                    adjacencyMatrix[i][neighbourIndex] = 1;
+                                    adjacencyMatrix[neighbourIndex][i] = 1;
+                                }
+                                checkedEdges.add(de);
+                            }
+                        }
+                    }
+
+                    int[] degreeMatrix = new int[nodes.size()];
+                    int degreeCount;
+                    for (int i = 0; i < nodes.size(); i++) {
+                        degreeCount = 0;
+                        for (int j = 0; j < nodes.size(); j++) {
+                            if (adjacencyMatrix[i][j] == 1) {
+                                degreeCount++;
+                            }
+                        }
+                        degreeMatrix[i] = degreeCount;
+                    }
+
+                    // 1. group hole triangles by hole
+                    // 2. choose degree-2 triangle adjacent to the hole (can be according to some criterion)
+                    // 3. ???
+                    // 4. profit
+
+                    /*
+                    for each triangle, find all the triangles that are connected to it from holeTriangles
+                    then do the same for the triangles added in that iteration
+                    start with the first hole/triangle
+                    find all its immediate neighbours from holeTriangles (and remove them from that list)
+                    find their immediate neighbours (and so forth) until no new triangles are added to the hole
+                     */
+
+                    // checking for adjacency of triangles in the holes
+                    checkedEdges.clear();
+                    ArrayList<ArrayList<DTriangle>> holes = new ArrayList<>();
+                    ArrayList<DTriangle> temp;
+                    for (int i = 0; i < holeTriangles.size(); i++) {
+                        dt1 = holeTriangles.get(i);
+                        temp = new ArrayList<>();
+                        temp.add(dt1);
+                        holeTriangles.remove(dt1);
+
+                        boolean addedToHole = true;
+                        while (addedToHole) {
+                            addedToHole = false;
+                            // go through the remaining triangles and see if they are adjacent to the ones already in the hole
+                            for (int j = 0; j < temp.size(); j++) {
+                                for (int k = 0; k < holeTriangles.size(); k++) {
+                                    if (temp.get(j) != holeTriangles.get(k) && (holeTriangles.get(k).isEdgeOf(temp.get(j).getEdge(0)) || holeTriangles.get(k).isEdgeOf(temp.get(j).getEdge(1)) || holeTriangles.get(k).isEdgeOf(temp.get(j).getEdge(2)))) {
+                                        temp.add(holeTriangles.get(k));
+                                        holeTriangles.remove(k);
+                                        addedToHole = true;
+                                        k--;
+                                    }
                                 }
                             }
                         }
-                        currentLayer = nextLayer;
-                        if (nextLayer.size() == 0) {
-                            unexploredLeft = false;
-                        }
+                        holes.add(temp);
+                        i--;
                     }
 
-                    ArrayList<DTriangle> separatingTriangles = new ArrayList<>();
-                    for (int i = 0; i < nodes.size(); i++) {
-                        boolean difference = false;
-                        int degree = 0;
-                        int adjacentIndex = -1;
-                        for (int j = 0; j < nodes.size(); j++) {
-                            if (spanningTreeAdjacencyMatrix[i][j] == 1) {
-                                degree++;
-                            }
-                            if (originalAdjacencyMatrix[i][j] == 1 && spanningTreeAdjacencyMatrix[i][j] != 1) {
-                                difference = true;
-                                adjacentIndex = j;
-                            }
-                        }
-                        // that means it's a leaf node in the spanning tree but was previously connected to some other node
-                        if (difference && degree == 1 && !separatingTriangles.contains(nodes.get(adjacentIndex))) {
-                            separatingTriangles.add(nodes.get(i));
-                        }
+                    System.out.println("Nr. holes: " + holes.size());
+                    for (ArrayList<DTriangle> hole : holes) {
+                        System.out.println("Hole with " + hole.size() + (hole.size() > 1 ? " triangles" : " triangle"));
                     }
-
-                    // breadth-first search:
-                    // go through list of nodes in current layer
-                    // go through their children (not parents!) and check if they have been visited
-                    // if no: add them to a list of nodes which are in the next layer
-                    // if yes: mark current node as "special" leaf
-                    // continue with next layer
 
                     Polygon tempTriangle;
                     Color currentColor;
+                    for (ArrayList<DTriangle> hole : holes) {
+                        currentColor = new Color(Math.random(), Math.random(), Math.random(), 0.7);
+                        for (DTriangle dt : hole) {
+                            tempTriangle = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                            tempTriangle.setFill(currentColor);
+                            tempTriangle.setStroke(Color.GREY);
+                            pane.getChildren().add(tempTriangle);
+                        }
+                    }
+
+                    // separating triangles are those adjacent to a hole and (for now) degree 2
+                    ArrayList<DTriangle> separatingTriangles = new ArrayList<>();
+                    for (ArrayList<DTriangle> hole : holes) {
+                        boolean triangleFound = false;
+                        // go through triangles in the hole
+                        for (int i = 0; !triangleFound && i < hole.size(); i++) {
+                            dt1 = hole.get(i);
+                            // go through triangles outside the hole
+                            for (int j = 0; !triangleFound && j < nodes.size(); j++) {
+                                dt2 = nodes.get(j);
+                                // if the triangle has degree two and is adjacent to the holeTriangle, make it a separating triangle
+                                if (degreeMatrix[j] == 2 && (dt2.isEdgeOf(dt1.getEdge(0)) || dt2.isEdgeOf(dt1.getEdge(1)) || dt2.isEdgeOf(dt1.getEdge(2)))) {
+                                    int vertexCount = 0;
+                                    for (DTriangle holeTriangle : hole) {
+                                        for (int k = 0; k < dt2.getPoints().size(); k++) {
+                                            if (holeTriangle.getPoints().contains(dt2.getPoint(k))) {
+                                                vertexCount++;
+                                            }
+                                        }
+                                    }
+                                    System.out.println("vertexCount = " + vertexCount);
+                                    if (vertexCount <= 4) {
+                                        separatingTriangles.add(dt2);
+                                        triangleFound = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    ArrayList<Polygon> showTriangles = new ArrayList<>(nodes.size());
                     for (DTriangle dt : nodes) {
                         if (separatingTriangles.contains(dt)) {
                             currentColor = Color.LIGHTBLUE.deriveColor(1, 1, 1, 0.7);
@@ -719,17 +978,18 @@ public class AltMain extends Application {
                             currentColor = Color.LAWNGREEN.deriveColor(1, 1, 1, 0.7);
                         }
                         tempTriangle = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                        tempTriangle.setFill(currentColor);
                         tempTriangle.setStroke(Color.BLACK);
-                        pane.getChildren().add(tempTriangle);
+                        tempTriangle.setFill(currentColor);
+                        showTriangles.add(tempTriangle);
+                        //pane.getChildren().add(tempTriangle);
                     }
-                    pane.getChildren().addAll(tree);
+                    pane.getChildren().addAll(showTriangles);
                 } catch (DelaunayError error) {
                     error.printStackTrace();
                 }
             }
         });
-        menu.getChildren().add(spanningTreeButton);
+        menu.getChildren().add(loopBreakingButton);
 
         Slider slider = new Slider(0, 150, 100);
         slider.setShowTickMarks(true);
