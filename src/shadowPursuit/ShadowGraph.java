@@ -68,8 +68,7 @@ public class ShadowGraph {
                     for (ShadowNode node : Nodes) {
                         if (node.getPosition() == leftP) {
                             start.prev = node;
-                        }
-                        else if(node.getPosition() == rightP)   {
+                        } else if (node.getPosition() == rightP) {
                             start.next = node;
                             node.prev = start;
                         }
@@ -83,7 +82,7 @@ public class ShadowGraph {
         }
     }
 
-    public void printGraph()    {
+    public void printGraph() {
         ArrayList<ShadowNode> copied = new ArrayList<>();
         System.arraycopy(Nodes, 0, copied, 0, Nodes.size());
 

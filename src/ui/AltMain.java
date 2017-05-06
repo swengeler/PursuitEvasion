@@ -23,6 +23,7 @@ import javafx.scene.shape.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.apache.log4j.DefaultThrowableRenderer;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
@@ -293,10 +294,6 @@ public class AltMain extends Application {
                                 inPolygon = false;
                             }
                         }
-                        System.out.println(dt.getAngle(0));
-                        System.out.println(dt.getAngle(1));
-                        System.out.println(dt.getAngle(2));
-                        System.out.println();
                         if (Math.abs(dt.getAngle(0) + dt.getAngle(1) + dt.getAngle(2)) < 5) {
                             inPolygon = false;
                         }
@@ -652,7 +649,8 @@ public class AltMain extends Application {
                         }
                     }
 
-                    for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++) {
+                    //for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++) {
+                        int nodeIndex = 0;
                         int[][] spanningTreeAdjacencyMatrix = new int[nodes.size()][nodes.size()];
                         boolean[] visitedNodes = new boolean[nodes.size()];
                         int[] parentNodes = new int[nodes.size()];
@@ -762,7 +760,7 @@ public class AltMain extends Application {
                         Circle rootIndicator = new Circle(nodes.get(nodeIndex).getBarycenter().getX(), nodes.get(nodeIndex).getBarycenter().getY(), 5, Color.BLACK);
                         pane.getChildren().add(rootIndicator);
 
-                        try {
+                        /*try {
                             //File file = new File("E:\\Simon\\Desktop\\Screenshots\\" + (int) (Math.random() * 1000) + "_screenshot.png");
                             File file = new File("E:\\Simon\\Desktop\\Screenshots\\" + nodeIndex + "_screenshot.png");
                             // Pad the capture area
@@ -778,8 +776,8 @@ public class AltMain extends Application {
                         pane.getChildren().removeAll(showTriangles);
                         pane.getChildren().removeAll(tree);
                         pane.getChildren().remove(rootIndicator);
-                        System.out.println("Screenshot with node " + nodeIndex + " as root taken.");
-                    }
+                        System.out.println("Screenshot with node " + nodeIndex + " as root taken.");*/
+                    //}
                 } catch (DelaunayError error) {
                     error.printStackTrace();
                 }
@@ -960,8 +958,16 @@ public class AltMain extends Application {
                                             }
                                         }
                                     }
+                                    int what = 0;
+                                    for (int z = 0; z < separatingTriangles.size(); z++) {
+                                        for (int k = 0; k < dt2.getPoints().size(); k++) {
+                                            if (separatingTriangles.get(z).getPoints().contains(dt2.getPoint(k))) {
+                                                what++;
+                                            }
+                                        }
+                                    }
                                     System.out.println("vertexCount = " + vertexCount);
-                                    if (vertexCount <= 4) {
+                                    if (vertexCount <= 4 && what < 2) {
                                         separatingTriangles.add(dt2);
                                         triangleFound = true;
                                     }
@@ -969,6 +975,121 @@ public class AltMain extends Application {
                             }
                         }
                     }
+                    // if they form a loop, then change one?
+                    // run spanning tree on the generated graph and see whether branches "meet"
+                    // if so, break that loop either by adding a separating triangle or by changing a separating triangle
+                    // also, could just use this from the start?
+
+                    int[][] spanningTreeAdjacencyMatrix = adjacencyMatrix.clone();
+                    for (DTriangle dt : separatingTriangles) {
+                        for (int i = 0; i < nodes.size(); i++) {
+                            spanningTreeAdjacencyMatrix[nodes.indexOf(dt)][i] = 0;
+                            spanningTreeAdjacencyMatrix[i][nodes.indexOf(dt)] = 0;
+                        }
+                    }
+
+                    boolean unexploredLeft = true;
+                    ArrayList<Integer> currentLayer = new ArrayList<>();
+                    currentLayer.add(0);
+                    ArrayList<Integer> nextLayer;
+
+                    boolean[] visitedNodes = new boolean[nodes.size()];
+                    int[] parentNodes = new int[nodes.size()];
+
+                    ArrayList<Line> tree = new ArrayList<>();
+                    Line tempLine;
+                    while (unexploredLeft) {
+                        nextLayer = new ArrayList<>();
+                        for (int i : currentLayer) {
+                            visitedNodes[i] = true;
+                            for (int j = 0; j < nodes.size(); j++) {
+                                if (spanningTreeAdjacencyMatrix[i][j] == 1 && j != parentNodes[i] && !visitedNodes[j]) {
+                                    nextLayer.add(j);
+                                    parentNodes[j] = i;
+                                    visitedNodes[j] = true;
+
+                                    tempLine = new Line(nodes.get(i).getBarycenter().getX(), nodes.get(i).getBarycenter().getY(), nodes.get(j).getBarycenter().getX(), nodes.get(j).getBarycenter().getY());
+                                    tempLine.setStroke(Color.RED);
+                                    tempLine.setStrokeWidth(4);
+                                    tree.add(tempLine);
+                                }
+                            }
+                        }
+                        currentLayer = nextLayer;
+                        if (nextLayer.size() == 0) {
+                            unexploredLeft = false;
+                        }
+                    }
+
+                    for (int i = 0; i < spanningTreeAdjacencyMatrix.length; i++) {
+                        int c = 0;
+                        for (int j = 0; j < spanningTreeAdjacencyMatrix[0].length; j++) {
+                            if (spanningTreeAdjacencyMatrix[i][j] == 1) {
+                                c++;
+                            }
+                        }
+                        System.out.println("Node " + i + " has " + c + " neighbours");
+                    }
+
+                    ArrayList<DTriangle> componentNodes = new ArrayList<>();
+                    for (DTriangle dt : nodes) {
+                        if (!separatingTriangles.contains(dt)) {
+                            componentNodes.add(dt);
+                        }
+                    }
+                    ArrayList<ArrayList<DTriangle>> simplyConnectedComponents = new ArrayList<>();
+                    visitedNodes = new boolean[nodes.size()];
+                    parentNodes = new int[nodes.size()];
+                    for (int i = 0; i < componentNodes.size(); i++) {
+                        temp = new ArrayList<>();
+                        temp.add(componentNodes.get(i));
+
+                        unexploredLeft = true;
+                        currentLayer = new ArrayList<>();
+                        /*System.out.println("i: " + i);
+                        System.out.println("componentNodes.size(): " + componentNodes.size());*/
+                        currentLayer.add(nodes.indexOf(componentNodes.get(i)));
+                        componentNodes.remove(i);
+                        while (unexploredLeft) {
+                            nextLayer = new ArrayList<>();
+                            for (int j : currentLayer) {
+                                visitedNodes[j] = true;
+                                for (int k = 0; k < componentNodes.size(); k++) {
+                                    if (spanningTreeAdjacencyMatrix[j][nodes.indexOf(componentNodes.get(k))] == 1 && nodes.indexOf(componentNodes.get(k)) != parentNodes[j] && !visitedNodes[nodes.indexOf(componentNodes.get(k))]) {
+                                        nextLayer.add(nodes.indexOf(componentNodes.get(k)));
+                                        parentNodes[nodes.indexOf(componentNodes.get(k))] = j;
+                                        visitedNodes[nodes.indexOf(componentNodes.get(k))] = true;
+                                        temp.add(componentNodes.get(k));
+                                        componentNodes.remove(k);
+                                        k--;
+                                    }
+                                }
+                            }
+                            currentLayer = nextLayer;
+                            if (nextLayer.size() == 0) {
+                                unexploredLeft = false;
+                            }
+                        }
+                        simplyConnectedComponents.add(temp);
+                        i--;
+                    }
+
+                    simplyConnectedComponents.sort((o1, o2) -> o1.size() > o2.size() ? -1 : (o1.size() == o2.size() ? 0 : 1));
+                    System.out.println("simplyConnectedComponents.size(): " + simplyConnectedComponents.size());
+
+                    // now cut through any possible loops:
+                    // want a triangle adjacent to one of the enclosing triangles for each cut-off region
+                    // (and on the outside) that is also part of the loop -> how can you identify that?
+                    // 1 could check whether everything is stil reachable from the adjacent nodes of the one you want to make a separator
+                    // 2 2.1 search for nodes in the tree which are not
+                    //       a) separating triangles
+                    //       b) parent and child
+                    //       but are still adjacent in the separating tree graph
+                    //   2.2 then trace their paths back to the last common ancestor
+                    //       -> thereby automatically iterate over all of the nodes on the loop
+                    //   2.3 find a hole that has a triangle on the loop adjacent to it, then move the current adjacent
+                    //       separating triangle to that new-found triangle (can use some other criterion for selection too)
+
 
                     ArrayList<Polygon> showTriangles = new ArrayList<>(nodes.size());
                     for (DTriangle dt : nodes) {
@@ -984,6 +1105,8 @@ public class AltMain extends Application {
                         //pane.getChildren().add(tempTriangle);
                     }
                     pane.getChildren().addAll(showTriangles);
+                    pane.getChildren().addAll(tree);
+                    pane.getChildren().add(new Circle(nodes.get(0).getBarycenter().getX(), nodes.get(0).getBarycenter().getY(), 5, Color.BLACK));
                 } catch (DelaunayError error) {
                     error.printStackTrace();
                 }

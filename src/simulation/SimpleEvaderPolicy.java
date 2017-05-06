@@ -1,10 +1,6 @@
 package simulation;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.Vector;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class SimpleEvaderPolicy extends MovePolicy {
 
@@ -71,8 +67,8 @@ public class SimpleEvaderPolicy extends MovePolicy {
         if (numberOfSeparationPursuers != 0) {
             //if there are seperation pursuers, do further calculations (normalizing, reversing (180 degrees))
 
-            deltaX = -deltaX/numberOfSeparationPursuers;
-            deltaY = -deltaY/numberOfSeparationPursuers;
+            deltaX = -deltaX / numberOfSeparationPursuers;
+            deltaY = -deltaY / numberOfSeparationPursuers;
         }
 
         if (numberOfCohesionPursuers != 0) {
@@ -86,7 +82,7 @@ public class SimpleEvaderPolicy extends MovePolicy {
         }
 
         //check out of bounds, for now we just don't do anything if the move would be out of bounds
-        if (!map.legalPosition(evader.getXPos() + deltaX * evader.getSpeed() * 1/4000, evader.getYPos() + deltaY * evader.getSpeed() * 1/4000)) {
+        if (!map.legalPosition(evader.getXPos() + deltaX * evader.getSpeed() * 1 / 4000, evader.getYPos() + deltaY * evader.getSpeed() * 1 / 4000)) {
             System.out.println("Move impossible: out of bounds");
             return new Move(0, 0, 0);
             //TODO: fix
