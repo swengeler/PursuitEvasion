@@ -4,6 +4,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import shadowPursuit.ShadowNode;
 
 import java.util.ArrayList;
 
@@ -129,21 +130,63 @@ public class GeometryOperations {
         return false;
     }
 
+
+
+
+    public static Line occRay(Point2D agentPos, ShadowNode t2Point) {
+        return occRay(agentPos, t2Point.getPosition());
+    }
+
+    public static Line occRay(Point2D agentPos, Point2D  t2Point) {
+        Line ray = new Line(agentPos.getX(), agentPos.getY(), t2Point.getX(), t2Point.getY());
+        ray.setScaleX(1000);
+        ray.setScaleY(1000);
+        return ray;
+
+    }
+
     private static double signed2DTriArea(double ax, double ay, double bx, double by, double cx, double cy) {
         return (ax - cx) * (by - cy) - (ay - cy) * (bx - cx);
     }
 
-    //TODO @Rob continue here
-    public ArrayList<Point2D> visiblePoints(ArrayList<Point2D> polyPoints, Point2D position) {
-        ArrayList<Point2D> visPoints = new ArrayList<>();
-        Line temp;
+    public static Point2D pointIntersect(Line line1, Line line2) {
 
 
-        for (Point2D point : polyPoints) {
+        double x1, x2, x3, x4;
+        double y1, y2, y3, y4;
 
-        }
-        return null;
+        x1 = line1.getStartX();
+        y1 = line1.getStartY();
+
+        x2 = line1.getEndX();
+        y2 = line1.getEndY();
+
+        x3 = line2.getStartX();
+        y3 = line2.getStartY();
+
+        x4 = line2.getEndX();
+        y4 = line2.getEndY();
+
+        double s1x, s1y, s2x, s2y, s, t;
+
+        s1x = x2 - x1;
+        s2x = x4 - x3;
+        s1y = y2 - y1;
+        s2y = y4 - y3;
+
+        s = (-s1y * (x1 - x3) + s1x * (y1 - y3)) / (-s2x * s1y + s1x * s2y);
+        t = (-s1x * (y1 - y3) - s2y * (x1 - x3)) / (-s2x * s1y + s1x * s2y);
+
+        double xInt, yInt;
+        xInt = x1 + (t * s1x);
+        yInt = y1 + (t * s1y);
+
+        return new Point2D(xInt, yInt);
+
+
     }
+
+
 
 
 }

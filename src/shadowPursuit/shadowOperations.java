@@ -1,10 +1,12 @@
 package shadowPursuit;
 
+import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import simulation.Agent;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.util.ArrayList;
 
 import static additionalOperations.GeometryOperations.lineIntersectInPoly;
@@ -118,11 +120,14 @@ public class shadowOperations {
 
     public static boolean inPolygon(Point2D dot, ArrayList<Point2D> polyPoints) {
         if (polyPoints.size() == 0) {
+            //System.out.println("Size = 0");
             return false;
         }
 
         for (Point2D point : polyPoints) {
-            if (point == dot) {
+            //System.out.println("point = " + point + "\tDot = " + dot);
+            if (point.getX() == dot.getX() && point.getY() == dot.getY()) {
+                //System.out.println("returning true");
                 return true;
             }
         }
@@ -286,28 +291,43 @@ public class shadowOperations {
 
     public static ArrayList<Point2D> getAdjacentPoints(Point2D point, ArrayList<Polygon> allPolys) {
 
+
+
         ArrayList<Point2D> tempPoints, retPoints;
         retPoints = new ArrayList<>();
 
         for (Polygon poly : allPolys) {
+
             tempPoints = polyToPoints(poly);
+            //System.out.println(poly);
             if (inPolygon(point, poly)) {
+
+                //System.out.println(tempPoints);
+
                 for (int i = 0; i < tempPoints.size(); i++) {
-                    if (tempPoints.get(i) == point) {
+                    if (tempPoints.get(i).getX() == point.getX() && tempPoints.get(i).getY() == point.getY()) {
+                        //System.out.println("ENTEREEED");
                         if (i == 0) {
+                            //System.out.println("i = 0 entered");
                             retPoints.add(tempPoints.get(tempPoints.size() - 1));
                             retPoints.add(tempPoints.get(1));
+                            break;
                         } else if (i == tempPoints.size() - 1) {
-                            retPoints.add(tempPoints.get(i - 1));
+                            //System.out.println("i = size-1 entered");
+                            retPoints.add(tempPoints.get(i - 2));
                             retPoints.add(tempPoints.get(0));
+                            break;
                         } else {
+                            //System.out.println("i = " + i + "Size = " + tempPoints.size());
                             retPoints.add(tempPoints.get(i - 1));
-                            retPoints.add(tempPoints.get(1 + 1));
+                            retPoints.add(tempPoints.get(i + 1));
+                            break;
                         }
-                        break;
+                    }
+                    else    {
+                        //System.out.println("ELSE Entered!!!!");
                     }
                 }
-                break;
             }
         }
         return retPoints;
@@ -367,6 +387,21 @@ public class shadowOperations {
         }
 
     }
+
+    //@TODO @Rob after testing, use Simons method so ppl don´t perceive you as a total ripoff ;)
+    public static boolean isVisible(double x1, double y1, double x2, double y2, ArrayList<Line> polygonEdges) {
+        // check whether the second controlledAgents is visible from the position of the first controlledAgents
+        // (given its field of view and the structure of the map)
+        for (Line l : polygonEdges) {
+            if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
 
 
 }
