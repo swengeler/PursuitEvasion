@@ -7,6 +7,7 @@ import simulation.MapRepresentation;
 import java.util.ArrayList;
 
 import static additionalOperations.GeometryOperations.polyToPoints;
+import static shadowPursuit.shadowOperations.getAdjacentPoints;
 import static shadowPursuit.shadowOperations.getX1Points;
 
 
@@ -15,7 +16,7 @@ import static shadowPursuit.shadowOperations.getX1Points;
  */
 public class ShadowTest {
 
-    Polygon poly;
+    Polygon environment;
     private MapRepresentation map;
     private ArrayList<Point2D> agents;
 
@@ -24,22 +25,56 @@ public class ShadowTest {
 
 
     public ShadowTest() {
-        poly = new Polygon(682.0, 281.0, 657.0, 281.0, 650.0, 300.0, 642.0, 285.0, 639.0, 264.0, 656.0, 252.0, 675.0, 236.0, 694.0, 240.0, 713.0, 242.0, 718.0, 227.0, 713.0, 214.0, 697.0, 202.0, 676.0, 199.0, 658.0, 203.0, 645.0, 209.0, 615.0, 227.0, 601.0, 241.0, 598.0, 267.0, 604.0, 298.0, 613.0, 318.0, 627.0, 328.0, 652.0, 332.0, 671.0, 324.0, 677.0, 303.0);
+        environment = new Polygon(394.0,396.0,576.0,396.0,578.0,305.0,626.0,310.0,633.0,358.0,633.0,418.0,694.0,442.0,796.0,443.0,794.0,365.0,751.0,323.0,751.0,266.0,766.0,213.0,694.0,159.0,482.0,141.0,423.0,189.0,213.0,207.0,189.0,281.0,116.0,397.0,166.0,489.0,223.0,549.0,247.0,438.0,228.0,371.0,264.0,334.0,307.0,361.0);
 
-        Point2D agentPos = new Point2D(670, 291);
+
+        Polygon obstacle1 = new Polygon(663.0 ,352.0 ,664.0 ,385.0 ,764.0 ,395.0);
+        Polygon obstacle2 = new Polygon(215.0 ,382.0 ,228.0 ,465.0 ,181.0 ,450.0);
+
+        ArrayList<Polygon> obst = new ArrayList<>();
+        obst.add(obstacle1);
+        obst.add(obstacle2);
+
+        Point2D agentPos = new Point2D(474, 357);
         ArrayList<Point2D> agents = new ArrayList<>();
         agents.add(agentPos);
 
-        ArrayList<Polygon> obstacles = new ArrayList<>();
 
 
-        ArrayList<Point2D> type1 = getX1Points(poly, obstacles, agents);
+        ArrayList<Polygon> polys = new ArrayList<>();
+        polys.add(environment);
+        polys.addAll(obst);
+
+
+        System.out.println("Invisible");
+        ArrayList<Point2D> type1 = getX1Points(environment, obst, agents);
+
         for (Point2D point : type1) {
             System.out.println(point);
         }
 
-        System.out.println();
-        ArrayList<Point2D> points = polyToPoints(poly);
+        System.out.println("\n");
+        /*
+        System.out.println("\nvisible");
+        ArrayList<Point2D> env = polyToPoints(environment);
+        for(Point2D point : env)  {
+            if(!type1.contains(point))    {
+                //System.out.println(point);
+                ArrayList<Point2D> connected = getAdjacentPoints(point, polys);
+                //System.out.println(connected.size());
+                System.out.print("\nFor = " + point + "\n" + connected.get(0) + " \t " + connected.get(1) + "\n");
+            }
+
+
+        }
+        */
+
+        //ArrayList<Point2D> connected = getAdjacentPoints(type1.get(0), polys);
+        //System.out.println("\nFor = " + type1.get(0) + "\n" + connected.get(0) + " \t " + connected.get(1));
+
+
+
+        shadows = new ShadowGraph(environment, obst, agents);
 
     }
 

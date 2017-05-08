@@ -32,14 +32,23 @@ public class ShadowNode {
     public ShadowNode(Point2D position) {
         this.position = position;
         type = type1;
+        prev = null;
+        next = null;
     }
 
 
     //Type2 Node()
     public ShadowNode(Point2D position, ShadowNode neighbor1) {
         this.position = position;
-        this.prev = neighbor1;
-        this.next = null;
+        if(neighbor1.getNext() == null) {
+            this.prev = neighbor1;
+            neighbor1.next = this;
+        }
+        else    {
+            this.next = neighbor1;
+            neighbor1.prev = this;
+        }
+
 
         type = type2;
     }
@@ -74,6 +83,14 @@ public class ShadowNode {
         return type;
     }
 
+    public void setNext(ShadowNode newNode) {
+        this.next = newNode;
+    }
+
+    public void setPrev(ShadowNode newNode) {
+        this.prev = newNode;
+    }
+
     public Point2D getPosition() {
         return position;
     }
@@ -96,7 +113,19 @@ public class ShadowNode {
     }
 
     public String toString() {
-        return new String(this.getPosition().toString());
+        Point2D prevPos, nextPos;
+        prevPos = null;
+        nextPos = null;
+
+        if(prev != null)    {
+            prevPos = prev.getPosition();
+        }
+        if(next != null){
+            nextPos = next.getPosition();
+        }
+
+
+        return new String(this.getPosition().toString() + "\tprev = " + prevPos + "\tnext = " + nextPos + "\tType = " + type);
     }
 
 

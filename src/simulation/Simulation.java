@@ -21,7 +21,7 @@ public class Simulation {
 
 
     //extra boolean to printout polygons for shadowtests
-    private final boolean polyPrint = false;
+    private final boolean polyPrint = true;
 
     public Simulation(MapRepresentation map, ArrayList<Agent> agents) {
         this.map = map;
