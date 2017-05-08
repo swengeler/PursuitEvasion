@@ -1,5 +1,6 @@
 package ui;
 
+import com.sun.org.apache.bcel.internal.generic.ARRAYLENGTH;
 import control.Controller;
 import conversion.GridConversion;
 import entities.CentralisedEntity;
@@ -1462,10 +1463,25 @@ public class AltMain extends Application {
                         tempIndeces[1] = new ArrayList<>();
                         tempIndeces[1].add(adjacentPair[1]);
                         currentParent = parentNodes[adjacentPair[1]];
-                        while (!tempIndeces[0].contains(currentParent)) {
-                            tempIndeces[1].add(currentParent);
-                            currentParent = parentNodes[currentParent];
+                        ArrayList<Integer> currentNeighbours = new ArrayList<>();
+                        for (int i = 0; i < originalAdjacencyMatrix.length; i++) {
+                            if (originalAdjacencyMatrix[currentParent][i] == 1 && i != adjacentPair[1]) {
+                                currentNeighbours.add(i);
+                            }
                         }
+                        int currentChild;
+                        while (!tempIndeces[0].contains(currentParent) /*&& !tempIndeces[0].contains(neighbours(currentParent))*/) {
+                            tempIndeces[1].add(currentParent);
+                            currentChild = currentParent;
+                            currentParent = parentNodes[currentParent];
+                            currentNeighbours = new ArrayList<>();
+                            for (int i = 0; i < originalAdjacencyMatrix.length; i++) {
+                                if (originalAdjacencyMatrix[currentParent][i] == 1 && i != currentChild) {
+                                    currentNeighbours.add(i);
+                                }
+                            }
+                        }
+
 
                         int commonAncestor = currentParent;
                         int currentIndex = tempIndeces[0].get(tempIndeces[0].size() - 1);
@@ -1490,6 +1506,7 @@ public class AltMain extends Application {
                         System.out.println();
                     }
 
+
                     ArrayList<DTriangle> separatingTriangles = new ArrayList<>();
                     for (ArrayList<Integer> loop : loops) {
                         boolean separatingTriangleFound = false;
@@ -1497,12 +1514,26 @@ public class AltMain extends Application {
                         for (int i = 0; !separatingTriangleFound && i < holes.size(); i++) {
                             for (int j = 0; !separatingTriangleFound && j < loop.size(); j++) {
                                 dt1 = nodes.get(loop.get(j));
+                                /*boolean adjacentFound = false;
+                                for (int z = 0; !adjacentFound && z < separatingTriangles.size(); z++) {
+                                    for (int y = 0; y < dt1.getEdges().length; y++) {
+                                        if (separatingTriangles.get(z).isEdgeOf(dt1.getEdge(y))) {
+                                            adjacentFound = true;
+                                        }
+                                    }
+                                }*/
+                                if (separatingTriangles.contains(dt1)) {
+                                    continue;
+                                }
                                 for (int k = 0; !separatingTriangleFound && k < holes.get(i).size(); k++) {
                                     for (int l = 0; !separatingTriangleFound && l < dt1.getEdges().length; l++) {
                                         if (holes.get(i).get(k).isEdgeOf(dt1.getEdge(l))) {
                                             // TODO: Also check for adjacency with existing separating triangles (avoid redundancy)
                                             separatingTriangleFound = true;
                                             currentSeparatingTriangle = dt1;
+                                            ArrayList<DTriangle> tmp = holes.remove(i);
+                                            holes.add(tmp);
+                                            i--;
                                         }
                                     }
                                 }
@@ -1540,8 +1571,8 @@ public class AltMain extends Application {
                     }
                     pane.getChildren().addAll(showTriangles);
                     pane.getChildren().addAll(tree);
+                    pane.getChildren().addAll(loopLines);
                     pane.getChildren().addAll(toFrontNodes);
-                    //pane.getChildren().addAll(loopLines);
 
                     Circle rootIndicator = new Circle(nodes.get(nodeIndex).getBarycenter().getX(), nodes.get(nodeIndex).getBarycenter().getY(), 5, Color.BLACK);
                     pane.getChildren().add(rootIndicator);
