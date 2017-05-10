@@ -283,7 +283,7 @@ public class ShadowGraph {
 
 
 
-    public void circleDetect()    {
+    public void circleDetect()   {
         ArrayList<ShadowNode> printed = new ArrayList<>();
 
 
