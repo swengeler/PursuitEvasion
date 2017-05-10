@@ -254,7 +254,7 @@ public class ShortestPathRoadMap {
         return test.getPath(source, sink);
     }
 
-//ok le
+//o
     // how to find reflex vertices
     // take the two neighbours
     // find the vector directed to the middle point
