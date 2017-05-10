@@ -8,20 +8,38 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import simulation.MapRepresentation;
+import sun.nio.cs.ext.MacArabic;
 
 import java.util.ArrayList;
 
 
 public class ShortestPathRoadMap {
 
-    private ArrayList<Vertex> graph;
+    private ArrayList<PathVertex> graph;
 
+    public void ShortestPathCalc(MapRepresentation map, Point2D source, Point2D sink) {
+
+
+        calculateShortestPath(map,  reflexInlineofsight(map, findReflex(map) ), source, sink);
+
+}
     public ShortestPathRoadMap(MapRepresentation map) {
         init(map);
     }
 
     private void init(MapRepresentation map) {
         graph = new ArrayList<>();
+
+
+
+
+
+
+
+
+
+
+
 
         // determine reflex vertices
         double currentAngle, a1, a2, b1, b2;
@@ -36,7 +54,7 @@ public class ShortestPathRoadMap {
             //currentAngle = Math.acos((a1 * b1 + a2 * b2) / (Math.sqrt(Math.pow(a1, 2) + Math.pow(a2, 2)) * Math.sqrt(Math.pow(b1, 2) + Math.pow(b2, 2))));
             inPolygon = currentPolygon.contains(currentPolygon.getPoints().get(i) + 0.0001 * a1, currentPolygon.getPoints().get(i + 1) + 0.0001 * a2);
             if (inPolygon) {
-                graph.add(new Vertex(currentPolygon.getPoints().get(i) + 0.0001 * a1, currentPolygon.getPoints().get(i + 1) + +0.0001 * a2));
+                graph.add(new PathVertex(currentPolygon.getPoints().get(i) + 0.0001 * a1, currentPolygon.getPoints().get(i + 1) + +0.0001 * a2));
             }
         }
         System.out.println("---------");
@@ -50,7 +68,7 @@ public class ShortestPathRoadMap {
                 //currentAngle = Math.acos((a1 * b1 + a2 * b2) / (Math.sqrt(Math.pow(a1, 2) + Math.pow(a2, 2)) * Math.sqrt(Math.pow(b1, 2) + Math.pow(b2, 2))));
                 inPolygon = p.contains(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + +0.0001 * a2);
                 if (!inPolygon) {
-                    graph.add(new Vertex(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + 0.0001 * a2));
+                    graph.add(new PathVertex(p.getPoints().get(i) + 0.0001 * a1, p.getPoints().get(i + 1) + 0.0001 * a2));
                     for (int j = 0; j < p.getPoints().size(); j += 2) {
                         if (i != j) {
 
@@ -76,7 +94,7 @@ public class ShortestPathRoadMap {
 
     }
 
-    public GraphPath generategraphMap(MapRepresentation map, Vertex source, Vertex sink) {
+    public GraphPath generategraphMap(MapRepresentation map, PathVertex source, PathVertex sink) {
         Polygon polygon = map.getBorderPolygon();
 
         double list[] = new double[polygon.getPoints().size()];
@@ -114,7 +132,7 @@ public class ShortestPathRoadMap {
         }
 
 
-        SimpleWeightedGraph<Vertex, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         int index = 0;
         for (int p = (int) minx; minx < maxx; minx++) {
             for (double l = (int) miny; miny < maxy; miny++) {
@@ -124,15 +142,15 @@ public class ShortestPathRoadMap {
                 // is point(p-1,l) , point(p-1,l-1), point(p,l-1) in the possible area
                 //if yes point(p,l) has neighbour and other one has neighbour as point(p,l)
                 if (map.legalPosition(p, l)) {
-                    graph1.addVertex(new Vertex(p, l));
+                    graph1.addVertex(new PathVertex(p, l));
                     if (map.legalPosition(p, l - 1)) {
-                        graph1.addEdge(new Vertex(p, l), new Vertex(p, l - 1));
+                        graph1.addEdge(new PathVertex(p, l), new PathVertex(p, l - 1));
                     }
                     if (map.legalPosition(p - 1, l)) {
-                        graph1.addEdge(new Vertex(p, l), new Vertex(p - 1, l));
+                        graph1.addEdge(new PathVertex(p, l), new PathVertex(p - 1, l));
                     }
                     if (map.legalPosition(p - 1, l - 1)) {
-                        graph1.addEdge(new Vertex(p, l), new Vertex(p - 1, l - 1));
+                        graph1.addEdge(new PathVertex(p, l), new PathVertex(p - 1, l - 1));
                     }
 
 
@@ -147,17 +165,17 @@ public class ShortestPathRoadMap {
     }
 
 
-    public ArrayList<javafx.geometry.Point2D> findReflex(MapRepresentation map) {
+    public ArrayList<PathVertex> findReflex(MapRepresentation map) {
         ArrayList<Polygon> polygons = map.getAllPolygons();
 
         GeometryOperations geometryOperations = new GeometryOperations();
-        ArrayList<javafx.geometry.Point2D> reflex = new ArrayList<>();
+        ArrayList<PathVertex> reflex = new ArrayList<>();
         int reflexIndex = 0;
         //  ArrayList<javafx.geometry.Point2D> polygon= geometryOperations.polyToPoints(polygons);
         Point2D left;
         Point2D right;
         for (int i = 0; i < polygons.size(); i++) {
-            ArrayList<javafx.geometry.Point2D> polygon = geometryOperations.polyToPoints(polygons.get(i));
+            ArrayList<Point2D> polygon = geometryOperations.polyToPoints(polygons.get(i));
 
             for (int j = 0; j < polygon.size(); j++) {
                 if (j != 0 && j != polygon.size() - 1) {
@@ -184,7 +202,7 @@ public class ShortestPathRoadMap {
                 }
 
                 if ((leftvector + rightvector) % 360 > 180) {
-                    reflex.add(reflexIndex, (Point2D) polygon.get(j));
+                    reflex.add(reflexIndex,  new PathVertex( polygon.get(j)));
                     reflexIndex++;
                 }
 
@@ -197,27 +215,35 @@ public class ShortestPathRoadMap {
     }
 
 
-    public SimpleWeightedGraph<Vertex, DefaultWeightedEdge> reflexInlineofsight(MapRepresentation map, ArrayList<Point2D> reflexs) {
+    public SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> reflexInlineofsight(MapRepresentation map, ArrayList<PathVertex> reflexs) {
         double eps = 0.0001;
         double angle;
-        SimpleWeightedGraph<Vertex, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
         for (int i = 0; i < reflexs.size(); i++) {
             for (int j = 9; j >= i; j--) {
                 if (i != j) {
                     if (map.isVisible(reflexs.get(i).getX(), reflexs.get(i).getY(), reflexs.get(j).getX(), reflexs.get(j).getY())) {
                         angle = Math.toDegrees(Math.atan2(reflexs.get(i).getY() - reflexs.get(j).getY(), reflexs.get(i).getX() - reflexs.get(j).getX()));
-                        Point2D above, below, inside1, inside2;
-                        above = new Point2D(reflexs.get(i).getX() + eps, reflexs.get(i).getY() + eps * angle);
-                        below = new Point2D(reflexs.get(j).getX() - eps, reflexs.get(j).getY() - eps * angle);
-                        inside1 = new Point2D(reflexs.get(i).getX() - eps, reflexs.get(i).getY() - eps * angle);
-                        inside2 = new Point2D(reflexs.get(j).getX() + eps, reflexs.get(j).getY() + eps * angle);
+                        PathVertex above, below, inside1, inside2;
+                        above = new PathVertex(reflexs.get(i).getX() + eps, reflexs.get(i).getY() + eps * angle);
+                        below = new PathVertex(reflexs.get(j).getX() - eps, reflexs.get(j).getY() - eps * angle);
+                        inside1 = new PathVertex(reflexs.get(i).getX() - eps, reflexs.get(i).getY() - eps * angle);
+                        inside2 = new PathVertex(reflexs.get(j).getX() + eps, reflexs.get(j).getY() + eps * angle);
                         if (map.legalPosition(above.getX(), above.getY()) && map.legalPosition(below.getX(), below.getY()) && map.legalPosition(inside1.getX(), inside1.getY()) && map.legalPosition(inside2.getX(), inside2.getY()))
                             ;
-                        graph1.addVertex(new Vertex(reflexs.get(i)));
-                        graph1.addVertex(new Vertex(reflexs.get(j)));
+
+                        PathVertex v1= reflexs.get(i);
+                        PathVertex v2= reflexs.get(j);
+
+
+                        graph1.addVertex(v1);
+                        graph1.addVertex(v2);
+
                         double differencesquare = (reflexs.get(i).getX() - reflexs.get(j).getX()) * (reflexs.get(i).getX() - reflexs.get(j).getX()) + (reflexs.get(i).getY() - reflexs.get(j).getY()) * (reflexs.get(i).getY() - reflexs.get(j).getY());
-                        graph1.addWeightedEdge(new Vertex(reflexs.get(i)), new Vertex(reflexs.get(j)), Math.sqrt(differencesquare));
+                       // graph1.addWeightedEdge(v1, v2, Math.sqrt(differencesquare));
+
+                            graph1.setEdgeWeight(graph1.addEdge(v1, v2), Math.sqrt(differencesquare));
                     }
                 }
             }
@@ -226,20 +252,24 @@ public class ShortestPathRoadMap {
     }
 
 
-    public  GraphPath calculateShortestPath(MapRepresentation map, ArrayList<Point2D> sightList, Point2D source, Point2D sink) {
+
+    public  GraphPath calculateShortestPath(MapRepresentation map, SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> sightList, Point2D source, Point2D sink) {
 
 
         ArrayList<Polygon> polygons = map.getAllPolygons();
-        sightList.addVertex(sink);
-        sightList.addVertex(source);
-        ArrayList<Point2D> reflexpoints = findReflex(map);
+
+        sightList.addVertex(new PathVertex(sink));
+        sightList.addVertex(new PathVertex(source));
+        ArrayList<PathVertex> reflexpoints = findReflex(map);
 
         for (int i = 0; i < reflexpoints.size(); i++) {
             if (map.isVisible(source.getX(), source.getY(), reflexpoints.get(i).getX(), reflexpoints.get(i).getY())) {
 
                 double differencesquare = (reflexpoints.get(i).getX() - source.getX()) * (reflexpoints.get(i).getX() - source.getX()) + (reflexpoints.get(i).getY() - source.getY()) * (reflexpoints.get(i).getY() - source.getY());
 
-                sightList.addWeightedEdge(source, reflexpoints.get(i), Math.sqrt(differencesquare));
+                // sightList.addEdge(source, reflexpoints.get(i));
+                sightList.setEdgeWeight(sightList.addEdge(new PathVertex(source), reflexpoints.get(i)),Math.sqrt(differencesquare ));
+
             }
         }
         for (int i = 0; i < reflexpoints.size(); i++) {
@@ -247,7 +277,9 @@ public class ShortestPathRoadMap {
 
                 double differencesquare = (reflexpoints.get(i).getX() - sink.getX()) * (reflexpoints.get(i).getX() - sink.getX()) + (reflexpoints.get(i).getY() - sink.getY()) * (reflexpoints.get(i).getY() - sink.getY());
 
-                sightList.addWeightedEdge(sink, reflexpoints.get(i), Math.sqrt(differencesquare));
+               // sightList.addWeightedEdge(sink, reflexpoints.get(i), Math.sqrt(differencesquare));
+                sightList.setEdgeWeight(sightList.addEdge(new PathVertex(sink),reflexpoints.get(i)), Math.sqrt(differencesquare));
+
             }
         }
         DijkstraShortestPath test = new DijkstraShortestPath(sightList);

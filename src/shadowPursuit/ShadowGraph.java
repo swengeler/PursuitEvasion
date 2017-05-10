@@ -69,7 +69,7 @@ public class ShadowGraph {
         generateT1Connections();
         circleDetect();
         calcT2Points();
-        getType2();
+        //getType2();
 
         printGraph();
     }

@@ -50,7 +50,7 @@ public class ShadowTest {
         ArrayList<Point2D> type1 = getX1Points(environment, obst, agents);
 
         for (Point2D point : type1) {
-            System.out.println(point);
+            //System.out.println(point);
         }
 
         System.out.println("\n");

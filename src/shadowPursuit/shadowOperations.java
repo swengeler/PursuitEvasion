@@ -35,9 +35,9 @@ public class shadowOperations {
 
 
         /* Possible cases for a type1 vertex:
-        *   1. environment Vertex is blocked by environment itself
-        *   2. environment Vertex is blocked by an obstacle
-        *   3. Obstacle Vertex is blocked by enironment
+        *   1. environment PathVertex is blocked by environment itself
+        *   2. environment PathVertex is blocked by an obstacle
+        *   3. Obstacle PathVertex is blocked by enironment
         *   4. Obstacle vertex is blocked by obstacle
          */
 
