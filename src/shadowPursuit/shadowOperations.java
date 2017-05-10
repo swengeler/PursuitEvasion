@@ -1,12 +1,12 @@
 package shadowPursuit;
 
+import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
-import javafx.scene.effect.Light;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import simulation.Agent;
 
-import java.lang.reflect.Array;
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.util.ArrayList;
 
 import static additionalOperations.GeometryOperations.lineIntersectInPoly;
@@ -18,8 +18,7 @@ import static additionalOperations.GeometryOperations.polyToPoints;
 public class shadowOperations {
 
 
-
-    public static ArrayList<Point2D> getX1Points(Polygon environment, ArrayList<Polygon> obstacles, ArrayList<Point2D> agents)  {
+    public static ArrayList<Point2D> getX1Points(Polygon environment, ArrayList<Polygon> obstacles, ArrayList<Point2D> agents) {
 
 
         //First you add all points
@@ -28,7 +27,7 @@ public class shadowOperations {
         ArrayList<Point2D> all = polyToPoints(environment);
 
         ArrayList<Point2D> vis = new ArrayList<>();
-        if(obstacles.size() > 0) {
+        if (obstacles.size() > 0) {
             for (Polygon poly : obstacles) {
                 all.addAll(polyToPoints(poly));
             }
@@ -48,15 +47,14 @@ public class shadowOperations {
         boolean visib = true;
 
 
-
-        while(i < all.size())   {
+        while (i < all.size()) {
             x2 = all.get(i).getX();
             y2 = all.get(i).getY();
 
             //System.out.println("\nFor point: \tX = " + x2 + "\tY = " + y2);
 
 
-            for(Point2D agent : agents)   {
+            for (Point2D agent : agents) {
                 agentX = agent.getX();
                 agentY = agent.getY();
 
@@ -67,24 +65,22 @@ public class shadowOperations {
 
                 visib = true;
                 //Not blocked by environment
-                if(!lineIntersectInPoly(environment, temp)) {
+                if (!lineIntersectInPoly(environment, temp)) {
 
-                    for(int j = 0; j < obstacles.size(); j++)   {
+                    for (int j = 0; j < obstacles.size(); j++) {
                         //And if just one obstacle blocks ths view for the controlledAgents this controlledAgents cannnot see the point
-                        if(lineIntersectInPoly(obstacles.get(j), temp)) {
+                        if (lineIntersectInPoly(obstacles.get(j), temp)) {
                             visib = false;
                             break;
                         }
                     }
-                }
-                else    {
+                } else {
                     visib = false;
                 }
             }
-            if(visib == false)   {
+            if (visib == false) {
                 i++;
-            }
-            else {
+            } else {
                 all.remove(i);
             }
             //System.out.println("New i = " + i);
@@ -94,42 +90,46 @@ public class shadowOperations {
     }
 
 
-    public static ArrayList<Point2D> getX2Points(Polygon environment, ArrayList<Polygon> obstacles, ArrayList<Point2D> type1Points, ArrayList<Agent> agents)  {
+    public static ArrayList<Point2D> getX2Points(Polygon environment, ArrayList<Polygon> obstacles, ArrayList<Point2D> type1Points, ArrayList<Agent> agents) {
         Point2D temp;
         ArrayList<Point2D> type2 = new ArrayList<>();
 
         //For every type1 identify the corresponding polygon
-        for(Point2D point: type1Points)  {
+        for (Point2D point : type1Points) {
 
-            if(inPolygon(point, environment))   {
+            if (inPolygon(point, environment)) {
                 getAdjT2(type1Points, type2, environment);
-            }
-            else {
+            } else {
                 for (Polygon poly : obstacles) {
                     getAdjT2(type1Points, type2, poly);
                 }
             }
 
         }
-        if(type2.size() == 0)   {
+        if (type2.size() == 0) {
             System.exit(000111000);
         }
 
         return type2;
     }
 
-    public static boolean inPolygon(Point2D dot, Polygon poly)   {
+    public static boolean inPolygon(Point2D dot, Polygon poly) {
         ArrayList<Point2D> pointList = polyToPoints(poly);
         return inPolygon(dot, pointList);
     }
 
     public static boolean inPolygon(Point2D dot, ArrayList<Point2D> polyPoints) {
-        if(polyPoints.size() == 0)
+        if (polyPoints.size() == 0) {
+            //System.out.println("Size = 0");
             return false;
+        }
 
-        for(Point2D point : polyPoints)  {
-            if(point == dot)
+        for (Point2D point : polyPoints) {
+            //System.out.println("point = " + point + "\tDot = " + dot);
+            if (point.getX() == dot.getX() && point.getY() == dot.getY()) {
+                //System.out.println("returning true");
                 return true;
+            }
         }
         return false;
     }
@@ -140,21 +140,21 @@ public class shadowOperations {
         Point2D point, temp;
 
 
-        if(type1Points.size() > 1)  {
+        if (type1Points.size() > 1) {
             //For every point in the non-visible set
-            for(int i = 0; i < type1Points.size(); i++)  {
+            for (int i = 0; i < type1Points.size(); i++) {
                 point = type1Points.get(i);
                 //Check to which polygon the point belongs
 
                 //Check if the adjacent points in the original polygon are also in the non-visible set
 
                 //Current one in polygon
-                if(inPolygon(type1Points.get(i), polyPoints)) {
+                if (inPolygon(type1Points.get(i), polyPoints)) {
 
                     //go to position in polygon
                     int j = 0;
 
-                    while(polyPoints.get(j) !=  point)  {
+                    while (polyPoints.get(j) != point) {
                         j++;
                     }
 
@@ -162,45 +162,40 @@ public class shadowOperations {
                     //check right side
 
 
-                    if((j+1) < polyPoints.size() && !inPolygon(polyPoints.get(j+1), type1Points))    {
-                        temp = polyPoints.get(j+1);
+                    if ((j + 1) < polyPoints.size() && !inPolygon(polyPoints.get(j + 1), type1Points)) {
+                        temp = polyPoints.get(j + 1);
 
-                        if(!inPolygon(temp, type2)) {
+                        if (!inPolygon(temp, type2)) {
                             type2.add(temp);
                         }
-                    }
-                    else if(j == polyPoints.size() - 1 && !inPolygon(polyPoints.get(0), type1Points))   {
+                    } else if (j == polyPoints.size() - 1 && !inPolygon(polyPoints.get(0), type1Points)) {
                         temp = polyPoints.get(0);
 
-                        if(!inPolygon(temp, type2)) {
+                        if (!inPolygon(temp, type2)) {
                             type2.add(temp);
                         }
                     }
 
-                    if(j == 0 && !inPolygon(polyPoints.get(polyPoints.size() - 1), type1Points))    {
+                    if (j == 0 && !inPolygon(polyPoints.get(polyPoints.size() - 1), type1Points)) {
                         temp = polyPoints.get(polyPoints.size() - 1);
 
-                        if(!inPolygon(temp, type2)) {
+                        if (!inPolygon(temp, type2)) {
                             type2.add(temp);
                         }
-                    }
-                    else if(j > 0 && !inPolygon(polyPoints.get(j-1), type1Points))  {
+                    } else if (j > 0 && !inPolygon(polyPoints.get(j - 1), type1Points)) {
                         temp = polyPoints.get(j - 1);
 
-                        if(!inPolygon(temp, type2)) {
+                        if (!inPolygon(temp, type2)) {
                             type2.add(temp);
                         }
                     }
                 }
             }
-        }
-        else if(type1Points.size() == 1)    {
+        } else if (type1Points.size() == 1) {
 
-        }
-        else    {
+        } else {
             System.exit(0);
         }
-
 
 
     }
@@ -217,25 +212,24 @@ public class shadowOperations {
         boolean visible = true;
 
 
-        for(Point2D point : type2Points)    {
+        for (Point2D point : type2Points) {
             pointX = point.getX();
             pointY = point.getY();
 
             temp = new Line(agentX, agentY, pointX, pointY);
             visible = true;
 
-            if(!lineIntersectInPoly(environment, temp)) {
-                for(Polygon obst: obstacles)    {
-                    if(lineIntersectInPoly(obst, temp)) {
+            if (!lineIntersectInPoly(environment, temp)) {
+                for (Polygon obst : obstacles) {
+                    if (lineIntersectInPoly(obst, temp)) {
                         visible = false;
                     }
                 }
-            }
-            else {
+            } else {
                 visible = false;
             }
 
-            if(visible == true) {
+            if (visible == true) {
                 ocPoints.add(point);
             }
         }
@@ -262,23 +256,22 @@ public class shadowOperations {
         Point2D temp;
         int j = 0;
 
-        for(int i = 0; i < type1.size() - 1; i++)   {
+        for (int i = 0; i < type1.size() - 1; i++) {
             connected = new ArrayList<>();
             temp = type1.get(i);
             connected.add(temp);
             j = i + 1;
-            if(directConnectInPoly(temp, type1.get(j), environment)) {
-                while(directConnectInPoly(temp, type1.get(j), environment)) {
+            if (directConnectInPoly(temp, type1.get(j), environment)) {
+                while (directConnectInPoly(temp, type1.get(j), environment)) {
                     i = j;
                     j = i + 1;
                     temp = type1.get(i);
                     connected.add(temp);
                 }
-            }
-            else    {
+            } else {
                 //Find obstacle in question
-                for(Polygon obst : obstacles)   {
-                    if(directConnectInPoly(temp, type1.get(j), obst)) {
+                for (Polygon obst : obstacles) {
+                    if (directConnectInPoly(temp, type1.get(j), obst)) {
                         while (directConnectInPoly(temp, type1.get(j), obst)) {
                             i = j;
                             j = i + 1;
@@ -292,95 +285,123 @@ public class shadowOperations {
             }
 
         }
-        return  overviewConnected;
+        return overviewConnected;
 
     }
 
-    public static ArrayList<Point2D> getAdjacentPoints(Point2D point, ArrayList<Polygon> allPolys)   {
+    public static ArrayList<Point2D> getAdjacentPoints(Point2D point, ArrayList<Polygon> allPolys) {
+
+
 
         ArrayList<Point2D> tempPoints, retPoints;
         retPoints = new ArrayList<>();
 
-        for(Polygon poly : allPolys)    {
+        for (Polygon poly : allPolys) {
+
             tempPoints = polyToPoints(poly);
-            if(inPolygon(point, poly))  {
-                for(int i = 0; i < tempPoints.size(); i++)  {
-                    if(tempPoints.get(i) == point)  {
-                        if(i== 0)   {
-                            retPoints.add(tempPoints.get(tempPoints.size()-1));
+            //System.out.println(poly);
+            if (inPolygon(point, poly)) {
+
+                //System.out.println(tempPoints);
+
+                for (int i = 0; i < tempPoints.size(); i++) {
+                    if (tempPoints.get(i).getX() == point.getX() && tempPoints.get(i).getY() == point.getY()) {
+                        //System.out.println("ENTEREEED");
+                        if (i == 0) {
+                            //System.out.println("i = 0 entered");
+                            retPoints.add(tempPoints.get(tempPoints.size() - 1));
                             retPoints.add(tempPoints.get(1));
-                        }
-                        else if(i == tempPoints.size()-1)   {
-                            retPoints.add(tempPoints.get(i-1));
+                            break;
+                        } else if (i == tempPoints.size() - 1) {
+                            //System.out.println("i = size-1 entered");
+                            retPoints.add(tempPoints.get(i - 2));
                             retPoints.add(tempPoints.get(0));
+                            break;
+                        } else {
+                            //System.out.println("i = " + i + "Size = " + tempPoints.size());
+                            retPoints.add(tempPoints.get(i - 1));
+                            retPoints.add(tempPoints.get(i + 1));
+                            break;
                         }
-                        else    {
-                            retPoints.add(tempPoints.get(i-1));
-                            retPoints.add(tempPoints.get(1+1));
-                        }
-                        break;
+                    }
+                    else    {
+                        //System.out.println("ELSE Entered!!!!");
                     }
                 }
-                break;
             }
         }
         return retPoints;
     }
 
     public static Polygon getSharedPolygon(Point2D point1, Point2D point2, ArrayList<Polygon> allPoly) {
-        for(Polygon poly : allPoly) {
-            if (inPolygon(point1,poly) && inPolygon(point2, poly))
+        for (Polygon poly : allPoly) {
+            if (inPolygon(point1, poly) && inPolygon(point2, poly)) {
                 return poly;
+            }
         }
         return null;
     }
 
-    public static boolean inSamePolygon(Point2D point1, Point2D point2, ArrayList<Polygon> allPoly)   {
-        for(Polygon poly : allPoly) {
-            if (inPolygon(point1,poly) && inPolygon(point2, poly))
+    public static boolean inSamePolygon(Point2D point1, Point2D point2, ArrayList<Polygon> allPoly) {
+        for (Polygon poly : allPoly) {
+            if (inPolygon(point1, poly) && inPolygon(point2, poly)) {
                 return true;
+            }
         }
         return false;
     }
 
-    public static boolean directConnectInPoly(Point2D point1, Point2D point2, Polygon poly)    {
+    public static boolean directConnectInPoly(Point2D point1, Point2D point2, Polygon poly) {
         return directConnectInPoly(point1, point2, polyToPoints(poly));
 
     }
 
-    public static boolean directConnectInPoly(Point2D point1, Point2D point2, ArrayList<Point2D> polyPoints)    {
+    public static boolean directConnectInPoly(Point2D point1, Point2D point2, ArrayList<Point2D> polyPoints) {
         int j = 0;
 
         //get To position in polygon where point1 is
-        while(point1 != polyPoints.get(j))  {
+        while (point1 != polyPoints.get(j)) {
             j++;
         }
 
 
-        if(j == 0)  {
+        if (j == 0) {
             //point1 is at j == 0
-            if(polyPoints.get(polyPoints.size()-1) == point2 || polyPoints.get(j+1) == point2)   {
+            if (polyPoints.get(polyPoints.size() - 1) == point2 || polyPoints.get(j + 1) == point2) {
                 return true;
-            }
-            else
+            } else {
                 return false;
-        }
-        else if(j == polyPoints.size()-1)   {
-            if(polyPoints.get(0) == point2 || polyPoints.get(j-1) == point2)   {
+            }
+        } else if (j == polyPoints.size() - 1) {
+            if (polyPoints.get(0) == point2 || polyPoints.get(j - 1) == point2) {
                 return true;
-            }
-            else
+            } else {
                 return false;
-        }
-        else    {
-            if(polyPoints.get(j-1) == point2 || polyPoints.get(j+1) == point2)   {
+            }
+        } else {
+            if (polyPoints.get(j - 1) == point2 || polyPoints.get(j + 1) == point2) {
                 return true;
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     }
+
+    //@TODO @Rob after testing, use Simons method so ppl don´t perceive you as a total ripoff ;)
+    public static boolean isVisible(double x1, double y1, double x2, double y2, ArrayList<Line> polygonEdges) {
+        // check whether the second controlledAgents is visible from the position of the first controlledAgents
+        // (given its field of view and the structure of the map)
+        for (Line l : polygonEdges) {
+            if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
 
 
 }
