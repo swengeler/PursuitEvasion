@@ -67,7 +67,10 @@ public class ShadowGraph {
         generateType1();
 
         generateT1Connections();
+        circleDetect();
         calcT2Points();
+        getType2();
+
         printGraph();
     }
 
@@ -278,6 +281,105 @@ public class ShadowGraph {
         }
     }
 
+
+
+    public void circleDetect()    {
+        ArrayList<ShadowNode> printed = new ArrayList<>();
+
+
+        ShadowNode start,start2, tmp;
+        //for(int i = 0; i < copied.size())
+        //ShadowNode temp = copied.get(0);
+        double sX, sY, s2X, s2Y, tmpX, tmpY;
+
+
+        for(int i = 0; i < Nodes.size(); i++)  {
+            start = Nodes.get(i);
+            sX = start.getPosition().getX();
+            sY = start.getPosition().getY();
+
+            //System.out.println("Start Node = " + start);
+
+            /*for(int j = 0; j < printed.size(); j++) {
+                System.out.println(printed.get(j));
+            }
+            System.out.println("i = " + i + "\tPrinted countains " + start + " = " + printed.contains(start));
+            if(sX == 766 && sY == 213)  {
+                System.out.println("Prev = " + start.prev + "\tNext = " + start.next);
+                System.out.println("Link left = " + start.prev.next);
+            }*/
+
+            if(printed.size() == 0 || !printed.contains(start)) {
+
+                if(start.next != null || start.prev != null)   {
+                    //get to start
+                    tmp = start.prev;
+                    boolean cycle = false;
+
+                    if(tmp != null) {
+                        tmpX = tmp.getPosition().getX();
+                        tmpY = tmp.getPosition().getY();
+                        while (tmp.prev != null) {
+                            if (tmpX == sX && tmpY == sY) {
+                                cycle = true;
+                                break;
+                            }
+                            tmp = tmp.prev;
+                            tmpX = tmp.getPosition().getX();
+                            tmpY = tmp.getPosition().getY();
+                        }
+                    }
+                    else    {
+                        tmp = start;
+                        tmpX = tmp.getPosition().getX();
+                        tmpY = tmp.getPosition().getY();
+                    }
+
+                    //At this point we assume either we are in a cycle or we are at the beginning
+                    int j = 1;
+                    start2 = tmp;
+
+                    s2X = start2.getPosition().getX();
+                    s2Y = start2.getPosition().getY();
+
+                    printed.add(start2);
+
+                    tmp = start2.next;
+                    tmpX = tmp.getPosition().getX();
+                    tmpY = tmp.getPosition().getY();
+
+
+                    while((tmpX != s2X || tmpY != s2Y) && tmp != null)    {
+
+                        printed.add(tmp);
+                        if(cycle && printed.get(printed.size()-1).next == null) {
+                            start2.prev.setNext(start2);
+                        }
+                        System.out.println(tmp);
+                        tmp = tmp.next;
+                        if(tmp != null) {
+                            tmpX = tmp.getPosition().getX();
+                            tmpY = tmp.getPosition().getY();
+                        }
+                    }
+
+
+                    if(tmpX == s2X && tmpY == s2Y)   {
+                        //System.out.println(tmp);
+                        printed.add(tmp);
+                    }
+
+
+                }
+                else    {
+                    System.out.println(start);
+                    printed.add(start);
+                    System.out.println("\n");
+                }
+            }
+        }
+    }
+
     //TODO @Rob - keep working here
     public ArrayList<ShadowNode> calcualteType3()    {
 
@@ -315,6 +417,20 @@ public class ShadowGraph {
         return null;
 
 
+    }
+
+    public void getType2()    {
+        ArrayList<ShadowNode> t2 = new ArrayList<>();
+
+        for(ShadowNode node : Nodes)    {
+            if(node.getType() == 2) {
+                t2.add(node);
+            }
+        }
+
+        for(ShadowNode node: t2)    {
+            System.out.println(node);
+        }
     }
 
     public Point2D getT3Intersect(Line ray)    {
