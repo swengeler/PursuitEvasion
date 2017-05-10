@@ -1,6 +1,9 @@
 package pathfinding;
 
+
+
 import java.util.ArrayList;
+import javafx.geometry.Point2D;
 
 public class Vertex {
 
@@ -11,6 +14,12 @@ public class Vertex {
     public Vertex(double x, double y) {
         this.x = x;
         this.y = y;
+    }
+
+    public Vertex(Point2D point)  {
+        this.x = point.getX();
+        this.y = point.getY();
+
     }
 
     public double getX() {

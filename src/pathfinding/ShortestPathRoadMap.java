@@ -214,10 +214,10 @@ public class ShortestPathRoadMap {
                         inside2 = new Point2D(reflexs.get(j).getX() + eps, reflexs.get(j).getY() + eps * angle);
                         if (map.legalPosition(above.getX(), above.getY()) && map.legalPosition(below.getX(), below.getY()) && map.legalPosition(inside1.getX(), inside1.getY()) && map.legalPosition(inside2.getX(), inside2.getY()))
                             ;
-                        graph1.addVertex(reflexs.get(i));
-                        graph1.addVertex(reflexs.get(j));
+                        graph1.addVertex(new Vertex(reflexs.get(i)));
+                        graph1.addVertex(new Vertex(reflexs.get(j)));
                         double differencesquare = (reflexs.get(i).getX() - reflexs.get(j).getX()) * (reflexs.get(i).getX() - reflexs.get(j).getX()) + (reflexs.get(i).getY() - reflexs.get(j).getY()) * (reflexs.get(i).getY() - reflexs.get(j).getY());
-                        graph1.addWeightedEdge(reflexs.get(i), reflexs.get(j), Math.sqrt(differencesquare));
+                        graph1.addWeightedEdge(new Vertex(reflexs.get(i)), new Vertex(reflexs.get(j)), Math.sqrt(differencesquare));
                     }
                 }
             }
