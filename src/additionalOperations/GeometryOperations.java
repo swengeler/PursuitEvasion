@@ -57,6 +57,17 @@ public class GeometryOperations {
     * Type 1: blocked entierly from  view because of an obstacles
      */
 
+    public static boolean polysIntersect(ArrayList<Polygon> allPoly, Line current) {
+        boolean intersect = false;
+        for(Polygon poly : allPoly) {
+            if(lineIntersectInPoly(poly, current))  {
+                return true;
+            }
+        }
+        return intersect;
+
+    }
+
     public static boolean lineIntersectInPoly(Polygon poly, Line current) {
         return lineIntersectInPoly(polyToPoints(poly), current);
     }
@@ -138,9 +149,22 @@ public class GeometryOperations {
     }
 
     public static Line occRay(Point2D agentPos, Point2D  t2Point) {
-        Line ray = new Line(agentPos.getX(), agentPos.getY(), t2Point.getX(), t2Point.getY());
-        ray.setScaleX(1000);
-        ray.setScaleY(1000);
+        double multVal = 1000;
+        double endX, endY, aX, aY;
+
+        endX = t2Point.getX();
+        endY = t2Point.getY();
+
+        aX = agentPos.getX();
+        aY = agentPos.getY();
+
+
+
+        double newX = endX + multVal * (endX - aX);
+        double newY = endY + multVal * (endY - aY);
+
+        Line ray = new Line(endX, endY, newX, newY);
+
         return ray;
 
     }

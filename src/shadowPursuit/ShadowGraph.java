@@ -66,6 +66,9 @@ public class ShadowGraph {
         generateT1Connections();
         circleDetect();
         calcT2Points();
+        printGraph();
+
+        calculateType3();
         //getType2();
 
         printGraph();
@@ -174,7 +177,6 @@ public class ShadowGraph {
 
     public void printGraph()    {
         ArrayList<ShadowNode> printed = new ArrayList<>();
-
 
         ShadowNode start,start2, tmp;
         //for(int i = 0; i < copied.size())
@@ -378,7 +380,7 @@ public class ShadowGraph {
     }
 
     //TODO @Rob - keep working here
-    public ArrayList<ShadowNode> calcualteType3()    {
+    public ArrayList<ShadowNode> calculateType3()    {
         ArrayList<Point2D> Type3 = new ArrayList<>();
         ArrayList<Point2D> tempList;
         Point2D tempPoint;
@@ -405,26 +407,29 @@ public class ShadowGraph {
                     if(isVisible(agentX, agentY, pointX, pointY, polygonEdges)) {
 
                         //Create occlusion Ray
+                        System.out.println("For Agent = " + agent + " and Point = " + tmp);
                         Ray = occRay(agent, tmp);
 
                         Point2D posT3 = getT3Intersect(Ray);
-                        Line newLine = new Line(agentX, agentY, posT3.getX(), posT3.getY());
-                        newLine.setScaleX(0.5);
-                        newLine.setScaleY(0.5);
+                        if(posT3 != null) {
+                            Line newLine = new Line(agentX, agentY, posT3.getX(), posT3.getY());
+                            newLine.setScaleX(0.5);
+                            newLine.setScaleY(0.5);
 
-                        Point2D middle = new Point2D(newLine.getEndX(), newLine.getEndY());
+                            Point2D middle = new Point2D(newLine.getEndX(), newLine.getEndY());
 
-                        boolean valid = true;
+                            boolean valid = true;
 
-                        if(inPolygon(middle, environment))  {
-                            for(Polygon obst : obstacles)   {
-                                if(inPolygon(middle,obst))  {
-                                    valid = false;
+                            if (inPolygon(middle, environment)) {
+                                for (Polygon obst : obstacles) {
+                                    if (inPolygon(middle, obst)) {
+                                        valid = false;
+                                    }
                                 }
                             }
-                        }
-                        if(valid ==true)    {
-                            Type3.add(posT3);
+                            if (valid == true) {
+                                Type3.add(posT3);
+                            }
                         }
                     }
                 }
@@ -459,6 +464,8 @@ public class ShadowGraph {
     }
 
     public Point2D getT3Intersect(Line ray)    {
+        System.out.print(ray);
+
         ArrayList<Point2D> intersectPoints = new ArrayList<>();
         Line tmpLine;
         Point2D tmpPoint;
@@ -479,10 +486,15 @@ public class ShadowGraph {
 
             if(dist < min)  {
                 minPos = i;
+                min=dist;
             }
 
         }
-        return intersectPoints.get(minPos);
+
+        if(intersectPoints.size() > 0)
+            return intersectPoints.get(minPos);
+        else
+            return null;
     }
 
 
