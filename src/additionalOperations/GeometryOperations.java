@@ -6,6 +6,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import shadowPursuit.ShadowNode;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -56,6 +57,37 @@ public class GeometryOperations {
     *Shadowpursuit: will be used to categorize points of type 1
     * Type 1: blocked entierly from  view because of an obstacles
      */
+
+    public static ArrayList<Point2D> allIntersect(ArrayList<Polygon> allPoly, Line current) {
+        ArrayList<Point2D> intersects = new ArrayList<>();
+        ArrayList<Point2D> points;
+        Line temp;
+        Point2D t1,t2;
+
+        for(Polygon poly : allPoly) {
+            points = polyToPoints(poly);
+            if(lineIntersectInPoly(points, current))    {
+                for(int i = 0; i < points.size() - 1; i++)  {
+                    t1 = points.get(i);
+                    t2 = points.get(i+1);
+                    temp = new Line(t1.getX(), t1.getY(), t2.getX(), t2.getY());
+                    if(lineIntersect(temp, current))    {
+                        intersects.add(pointIntersect(temp, current));
+                    }
+                }
+                t1 = points.get(points.size()-1);
+                t2 = points.get(0);
+                temp = new Line(t1.getX(), t1.getY(), t2.getX(), t2.getY());
+                if(lineIntersect(temp, current))    {
+                    intersects.add(pointIntersect(temp, current));
+                }
+            }
+
+        }
+
+        return intersects;
+    }
+
 
     public static boolean polysIntersect(ArrayList<Polygon> allPoly, Line current) {
         boolean intersect = false;
