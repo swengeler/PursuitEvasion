@@ -13,7 +13,9 @@ import sun.nio.cs.ext.MacArabic;
 
 import java.util.ArrayList;
 
+import static additionalOperations.GeometryOperations.allIntersect;
 import static additionalOperations.GeometryOperations.lineIntersectInPoly;
+import static additionalOperations.GeometryOperations.polysIntersect;
 import static shadowPursuit.shadowOperations.inPolygon;
 
 
@@ -186,20 +188,35 @@ public class ShortestPathRoadMap {
 
                 }
                 //Line between= new Line(left.getX(),left.getY(), right.getX(),right.getY());
-                double x=(right.getX()-left.getX())/2;
-                double y= (right.getY()-left.getY())/2;
+                double x = (right.getX() - left.getX()) / 2;
+                double y = (right.getY() - left.getY()) / 2;
+                if (x < 0)
+                    x = -x;
+                if (y < 0)
+                    y = -y;
+                Point2D mid = new Point2D(x, y);
 
-                Point2D mid= new Point2D(x,y);
-
-                Point2D main= polygon.get(j);
-
-                Line between= new Line(mid.getX(),mid.getY(),main.getX(),main.getY());
-                map.legalPosition(mid.getX(),mid.getY());
-
-
-
+                Point2D main = polygon.get(j);
 
                 int count = 0;
+                Line between = new Line(mid.getX(), mid.getY(), main.getX(), main.getY());
+                boolean legal = map.legalPosition(mid.getX(), mid.getY());
+                count= allIntersect(polygons, between).size();
+
+                if (count % 2 == 0 && !legal) {
+                    reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
+                    reflexIndex++;
+
+                } else if (count % 2 == 1 && legal) {
+                    reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
+                    reflexIndex++;
+                }
+
+                //map.legalPosition(mid.getX(),mid.getY());
+
+
+
+
 
 
                 /*
