@@ -1514,16 +1514,16 @@ public class AltMain extends Application {
                         for (int i = 0; !separatingTriangleFound && i < holes.size(); i++) {
                             for (int j = 0; !separatingTriangleFound && j < loop.size(); j++) {
                                 dt1 = nodes.get(loop.get(j));
-                                /*boolean adjacentFound = false;
+                                boolean adjacentFound = false;
                                 for (int z = 0; !adjacentFound && z < separatingTriangles.size(); z++) {
                                     for (int y = 0; y < dt1.getEdges().length; y++) {
-                                        if (separatingTriangles.get(z).isEdgeOf(dt1.getEdge(y))) {
+                                        if (separatingTriangles.get(z).isEdgeOf(dt1.getEdge(y)) || separatingTriangles.get(z).getPoints().contains(dt1.getPoint(y))) {
                                             adjacentFound = true;
                                         }
                                     }
-                                }*/
-                                if (separatingTriangles.contains(dt1)) {
-                                    continue;
+                                }
+                                if (adjacentFound || separatingTriangles.contains(dt1)) {
+                                    //continue;
                                 }
                                 for (int k = 0; !separatingTriangleFound && k < holes.get(i).size(); k++) {
                                     for (int l = 0; !separatingTriangleFound && l < dt1.getEdges().length; l++) {
