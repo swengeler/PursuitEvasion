@@ -495,6 +495,8 @@ public class ShadowGraph {
 
                         Point2D posT3 = getT3Intersect(Ray);
 
+
+                        System.out.println("");
                         addT3ToGraph(tmp,posT3);
                         Type3.add(posT3);
 
@@ -527,9 +529,61 @@ public class ShadowGraph {
 
     public void addT3ToGraph(ShadowNode t2, Point2D t3)   {
 
-        ShadowNode tNode, pT2, newNode;
-        Line tLine;
 
+        ShadowNode pT2, newNode;
+        //Line tLine;
+
+        Point2D start, end;
+
+
+
+        for(Line tLine : polygonEdges)  {
+            if(onLine(t3, tLine))   {
+
+                //get both sides
+                start = new Point2D(tLine.getStartX(), tLine.getStartY());
+                end = new Point2D(tLine.getEndX(), tLine.getEndY());
+
+                boolean found = false;
+
+                //Check which ones is a Type1 Node
+                for(ShadowNode tNode : Nodes) {
+                    if((tNode.getPosition().getX() == start.getX() && tNode.getPosition().getY() == start.getY())|| (tNode.getPosition().getX() == end.getX() && tNode.getPosition().getY() == end.getY()))    {
+                        found = true;
+                        if(tNode.getNext() == null) {
+                            newNode = new ShadowNode(t3, tNode, t2, true);
+                            Nodes.add(newNode);
+                        }
+                        else if(tNode.getPrev() == null)   {
+                            newNode = new ShadowNode(t3, t2, tNode, true);
+                            Nodes.add(newNode);
+                        }
+                        else if(tNode.getNext() != null && tNode.getNext().getNext() == t2) {
+                            if(distance(tNode.getPosition(), t3) < distance(tNode.getPosition(), tNode.getNext().getPosition()))    {
+                                newNode = new ShadowNode(t3, tNode, t2, true);
+                                Nodes.add(newNode);
+                            }
+                        }
+                        else if(tNode.getPrev() != null && tNode.getPrev().getPrev() == t2) {
+                            if(distance(tNode.getPosition(), t3) < distance(tNode.getPosition(), tNode.getPrev().getPosition()))    {
+                                newNode = new ShadowNode(t3, t2, tNode, true);
+                                Nodes.add(newNode);
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                if(found)
+                    break;
+
+
+
+            }
+        }
+
+
+        /*
         for(int i = 0; i < Nodes.size() - 1; i++)   {
             tNode = Nodes.get(i);
 
@@ -555,6 +609,7 @@ public class ShadowGraph {
 
         }
 
+        */
 
     }
 
@@ -585,7 +640,7 @@ public class ShadowGraph {
         for(Line intLine : polygonEdges)    {
             if(lineIntersect(intLine, ray)) {
                 System.out.println("INTERSECT DETECTED");
-                intersectPoints.add(pointIntersect(intLine, ray));
+                intersectPoints.add(FindIntersection(intLine,ray));
                 System.out.println("AT = " + intersectPoints.get(intersectPoints.size()-1) + "\tWITH = " + intLine);
             }
         }

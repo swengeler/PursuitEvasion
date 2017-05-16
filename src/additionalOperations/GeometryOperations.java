@@ -283,6 +283,38 @@ public class GeometryOperations {
     }
 
 
+
+    public static double GetLineYIntesept(Point2D p, double slope)
+    {
+        return p.getY() - slope * p.getX();
+    }
+
+    public static Point2D FindIntersection(Line line1, Line line2)
+    {
+
+        double slope1 = (line1.getEndY() - line1.getStartY()) / (line1.getEndX() - line1.getStartX());
+        double slope2 = (line2.getEndY() - line2.getStartY()) / (line2.getEndX() - line2.getStartX());
+
+        Point2D line1Start, line2Start;
+        line1Start = new Point2D(line1.getStartX(), line1.getStartY());
+        line2Start = new Point2D(line2.getStartX(), line2.getStartY());
+
+
+        double yinter1 = GetLineYIntesept(line1Start, slope1);
+        double yinter2 = GetLineYIntesept(line2Start, slope2);
+
+        if (slope1 == slope2 && yinter1 != yinter2)
+            return null;
+
+        double x = (yinter2 - yinter1) / (slope1 - slope2);
+
+        double y = slope1 * x + yinter1;
+
+        return new Point2D(x, y);
+    }
+
+
+
     public static Point2D pointIntersect2(Line line1, Line line2) {
 
         double px,py,qx,qy,ry,rx,sx,sy,ty,tx;
@@ -339,8 +371,8 @@ public class GeometryOperations {
         eX = between.getEndX();
         eY = between.getEndY();
 
-        System.out.println("Overall Distance = " + distance(sX, sY, eX, eY));
-        System.out.println("Between Dist = " + ((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))));
+        //System.out.println("Overall Distance = " + distance(sX, sY, eX, eY));
+        //System.out.println("Between Dist = " + ((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))));
 
 
         if (Math.round((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))) == Math.round(distance(sX, sY, eX, eY))) {
