@@ -25,29 +25,7 @@ public class ShadowTest {
 
 
     public ShadowTest() {
-        environment = new Polygon(352.0,214.0,
-                301.0,259.0,
-                268.0,318.0,
-                281.0,378.0,
-                303.0,447.0,
-                360.0,462.0,
-                421.0,480.0,
-                410.0,556.0,
-                367.0,613.0,
-                367.0,656.0,
-                439.0,676.0,
-                503.0,670.0,
-                603.0,641.0,
-                740.0,601.0,
-                795.0,556.0,
-                725.0,458.0,
-                636.0,408.0,
-                633.0,327.0,
-                726.0,245.0,
-                705.0,174.0,
-                616.0,134.0,
-                552.0,131.0,
-                448.0,162.0);
+        environment = new Polygon(162.0,105.0,914.0,91.0,958.0,754.0,135.0,750.0,748.0,558.0,121.0,718.0,735.0,511.0,94.0,657.0,727.0,459.0,105.0,558.0);
 
         Polygon obstacle1 = null;//new Polygon(340.0 ,472.0 ,393.0 ,535.0 ,390.0 ,618.0);
         Polygon obstacle2 = null;//new Polygon(766.0 ,509.0 ,747.0 ,596.0 ,804.0 ,612.0);
@@ -56,7 +34,7 @@ public class ShadowTest {
         //obst.add(obstacle1);
         //obst.add(obstacle2);
 
-        Point2D agentPos = new Point2D(566, 542);
+        Point2D agentPos = new Point2D(397, 301);
         ArrayList<Point2D> agents = new ArrayList<>();
         agents.add(agentPos);
 
@@ -70,7 +48,7 @@ public class ShadowTest {
         System.out.println("Invisible");
         ArrayList<Point2D> type1 = getX1Points(environment, obst, agents);
 
-        for (Point2D point : type1) {
+        for (Point2D point : type1)  {
             //System.out.println(point);
         }
 

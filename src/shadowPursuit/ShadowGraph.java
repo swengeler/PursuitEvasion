@@ -6,7 +6,7 @@ import javafx.scene.effect.Light;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import org.omg.CORBA.DoubleHolder;
-import pathfinding.Edge;
+import pathfinding.PathVertex;
 import simulation.Agent;
 import simulation.MapRepresentation;
 
@@ -52,7 +52,6 @@ public class ShadowGraph {
         allPolygons = new ArrayList<>();
         allPolygons.add(environment);
         allPolygons.addAll(Obstacles);
-
         polygonEdges = new ArrayList<>();
 
         Line newLine;
@@ -90,8 +89,8 @@ public class ShadowGraph {
         T2Points = new ArrayList<>();
         Point2D tmpPoint;
         ShadowNode tmpNode, tmp2Node, tNode;
-
-
+        ArrayList<Point2D> pointy = findReflex(environment, allPolygons);
+        System.out.println("pointy points :D = " + pointy);
 
 
         for(int i = 0; i < Nodes.size(); i++)    {
@@ -107,21 +106,39 @@ public class ShadowGraph {
                     //System.out.println("tNode = " + tNode);
                     tmpPoint = tNode.prev.getPosition();
                     if(temp.get(0) == tmpPoint) {
-                        Nodes.add(new ShadowNode(temp.get(0), tNode));
+                        if(pointy.contains(temp.get(0))) {
+                            Nodes.add(new ShadowNode(temp.get(0), tNode));
+                        }
                     }
                     else    {
-                       Nodes.add(new ShadowNode(temp.get(1), tNode));
+                        if(pointy.contains(temp.get(1))) {
+                            Nodes.add(new ShadowNode(temp.get(1), tNode));
+                        }
                     }
                 }
                 else if(tNode.prev == null)   {
                     //Correct
                     tmpPoint = tNode.next.getPosition();
                     if(temp.get(0) == tmpPoint) {
-                        Nodes.add(new ShadowNode(temp.get(1), tNode));
+                        if(pointy.contains(temp.get(1))) {
+                            Nodes.add(new ShadowNode(temp.get(1), tNode));
+                        }
                     }
                     else    {
+                        if(pointy.contains(temp.get(1))) {
+                            Nodes.add(new ShadowNode(temp.get(0), tNode));
+                        }
+                    }
+
+
+                    /*
+                    if(temp.get(0) == tmpPoint && pointy.contains(temp.get(1))) {
+                        Nodes.add(new ShadowNode(temp.get(1), tNode));
+                    }
+                    else if(temp.get(1) == tmpPoint && pointy.contains(temp.get(0)))
                         Nodes.add(new ShadowNode(temp.get(0), tNode));
                     }
+                     */
                 }
 
             }
@@ -467,39 +484,21 @@ public class ShadowGraph {
                     tempList = new ArrayList<>();
                     pointX = tmp.getPosition().getX();
                     pointY = tmp.getPosition().getY();
-                    tmpLine = new Line(agentX, agentY, pointX, pointY);
+                    //tmpLine = new Line(agentX, agentY, pointX, pointY);
 
                     if(isVisible(agentX, agentY, pointX, pointY, polygonEdges)) {
 
                         //Create occlusion Ray
-                        //System.out.println("For Agent = " + agent + " and Point = " + tmp);
+                        System.out.println("For Agent = " + agent + " and Point = " + tmp.getPosition());
                         Ray = scaleRay(agent, tmp, rayLength);
-                        //System.out.println(Ray);
+                        System.out.println("RAY = " + Ray);
 
                         Point2D posT3 = getT3Intersect(Ray);
 
-                        if(posT3 != null) {
-                            Line newLine = scaleRay(agent, posT3, 0.5);
-                            newLine.setScaleX(0.5);
-                            newLine.setScaleY(0.5);
+                        addT3ToGraph(tmp,posT3);
+                        Type3.add(posT3);
 
-                            Point2D middle = new Point2D(newLine.getEndX(), newLine.getEndY());
 
-                            boolean valid = true;
-
-                            if (inPolygon(middle, environment)) {
-                                for (Polygon obst : obstacles) {
-                                    if (inPolygon(middle, obst)) {
-                                        valid = false;
-                                    }
-                                }
-                            }
-                            if (valid == true) {
-                                System.out.println("possible T3 = " + posT3);
-                                addT3ToGraph(tmp,posT3);
-                                Type3.add(posT3);
-                            }
-                        }
 
                     }
                     else    {
@@ -575,7 +574,7 @@ public class ShadowGraph {
     }
 
     public Point2D getT3Intersect(Line ray)    {
-        //System.out.print(ray);
+        System.out.print("Passed ray = " + ray);
 
         ArrayList<Point2D> intersectPoints = new ArrayList<>();
         Line tmpLine;
@@ -585,7 +584,9 @@ public class ShadowGraph {
 
         for(Line intLine : polygonEdges)    {
             if(lineIntersect(intLine, ray)) {
+                System.out.println("INTERSECT DETECTED");
                 intersectPoints.add(pointIntersect(intLine, ray));
+                System.out.println("AT = " + intersectPoints.get(intersectPoints.size()-1) + "\tWITH = " + intLine);
             }
         }
 

@@ -23,10 +23,10 @@ public class ShortestPathRoadMap {
 
     private ArrayList<PathVertex> graph;
 
-    public void ShortestPathCalc(MapRepresentation map, Point2D source, Point2D sink) {
+    public  GraphPath ShortestPathCalc(MapRepresentation map, Point2D source, Point2D sink) {
 
 
-        calculateShortestPath(map, reflexInlineofsight(map, findReflex(map)), source, sink);
+         return calculateShortestPath(map, reflexInlineofsight(map, findReflex(map)), source, sink);
 
     }
 
@@ -203,11 +203,11 @@ public class ShortestPathRoadMap {
                 boolean legal = map.legalPosition(mid.getX(), mid.getY());
                 count= allIntersect(polygons, between).size();
 
-                if (count % 2 == 0 && !legal) {
+                if (count % 2 == 0 && legal) {
                     reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
                     reflexIndex++;
 
-                } else if (count % 2 == 1 && legal) {
+                } else if (count % 2 == 1 && !legal) {
                     reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
                     reflexIndex++;
                 }

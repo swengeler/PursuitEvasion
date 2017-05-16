@@ -4,11 +4,14 @@ import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import pathfinding.PathVertex;
 import simulation.Agent;
+import simulation.MapRepresentation;
 
 import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.util.ArrayList;
 
+import static additionalOperations.GeometryOperations.allIntersect;
 import static additionalOperations.GeometryOperations.lineIntersectInPoly;
 import static additionalOperations.GeometryOperations.polyToPoints;
 
@@ -406,6 +409,76 @@ public class shadowOperations {
     }
 
 
+
+    public static ArrayList<Point2D> findReflex(Polygon env, ArrayList<Polygon> allPoly) {
+        ArrayList<Polygon> polygons = allPoly;
+        GeometryOperations geometryOperations = new GeometryOperations();
+        ArrayList<Point2D> reflex = new ArrayList<>();
+        int reflexIndex = 0;
+        //  ArrayList<javafx.geometry.Point2D> polygon= geometryOperations.polyToPoints(polygons);
+        Point2D left;
+        Point2D right;
+        for (int i = 0; i < polygons.size(); i++) {
+            ArrayList<Point2D> polygon = geometryOperations.polyToPoints(polygons.get(i));
+
+            for (int j = 0; j < polygon.size(); j++) {
+                if (j != 0 && j != polygon.size() - 1) {
+                    left = polygon.get(j - 1);
+                    right = polygon.get(j + 1);
+
+                } else if (j == 0) {
+                    left = polygon.get(polygon.size() - 1);
+                    right = polygon.get(j + 1);
+                } else {
+
+                    left = polygon.get(j - 1);
+                    right = polygon.get(0);
+
+                }
+                //Line between= new Line(left.getX(),left.getY(), right.getX(),right.getY());
+                double x = (right.getX() - left.getX()) / 2;
+                double y = (right.getY() - left.getY()) / 2;
+                if (x < 0)
+                    x = -x;
+                if (y < 0)
+                    y = -y;
+                Point2D mid = new Point2D(x, y);
+
+                Point2D main = polygon.get(j);
+
+                int count = 0;
+                Line between = new Line(mid.getX(), mid.getY(), main.getX(), main.getY());
+                boolean legal = legalPosition(env, allPoly, mid.getX(), mid.getY());
+                count= allIntersect(polygons, between).size();
+
+                if (count % 2 == 0 && legal) {
+                    reflex.add(reflexIndex, polygon.get(j));
+                    reflexIndex++;
+
+                } else if (count % 2 == 1 && !legal) {
+                    reflex.add(reflexIndex, polygon.get(j));
+                    reflexIndex++;
+                }
+
+            }
+
+
+        }
+
+        return reflex;
+    }
+
+    public static boolean legalPosition(Polygon env, ArrayList<Polygon> obstacles, double xPos, double yPos) {
+        if (!env.contains(xPos, yPos)) {
+            return false;
+        }
+        for (Polygon p : obstacles) {
+            if (p.contains(xPos, yPos)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 
 

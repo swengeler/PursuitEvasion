@@ -36,7 +36,7 @@ public class GeometryOperations {
         //Turn polygon into points
         double xPos, yPos;
 
-        if(poly.getPoints().size() != 0) {
+        if (poly.getPoints().size() != 0) {
 
             ObservableList<Double> vertices = poly.getPoints();
             ArrayList<Point2D> points = new ArrayList<>();
@@ -50,8 +50,7 @@ public class GeometryOperations {
 
 
             return points;
-        }
-        else
+        } else
             return null;
     }
 
@@ -68,23 +67,23 @@ public class GeometryOperations {
         ArrayList<Point2D> intersects = new ArrayList<>();
         ArrayList<Point2D> points;
         Line temp;
-        Point2D t1,t2;
+        Point2D t1, t2;
 
-        for(Polygon poly : allPoly) {
+        for (Polygon poly : allPoly) {
             points = polyToPoints(poly);
-            if(lineIntersectInPoly(points, current))    {
-                for(int i = 0; i < points.size() - 1; i++)  {
+            if (lineIntersectInPoly(points, current)) {
+                for (int i = 0; i < points.size() - 1; i++) {
                     t1 = points.get(i);
-                    t2 = points.get(i+1);
+                    t2 = points.get(i + 1);
                     temp = new Line(t1.getX(), t1.getY(), t2.getX(), t2.getY());
-                    if(lineIntersect(temp, current))    {
+                    if (lineIntersect(temp, current)) {
                         intersects.add(pointIntersect(temp, current));
                     }
                 }
-                t1 = points.get(points.size()-1);
+                t1 = points.get(points.size() - 1);
                 t2 = points.get(0);
                 temp = new Line(t1.getX(), t1.getY(), t2.getX(), t2.getY());
-                if(lineIntersect(temp, current))    {
+                if (lineIntersect(temp, current)) {
                     intersects.add(pointIntersect(temp, current));
                 }
             }
@@ -97,8 +96,8 @@ public class GeometryOperations {
 
     public static boolean polysIntersect(ArrayList<Polygon> allPoly, Line current) {
         boolean intersect = false;
-        for(Polygon poly : allPoly) {
-            if(lineIntersectInPoly(poly, current))  {
+        for (Polygon poly : allPoly) {
+            if (lineIntersectInPoly(poly, current)) {
                 return true;
             }
         }
@@ -180,14 +179,11 @@ public class GeometryOperations {
     }
 
 
-
-
     public static Line scaleRay(Point2D agentPos, ShadowNode t2Point, double value) {
         return scaleRay(agentPos, t2Point.getPosition(), value);
     }
 
-    public static Line scaleRay(Point2D agentPos, Point2D  t2Point, double value) {
-        double multVal = value;
+    public static Line scaleRay(Point2D agentPos, Point2D t2Point, double value) {
         double endX, endY, aX, aY;
 
         endX = t2Point.getX();
@@ -195,11 +191,27 @@ public class GeometryOperations {
 
         aX = agentPos.getX();
         aY = agentPos.getY();
+        double newX, newY;
 
+        //y=mx+c
+      //  double m = (endY-aY)/(endX-aX);
+        double m = (aY-endY)/(aX-endX);
+        /*System.out.println("ay= " +aY);
+        System.out.println("ax= " +aX);
+        System.out.println("ENDy= " +endY);
+        System.out.println("endx= " +endX);
+*/
+        if(endX>aX) {
+            //System.out.print("wooh its working = " +m );
+            newX = endX + value;
+            newY = endY + value * m;
+        }
+        else {
+            //System.out.print("why the fuck man");
+            newX = endX - value;
+            newY = endY - value * m;
+        }
 
-
-        double newX = endX + value * (endX - aX);
-        double newY = endY + value * (endY - aY);
 
         Line ray = new Line(endX, endY, newX, newY);
 
@@ -210,6 +222,7 @@ public class GeometryOperations {
     private static double signed2DTriArea(double ax, double ay, double bx, double by, double cx, double cy) {
         return (ax - cx) * (by - cy) - (ay - cy) * (bx - cx);
     }
+
 
     public static Point2D pointIntersect(Line line1, Line line2) {
 
@@ -229,26 +242,90 @@ public class GeometryOperations {
         x4 = line2.getEndX();
         y4 = line2.getEndY();
 
-        double s1x, s1y, s2x, s2y, s, t;
+        double s1x, s1y, s2x, s2y, u, t;
+
+        //rx = s1x
+        //ry = s1y
+        //sx = s2x
+        //sy = s2y
+
 
         s1x = x2 - x1;
         s2x = x4 - x3;
         s1y = y2 - y1;
         s2y = y4 - y3;
 
-        s = (-s1y * (x1 - x3) + s1x * (y1 - y3)) / (-s2x * s1y + s1x * s2y);
+        u = (-s1y * (x1 - x3) + s1x * (y1 - y3)) / (-s2x * s1y + s1x * s2y);
         t = (-s1x * (y1 - y3) - s2y * (x1 - x3)) / (-s2x * s1y + s1x * s2y);
 
         double xInt, yInt;
-        xInt = x1 + (t * s1x);
-        yInt = y1 + (t * s1y);
 
-        return new Point2D(xInt, yInt);
 
+
+        /*
+        p + tr = q + us
+
+        x1 + t * s1x - x3 - u * s2x
+        y1 + t * s1y - y3 - u * s2y
+
+         */
+
+
+
+        xInt = x1 + t * s1x - x3 - u * s2x;
+        yInt = y1 + t * s1y - y3 - u * s2y;
+
+        if(u >= 0 && u < 1 && t >= 0 && t < 1)
+            return new Point2D(xInt, yInt);
+        else
+            return null;
 
     }
 
-    public  static boolean onLine(Point2D point, Line between) {
+
+    public static Point2D pointIntersect2(Line line1, Line line2) {
+
+        double px,py,qx,qy,ry,rx,sx,sy,ty,tx;
+
+        px = line1.getStartX();
+        py = line1.getStartY();
+
+        rx = line1.getEndX()-px;
+        ry = line1.getEndY()-py;
+
+        qx = line2.getStartX();
+        qy = line2.getStartY();
+
+        sx = line2.getEndX()-qx;
+        sy = line2.getEndY()-qy;
+
+       ty=(qy-py)*sy/(ry*sy);
+       tx=(qx-px)*sx/(rx*sx);
+
+
+/*
+        t = (q − p) × s / (r × s)
+        q= beginning of 1
+        p= begining of 2
+        P+r= end of 2
+        q+s= end of 1
+
+        p+tr= intersection.
+
+
+
+
+        s = (-s1y * (x1 - x3)  + s1x * (y1 - y3)) / (-s2x * s1y + s1x * s2y);
+        t = (-s1x * (y1 - y3) - s2y * (x1 - x3)) / (-s2x * s1y + s1x * s2y);
+ */
+        double xInt, yInt;
+        xInt = px + (tx * sx);
+        yInt = py + (ty * sy);
+
+        return new Point2D(xInt, yInt);
+    }
+
+    public static boolean onLine(Point2D point, Line between) {
 
 
         double pX, pY, sX, sY, eX, eY;
@@ -262,14 +339,13 @@ public class GeometryOperations {
         eX = between.getEndX();
         eY = between.getEndY();
 
-        System.out.println("Overall Distance = " + distance(sX, sY,eX, eY));
+        System.out.println("Overall Distance = " + distance(sX, sY, eX, eY));
         System.out.println("Between Dist = " + ((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))));
 
 
-        if(Math.round((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))) == Math.round(distance(sX, sY,eX, eY)))    {
+        if (Math.round((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))) == Math.round(distance(sX, sY, eX, eY))) {
             return true;
-        }
-        else
+        } else
             return false;
 
     }
@@ -292,9 +368,6 @@ public class GeometryOperations {
     public static double distance(double p1X, double p1Y, double p2X, double p2Y) {
         return Math.sqrt(Math.pow(p1X - p2X, 2) + Math.pow(p1Y - p2Y, 2));
     }
-
-
-
 
 
 }
