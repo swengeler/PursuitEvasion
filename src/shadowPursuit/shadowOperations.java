@@ -27,9 +27,11 @@ public class shadowOperations {
         ArrayList<Point2D> all = polyToPoints(environment);
 
         ArrayList<Point2D> vis = new ArrayList<>();
-        if (obstacles.size() > 0) {
+        if (obstacles.size() > 0 && obstacles != null) {
             for (Polygon poly : obstacles) {
-                all.addAll(polyToPoints(poly));
+                if(poly != null) {
+                    all.addAll(polyToPoints(poly));
+                }
             }
         }
 
@@ -394,6 +396,9 @@ public class shadowOperations {
         // (given its field of view and the structure of the map)
         for (Line l : polygonEdges) {
             if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
+                Line l1 = new Line(x1, y1, x2, y2);
+
+                //System.out.println("Intersect between Line " + l + " and Line = " + l1);
                 return false;
             }
         }

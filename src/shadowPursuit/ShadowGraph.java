@@ -2,12 +2,15 @@ package shadowPursuit;
 
 import javafx.geometry.Point2D;
 
+import javafx.scene.effect.Light;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import org.omg.CORBA.DoubleHolder;
 import pathfinding.Edge;
 import simulation.Agent;
 import simulation.MapRepresentation;
 
+import javax.sound.midi.SysexMessage;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
@@ -51,9 +54,14 @@ public class ShadowGraph {
         allPolygons.addAll(Obstacles);
 
         polygonEdges = new ArrayList<>();
+
+        Line newLine;
         for (Polygon p : allPolygons) {
             for (int i = 0; i < p.getPoints().size(); i += 2) {
-                polygonEdges.add(new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size()))));
+
+                newLine = new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size())));
+                //System.out.println("new Line added = " + newLine);
+                polygonEdges.add(newLine);
             }
         }
 
@@ -64,18 +72,19 @@ public class ShadowGraph {
         generateType1();
 
         generateT1Connections();
-        circleDetect();
+        //circleDetect();
         calcT2Points();
         printGraph();
 
         calculateType3();
+        printGraph();
         //getType2();
 
-        printGraph();
+        //printGraph();
     }
 
 
-    //@TODO problem for objects taht are entierly in shadow
+    //@TODO problem for objects that are entierly in shadow
     public void calcT2Points()    {
         ArrayList<Point2D> temp, T2Points;
         T2Points = new ArrayList<>();
@@ -94,15 +103,18 @@ public class ShadowGraph {
             if((tNode.prev == null || tNode.next == null) && tNode.getType() == 1)  {
                 temp = getAdjacentPoints(tNode.getPosition(), allPolygons);
                 if(tNode.next == null)   {
+                    //false
+                    //System.out.println("tNode = " + tNode);
                     tmpPoint = tNode.prev.getPosition();
                     if(temp.get(0) == tmpPoint) {
-                        Nodes.add(new ShadowNode(temp.get(1), tNode));
+                        Nodes.add(new ShadowNode(temp.get(0), tNode));
                     }
                     else    {
-                       Nodes.add(new ShadowNode(temp.get(0), tNode));
+                       Nodes.add(new ShadowNode(temp.get(1), tNode));
                     }
                 }
                 else if(tNode.prev == null)   {
+                    //Correct
                     tmpPoint = tNode.next.getPosition();
                     if(temp.get(0) == tmpPoint) {
                         Nodes.add(new ShadowNode(temp.get(1), tNode));
@@ -380,7 +392,7 @@ public class ShadowGraph {
     }
 
     //TODO @Rob - keep working here
-    public ArrayList<ShadowNode> calculateType3()    {
+    public void calculateType3()    {
         ArrayList<Point2D> Type3 = new ArrayList<>();
         ArrayList<Point2D> tempList;
         Point2D tempPoint;
@@ -389,7 +401,60 @@ public class ShadowGraph {
         shadowPursuit.ShadowNode tmp;
         Line tmpLine, Ray;
 
-        //For every agent that  has a straightöline visibility to a point
+
+
+        double maxYDist, maxXDist, maxY, maxX, minX, minY, rayLength;
+
+        maxYDist = 0;
+        maxXDist = 0;
+
+        maxX = Double.MIN_VALUE;
+        maxY = Double.MIN_VALUE;
+
+        minX = Double.MAX_VALUE;
+        minY = Double.MAX_VALUE;
+
+        Line newL;
+
+
+        //System.out.println("Before calculation: ");
+        for(int i =0; i < Nodes.size(); i++)    {
+            tmp = Nodes.get(i);
+            if(tmp.getType() == 2){
+                //System.out.println(tmp.getPosition());
+                newL = new Line(tmp.getPosition().getX(), tmp.getPosition().getY(), agents.get(0).getX(), agents.get(0).getY());
+                //System.out.println("Visible? => " + isVisible(tmp.getPosition().getX(), tmp.getPosition().getY(), agents.get(0).getX(), agents.get(0).getY(),polygonEdges));
+            }
+
+            if(tmp.getPosition().getX() < minX) {
+                minX = tmp.getPosition().getX();
+                maxXDist = maxX - minX;
+            }
+            else if(tmp.getPosition().getX() > maxX) {
+                maxX = tmp.getPosition().getX();
+                maxXDist = maxX - minX;
+            }
+
+            if(tmp.getPosition().getY() < minY) {
+                minX = tmp.getPosition().getY();
+                maxYDist = maxY - minY;
+            }
+            else if(tmp.getPosition().getY() > maxY) {
+                minX = tmp.getPosition().getY();
+                maxYDist = maxY - minY;
+            }
+
+        }
+
+        if(maxYDist < maxXDist) {
+            rayLength = maxXDist * 2;
+        }
+        else    {
+            rayLength = maxYDist * 2;
+        }
+
+
+        //For every agent that  has a straight line visibility to a point
         for(Point2D agent : agents)   {
 
             agentX = agent.getX();
@@ -407,12 +472,14 @@ public class ShadowGraph {
                     if(isVisible(agentX, agentY, pointX, pointY, polygonEdges)) {
 
                         //Create occlusion Ray
-                        System.out.println("For Agent = " + agent + " and Point = " + tmp);
-                        Ray = occRay(agent, tmp);
+                        //System.out.println("For Agent = " + agent + " and Point = " + tmp);
+                        Ray = scaleRay(agent, tmp, rayLength);
+                        //System.out.println(Ray);
 
                         Point2D posT3 = getT3Intersect(Ray);
+
                         if(posT3 != null) {
-                            Line newLine = new Line(agentX, agentY, posT3.getX(), posT3.getY());
+                            Line newLine = scaleRay(agent, posT3, 0.5);
                             newLine.setScaleX(0.5);
                             newLine.setScaleY(0.5);
 
@@ -428,10 +495,17 @@ public class ShadowGraph {
                                 }
                             }
                             if (valid == true) {
+                                System.out.println("possible T3 = " + posT3);
+                                addT3ToGraph(tmp,posT3);
                                 Type3.add(posT3);
                             }
                         }
+
                     }
+                    else    {
+                        System.out.println("Not visible");
+                    }
+
                 }
             }
 
@@ -443,11 +517,48 @@ public class ShadowGraph {
 
             }
 
+
+
         }
-        return null;
+
 
 
     }
+
+
+    public void addT3ToGraph(ShadowNode t2, Point2D t3)   {
+
+        ShadowNode tNode, pT2, newNode;
+        Line tLine;
+
+        for(int i = 0; i < Nodes.size() - 1; i++)   {
+            tNode = Nodes.get(i);
+
+            if(tNode.getNext() != null && tNode.getNext().getType() == 2)   {
+                tLine = new Line(tNode.getPosition().getX(),tNode.getPosition().getY(), tNode.getNext().getPosition().getX(),tNode.getNext().getPosition().getY());
+                if(onLine(t3, tLine))   {
+                    System.out.println("Entered 1\n T3 = " + t3 + "\nPREV: " + tNode + "\nNEXT: " + t2 + "\n");
+                    newNode = new ShadowNode(t3, t2, tNode, true);
+                    Nodes.add(newNode);
+                }
+            }
+            else if(tNode.getPrev() != null && tNode.getPrev().getType() == 2)    {
+
+                tLine = new Line(tNode.getPosition().getX(),tNode.getPosition().getY(), tNode.getPrev().getPosition().getX(),tNode.getPrev().getPosition().getY());
+                if(onLine(t3, tLine))   {
+                    System.out.println("Entered 2");
+                    newNode = new ShadowNode(t3, tNode, t2, true);
+                    Nodes.add(newNode);
+                }
+            }
+
+
+
+        }
+
+
+    }
+
 
     public void getType2()    {
         ArrayList<ShadowNode> t2 = new ArrayList<>();
@@ -464,7 +575,7 @@ public class ShadowGraph {
     }
 
     public Point2D getT3Intersect(Line ray)    {
-        System.out.print(ray);
+        //System.out.print(ray);
 
         ArrayList<Point2D> intersectPoints = new ArrayList<>();
         Line tmpLine;

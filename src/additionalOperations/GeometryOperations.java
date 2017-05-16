@@ -36,17 +36,23 @@ public class GeometryOperations {
         //Turn polygon into points
         double xPos, yPos;
 
-        ObservableList<Double> vertices = poly.getPoints();
-        ArrayList<Point2D> points = new ArrayList<>();
+        if(poly.getPoints().size() != 0) {
 
-        for (int i = 0; i < vertices.size() - 1; i += 2) {
-            xPos = vertices.get(i);
-            yPos = vertices.get(i + 1);
+            ObservableList<Double> vertices = poly.getPoints();
+            ArrayList<Point2D> points = new ArrayList<>();
 
-            points.add(new Point2D(xPos, yPos));
+            for (int i = 0; i < vertices.size() - 1; i += 2) {
+                xPos = vertices.get(i);
+                yPos = vertices.get(i + 1);
+
+                points.add(new Point2D(xPos, yPos));
+            }
+
+
+            return points;
         }
-
-        return points;
+        else
+            return null;
     }
 
 
@@ -176,12 +182,12 @@ public class GeometryOperations {
 
 
 
-    public static Line occRay(Point2D agentPos, ShadowNode t2Point) {
-        return occRay(agentPos, t2Point.getPosition());
+    public static Line scaleRay(Point2D agentPos, ShadowNode t2Point, double value) {
+        return scaleRay(agentPos, t2Point.getPosition(), value);
     }
 
-    public static Line occRay(Point2D agentPos, Point2D  t2Point) {
-        double multVal = 1000;
+    public static Line scaleRay(Point2D agentPos, Point2D  t2Point, double value) {
+        double multVal = value;
         double endX, endY, aX, aY;
 
         endX = t2Point.getX();
@@ -192,8 +198,8 @@ public class GeometryOperations {
 
 
 
-        double newX = endX + multVal * (endX - aX);
-        double newY = endY + multVal * (endY - aY);
+        double newX = endX + value * (endX - aX);
+        double newY = endY + value * (endY - aY);
 
         Line ray = new Line(endX, endY, newX, newY);
 
@@ -241,6 +247,52 @@ public class GeometryOperations {
 
 
     }
+
+    public  static boolean onLine(Point2D point, Line between) {
+
+
+        double pX, pY, sX, sY, eX, eY;
+        pX = point.getX();
+        pY = point.getY();
+
+        sX = between.getStartX();
+        sY = between.getStartY();
+
+
+        eX = between.getEndX();
+        eY = between.getEndY();
+
+        System.out.println("Overall Distance = " + distance(sX, sY,eX, eY));
+        System.out.println("Between Dist = " + ((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))));
+
+
+        if(Math.round((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))) == Math.round(distance(sX, sY,eX, eY)))    {
+            return true;
+        }
+        else
+            return false;
+
+    }
+
+
+    public static double distance(Point2D p1, Point2D p2) {
+        double p1X, p2X, p1Y, p2Y;
+
+        p1X = p1.getX();
+        p1Y = p1.getX();
+
+        p2X = p2.getX();
+        p2Y = p2.getX();
+
+
+        return distance(p1X, p1Y, p2X, p2Y);
+
+    }
+
+    public static double distance(double p1X, double p1Y, double p2X, double p2Y) {
+        return Math.sqrt(Math.pow(p1X - p2X, 2) + Math.pow(p1Y - p2Y, 2));
+    }
+
 
 
 

@@ -1,6 +1,7 @@
 package shadowPursuit;
 
 import javafx.geometry.Point2D;
+import javafx.scene.image.PixelFormat;
 import javafx.scene.shape.Line;
 
 /**
@@ -63,6 +64,24 @@ public class ShadowNode {
         this.occLine = new Line(position.getX(), position.getY(), type2Neighbor.getPosition().getX(), type2Neighbor.getPosition().getY());
     }
 
+    //For Type3
+    public ShadowNode(Point2D position, ShadowNode prev, ShadowNode next, boolean T3) {
+
+        System.out.println("ENTTEREDED");
+        this.position = position;
+        this.prev = prev;
+        this.next = next;
+
+        prev.next = this;
+        next.prev = this;
+        type = type3;
+
+        System.out.println(this);
+
+        this.placedOn = placedOn;
+        this.occLine = new Line(position.getX(), position.getY(), prev.getPosition().getX(), prev.getPosition().getY());
+    }
+
     //For Type4
     public ShadowNode(Point2D position, ShadowNode type2Neighbor1, ShadowNode type2Neighbor2) {
         this.position = position;
@@ -71,9 +90,7 @@ public class ShadowNode {
         this.prev = type2Neighbor1;
         this.next = type2Neighbor2;
 
-        this.occLine =
-
-                this.placedOn = placedOn;
+        this.occLine =  this.placedOn = placedOn;
         this.occLeft = new Line(position.getX(), position.getY(), type2Neighbor1.getPosition().getX(), type2Neighbor1.getPosition().getY());
         this.occRight = new Line(position.getX(), position.getY(), type2Neighbor2.getPosition().getX(), type2Neighbor2.getPosition().getY());
     }
