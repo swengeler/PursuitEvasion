@@ -451,11 +451,11 @@ public class shadowOperations {
                 boolean legal = legalPosition(env, allPoly, mid.getX(), mid.getY());
                 count= allIntersect(polygons, between).size();
 
-                if (count % 2 == 0 && legal) {
+                if (count % 2 == 0 && !legal) {
                     reflex.add(reflexIndex, polygon.get(j));
                     reflexIndex++;
 
-                } else if (count % 2 == 1 && !legal) {
+                } else if (count % 2 == 1 && legal) {
                     reflex.add(reflexIndex, polygon.get(j));
                     reflexIndex++;
                 }
