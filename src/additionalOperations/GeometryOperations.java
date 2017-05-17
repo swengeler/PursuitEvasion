@@ -77,14 +77,14 @@ public class GeometryOperations {
                     t2 = points.get(i + 1);
                     temp = new Line(t1.getX(), t1.getY(), t2.getX(), t2.getY());
                     if (lineIntersect(temp, current)) {
-                        intersects.add(pointIntersect(temp, current));
+                        intersects.add(FindIntersection(temp, current));
                     }
                 }
                 t1 = points.get(points.size() - 1);
                 t2 = points.get(0);
                 temp = new Line(t1.getX(), t1.getY(), t2.getX(), t2.getY());
                 if (lineIntersect(temp, current)) {
-                    intersects.add(pointIntersect(temp, current));
+                    intersects.add(FindIntersection(temp, current));
                 }
             }
 
@@ -184,6 +184,8 @@ public class GeometryOperations {
     }
 
     public static Line scaleRay(Point2D agentPos, Point2D t2Point, double value) {
+        System.out.println("Passed value = " + value);
+
         double endX, endY, aX, aY;
 
         endX = t2Point.getX();
@@ -201,6 +203,8 @@ public class GeometryOperations {
         System.out.println("ENDy= " +endY);
         System.out.println("endx= " +endX);
 */
+
+
         if(endX>aX) {
             //System.out.print("wooh its working = " +m );
             newX = endX + value;
@@ -213,7 +217,32 @@ public class GeometryOperations {
         }
 
 
+
+
         Line ray = new Line(endX, endY, newX, newY);
+        System.out.println("Created Ray = " + ray);
+
+        //In case Lines with a negative end are the Problem when we do not find an Intersection where there should be one
+        /*
+        if(newY < 0 || newX < 0)    {
+            Point2D intPoint;
+            Line xLine = new Line(0,0,value, 0);
+            Line yLine = new Line(0,0, 0, value);
+            if(lineIntersect(xLine, ray))   {
+                System.out.println("Enter1");
+                intPoint = FindIntersection(xLine, ray);
+                ray.setEndX(intPoint.getX());
+                ray.setEndY(intPoint.getY());
+            }
+            else if (lineIntersect(yLine, ray))  {
+                System.out.println("Enter2");
+                intPoint = FindIntersection(yLine, ray);
+                System.out.println(intPoint);
+                ray.setEndX(intPoint.getX());
+                ray.setEndY(intPoint.getY());
+            }
+        }
+        */
 
         return ray;
 
@@ -221,65 +250,6 @@ public class GeometryOperations {
 
     private static double signed2DTriArea(double ax, double ay, double bx, double by, double cx, double cy) {
         return (ax - cx) * (by - cy) - (ay - cy) * (bx - cx);
-    }
-
-
-    public static Point2D pointIntersect(Line line1, Line line2) {
-
-
-        double x1, x2, x3, x4;
-        double y1, y2, y3, y4;
-
-        x1 = line1.getStartX();
-        y1 = line1.getStartY();
-
-        x2 = line1.getEndX();
-        y2 = line1.getEndY();
-
-        x3 = line2.getStartX();
-        y3 = line2.getStartY();
-
-        x4 = line2.getEndX();
-        y4 = line2.getEndY();
-
-        double s1x, s1y, s2x, s2y, u, t;
-
-        //rx = s1x
-        //ry = s1y
-        //sx = s2x
-        //sy = s2y
-
-
-        s1x = x2 - x1;
-        s2x = x4 - x3;
-        s1y = y2 - y1;
-        s2y = y4 - y3;
-
-        u = (-s1y * (x1 - x3) + s1x * (y1 - y3)) / (-s2x * s1y + s1x * s2y);
-        t = (-s1x * (y1 - y3) - s2y * (x1 - x3)) / (-s2x * s1y + s1x * s2y);
-
-        double xInt, yInt;
-
-
-
-        /*
-        p + tr = q + us
-
-        x1 + t * s1x - x3 - u * s2x
-        y1 + t * s1y - y3 - u * s2y
-
-         */
-
-
-
-        xInt = x1 + t * s1x - x3 - u * s2x;
-        yInt = y1 + t * s1y - y3 - u * s2y;
-
-        if(u >= 0 && u < 1 && t >= 0 && t < 1)
-            return new Point2D(xInt, yInt);
-        else
-            return null;
-
     }
 
 
@@ -292,6 +262,9 @@ public class GeometryOperations {
     public static Point2D FindIntersection(Line line1, Line line2)
     {
 
+        //System.out.println("Line1 = " + line1);
+        //System.out.println("Line2 = " + line1);
+
         double slope1 = (line1.getEndY() - line1.getStartY()) / (line1.getEndX() - line1.getStartX());
         double slope2 = (line2.getEndY() - line2.getStartY()) / (line2.getEndX() - line2.getStartX());
 
@@ -303,8 +276,12 @@ public class GeometryOperations {
         double yinter1 = GetLineYIntesept(line1Start, slope1);
         double yinter2 = GetLineYIntesept(line2Start, slope2);
 
-        if (slope1 == slope2 && yinter1 != yinter2)
+        if (slope1 == slope2 && yinter1 != yinter2) {
+            //System.out.println("Slope clause");
             return null;
+        }
+
+        //System.out.println("Slope1 = "+ slope1 + "\tSlope2 = " + slope2);
 
         double x = (yinter2 - yinter1) / (slope1 - slope2);
 
