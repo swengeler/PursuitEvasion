@@ -357,6 +357,21 @@ public class GeometryOperations {
         return new Point2D(xInt, yInt);
     }
 
+    public static double gradient(Line line) {
+
+        double x1, x2, y1, y2;
+
+        x1 = line.getStartX();
+        y1 = line.getStartY();
+
+        x2 = line.getEndX();
+        y2 = line.getEndY();
+
+        return (y2 - y1)/(x2 - x1);
+    }
+
+
+
     public static boolean onLine(Point2D point, Line between) {
 
 

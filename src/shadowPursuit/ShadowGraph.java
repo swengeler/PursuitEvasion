@@ -90,7 +90,7 @@ public class ShadowGraph {
         Point2D tmpPoint;
         ShadowNode tmpNode, tmp2Node, tNode;
         ArrayList<Point2D> pointy = findReflex(environment, allPolygons);
-        System.out.println("pointy points :D = " + pointy);
+        //System.out.println("pointy points :D = " + pointy);
 
 
         for(int i = 0; i < Nodes.size(); i++)    {
@@ -218,16 +218,6 @@ public class ShadowGraph {
             sX = start.getPosition().getX();
             sY = start.getPosition().getY();
 
-            //System.out.println("Start Node = " + start);
-
-            /*for(int j = 0; j < printed.size(); j++) {
-                System.out.println(printed.get(j));
-            }
-            System.out.println("i = " + i + "\tPrinted countains " + start + " = " + printed.contains(start));
-            if(sX == 766 && sY == 213)  {
-                System.out.println("Prev = " + start.prev + "\tNext = " + start.next);
-                System.out.println("Link left = " + start.prev.next);
-            }*/
 
             if(printed.size() == 0 || !printed.contains(start)) {
 
@@ -241,7 +231,10 @@ public class ShadowGraph {
                         tmpY = tmp.getPosition().getY();
                         while (tmp.prev != null) {
                             if (tmpX == sX && tmpY == sY) {
-                                System.out.println("Cycle detected - aka entire Obstacle in Shadow");
+                                System.out.println("Cycle detected");
+                                if(tmp.getType() == 1 && start.getType()  == 1) {
+                                    System.out.println("entire Obstacle in Shadow");
+                                }
                                 cycle = true;
                                 break;
                             }
@@ -493,7 +486,11 @@ public class ShadowGraph {
                         Ray = scaleRay(agent, tmp, rayLength);
                         System.out.println("RAY = " + Ray);
 
+                        Line original = new Line(agentX, agentY, tmp.getPosition().getX(), tmp.getPosition().getY());
+                        System.out.println("Gradient1 = " + gradient(original) + "\tGradient2 = " + gradient(Ray));
+
                         Point2D posT3 = getT3Intersect(Ray);
+
 
 
                         System.out.println("");
@@ -637,11 +634,11 @@ public class ShadowGraph {
         double dist = 0;
         int minPos = 0;
 
-        for(Line intLine : polygonEdges)    {
-            if(lineIntersect(intLine, ray)) {
+        for(Line inLine : polygonEdges)    {
+             if(lineIntersect(inLine, ray)) {
                 System.out.println("INTERSECT DETECTED");
-                intersectPoints.add(FindIntersection(intLine,ray));
-                System.out.println("AT = " + intersectPoints.get(intersectPoints.size()-1) + "\tWITH = " + intLine);
+                intersectPoints.add(FindIntersection(inLine,ray));
+                System.out.println("AT = " + intersectPoints.get(intersectPoints.size()-1) + "\tWITH = " + inLine);
             }
         }
 
