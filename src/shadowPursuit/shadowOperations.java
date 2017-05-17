@@ -410,7 +410,7 @@ public class shadowOperations {
 
 
 
-    public static ArrayList<Point2D> findReflex(Polygon env, ArrayList<Polygon> allPoly) {
+    public static ArrayList<Point2D> findReflex(Polygon env,ArrayList<Polygon> allPoly, ArrayList<Polygon> obstacles) {
         ArrayList<Polygon> polygons = allPoly;
         GeometryOperations geometryOperations = new GeometryOperations();
         ArrayList<Point2D> reflex = new ArrayList<>();
@@ -421,42 +421,66 @@ public class shadowOperations {
         for (int i = 0; i < polygons.size(); i++) {
             ArrayList<Point2D> polygon = geometryOperations.polyToPoints(polygons.get(i));
 
+
             for (int j = 0; j < polygon.size(); j++) {
                 if (j != 0 && j != polygon.size() - 1) {
                     left = polygon.get(j - 1);
                     right = polygon.get(j + 1);
-
+                   // System.out.println("this happens 8 times");
                 } else if (j == 0) {
+                   // System.out.println("this should happen once");
                     left = polygon.get(polygon.size() - 1);
                     right = polygon.get(j + 1);
-                } else {
-
+                } else if(j==polygon.size()-1){
+                    //System.out.println("this happens once");
                     left = polygon.get(j - 1);
                     right = polygon.get(0);
 
+                }else {
+                    System.out.println("you're a fucking retard");
+                    left = polygon.get(j - 1);
+                    right = polygon.get(0);
                 }
+
                 //Line between= new Line(left.getX(),left.getY(), right.getX(),right.getY());
+
                 double x = (right.getX() - left.getX()) / 2;
                 double y = (right.getY() - left.getY()) / 2;
 
-                Point2D mid = new Point2D(right.getX()+x, right.getY()+ y);
+
+                Point2D mid = new Point2D(right.getX()-x, right.getY()- y);
 
                 Point2D main = polygon.get(j);
 
+                System.out.println("right x = " + right.getX() + " left x = " + left.getX() + " x = " + (right.getX()-x));
+                System.out.println("right y = " + right.getY() + " left y = " + left.getY() + " y = " + (right.getY()-y));
+                System.out.println("x coord = " + mid.getX() +" y coord = " + mid.getY() );
+
+
                 int count = 0;
                 Line between = new Line(mid.getX(), mid.getY(), main.getX(), main.getY());
-                boolean legal = legalPosition(env, allPoly, mid.getX(), mid.getY());
+                boolean legal = legalPosition(env, obstacles, mid.getX(), mid.getY());
+                System.out.println("is legal? " + legal);
                 count= allIntersect(polygons, between).size();
+                System.out.print("intersections= " + count);
 
-                if (count % 2 == 0 && legal) {
+                if (count % 2 == 0 && !legal) {
                     reflex.add(reflexIndex, polygon.get(j));
+                    System.out.print("even and illegal");
+
                     reflexIndex++;
 
-                } else if (count % 2 == 1 && !legal) {
+                } else if (count % 2 == 1 && legal) {
                     reflex.add(reflexIndex, polygon.get(j));
+                    System.out.print("odd and legal");
+
+
                     reflexIndex++;
                 }
 
+                System.out.println();
+                System.out.println();
+                System.out.println();
             }
 
 

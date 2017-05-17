@@ -93,7 +93,7 @@ public class ShadowGraph {
         T2Points = new ArrayList<>();
         Point2D tmpPoint;
         ShadowNode tmpNode, tmp2Node, tNode;
-        ArrayList<Point2D> pointy = findReflex(environment, allPolygons);
+        ArrayList<Point2D> pointy = findReflex(environment,allPolygons, obstacles);
         System.out.println("pointy points :D = " + pointy);
 
 

@@ -353,6 +353,7 @@ public class GeometryOperations {
 
 
         double pX, pY, sX, sY, eX, eY;
+        System.out.print(point);
         pX = point.getX();
         pY = point.getY();
 

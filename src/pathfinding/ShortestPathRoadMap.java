@@ -191,7 +191,7 @@ public class ShortestPathRoadMap {
                 double x = (right.getX() - left.getX()) / 2;
                 double y = (right.getY() - left.getY()) / 2;
 
-                Point2D mid = new Point2D(right.getX()+x, right.getY()+ y);
+                Point2D mid = new Point2D(right.getX()-x, right.getY()- y);
 
                 Point2D main = polygon.get(j);
 
@@ -200,11 +200,11 @@ public class ShortestPathRoadMap {
                 boolean legal = map.legalPosition(mid.getX(), mid.getY());
                 count= allIntersect(polygons, between).size();
 
-                if (count % 2 == 0 && legal) {
+                if (count % 2 == 0 && !legal) {
                     reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
                     reflexIndex++;
 
-                } else if (count % 2 == 1 && !legal) {
+                } else if (count % 2 == 1 && legal) {
                     reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
                     reflexIndex++;
                 }
