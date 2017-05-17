@@ -438,11 +438,8 @@ public class shadowOperations {
                 //Line between= new Line(left.getX(),left.getY(), right.getX(),right.getY());
                 double x = (right.getX() - left.getX()) / 2;
                 double y = (right.getY() - left.getY()) / 2;
-                if (x < 0)
-                    x = -x;
-                if (y < 0)
-                    y = -y;
-                Point2D mid = new Point2D(x, y);
+
+                Point2D mid = new Point2D(right.getX()+x, right.getY()+ y);
 
                 Point2D main = polygon.get(j);
 
