@@ -40,12 +40,15 @@ public class ShadowNode {
 
     //Type2 Node()
     public ShadowNode(Point2D position, ShadowNode neighbor1) {
+
+
         this.position = position;
         if(neighbor1.getNext() == null) {
+
             this.prev = neighbor1;
             neighbor1.next = this;
         }
-        else    {
+        else if(neighbor1.getPrev() == null)   {
             this.next = neighbor1;
             neighbor1.prev = this;
         }

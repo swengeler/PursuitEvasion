@@ -451,36 +451,34 @@ public class shadowOperations {
                 Point2D mid = new Point2D(right.getX()-x, right.getY()- y);
 
                 Point2D main = polygon.get(j);
-
+                /*
                 System.out.println("right x = " + right.getX() + " left x = " + left.getX() + " x = " + (right.getX()-x));
                 System.out.println("right y = " + right.getY() + " left y = " + left.getY() + " y = " + (right.getY()-y));
                 System.out.println("x coord = " + mid.getX() +" y coord = " + mid.getY() );
-
+                */
 
                 int count = 0;
                 Line between = new Line(mid.getX(), mid.getY(), main.getX(), main.getY());
                 boolean legal = legalPosition(env, obstacles, mid.getX(), mid.getY());
-                System.out.println("is legal? " + legal);
+                //System.out.println("is legal? " + legal);
                 count= allIntersect(polygons, between).size();
-                System.out.print("intersections= " + count);
+                //System.out.print("intersections= " + count);
 
                 if (count % 2 == 0 && !legal) {
                     reflex.add(reflexIndex, polygon.get(j));
-                    System.out.print("even and illegal");
+                    //System.out.print("even and illegal");
 
                     reflexIndex++;
 
                 } else if (count % 2 == 1 && legal) {
                     reflex.add(reflexIndex, polygon.get(j));
-                    System.out.print("odd and legal");
+                    //System.out.print("odd and legal");
 
 
                     reflexIndex++;
                 }
 
-                System.out.println();
-                System.out.println();
-                System.out.println();
+
             }
 
 
