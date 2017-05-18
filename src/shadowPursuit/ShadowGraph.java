@@ -75,7 +75,7 @@ public class ShadowGraph {
         generateType1();
 
         generateT1Connections();
-        //circleDetect();
+        circleDetect();
         calcT2Points();
         printGraph();
 
@@ -96,6 +96,9 @@ public class ShadowGraph {
         ArrayList<Point2D> pointy = findReflex(environment,allPolygons, obstacles);
         System.out.println("pointy points :D = " + pointy);
 
+        if(Nodes.size() == 0)   {
+            System.exit(15242);
+        }
 
         for(int i = 0; i < Nodes.size(); i++)    {
             tNode = Nodes.get(i);
@@ -106,10 +109,14 @@ public class ShadowGraph {
             if((tNode.prev == null || tNode.next == null) && tNode.getType() == 1)  {
                 temp = getAdjacentPoints(tNode.getPosition(), allPolygons);
                 //System.out.println("For = " + tNode.getPosition() + "\tAdjacent: " + temp);
-                if(tNode.next == null)   {
+
+                System.out.println(tNode);
+                if(tNode.next == null && tNode.prev != null)   {
                     //false
                     //System.out.println("tNode = " + tNode);
+
                     tmpPoint = tNode.prev.getPosition();
+
                     if(temp.get(0) == tmpPoint) {
                         if(pointy.contains(temp.get(0))) {
                             Nodes.add(new ShadowNode(temp.get(0), tNode));
@@ -121,7 +128,7 @@ public class ShadowGraph {
                         }
                     }
                 }
-                else if(tNode.prev == null)   {
+                else if(tNode.prev == null && tNode.next != null)   {
                     //Correct
                     tmpPoint = tNode.next.getPosition();
                     if(temp.get(0) == tmpPoint) {
@@ -144,6 +151,27 @@ public class ShadowGraph {
                         Nodes.add(new ShadowNode(temp.get(0), tNode));
                     }
                      */
+                }
+                else     {
+                    System.out.println("Both null entered");
+                    temp = getAdjacentPoints(tNode.getPosition(), allPolygons);
+                    System.out.println(temp);
+                    tmpPoint = tNode.getPosition();
+
+                    System.exit(555);
+
+
+                    //TODO Continue here
+                    if(pointy.contains(temp.get(0))) {
+                            Nodes.add(new ShadowNode(temp.get(0), tNode));
+                    }
+
+                    else    {
+                        if(pointy.contains(temp.get(1))) {
+                            Nodes.add(new ShadowNode(temp.get(1), tNode));
+                        }
+                    }
+
                 }
 
             }
@@ -211,6 +239,8 @@ public class ShadowGraph {
 
     public void printGraph()    {
         ArrayList<ShadowNode> printed = new ArrayList<>();
+
+        System.out.println("Ampount of Nodes = " + Nodes.size());
 
         ShadowNode start,start2, tmp;
         //for(int i = 0; i < copied.size())
@@ -469,6 +499,8 @@ public class ShadowGraph {
         }
 
 
+
+
         //For every agent that  has a straight line visibility to a point
         for(Point2D agent : agents)   {
 
@@ -498,7 +530,7 @@ public class ShadowGraph {
 
 
 
-                        System.out.println("");
+                        System.out.println("Intersect at = " + posT3);
                         addT3ToGraph(tmp,posT3);
                         Type3.add(posT3);
 
@@ -582,6 +614,8 @@ public class ShadowGraph {
 
 
             }
+
+
         }
 
 
@@ -631,7 +665,7 @@ public class ShadowGraph {
     }
 
     public Point2D getT3Intersect(Line ray)    {
-        System.out.print("Passed ray = " + ray);
+        //System.out.print("Passed ray = " + ray);
 
         ArrayList<Point2D> intersectPoints = new ArrayList<>();
         Line tmpLine;
@@ -642,6 +676,7 @@ public class ShadowGraph {
         for(Line inLine : polygonEdges)    {
              if(lineIntersect(inLine, ray)) {
                 System.out.println("INTERSECT DETECTED");
+                System.out.println("Ray = " + ray);
                 intersectPoints.add(FindIntersection(inLine,ray));
                 System.out.println("AT = " + intersectPoints.get(intersectPoints.size()-1) + "\tWITH = " + inLine);
             }

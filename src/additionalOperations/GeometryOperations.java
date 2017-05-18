@@ -69,6 +69,7 @@ public class GeometryOperations {
         Line temp;
         Point2D t1, t2;
 
+
         for (Polygon poly : allPoly) {
             points = polyToPoints(poly);
             if (lineIntersectInPoly(points, current)) {
@@ -184,7 +185,7 @@ public class GeometryOperations {
     }
 
     public static Line scaleRay(Point2D agentPos, Point2D t2Point, double value) {
-        System.out.println("Passed value = " + value);
+        //System.out.println("Passed value = " + value);
 
         double endX, endY, aX, aY;
 
@@ -220,7 +221,7 @@ public class GeometryOperations {
 
 
         Line ray = new Line(endX, endY, newX, newY);
-        System.out.println("Created Ray = " + ray);
+        //System.out.println("Created Ray = " + ray);
 
         //In case Lines with a negative end are the Problem when we do not find an Intersection where there should be one
         /*
@@ -263,7 +264,7 @@ public class GeometryOperations {
     {
 
         //System.out.println("Line1 = " + line1);
-        //System.out.println("Line2 = " + line1);
+        //System.out.println("Line2 = " + line2);
 
         double slope1 = (line1.getEndY() - line1.getStartY()) / (line1.getEndX() - line1.getStartX());
         double slope2 = (line2.getEndY() - line2.getStartY()) / (line2.getEndX() - line2.getStartX());
@@ -353,7 +354,7 @@ public class GeometryOperations {
 
 
         double pX, pY, sX, sY, eX, eY;
-        System.out.print(point);
+        //System.out.print(point);
         pX = point.getX();
         pY = point.getY();
 

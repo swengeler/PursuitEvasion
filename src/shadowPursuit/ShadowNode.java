@@ -39,6 +39,35 @@ public class ShadowNode {
 
 
     //Type2 Node()
+    public ShadowNode(Point2D position, ShadowNode neighbor1, boolean left) {
+
+
+        this.position = position;
+        if(neighbor1.getNext() == null) {
+
+            this.prev = neighbor1;
+            neighbor1.next = this;
+        }
+        else if(neighbor1.getPrev() == null)   {
+            this.next = neighbor1;
+            neighbor1.prev = this;
+        }
+        else    {
+            if(left)    {
+                this.prev = neighbor1;
+                neighbor1.next = this;
+            }
+            else    {
+                this.next = neighbor1;
+                neighbor1.prev = this;
+            }
+        }
+
+
+        type = type2;
+    }
+
+
     public ShadowNode(Point2D position, ShadowNode neighbor1) {
 
 
@@ -56,7 +85,6 @@ public class ShadowNode {
 
         type = type2;
     }
-
     //For Type3
     public ShadowNode(Point2D position, ShadowNode type2Neighbor, Line placedOn) {
         this.position = position;
@@ -79,7 +107,7 @@ public class ShadowNode {
         next.prev = this;
         type = type3;
 
-        System.out.println(this);
+        //System.out.println(this);
 
         this.placedOn = placedOn;
         this.occLine = new Line(position.getX(), position.getY(), prev.getPosition().getX(), prev.getPosition().getY());
