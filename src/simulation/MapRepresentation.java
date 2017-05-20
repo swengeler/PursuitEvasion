@@ -71,9 +71,12 @@ public class MapRepresentation {
             }
         }
         for (Polygon p : obstaclePolygons) {
-            if (GeometryOperations.inPolygon(p, x1, y1, x2, y2)) {
+            if (GeometryOperations.inPolygonWithoutBorder(p, x1, y1, x2, y2)) {
                 return false;
             }
+        }
+        if (!GeometryOperations.inPolygon(borderPolygon, x1, y1, x2, y2)) {
+            return false;
         }
         return true;
     }
