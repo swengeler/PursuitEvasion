@@ -23,10 +23,10 @@ public class ShortestPathRoadMap {
 
     private ArrayList<PathVertex> graph;
 
-    public  GraphPath ShortestPathCalc(MapRepresentation map, Point2D source, Point2D sink) {
+    public GraphPath ShortestPathCalc(MapRepresentation map, Point2D source, Point2D sink) {
 
 
-         return calculateShortestPath(map, reflexInlineofsight(map, findReflex(map)), source, sink);
+        return calculateShortestPath(map, reflexInlineofsight(map, findReflex(map)), source, sink);
 
     }
 
@@ -191,14 +191,14 @@ public class ShortestPathRoadMap {
                 double x = (right.getX() - left.getX()) / 2;
                 double y = (right.getY() - left.getY()) / 2;
 
-                Point2D mid = new Point2D(right.getX()-x, right.getY()- y);
+                Point2D mid = new Point2D(right.getX() - x, right.getY() - y);
 
                 Point2D main = polygon.get(j);
 
                 int count = 0;
                 Line between = new Line(mid.getX(), mid.getY(), main.getX(), main.getY());
                 boolean legal = map.legalPosition(mid.getX(), mid.getY());
-                count= allIntersect(polygons, between).size();
+                count = allIntersect(polygons, between).size();
 
                 if (count % 2 == 0 && !legal) {
                     reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
@@ -286,20 +286,22 @@ STILL TODO
                         below = new PathVertex(reflexs.get(j).getX() - eps, reflexs.get(j).getY() - eps * angle);
                         inside1 = new PathVertex(reflexs.get(i).getX() - eps, reflexs.get(i).getY() - eps * angle);
                         inside2 = new PathVertex(reflexs.get(j).getX() + eps, reflexs.get(j).getY() + eps * angle);
-                        if (map.legalPosition(above.getX(), above.getY()) && map.legalPosition(below.getX(), below.getY()) && map.legalPosition(inside1.getX(), inside1.getY()) && map.legalPosition(inside2.getX(), inside2.getY()))
-                            ;
-
-                        PathVertex v1 = reflexs.get(i);
-                        PathVertex v2 = reflexs.get(j);
+                        if (map.legalPosition(above.getX(), above.getY()) && map.legalPosition(below.getX(), below.getY()) && map.legalPosition(inside1.getX(), inside1.getY()) && map.legalPosition(inside2.getX(), inside2.getY())) {
 
 
-                        graph1.addVertex(v1);
-                        graph1.addVertex(v2);
+                            PathVertex v1 = reflexs.get(i);
+                            PathVertex v2 = reflexs.get(j);
 
-                        double differencesquare = (reflexs.get(i).getX() - reflexs.get(j).getX()) * (reflexs.get(i).getX() - reflexs.get(j).getX()) + (reflexs.get(i).getY() - reflexs.get(j).getY()) * (reflexs.get(i).getY() - reflexs.get(j).getY());
-                        // graph1.addWeightedEdge(v1, v2, Math.sqrt(differencesquare));
 
-                        graph1.setEdgeWeight(graph1.addEdge(v1, v2), Math.sqrt(differencesquare));
+                            graph1.addVertex(v1);
+                            graph1.addVertex(v2);
+
+                            double differencesquare = (reflexs.get(i).getX() - reflexs.get(j).getX()) * (reflexs.get(i).getX() - reflexs.get(j).getX()) + (reflexs.get(i).getY() - reflexs.get(j).getY()) * (reflexs.get(i).getY() - reflexs.get(j).getY());
+                            // graph1.addWeightedEdge(v1, v2, Math.sqrt(differencesquare));
+
+                            graph1.setEdgeWeight(graph1.addEdge(v1, v2), Math.sqrt(differencesquare));
+                        }
+
                     }
                 }
             }

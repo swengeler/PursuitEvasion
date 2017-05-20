@@ -3,6 +3,8 @@ package shadowPursuit;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 
+import javax.swing.plaf.synth.SynthUI;
+
 /**
  * Created by Robins on 30.04.2017.
  */
@@ -19,6 +21,8 @@ public class ShadowNode {
     private Line occLeft, occRight;
     private int type;
     private Point2D position;
+
+    private Point2D neighbourRightAgent, neighbourLeftAgent;
 
 
     //Type1 Node
@@ -86,14 +90,28 @@ public class ShadowNode {
         type = type2;
     }
 
-    //For Type3
-    public ShadowNode(Point2D position, ShadowNode type2Neighbor, Line placedOn) {
-        this.position = position;
-        this.left = type2Neighbor;
-        this.right = null;
 
-        this.placedOn = placedOn;
-        this.occLine = new Line(position.getX(), position.getY(), type2Neighbor.getPosition().getX(), type2Neighbor.getPosition().getY());
+    //For Type3
+    public ShadowNode(Point2D position, ShadowNode Type2, Line Ray) {
+
+        System.out.println("ENTTEREDED");
+        this.position = position;
+
+        if(Type2.getLeft() == null) {
+            this.right = Type2;
+            this.left = null;
+        }
+        else if(Type2.getRight() == null) {
+            this.left = Type2;
+            this.right = null;
+        }
+
+        type = type3;
+
+        //System.out.println(this);
+
+
+        this.occLine = Ray;
     }
 
     //For Type3
@@ -119,6 +137,9 @@ public class ShadowNode {
         this.position = position;
 
 
+        if(type2Neighbor1.getLeft() == null && type2Neighbor2.getRight() == null) {
+
+        }
         this.left = type2Neighbor1;
         this.right = type2Neighbor2;
 
@@ -126,6 +147,38 @@ public class ShadowNode {
         this.occLeft = new Line(position.getX(), position.getY(), type2Neighbor1.getPosition().getX(), type2Neighbor1.getPosition().getY());
         this.occRight = new Line(position.getX(), position.getY(), type2Neighbor2.getPosition().getX(), type2Neighbor2.getPosition().getY());
     }
+
+    //For Type4
+    public ShadowNode(Point2D position, ShadowNode type2Neighbor1, ShadowNode type2Neighbor2, Point2D agent1, Point2D agent2) {
+        //note that type2neighbour 1 is the type 2 corresponding to agent one that created an occlusion ray and vice versa for type2neighbour2 and agent2
+
+        this.position = position;
+        this.neighbourRightAgent= agent1;
+        this.neighbourLeftAgent= agent2;
+
+
+
+        if(type2Neighbor1.getLeft() == null && type2Neighbor2.getRight() == null) {
+            this.right = type2Neighbor1;
+            this.left = type2Neighbor2;
+            this.neighbourRightAgent= agent1;
+            this.neighbourLeftAgent= agent2;
+        }
+        else if(type2Neighbor1.getRight() == null && type2Neighbor2.getLeft() == null)  {
+            this.left = type2Neighbor1;
+            this.right = type2Neighbor2;
+            this.neighbourRightAgent= agent2;
+            this.neighbourLeftAgent= agent1;
+        }
+        else {
+            System.exit(67666);
+        }
+
+
+
+    }
+
+
 
 
     public int getType() {
@@ -146,8 +199,8 @@ public class ShadowNode {
         return position;
     }
 
-    public Line getPlacedOn() {
-        return placedOn;
+    public Line getRay() {
+        return occLine;
     }
 
     public ShadowNode getLeft() {

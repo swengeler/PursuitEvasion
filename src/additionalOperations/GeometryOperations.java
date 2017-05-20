@@ -197,27 +197,35 @@ public class GeometryOperations {
         double newX, newY;
 
         //y=mx+c
-      //  double m = (endY-aY)/(endX-aX);
-        double m = (aY-endY)/(aX-endX);
+        //  double m = (endY-aY)/(endX-aX);
+        double m = (aY - endY) / (aX - endX);
         /*System.out.println("ay= " +aY);
         System.out.println("ax= " +aX);
         System.out.println("ENDy= " +endY);
         System.out.println("endx= " +endX);
 */
 
-
-        if(endX>aX) {
-            //System.out.print("wooh its working = " +m );
-            newX = endX + value;
-            newY = endY + value * m;
+        if (aX - endX != 0) {
+            if (endX > aX) {
+                System.out.print("wooh its working = " + m);
+                newX = endX + value;
+                newY = endY + value * m;
+            } else {
+                System.out.print("why the fuck man");
+                newX = endX - value;
+                newY = endY - value * m;
+            }
+        } else {
+            if (endY > aY) {
+                System.out.print("wooh its working = " + m);
+                newX = endX;
+                newY = endY + value;
+            } else {
+                System.out.print("why the fuck man");
+                newX = endX;
+                newY = endY - value;
+            }
         }
-        else {
-            //System.out.print("why the fuck man");
-            newX = endX - value;
-            newY = endY - value * m;
-        }
-
-
 
 
         Line ray = new Line(endX, endY, newX, newY);
@@ -254,20 +262,30 @@ public class GeometryOperations {
     }
 
 
-
-    public static double GetLineYIntesept(Point2D p, double slope)
-    {
+    public static double GetLineYIntesept(Point2D p, double slope) {
         return p.getY() - slope * p.getX();
     }
 
-    public static Point2D FindIntersection(Line line1, Line line2)
-    {
+    public static Point2D FindIntersection(Line line1, Line line2) {
 
         //System.out.println("Line1 = " + line1);
         //System.out.println("Line2 = " + line2);
 
-        double slope1 = (line1.getEndY() - line1.getStartY()) / (line1.getEndX() - line1.getStartX());
-        double slope2 = (line2.getEndY() - line2.getStartY()) / (line2.getEndX() - line2.getStartX());
+        double l1x = (line1.getEndX() - line1.getStartX());
+        double l2x = (line2.getEndX() - line2.getStartX());
+
+        if (l1x == 0) {
+            l1x = 0.000000001;
+        }
+
+        if (l2x == 0) {
+            l2x = 0.000000001;
+        }
+
+
+        double slope1 = (line1.getEndY() - line1.getStartY()) / l1x;
+        double slope2 = (line2.getEndY() - line2.getStartY()) / l2x;
+
 
         Point2D line1Start, line2Start;
         line1Start = new Point2D(line1.getStartX(), line1.getStartY());
@@ -282,35 +300,39 @@ public class GeometryOperations {
             return null;
         }
 
-        //System.out.println("Slope1 = "+ slope1 + "\tSlope2 = " + slope2);
 
+        //System.out.println("Slope1 = "+ slope1 + "\tSlope2 = " + slope2);
         double x = (yinter2 - yinter1) / (slope1 - slope2);
 
         double y = slope1 * x + yinter1;
+
+
+        //System.out.println("X = " + x);
+        //System.out.println("Y = " + y);
+
 
         return new Point2D(x, y);
     }
 
 
-
     public static Point2D pointIntersect2(Line line1, Line line2) {
 
-        double px,py,qx,qy,ry,rx,sx,sy,ty,tx;
+        double px, py, qx, qy, ry, rx, sx, sy, ty, tx;
 
         px = line1.getStartX();
         py = line1.getStartY();
 
-        rx = line1.getEndX()-px;
-        ry = line1.getEndY()-py;
+        rx = line1.getEndX() - px;
+        ry = line1.getEndY() - py;
 
         qx = line2.getStartX();
         qy = line2.getStartY();
 
-        sx = line2.getEndX()-qx;
-        sy = line2.getEndY()-qy;
+        sx = line2.getEndX() - qx;
+        sy = line2.getEndY() - qy;
 
-       ty=(qy-py)*sy/(ry*sy);
-       tx=(qx-px)*sx/(rx*sx);
+        ty = (qy - py) * sy / (ry * sy);
+        tx = (qx - px) * sx / (rx * sx);
 
 
 /*
@@ -345,9 +367,8 @@ public class GeometryOperations {
         x2 = line.getEndX();
         y2 = line.getEndY();
 
-        return (y2 - y1)/(x2 - x1);
+        return (y2 - y1) / (x2 - x1);
     }
-
 
 
     public static boolean onLine(Point2D point, Line between) {

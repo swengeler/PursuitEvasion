@@ -6,14 +6,17 @@ import javafx.scene.Node;
 import javafx.scene.effect.Light;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Shape;
 import org.omg.CORBA.DoubleHolder;
 import pathfinding.PathVertex;
 import simulation.Agent;
 import simulation.MapRepresentation;
 
 import javax.sound.midi.SysexMessage;
+import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.concurrent.RecursiveTask;
 
 import static additionalOperations.GeometryOperations.*;
 import static shadowPursuit.shadowOperations.*;
@@ -34,6 +37,8 @@ public class ShadowGraph {
     private ArrayList<Point2D> agents;
 
     private ArrayList<Point2D> t1 = new ArrayList<>();
+    private  ArrayList<ShadowNode> checkT3= new ArrayList<>();
+    private  ArrayList<ShadowNode> checkT4= new ArrayList<>();
 
 
     public ShadowGraph(MapRepresentation map, ArrayList<Point2D> agents) {
@@ -98,12 +103,11 @@ public class ShadowGraph {
         //calcT2Points();
         //printGraph();
 
-        //calculateType3();
-        printGraph();
+        calculateType3();
         //printGraph();
-        //getType2();
+        //printGraph();
 
-        //printGraph();
+        printGraph();
     }
 
 
@@ -196,6 +200,13 @@ public class ShadowGraph {
             if(tmp.getType() == 1) {
                 adj = getAdjacentPoints(tmpPoint, allPolygons);
 
+                /*
+                if((tmpPoint.getX() == 450 && tmpPoint.getY() == 632) || (tmpPoint.getX() == 177 && tmpPoint.getY() == 619))    {
+                    System.out.println("For: " + tmpPoint + "\tAdjacent: " + adj);
+                }
+                */
+
+
                 //Left side
                 if (t1.contains(adj.get(0))) {
                     tmpPoint2 = adj.get(0);
@@ -205,16 +216,21 @@ public class ShadowGraph {
                             shadPoint = tmp2.getPosition();
                             if (tmpPoint2.getX() == shadPoint.getX() && tmpPoint2.getY() == shadPoint.getY()) {
                                 tmp.setLeft(tmp2);
-                                break;
                             }
                         }
                     }
                 }
                 else    {
                     if (pointy.contains(adj.get(0)) && tmp.left == null) {
-                        t2Shad = new ShadowNode(adj.get(0), true);
-                        tmp.setLeft(t2Shad);
-                        Nodes.add(t2Shad);
+                        if (nodePresent(adj.get(0)) == null) {
+                            t2Shad = new ShadowNode(adj.get(0), true);
+                            tmp.setLeft(t2Shad);
+                            Nodes.add(t2Shad);
+                        }
+                        else    {
+                            t2Shad = nodePresent(adj.get(0));
+                            tmp.setLeft(t2Shad);
+                        }
                     }
                 }
 
@@ -227,29 +243,41 @@ public class ShadowGraph {
                         shadPoint = tmp2.getPosition();
                         if (tmpPoint2.getX() == shadPoint.getX() && tmpPoint2.getY() == shadPoint.getY()) {
                             tmp.setRight(tmp2);
-                            break;
                         }
                     }
                 }
                 else {
                     if (pointy.contains(adj.get(1)) && tmp.right == null) {
-                        t2Shad = new ShadowNode(adj.get(1), true);
-                        tmp.setRight(t2Shad);
-                        Nodes.add(t2Shad);
+                        if (nodePresent(adj.get(1)) == null) {
+                            t2Shad = new ShadowNode(adj.get(1), true);
+                            tmp.setRight(t2Shad);
+                            Nodes.add(t2Shad);
+                        }
+                        else {
+                            t2Shad = nodePresent(adj.get(1));
+                            tmp.setRight(t2Shad);
+                        }
                     }
                 }
-            }
+             }
 
 
         }
 
 
+    }
 
 
+    public ShadowNode nodePresent(Point2D point)    {
+        Point2D tmp;
+        for(ShadowNode node : Nodes)    {
+            tmp = node.getPosition();
 
-
-
-
+            if(tmp.getX() == point.getX() && tmp.getY() == point.getY())    {
+                return node;
+            }
+        }
+        return null;
     }
 
 
@@ -270,6 +298,8 @@ public class ShadowGraph {
             tmpX = tmp.getPosition().getX();
             tmpY = tmp.getPosition().getY();
 
+            //System.out.println(tmp);
+
 
             if(printed.size() == 0 || !printed.contains(tmp))   {
                 tmp2 = tmp;
@@ -285,13 +315,15 @@ public class ShadowGraph {
                 }
 
                 //We are now at the start
-                while(tmp2 != null) {
+                while(tmp2 != null && printed.size()< Nodes.size()) {
                     System.out.println(tmp2);
                     printed.add(tmp2);
                     tmp2 = tmp2.getRight();
                 }
                 System.out.println("\n");
             }
+
+
         }
     }
 
@@ -462,32 +494,50 @@ public class ShadowGraph {
 
             agentX = agent.getX();
             agentY = agent.getY();
-
             //For every point of Type2
             for(int i =0; i < Nodes.size(); i++) {
                 tmp = Nodes.get(i);
                 if (tmp.getType() == 2) {
+                    System.out.println("TYPE 2 ENTERED FOR = " + tmp.getPosition());
 
                     pointX = tmp.getPosition().getX();
                     pointY = tmp.getPosition().getY();
 
                     if(isVisible(agentX, agentY, pointX, pointY, polygonEdges)) {
                         //Create occlusion Ray
-                        //System.out.println("For Agent = " + agent + " and Point = " + tmp.getPosition());
+                        System.out.println("For Agent = " + agent + " and Point = " + tmp.getPosition());
                         Ray = scaleRay(agent, tmp, rayLength);
-                        //System.out.println("RAY = " + Ray);
+                        System.out.println("RAY = " + Ray);
 
                         Line original = new Line(agentX, agentY, tmp.getPosition().getX(), tmp.getPosition().getY());
                         //System.out.println("Gradient1 = " + gradient(original) + "\tGradient2 = " + gradient(Ray));
 
                         Point2D posT3 = getT3Intersect(Ray);
+                        System.out.println("INTERSECT DETECTED");
+                        System.out.println("AT = " + posT3);
 
                         System.out.println("");
-                        addT3ToGraph(tmp,posT3);
-                        Type3.add(posT3);
+
+                        if(posT3 != null)   {
+                            double midx= (posT3.getX()+ pointX)/2;
+                            double midy= (posT3.getY()+ pointY)/2;
+
+
+                            if(legalPosition(environment,obstacles,midx,midy)){
+                                Line t3Line = new Line(Ray.getStartX(), Ray.getStartY(), posT3.getX(), posT3.getY());
+                                ShadowNode newNode = new ShadowNode(posT3, tmp, t3Line);
+
+                                checkT3.add(newNode);
+                                //System.out.println("woooooooooh good intersection");
+
+                            }
+                        }
+
                     }
                 }
             }
+
+            System.out.println("Amount of Type 3 => " + checkT3.size());
 
         }
 
@@ -495,7 +545,64 @@ public class ShadowGraph {
 
 
 
+        ArrayList<ShadowNode> replacedT3 = new ArrayList<>();
 
+        for(int i=0; i<checkT3.size();i++){
+            ShadowNode current= checkT3.get(i);
+            for(int j=0; j<checkT3.size(); j++){
+                if(i!=j){
+                    ShadowNode checkInt= checkT3.get(j);
+
+                    if(lineIntersect(current.getRay(),checkInt.getRay())){
+                        replacedT3.add(checkT3.get(i));
+                        replacedT3.add(checkT3.get(j));
+                        Point2D intersect = FindIntersection(current.getRay(),checkInt.getRay());
+                        //TODO
+                        //figure out which t2 and pursuer corresponds to each t3
+                      //  ShadowNode posT4 = new ShadowNode(intersect,  );
+                       // checkT4.add(posT4);
+                    }
+                }
+            }
+
+
+
+
+        }
+       ArrayList<ShadowNode> toRemove=  t4overseen(checkT4);
+
+        for(int i=0; i<toRemove.size(); i++){
+            checkT4.remove(toRemove.get(i));
+        }
+        for(int i=0; i<checkT4.size();i++){
+            Nodes.add(checkT4.get(i));
+        }
+
+
+
+
+    }
+
+    public ArrayList<ShadowNode> t4overseen( ArrayList<ShadowNode> allPosT4){
+        // take the possible t4, create a shape that has it and its two corresponding t2. check if any type 4s are contained in this shape. if yes then remove from list.
+        ArrayList<ShadowNode> toRemove= new ArrayList<>();
+        ShadowNode current;
+        Point2D currentPoint;
+        for(int i=0; i<allPosT4.size(); i++){
+            current= allPosT4.get(i);
+            currentPoint=allPosT4.get(i).getPosition();
+            Polygon polygon= new Polygon(currentPoint.getX(),currentPoint.getY(), current.getLeft().getPosition().getX(), current.getLeft().getPosition().getY(), current.getRight().getPosition().getX(),current.getRight().getPosition().getY());
+
+            for(int j=0; j<allPosT4.size(); j++){
+                if(j!=i){
+                    if(polygon.contains(allPosT4.get(j).getPosition())){
+                        toRemove.add(allPosT4.get(i));
+                    }
+                }
+            }
+
+        }
+        return toRemove;
     }
 
 
@@ -642,9 +749,9 @@ public class ShadowGraph {
 
         for(Line inLine : polygonEdges)    {
              if(lineIntersect(inLine, ray)) {
-                System.out.println("INTERSECT DETECTED");
+                //System.out.println("INTERSECT DETECTED");
                 intersectPoints.add(FindIntersection(inLine,ray));
-                System.out.println("AT = " + intersectPoints.get(intersectPoints.size()-1) + "\tWITH = " + inLine + "\n");
+                //System.out.println("AT = " + intersectPoints.get(intersectPoints.size()-1) + "\tWITH = " + inLine + "\n");
             }
         }
 

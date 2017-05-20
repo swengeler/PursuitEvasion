@@ -321,7 +321,7 @@ public class shadowOperations {
                             break;
                         } else if (i == tempPoints.size() - 1) {
                             //System.out.println("i = size-1 entered");
-                            retPoints.add(tempPoints.get(i - 2));
+                            retPoints.add(tempPoints.get(i - 1));
                             retPoints.add(tempPoints.get(0));
                             break;
                         } else {
