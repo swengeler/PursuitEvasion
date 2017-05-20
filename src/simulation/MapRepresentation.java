@@ -70,6 +70,11 @@ public class MapRepresentation {
                 return false;
             }
         }
+        for (Polygon p : obstaclePolygons) {
+            if (GeometryOperations.inPolygon(p, x1, y1, x2, y2)) {
+                return false;
+            }
+        }
         return true;
     }
 

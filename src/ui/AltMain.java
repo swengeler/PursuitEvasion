@@ -1,6 +1,5 @@
 package ui;
 
-import com.sun.org.apache.bcel.internal.generic.ARRAYLENGTH;
 import control.Controller;
 import conversion.GridConversion;
 import entities.CentralisedEntity;
@@ -9,14 +8,12 @@ import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -24,14 +21,11 @@ import javafx.scene.shape.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import org.apache.log4j.DefaultThrowableRenderer;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import simulation.*;
 
-import javax.imageio.ImageIO;
-import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.*;
 
@@ -47,7 +41,7 @@ public class AltMain extends Application {
 
     private HBox outerLayout;
     private VBox menu;
-    private ZoomablePane pane;
+    public static ZoomablePane pane;
 
     private Line indicatorLine;
     public static ArrayList<MapPolygon> mapPolygons;
@@ -651,115 +645,115 @@ public class AltMain extends Application {
                     }
 
                     //for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++) {
-                        int nodeIndex = 0;
-                        int[][] spanningTreeAdjacencyMatrix = new int[nodes.size()][nodes.size()];
-                        boolean[] visitedNodes = new boolean[nodes.size()];
-                        int[] parentNodes = new int[nodes.size()];
+                    int nodeIndex = 0;
+                    int[][] spanningTreeAdjacencyMatrix = new int[nodes.size()][nodes.size()];
+                    boolean[] visitedNodes = new boolean[nodes.size()];
+                    int[] parentNodes = new int[nodes.size()];
 
-                        ArrayList<Integer> nextLayer;
-                        ArrayList<Integer> currentLayer = new ArrayList<>();
-                        currentLayer.add(nodeIndex);
-                        parentNodes[nodeIndex] = -1;
-                        boolean unexploredLeft = true;
+                    ArrayList<Integer> nextLayer;
+                    ArrayList<Integer> currentLayer = new ArrayList<>();
+                    currentLayer.add(nodeIndex);
+                    parentNodes[nodeIndex] = -1;
+                    boolean unexploredLeft = true;
 
-                        ArrayList<Line> tree = new ArrayList<>();
-                        Line temp;
-                        while (unexploredLeft) {
-                            nextLayer = new ArrayList<>();
-                            for (int i : currentLayer) {
-                                visitedNodes[i] = true;
-                                for (int j = 0; j < nodes.size(); j++) {
-                                    if (originalAdjacencyMatrix[i][j] == 1 && j != parentNodes[i] && !visitedNodes[j]) {
-                                        spanningTreeAdjacencyMatrix[i][j] = 1;
-                                        spanningTreeAdjacencyMatrix[j][i] = 1;
-                                        nextLayer.add(j);
-                                        parentNodes[j] = i;
-                                        visitedNodes[j] = true;
-
-                                        temp = new Line(nodes.get(i).getBarycenter().getX(), nodes.get(i).getBarycenter().getY(), nodes.get(j).getBarycenter().getX(), nodes.get(j).getBarycenter().getY());
-                                        temp.setStroke(Color.RED);
-                                        temp.setStrokeWidth(4);
-                                        tree.add(temp);
-                                    }
-                                }
-                            }
-                            currentLayer = nextLayer;
-                            if (nextLayer.size() == 0) {
-                                unexploredLeft = false;
-                            }
-                        }
-
-                        ArrayList<DTriangle> separatingTriangles = new ArrayList<>();
-                        ArrayList<Integer> separatingIndeces = new ArrayList<>();
-                        for (int i = 0; i < nodes.size(); i++) {
-                            boolean difference = false;
-                            int degree = 0;
-                            int adjacentIndex = -1;
+                    ArrayList<Line> tree = new ArrayList<>();
+                    Line temp;
+                    while (unexploredLeft) {
+                        nextLayer = new ArrayList<>();
+                        for (int i : currentLayer) {
+                            visitedNodes[i] = true;
                             for (int j = 0; j < nodes.size(); j++) {
-                                if (spanningTreeAdjacencyMatrix[i][j] == 1) {
-                                    degree++;
-                                }
-                                if (originalAdjacencyMatrix[i][j] == 1 && spanningTreeAdjacencyMatrix[i][j] != 1) {
-                                    difference = true;
-                                    adjacentIndex = j;
-                                }
-                            }
-                            // that means it's a leaf node in the spanning tree but was previously connected to some other node
-                            if (difference && !separatingTriangles.contains(nodes.get(adjacentIndex))) {
-                                separatingTriangles.add(nodes.get(i));
-                                separatingIndeces.add(i);
-                            }
-                        }
+                                if (originalAdjacencyMatrix[i][j] == 1 && j != parentNodes[i] && !visitedNodes[j]) {
+                                    spanningTreeAdjacencyMatrix[i][j] = 1;
+                                    spanningTreeAdjacencyMatrix[j][i] = 1;
+                                    nextLayer.add(j);
+                                    parentNodes[j] = i;
+                                    visitedNodes[j] = true;
 
-                        boolean properTree = true;
-                        for (int i = 0; properTree && i < separatingIndeces.size(); i++) {
-                            int adjacencyCount = 0;
-                            for (int j = 0; j < nodes.size(); j++) {
-                                if (spanningTreeAdjacencyMatrix[separatingIndeces.get(i)][j] == 1) {
-                                    adjacencyCount++;
+                                    temp = new Line(nodes.get(i).getBarycenter().getX(), nodes.get(i).getBarycenter().getY(), nodes.get(j).getBarycenter().getX(), nodes.get(j).getBarycenter().getY());
+                                    temp.setStroke(Color.RED);
+                                    temp.setStrokeWidth(4);
+                                    tree.add(temp);
                                 }
                             }
-                            if (adjacencyCount > 1) {
-                                properTree = false;
+                        }
+                        currentLayer = nextLayer;
+                        if (nextLayer.size() == 0) {
+                            unexploredLeft = false;
+                        }
+                    }
+
+                    ArrayList<DTriangle> separatingTriangles = new ArrayList<>();
+                    ArrayList<Integer> separatingIndeces = new ArrayList<>();
+                    for (int i = 0; i < nodes.size(); i++) {
+                        boolean difference = false;
+                        int degree = 0;
+                        int adjacentIndex = -1;
+                        for (int j = 0; j < nodes.size(); j++) {
+                            if (spanningTreeAdjacencyMatrix[i][j] == 1) {
+                                degree++;
+                            }
+                            if (originalAdjacencyMatrix[i][j] == 1 && spanningTreeAdjacencyMatrix[i][j] != 1) {
+                                difference = true;
+                                adjacentIndex = j;
                             }
                         }
-
-                        Rectangle frame = new Rectangle(0, 0, pane.getWidth(), pane.getHeight());
-                        frame.setStroke(Color.RED);
-                        frame.setFill(Color.TRANSPARENT);
-                        frame.setStrokeWidth(10);
-                        if (properTree) {
-                            frame.setStroke(Color.FORESTGREEN);
+                        // that means it's a leaf node in the spanning tree but was previously connected to some other node
+                        if (difference && !separatingTriangles.contains(nodes.get(adjacentIndex))) {
+                            separatingTriangles.add(nodes.get(i));
+                            separatingIndeces.add(i);
                         }
-                        pane.getChildren().add(frame);
+                    }
 
-                        // breadth-first search:
-                        // go through list of nodes in current layer
-                        // go through their children (not parents!) and check if they have been visited
-                        // if no: add them to a list of nodes which are in the next layer
-                        // if yes: mark current node as "special" leaf
-                        // continue with next layer
-
-                        ArrayList<Polygon> showTriangles = new ArrayList<>(nodes.size());
-                        Polygon tempTriangle;
-                        Color currentColor;
-                        for (DTriangle dt : nodes) {
-                            if (separatingTriangles.contains(dt)) {
-                                currentColor = Color.LIGHTBLUE.deriveColor(1, 1, 1, 0.7);
-                            } else {
-                                currentColor = Color.LAWNGREEN.deriveColor(1, 1, 1, 0.7);
+                    boolean properTree = true;
+                    for (int i = 0; properTree && i < separatingIndeces.size(); i++) {
+                        int adjacencyCount = 0;
+                        for (int j = 0; j < nodes.size(); j++) {
+                            if (spanningTreeAdjacencyMatrix[separatingIndeces.get(i)][j] == 1) {
+                                adjacencyCount++;
                             }
-                            tempTriangle = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                            tempTriangle.setFill(currentColor);
-                            tempTriangle.setStroke(Color.BLACK);
-                            showTriangles.add(tempTriangle);
-                            //pane.getChildren().add(tempTriangle);
                         }
-                        pane.getChildren().addAll(showTriangles);
-                        pane.getChildren().addAll(tree);
+                        if (adjacencyCount > 1) {
+                            properTree = false;
+                        }
+                    }
 
-                        Circle rootIndicator = new Circle(nodes.get(nodeIndex).getBarycenter().getX(), nodes.get(nodeIndex).getBarycenter().getY(), 5, Color.BLACK);
-                        pane.getChildren().add(rootIndicator);
+                    Rectangle frame = new Rectangle(0, 0, pane.getWidth(), pane.getHeight());
+                    frame.setStroke(Color.RED);
+                    frame.setFill(Color.TRANSPARENT);
+                    frame.setStrokeWidth(10);
+                    if (properTree) {
+                        frame.setStroke(Color.FORESTGREEN);
+                    }
+                    pane.getChildren().add(frame);
+
+                    // breadth-first search:
+                    // go through list of nodes in current layer
+                    // go through their children (not parents!) and check if they have been visited
+                    // if no: add them to a list of nodes which are in the next layer
+                    // if yes: mark current node as "special" leaf
+                    // continue with next layer
+
+                    ArrayList<Polygon> showTriangles = new ArrayList<>(nodes.size());
+                    Polygon tempTriangle;
+                    Color currentColor;
+                    for (DTriangle dt : nodes) {
+                        if (separatingTriangles.contains(dt)) {
+                            currentColor = Color.LIGHTBLUE.deriveColor(1, 1, 1, 0.7);
+                        } else {
+                            currentColor = Color.LAWNGREEN.deriveColor(1, 1, 1, 0.7);
+                        }
+                        tempTriangle = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                        tempTriangle.setFill(currentColor);
+                        tempTriangle.setStroke(Color.BLACK);
+                        showTriangles.add(tempTriangle);
+                        //pane.getChildren().add(tempTriangle);
+                    }
+                    pane.getChildren().addAll(showTriangles);
+                    pane.getChildren().addAll(tree);
+
+                    Circle rootIndicator = new Circle(nodes.get(nodeIndex).getBarycenter().getX(), nodes.get(nodeIndex).getBarycenter().getY(), 5, Color.BLACK);
+                    pane.getChildren().add(rootIndicator);
 
                         /*try {
                             //File file = new File("E:\\Simon\\Desktop\\Screenshots\\" + (int) (Math.random() * 1000) + "_screenshot.png");

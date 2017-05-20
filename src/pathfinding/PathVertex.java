@@ -1,9 +1,9 @@
 package pathfinding;
 
 
+import javafx.geometry.Point2D;
 
 import java.util.ArrayList;
-import javafx.geometry.Point2D;
 
 public class PathVertex {
 
@@ -16,12 +16,11 @@ public class PathVertex {
         this.y = y;
     }
 
-    public PathVertex(Point2D point)  {
+    public PathVertex(Point2D point) {
         this.x = point.getX();
         this.y = point.getY();
 
     }
-
 
 
     public double getX() {

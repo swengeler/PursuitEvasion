@@ -4,16 +4,11 @@ import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import pathfinding.PathVertex;
 import simulation.Agent;
-import simulation.MapRepresentation;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import java.util.ArrayList;
 
-import static additionalOperations.GeometryOperations.allIntersect;
-import static additionalOperations.GeometryOperations.lineIntersectInPoly;
-import static additionalOperations.GeometryOperations.polyToPoints;
+import static additionalOperations.GeometryOperations.*;
 
 /**
  * Created by Robins on 29.04.2017.
@@ -30,11 +25,10 @@ public class shadowOperations {
         ArrayList<Point2D> all = polyToPoints(environment);
 
 
-
         ArrayList<Point2D> vis = new ArrayList<>();
         if (obstacles.size() > 0 && obstacles != null) {
             for (Polygon poly : obstacles) {
-                if(poly != null) {
+                if (poly != null) {
                     all.addAll(polyToPoints(poly));
                 }
             }
@@ -299,7 +293,6 @@ public class shadowOperations {
     public static ArrayList<Point2D> getAdjacentPoints(Point2D point, ArrayList<Polygon> allPolys) {
 
 
-
         ArrayList<Point2D> tempPoints, retPoints;
         retPoints = new ArrayList<>();
 
@@ -330,8 +323,7 @@ public class shadowOperations {
                             retPoints.add(tempPoints.get(i + 1));
                             break;
                         }
-                    }
-                    else    {
+                    } else {
                         //System.out.println("ELSE Entered!!!!");
                     }
                 }
@@ -411,8 +403,7 @@ public class shadowOperations {
     }
 
 
-
-    public static ArrayList<Point2D> findReflex(Polygon env,ArrayList<Polygon> allPoly, ArrayList<Polygon> obstacles) {
+    public static ArrayList<Point2D> findReflex(Polygon env, ArrayList<Polygon> allPoly, ArrayList<Polygon> obstacles) {
         ArrayList<Polygon> polygons = allPoly;
         GeometryOperations geometryOperations = new GeometryOperations();
         ArrayList<Point2D> reflex = new ArrayList<>();
@@ -428,17 +419,17 @@ public class shadowOperations {
                 if (j != 0 && j != polygon.size() - 1) {
                     left = polygon.get(j - 1);
                     right = polygon.get(j + 1);
-                   // System.out.println("this happens 8 times");
+                    // System.out.println("this happens 8 times");
                 } else if (j == 0) {
-                   // System.out.println("this should happen once");
+                    // System.out.println("this should happen once");
                     left = polygon.get(polygon.size() - 1);
                     right = polygon.get(j + 1);
-                } else if(j==polygon.size()-1){
+                } else if (j == polygon.size() - 1) {
                     //System.out.println("this happens once");
                     left = polygon.get(j - 1);
                     right = polygon.get(0);
 
-                }else {
+                } else {
                     System.out.println("you're a fucking retard");
                     left = polygon.get(j - 1);
                     right = polygon.get(0);
@@ -450,7 +441,7 @@ public class shadowOperations {
                 double y = (right.getY() - left.getY()) / 2;
 
 
-                Point2D mid = new Point2D(right.getX()-x, right.getY()- y);
+                Point2D mid = new Point2D(right.getX() - x, right.getY() - y);
 
                 Point2D main = polygon.get(j);
                 /*
@@ -463,7 +454,7 @@ public class shadowOperations {
                 Line between = new Line(mid.getX(), mid.getY(), main.getX(), main.getY());
                 boolean legal = legalPosition(env, obstacles, mid.getX(), mid.getY());
                 //System.out.println("is legal? " + legal);
-                count= allIntersect(polygons, between).size();
+                count = allIntersect(polygons, between).size();
                 //System.out.print("intersections= " + count);
 
                 if (count % 2 == 0 && !legal) {
@@ -500,7 +491,6 @@ public class shadowOperations {
         }
         return true;
     }
-
 
 
 }

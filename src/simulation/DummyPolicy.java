@@ -5,6 +5,7 @@ import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
+import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -117,6 +118,8 @@ public class DummyPolicy extends MovePolicy {
             }
 
             tree = new SimplyConnectedTree((ArrayList<DTriangle>) includedTriangles);
+            tree.roadMap = new ShortestPathRoadMap(map);
+            tree.map = map;
         } catch (DelaunayError e) {
             e.printStackTrace();
         }

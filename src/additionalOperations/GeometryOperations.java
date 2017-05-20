@@ -6,12 +6,8 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import shadowPursuit.ShadowNode;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-/**
- * Created by simon on 4/24/17.
- */
 public class GeometryOperations {
 
 
@@ -32,31 +28,18 @@ public class GeometryOperations {
 
 
     public static ArrayList<Point2D> polyToPoints(Polygon poly) {
-
         //Turn polygon into points
         double xPos, yPos;
+        ObservableList<Double> vertices = poly.getPoints();
+        ArrayList<Point2D> points = new ArrayList<>();
+        for (int i = 0; i < vertices.size(); i += 2) {
+            xPos = vertices.get(i);
+            yPos = vertices.get(i + 1);
 
-        if (poly.getPoints().size() != 0) {
-
-            ObservableList<Double> vertices = poly.getPoints();
-            ArrayList<Point2D> points = new ArrayList<>();
-
-            for (int i = 0; i < vertices.size() - 1; i += 2) {
-                xPos = vertices.get(i);
-                yPos = vertices.get(i + 1);
-
-                points.add(new Point2D(xPos, yPos));
-            }
-
-
-            return points;
-        } else
-            return null;
+            points.add(new Point2D(xPos, yPos));
+        }
+        return points;
     }
-
-
-
-
 
     /*
     *Shadowpursuit: will be used to categorize points of type 1
@@ -179,6 +162,17 @@ public class GeometryOperations {
         return false;
     }
 
+    public static boolean inPolygon(Polygon polygon, double startX, double startY, double endX, double endY) {
+        boolean polygonContains = polygon.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2));
+        Line temp;
+        for (int i = 0; i < polygon.getPoints().size(); i += 2) {
+            temp = new Line(polygon.getPoints().get(i), polygon.getPoints().get(i + 1), polygon.getPoints().get((i + 2) % polygon.getPoints().size()), polygon.getPoints().get((i + 3) % polygon.getPoints().size()));
+            if (temp.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2))) {
+                return false;
+            }
+        }
+        return polygonContains;
+    }
 
     public static Line scaleRay(Point2D agentPos, ShadowNode t2Point, double value) {
         return scaleRay(agentPos, t2Point.getPosition(), value);
@@ -392,8 +386,9 @@ public class GeometryOperations {
 
         if (Math.round((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))) == Math.round(distance(sX, sY, eX, eY))) {
             return true;
-        } else
+        } else {
             return false;
+        }
 
     }
 
@@ -416,5 +411,13 @@ public class GeometryOperations {
         return Math.sqrt(Math.pow(p1X - p2X, 2) + Math.pow(p1Y - p2Y, 2));
     }
 
+    public static boolean isClockwise(Polygon polygon) {
+        // iterate over edges
+        double sum = 0;
+        for (int i = 0; i < polygon.getPoints().size(); i += 2) {
+            sum += (-polygon.getPoints().get((i + 2) % polygon.getPoints().size()) - polygon.getPoints().get(i)) * (-polygon.getPoints().get((i + 3) % polygon.getPoints().size()) + polygon.getPoints().get(i + 1));
+        }
+        return sum > 0;
+    }
 
 }

@@ -3,8 +3,6 @@ package shadowPursuit;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 
-import javax.swing.plaf.synth.SynthUI;
-
 /**
  * Created by Robins on 30.04.2017.
  */
@@ -63,14 +61,14 @@ public class ShadowNode {
 
     public ShadowNode(Point2D position, boolean isType2S) {
 
-        if(isType2S) {
+        if (isType2S) {
             this.position = position;
             this.left = null;
             this.right = null;
             type = type2;
-        }
-        else
+        } else {
             System.exit(51212);
+        }
     }
 
     public ShadowNode(Point2D position, ShadowNode neighbor1) {
@@ -97,11 +95,10 @@ public class ShadowNode {
         System.out.println("ENTTEREDED");
         this.position = position;
 
-        if(Type2.getLeft() == null) {
+        if (Type2.getLeft() == null) {
             this.right = Type2;
             this.left = null;
-        }
-        else if(Type2.getRight() == null) {
+        } else if (Type2.getRight() == null) {
             this.left = Type2;
             this.right = null;
         }
@@ -137,7 +134,7 @@ public class ShadowNode {
         this.position = position;
 
 
-        if(type2Neighbor1.getLeft() == null && type2Neighbor2.getRight() == null) {
+        if (type2Neighbor1.getLeft() == null && type2Neighbor2.getRight() == null) {
 
         }
         this.left = type2Neighbor1;
@@ -153,32 +150,26 @@ public class ShadowNode {
         //note that type2neighbour 1 is the type 2 corresponding to agent one that created an occlusion ray and vice versa for type2neighbour2 and agent2
 
         this.position = position;
-        this.neighbourRightAgent= agent1;
-        this.neighbourLeftAgent= agent2;
+        this.neighbourRightAgent = agent1;
+        this.neighbourLeftAgent = agent2;
 
 
-
-        if(type2Neighbor1.getLeft() == null && type2Neighbor2.getRight() == null) {
+        if (type2Neighbor1.getLeft() == null && type2Neighbor2.getRight() == null) {
             this.right = type2Neighbor1;
             this.left = type2Neighbor2;
-            this.neighbourRightAgent= agent1;
-            this.neighbourLeftAgent= agent2;
-        }
-        else if(type2Neighbor1.getRight() == null && type2Neighbor2.getLeft() == null)  {
+            this.neighbourRightAgent = agent1;
+            this.neighbourLeftAgent = agent2;
+        } else if (type2Neighbor1.getRight() == null && type2Neighbor2.getLeft() == null) {
             this.left = type2Neighbor1;
             this.right = type2Neighbor2;
-            this.neighbourRightAgent= agent2;
-            this.neighbourLeftAgent= agent1;
-        }
-        else {
+            this.neighbourRightAgent = agent2;
+            this.neighbourLeftAgent = agent1;
+        } else {
             System.exit(67666);
         }
 
 
-
     }
-
-
 
 
     public int getType() {
