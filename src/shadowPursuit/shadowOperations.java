@@ -29,6 +29,8 @@ public class shadowOperations {
 
         ArrayList<Point2D> all = polyToPoints(environment);
 
+
+
         ArrayList<Point2D> vis = new ArrayList<>();
         if (obstacles.size() > 0 && obstacles != null) {
             for (Polygon poly : obstacles) {

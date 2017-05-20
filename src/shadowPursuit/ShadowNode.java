@@ -1,7 +1,6 @@
 package shadowPursuit;
 
 import javafx.geometry.Point2D;
-import javafx.scene.image.PixelFormat;
 import javafx.scene.shape.Line;
 
 /**
@@ -13,19 +12,12 @@ public class ShadowNode {
     private final int type2 = 2;
     private final int type3 = 3;
     private final int type4 = 4;
-
-
+    ShadowNode left, right;
     //FOr Type3 Nodes
     private Line placedOn, occLine;
-
     //For Type4 Nodes
     private Line occLeft, occRight;
-
     private int type;
-
-    ShadowNode prev, next;
-
-
     private Point2D position;
 
 
@@ -33,8 +25,8 @@ public class ShadowNode {
     public ShadowNode(Point2D position) {
         this.position = position;
         type = type1;
-        prev = null;
-        next = null;
+        left = null;
+        right = null;
     }
 
 
@@ -43,23 +35,20 @@ public class ShadowNode {
 
 
         this.position = position;
-        if(neighbor1.getNext() == null) {
+        if (neighbor1.getRight() == null) {
 
-            this.prev = neighbor1;
-            neighbor1.next = this;
-        }
-        else if(neighbor1.getPrev() == null)   {
-            this.next = neighbor1;
-            neighbor1.prev = this;
-        }
-        else    {
-            if(left)    {
-                this.prev = neighbor1;
-                neighbor1.next = this;
-            }
-            else    {
-                this.next = neighbor1;
-                neighbor1.prev = this;
+            this.left = neighbor1;
+            neighbor1.right = this;
+        } else if (neighbor1.getLeft() == null) {
+            this.right = neighbor1;
+            neighbor1.left = this;
+        } else {
+            if (left) {
+                this.left = neighbor1;
+                neighbor1.right = this;
+            } else {
+                this.right = neighbor1;
+                neighbor1.left = this;
             }
         }
 
@@ -67,50 +56,62 @@ public class ShadowNode {
         type = type2;
     }
 
+
+    public ShadowNode(Point2D position, boolean isType2S) {
+
+        if(isType2S) {
+            this.position = position;
+            this.left = null;
+            this.right = null;
+            type = type2;
+        }
+        else
+            System.exit(51212);
+    }
 
     public ShadowNode(Point2D position, ShadowNode neighbor1) {
 
 
         this.position = position;
-        if(neighbor1.getNext() == null) {
+        if (neighbor1.getRight() == null) {
 
-            this.prev = neighbor1;
-            neighbor1.next = this;
-        }
-        else if(neighbor1.getPrev() == null)   {
-            this.next = neighbor1;
-            neighbor1.prev = this;
+            this.left = neighbor1;
+            neighbor1.right = this;
+        } else if (neighbor1.getLeft() == null) {
+            this.right = neighbor1;
+            neighbor1.left = this;
         }
 
 
         type = type2;
     }
+
     //For Type3
     public ShadowNode(Point2D position, ShadowNode type2Neighbor, Line placedOn) {
         this.position = position;
-        this.prev = type2Neighbor;
-        this.next = null;
+        this.left = type2Neighbor;
+        this.right = null;
 
         this.placedOn = placedOn;
         this.occLine = new Line(position.getX(), position.getY(), type2Neighbor.getPosition().getX(), type2Neighbor.getPosition().getY());
     }
 
     //For Type3
-    public ShadowNode(Point2D position, ShadowNode prev, ShadowNode next, boolean T3) {
+    public ShadowNode(Point2D position, ShadowNode left, ShadowNode right, boolean T3) {
 
         System.out.println("ENTTEREDED");
         this.position = position;
-        this.prev = prev;
-        this.next = next;
+        this.left = left;
+        this.right = right;
 
-        prev.next = this;
-        next.prev = this;
+        left.right = this;
+        right.left = this;
         type = type3;
 
         //System.out.println(this);
 
         this.placedOn = placedOn;
-        this.occLine = new Line(position.getX(), position.getY(), prev.getPosition().getX(), prev.getPosition().getY());
+        this.occLine = new Line(position.getX(), position.getY(), left.getPosition().getX(), left.getPosition().getY());
     }
 
     //For Type4
@@ -118,10 +119,10 @@ public class ShadowNode {
         this.position = position;
 
 
-        this.prev = type2Neighbor1;
-        this.next = type2Neighbor2;
+        this.left = type2Neighbor1;
+        this.right = type2Neighbor2;
 
-        this.occLine =  this.placedOn = placedOn;
+        this.occLine = this.placedOn = placedOn;
         this.occLeft = new Line(position.getX(), position.getY(), type2Neighbor1.getPosition().getX(), type2Neighbor1.getPosition().getY());
         this.occRight = new Line(position.getX(), position.getY(), type2Neighbor2.getPosition().getX(), type2Neighbor2.getPosition().getY());
     }
@@ -131,12 +132,14 @@ public class ShadowNode {
         return type;
     }
 
-    public void setNext(ShadowNode newNode) {
-        this.next = newNode;
+    public void setRight(ShadowNode newNode) {
+        this.right = newNode;
+        newNode.left = this;
     }
 
-    public void setPrev(ShadowNode newNode) {
-        this.prev = newNode;
+    public void setLeft(ShadowNode newNode) {
+        this.left = newNode;
+        newNode.right = this;
     }
 
     public Point2D getPosition() {
@@ -147,33 +150,33 @@ public class ShadowNode {
         return placedOn;
     }
 
-    public ShadowNode getPrev() {
-        return prev;
+    public ShadowNode getLeft() {
+        return left;
     }
 
-    public ShadowNode getNext() {
-        return next;
+    public ShadowNode getRight() {
+        return right;
     }
 
-    public void addnextType1(ShadowNode newNeighbor) {
-        this.next = newNeighbor;
-        newNeighbor.prev = this;
+    public void addrightType1(ShadowNode newNeighbor) {
+        this.right = newNeighbor;
+        newNeighbor.left = this;
     }
 
     public String toString() {
-        Point2D prevPos, nextPos;
-        prevPos = null;
-        nextPos = null;
+        Point2D leftPos, rightPos;
+        leftPos = null;
+        rightPos = null;
 
-        if(prev != null)    {
-            prevPos = prev.getPosition();
+        if (left != null) {
+            leftPos = left.getPosition();
         }
-        if(next != null){
-            nextPos = next.getPosition();
+        if (right != null) {
+            rightPos = right.getPosition();
         }
 
 
-        return new String(this.getPosition().toString() + "\tprev = " + prevPos + "\tnext = " + nextPos + "\tType = " + type);
+        return new String(this.getPosition().toString() + "\tleft = " + leftPos + "\tright = " + rightPos + "\tType = " + type);
     }
 
 
