@@ -92,7 +92,7 @@ public class ShadowNode {
     //For Type3
     public ShadowNode(Point2D position, ShadowNode Type2, Line Ray) {
 
-        System.out.println("ENTTEREDED");
+        //System.out.println("ENTTEREDED");
         this.position = position;
 
         if (Type2.getLeft() == null) {
@@ -105,7 +105,7 @@ public class ShadowNode {
 
         type = type3;
 
-        //System.out.println(this);
+        System.out.println(this);
 
 
         this.occLine = Ray;
@@ -114,7 +114,7 @@ public class ShadowNode {
     //For Type3
     public ShadowNode(Point2D position, ShadowNode left, ShadowNode right, boolean T3) {
 
-        System.out.println("ENTTEREDED");
+        //System.out.println("ENTTEREDED");
         this.position = position;
         this.left = left;
         this.right = right;
@@ -130,8 +130,6 @@ public class ShadowNode {
     }
 
 
-
-
     //For Type4
     public ShadowNode(Point2D position, ShadowNode type2Neighbor1, ShadowNode type2Neighbor2) {
         this.position = position;
@@ -142,6 +140,8 @@ public class ShadowNode {
         }
         this.left = type2Neighbor1;
         this.right = type2Neighbor2;
+
+        type = type4;
 
         this.occLine = this.placedOn = placedOn;
         this.occLeft = new Line(position.getX(), position.getY(), type2Neighbor1.getPosition().getX(), type2Neighbor1.getPosition().getY());
@@ -157,6 +157,8 @@ public class ShadowNode {
         this.neighbourLeftAgent = agent2;
 
 
+        System.out.println("Type1 => " + type2Neighbor1 + "\nType2 => " + type2Neighbor2);
+
         if (type2Neighbor1.getLeft() == null && type2Neighbor2.getRight() == null) {
             this.right = type2Neighbor1;
             this.left = type2Neighbor2;
@@ -171,6 +173,8 @@ public class ShadowNode {
             System.exit(67666);
         }
 
+        type = type4;
+
 
     }
 
@@ -179,14 +183,64 @@ public class ShadowNode {
         return type;
     }
 
-    public void setRight(ShadowNode newNode) {
-        this.right = newNode;
-        newNode.left = this;
+    //Exclusive to Typ3
+    public void addT1(ShadowNode T1) {
+        if (this.type == 3) {
+            //TODO Continue here ROBIN
+            if (left.getType() == 2) {
+                right = T1;
+                T1.left = this;
+            } else if (right.getType() == 2) {
+                left = T1;
+                T1.right = this;
+            } else {
+                System.out.println("Add T1 error");
+                System.exit(9889);
+            }
+        } else {
+            System.out.println("stop cheating");
+            System.exit(9999);
+        }
     }
 
-    public void setLeft(ShadowNode newNode) {
-        this.left = newNode;
-        newNode.right = this;
+    public ShadowNode[] getAdjT3() {
+        ShadowNode[] list = new ShadowNode[2];
+        int i = 0;
+
+        if (left.getType() == 3) {
+            list[i] = left;
+            i++;
+        } else if (right.getType() == 3) {
+            list[i] = right;
+            i++;
+        } else
+            return null;
+
+        return list;
+    }
+
+    public void overwriteT3(ShadowNode overW) {
+        if (left.getType() == 3 && right.getType() == 1) {
+            left = overW;
+            overW.right = this;
+        } else if (right.getType() == 3 && left.getType() == 1) {
+            right = overW;
+            overW.left = this;
+        } else {
+            System.exit(118);
+        }
+    }
+
+    public void overwriteT3(ShadowNode overW, ShadowNode toOverWrite) {
+        if (left == toOverWrite) {
+            left = overW;
+            overW.right = this;
+        } else if (right == toOverWrite) {
+            right = overW;
+            overW.left = this;
+        } else {
+            System.exit(117);
+        }
     }
 
     public Point2D getPosition() {
@@ -201,8 +255,18 @@ public class ShadowNode {
         return left;
     }
 
+    public void setLeft(ShadowNode newNode) {
+        this.left = newNode;
+        newNode.right = this;
+    }
+
     public ShadowNode getRight() {
         return right;
+    }
+
+    public void setRight(ShadowNode newNode) {
+        this.right = newNode;
+        newNode.left = this;
     }
 
     public void addrightType1(ShadowNode newNeighbor) {
