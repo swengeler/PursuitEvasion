@@ -117,6 +117,7 @@ public class Main extends Application {
         pane.getChildren().add(indicatorLine);
 
         currentMapPolygon = new MapPolygon(pane);
+        currentMapPolygon.setPickOnBounds(false);
         pane.getChildren().add(currentMapPolygon);
         mapPolygons = new ArrayList<>();
         mapPolygons.add(currentMapPolygon);
@@ -1690,7 +1691,7 @@ public class Main extends Application {
             try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
                 // write map to file
                 out.println("map");
-                for (int i = 0; i < mapPolygons.size() - 1; i++) {
+                for (int i = 0; i < mapPolygons.size(); i++) {
                     for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
                         out.print(mapPolygons.get(i).getPoints().get(j) + " ");
                     }
@@ -1790,7 +1791,6 @@ public class Main extends Application {
                         VisualAgent visualAgent = new VisualAgent();
                         visualAgent.adoptSettings(agentSettings);
                         visualAgents.add(visualAgent);
-                        //System.out.println("Pursuer loaded: " + visualAgent.getSettings().getXPos() + " " + visualAgent.getSettings().getYPos());
                         pane.getChildren().add(visualAgent);
                     }
                     for (MapPolygon p : mapPolygons) {
@@ -1799,6 +1799,7 @@ public class Main extends Application {
                     for (Shape c : covers) {
                         c.toFront();
                     }
+                    mapPolygons.get(0).setMouseTransparent(true);
                 } else {
                     currentState = ProgramState.MAP_EDITING;
                     // map data only
@@ -1983,10 +1984,11 @@ public class Main extends Application {
                                 pane.getChildren().add(visualAgent);
 
                                 // covering areas beyond the controlledAgents's vision
-                                /*for (Shape s : covers) {
+                                for (Shape s : covers) {
                                     s.toFront();
                                 }
-                                mapPolygons.get(0).toFront();*/
+                                mapPolygons.get(0).toFront();
+                                mapPolygons.get(0).setMouseTransparent(true);
                             } else {
                                 VisualAgent va1 = new VisualAgent(e.getX(), e.getY());
                                 va1.getAgentBody().setFill(Color.LAWNGREEN);

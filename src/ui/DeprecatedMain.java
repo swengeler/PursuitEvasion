@@ -329,7 +329,7 @@ public class DeprecatedMain extends Application {
                     }
 
                     /*// randomised walkthrough test
-                    SimplyConnectedTree tree = new SimplyConnectedTree((ArrayList<DTriangle>) includedTriangles);
+                    TraversalHandler tree = new TraversalHandler((ArrayList<DTriangle>) includedTriangles);
                     //tree.printAdjacencyMatrix();
                     tree.getRandomTraversal(tree.getLeaf());
                     tree.getRandomTraversal(tree.getLeaf());

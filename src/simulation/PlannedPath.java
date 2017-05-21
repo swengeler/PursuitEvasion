@@ -14,6 +14,14 @@ public class PlannedPath {
         pathLines = new ArrayList<>();
     }
 
+    public void addPathToEnd(PlannedPath path) {
+        // assumes that the other path starts where this one ends
+        for (Line l : path.getPathLines()) {
+            addLine(l);
+        }
+        setEndIndex(path.getEndIndex());
+    }
+
     public void setStartIndex(int startIndex) {
         this.startIndex = startIndex;
     }

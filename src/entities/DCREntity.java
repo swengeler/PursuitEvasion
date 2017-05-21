@@ -1,16 +1,13 @@
 package entities;
 
 import additionalOperations.Tuple;
-import com.sun.org.apache.xalan.internal.xsltc.DOMEnhancedForDTM;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
-import javafx.util.Pair;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import simulation.*;
 import ui.Main;
-import ui.MapPolygon;
 
 import java.util.*;
 
@@ -22,7 +19,7 @@ public class DCREntity extends CentralisedEntity {
     private Agent searcher, catcher;
     private ArrayList<Agent> guards;
 
-    private SimplyConnectedTree mapTree;
+    private TraversalHandler mapTree;
 
     public DCREntity(MapRepresentation map) {
         super(map);

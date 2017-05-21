@@ -1,19 +1,22 @@
 package simulation;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
+import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
 
-public class SimplyConnectedTree {
+// could consider using this class for both randomised and deterministic approach (randomised already pretty clear)
+public class TraversalHandler {
 
     private static final boolean PRINT_PATH_CONSTRUCT = false;
 
     private ArrayList<TGNode> nodes;
-    private boolean[][] adjacencyMatrix;
+    private int[][] adjacencyMatrix;
 
     private Line[][] adjacencyLineMatrix;
     private DEdge[][] adjacencyEdgeMatrix;
@@ -21,8 +24,25 @@ public class SimplyConnectedTree {
     public ShortestPathRoadMap roadMap;
     public MapRepresentation map;
 
-    public SimplyConnectedTree(ArrayList<DTriangle> triangles) {
+    private ArrayList<DTriangle> nodess;
+    private ArrayList<ArrayList<DTriangle>> components;
+    private ArrayList<DTriangle> separatingTriangles;
+
+    private EnumeratedIntegerDistribution rng;
+
+    public TraversalHandler(ArrayList<DTriangle> triangles) {
         init(triangles);
+    }
+
+    public TraversalHandler(MapRepresentation map, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<DTriangle> separatingTriangles, int[][] adjacencyMatrix) {
+        // this constructor should be able to handle any input where the map has been converted into
+        // one or multiple SIMPLY-CONNECTED components
+        // then this class can deal with transitions between components as well as traversals within components
+        roadMap = new ShortestPathRoadMap(map);
+        this.nodess = nodes;
+        this.components = components;
+        this.separatingTriangles = separatingTriangles;
+        this.adjacencyMatrix = adjacencyMatrix;
     }
 
     private void init(ArrayList<DTriangle> triangles) {
@@ -31,7 +51,7 @@ public class SimplyConnectedTree {
         for (DTriangle dt : triangles) {
             nodes.add(new TGNode(dt));
         }
-        adjacencyMatrix = new boolean[nodes.size()][nodes.size()];
+        adjacencyMatrix = new int[nodes.size()][nodes.size()];
         adjacencyLineMatrix = new Line[nodes.size()][nodes.size()];
         adjacencyEdgeMatrix = new DEdge[nodes.size()][nodes.size()];
 
@@ -55,8 +75,8 @@ public class SimplyConnectedTree {
                     }
                     if (neighbourIndex != -1) {
                         try {
-                            adjacencyMatrix[i][neighbourIndex] = true;
-                            adjacencyMatrix[neighbourIndex][i] = true;
+                            adjacencyMatrix[i][neighbourIndex] = 1;
+                            adjacencyMatrix[neighbourIndex][i] = 1;
                             adjacencyLineMatrix[i][neighbourIndex] = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), triangles.get(neighbourIndex).getBarycenter().getX(), triangles.get(neighbourIndex).getBarycenter().getY());
                             adjacencyLineMatrix[neighbourIndex][i] = new Line(triangles.get(neighbourIndex).getBarycenter().getX(), triangles.get(neighbourIndex).getBarycenter().getY(), dt1.getBarycenter().getX(), dt1.getBarycenter().getY());
                             adjacencyEdgeMatrix[i][neighbourIndex] = de;
@@ -75,7 +95,7 @@ public class SimplyConnectedTree {
         for (int i = 0; i < adjacencyMatrix.length; i++) {
             int count = 0;
             for (int j = 0; j < adjacencyMatrix[0].length; j++) {
-                if (adjacencyMatrix[i][j]) {
+                if (adjacencyMatrix[i][j] == 1) {
                     count++;
                 }
             }
@@ -98,7 +118,7 @@ public class SimplyConnectedTree {
     public boolean isLeaf(int index) {
         int count = 0;
         for (int i = 0; i < adjacencyMatrix.length; i++) {
-            if (adjacencyMatrix[index][i]) {
+            if (adjacencyMatrix[index][i] == 1) {
                 count++;
             }
         }
@@ -108,7 +128,7 @@ public class SimplyConnectedTree {
     public TGNode getLeafNeighbour(TGNode leaf) {
         if (isLeaf(leaf)) {
             for (int i = 0; i < adjacencyMatrix[0].length; i++) {
-                if (adjacencyMatrix[nodes.indexOf(leaf)][i]) {
+                if (adjacencyMatrix[nodes.indexOf(leaf)][i] == 1) {
                     return nodes.get(i);
                 }
             }
@@ -137,19 +157,56 @@ public class SimplyConnectedTree {
         return getNodes();
     }
 
-    public PlannedPath getRandomTraversal(double xPos, double yPos) {
+    public PlannedPath getRandomTraversal(double xPos, double yPos) throws DelaunayError {
+        // 1. pick one of the simply-connected components to make a run/traversal in
+        //    (could do that uniformly or by size or something like that)
+        // 2. move to a randomly chosen leaf node of that component
+        // 3. get normal random traversal from that leaf not to a different leaf node
+        // 4. run is over, repeat
+
+        // for now chosen uniformly at random
+        ArrayList<DTriangle> currentComponent = components.get((int) (Math.random() * components.size()));
+        // check whether we're already in that component, then the movement to one of its leaves can be skipped
+        boolean inComponentLeaf = false;
+        for (DTriangle dt : currentComponent) {
+            if (dt.contains(new DPoint(xPos, yPos, 0)) && isLeaf(nodess.indexOf(dt))) {
+                inComponentLeaf = true;
+                break;
+            }
+        }
+
+        PlannedPath moveToLeaf = null;
+        ArrayList<Integer> childIndeces = new ArrayList<>();
+
+        double[] discreteProbabilities;
+        int[] indecesToGenerate;
+        int totalLeafSum, currentLeafCount;
+        int chosenLeafIndex = -1;
+
+        if (!inComponentLeaf) {
+            // only in this case is it necessary to first move to a leaf
+
+            // get all the leaves in that component
+            for (int i = 0; i < currentComponent.size(); i++) {
+                if (isLeaf(nodess.indexOf(currentComponent.get(i)))) {
+                    childIndeces.add(i);
+                }
+            }
+
+            // choose one of the leaves uniformly at random (because all subtres would have the same number of leaves anyway)
+            chosenLeafIndex = (int) (Math.random() * childIndeces.size());
+            moveToLeaf = roadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY()));
+        }
+
         // chooses a path through the tree/map according to the random selection described in the paper
-        ArrayList<Integer> path = new ArrayList<>();
-        int startIndex = getNodeIndex(xPos, yPos);
+        int startIndex = inComponentLeaf ? getNodeIndex(xPos, yPos) : nodess.indexOf(currentComponent.get(chosenLeafIndex));
         int currentIndex = startIndex;
         int lastIndex = currentIndex;
-        ArrayList<Integer> childIndeces = new ArrayList<>();
-        path.add(startIndex);
         int counter = 1;
         while (currentIndex == startIndex || !isLeaf(currentIndex)) {
             // collect the children (not going back)
             for (int i = 0; i < adjacencyMatrix[0].length; i++) {
-                if (i != currentIndex && i != lastIndex && adjacencyMatrix[currentIndex][i]) {
+                if (i != currentIndex && i != lastIndex && adjacencyMatrix[currentIndex][i] == 1) {
                     childIndeces.add(i);
                 }
             }
@@ -157,27 +214,40 @@ public class SimplyConnectedTree {
                 System.out.println("\nChildren on iteration " + counter++);
                 for (Integer i : childIndeces) {
                     System.out.print("Index: " + i + ", ");
-                    nodes.get(i).print();
+                    //nodes.get(i).print();
                 }
             }
+            //System.out.println("Leaf nodes from root " + currentIndex + " (with parent node " + lastIndex + "): " + subTreeLeafNodes(currentIndex, lastIndex));
+
             // get new node to visit
             lastIndex = currentIndex;
-            currentIndex = childIndeces.get((int) (Math.random() * childIndeces.size())); // needs proper probability distribution
-            path.add(currentIndex);
+            discreteProbabilities = new double[childIndeces.size()];
+            indecesToGenerate = new int[childIndeces.size()];
+            totalLeafSum = 0;
+            for (int i = 0; i < childIndeces.size(); i++) {
+                currentLeafCount = subTreeLeafNodes(childIndeces.get(i), lastIndex);
+                discreteProbabilities[i] = currentLeafCount;
+                indecesToGenerate[i] = childIndeces.get(i);
+                totalLeafSum += currentLeafCount;
+            }
+            //System.out.println("Child probabilities (root " + currentIndex + "):");
+            for (int i = 0; i < indecesToGenerate.length; i++) {
+                //System.out.print(indecesToGenerate[i] + " | " + discreteProbabilities[i] + " | ");
+                discreteProbabilities[i] /= totalLeafSum;
+                //System.out.println(discreteProbabilities[i]);
+            }
+            rng = new EnumeratedIntegerDistribution(indecesToGenerate, discreteProbabilities);
+            currentIndex = rng.sample(); // needs proper probability distribution
             childIndeces.clear();
         }
-        if (PRINT_PATH_CONSTRUCT) {
-            System.out.println("\nFinal path:");
-            for (Integer i : path) {
-                System.out.print("Index: " + i + ", ");
-                nodes.get(i).print();
-            }
-        }
+        //PlannedPath plannedPath = roadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getX(), nodess.get(currentIndex).getBarycenter().getY()));
         PlannedPath plannedPath = null;
-        try {
+        if (!inComponentLeaf) {
+            plannedPath = roadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            moveToLeaf.addPathToEnd(plannedPath);
+            plannedPath = moveToLeaf;
+        } else {
             plannedPath = roadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
-        } catch (DelaunayError delaunayError) {
-            delaunayError.printStackTrace();
         }
         plannedPath.setStartIndex(startIndex);
         plannedPath.setEndIndex(currentIndex);
@@ -202,7 +272,7 @@ public class SimplyConnectedTree {
         while (currentIndex == startIndex || !isLeaf(currentIndex)) {
             // collect the children (not going back)
             for (int i = 0; i < adjacencyMatrix[0].length; i++) {
-                if (i != currentIndex && i != lastIndex && adjacencyMatrix[currentIndex][i]) {
+                if (i != currentIndex && i != lastIndex && adjacencyMatrix[currentIndex][i] == 1) {
                     childIndeces.add(i);
                 }
             }
@@ -244,10 +314,46 @@ public class SimplyConnectedTree {
         return plannedPath;
     }
 
+    private int subTreeLeafNodes(int rootNodeIndex, int blockedNodeIndex) {
+        boolean unexploredLeft = true;
+        ArrayList<Integer> currentLayer = new ArrayList<>();
+        currentLayer.add(rootNodeIndex);
+        ArrayList<Integer> nextLayer;
+
+        boolean[] visitedNodes = new boolean[adjacencyMatrix.length];
+        int[] parentNodes = new int[adjacencyMatrix.length];
+        parentNodes[rootNodeIndex] = blockedNodeIndex;
+
+        int nrLeafNodes = 0;
+        while (unexploredLeft) {
+            nextLayer = new ArrayList<>();
+            for (int i : currentLayer) {
+                visitedNodes[i] = true;
+                int childrenCount = 0;
+                for (int j = 0; j < adjacencyMatrix.length; j++) {
+                    if (adjacencyMatrix[i][j] == 1 && j != parentNodes[i] && !visitedNodes[j]) {
+                        nextLayer.add(j);
+                        parentNodes[j] = i;
+                        visitedNodes[j] = true;
+                        childrenCount++;
+                    }
+                }
+                if (childrenCount == 0) {
+                    nrLeafNodes++;
+                }
+            }
+            currentLayer = nextLayer;
+            if (nextLayer.size() == 0) {
+                unexploredLeft = false;
+            }
+        }
+        return nrLeafNodes;
+    }
+
     public void printAdjacencyMatrix() {
         for (int i = 0; i < adjacencyMatrix.length; i++) {
             for (int j = 0; j < adjacencyMatrix[0].length; j++) {
-                System.out.print(adjacencyMatrix[i][j] ? "1  " : "0  ");
+                System.out.print(adjacencyMatrix[i][j] == 1 ? "1  " : "0  ");
             }
             System.out.println();
         }
