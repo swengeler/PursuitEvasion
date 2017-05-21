@@ -152,7 +152,6 @@ public class SimplyConnectedTree {
         ArrayList<Integer> childIndeces = new ArrayList<>();
         path.add(startIndex);
         int counter = 1;
-        System.out.println("\nTEST");
         while (currentIndex == startIndex || !isLeaf(currentIndex)) {
             // collect the children (not going back)
             for (int i = 0; i < adjacencyMatrix[0].length; i++) {
@@ -182,19 +181,20 @@ public class SimplyConnectedTree {
             plannedPath.addLine(l2);
             path.add(currentIndex);
             childIndeces.clear();
-            System.out.println("In looop");
         }
-        System.out.println("\nTEST 2");
         plannedPath.setEndIndex(currentIndex);
         plannedPath.getPathLines().remove(0);
-        if (PRINT_PATH_CONSTRUCT) {
+        /*if (PRINT_PATH_CONSTRUCT) {
             System.out.println("\nFinal path:");
             for (Integer i : path) {
                 System.out.print("Index: " + i + ", ");
                 nodes.get(i).print();
             }
-        }
-        roadMap.getShortestPathVertices(map, new Point2D(plannedPath.getStartX(), plannedPath.getStartY()), new Point2D(plannedPath.getEndX(), plannedPath.getEndY()));
+        }*/
+        //return plannedPath;
+        plannedPath = roadMap.getShortestPath(new Point2D(plannedPath.getStartX(), plannedPath.getStartY()), new Point2D(plannedPath.getEndX(), plannedPath.getEndY()));
+        plannedPath.setStartIndex(startIndex);
+        plannedPath.setEndIndex(currentIndex);
         return plannedPath;
     }
 

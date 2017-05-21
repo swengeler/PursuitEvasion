@@ -1,5 +1,6 @@
 package additionalOperations;
 
+import Jama.Matrix;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
@@ -163,7 +164,11 @@ public class GeometryOperations {
     }
 
     public static boolean inPolygon(Polygon polygon, double startX, double startY, double endX, double endY) {
-        boolean polygonContains = polygon.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2));
+        return polygon.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2));
+    }
+
+    public static boolean inPolygonWithoutBorder(Polygon polygon, double startX, double startY, double endX, double endY) {
+        boolean polygonContains = inPolygon(polygon, startX, startY, endX, endY);
         Line temp;
         for (int i = 0; i < polygon.getPoints().size(); i += 2) {
             temp = new Line(polygon.getPoints().get(i), polygon.getPoints().get(i + 1), polygon.getPoints().get((i + 2) % polygon.getPoints().size()), polygon.getPoints().get((i + 3) % polygon.getPoints().size()));
@@ -255,7 +260,6 @@ public class GeometryOperations {
         return (ax - cx) * (by - cy) - (ay - cy) * (bx - cx);
     }
 
-
     public static double GetLineYIntesept(Point2D p, double slope) {
         return p.getY() - slope * p.getX();
     }
@@ -307,7 +311,6 @@ public class GeometryOperations {
 
         return new Point2D(x, y);
     }
-
 
     public static Point2D pointIntersect2(Line line1, Line line2) {
 
@@ -364,10 +367,7 @@ public class GeometryOperations {
         return (y2 - y1) / (x2 - x1);
     }
 
-
     public static boolean onLine(Point2D point, Line between) {
-
-
         double pX, pY, sX, sY, eX, eY;
         //System.out.print(point);
         pX = point.getX();
@@ -391,7 +391,6 @@ public class GeometryOperations {
         }
 
     }
-
 
     public static double distance(Point2D p1, Point2D p2) {
         double p1X, p2X, p1Y, p2Y;
@@ -418,6 +417,12 @@ public class GeometryOperations {
             sum += (-polygon.getPoints().get((i + 2) % polygon.getPoints().size()) - polygon.getPoints().get(i)) * (-polygon.getPoints().get((i + 3) % polygon.getPoints().size()) + polygon.getPoints().get(i + 1));
         }
         return sum > 0;
+    }
+
+    public static boolean leftTurnPredicate(Point2D p1, Point2D p2, Point2D p3) {
+        double[][] array = {{1, p1.getX(), p1.getY()}, {1, p2.getX(), p2.getY()}, {1, p3.getX(), p3.getY()}};
+        Matrix matrix = new Matrix(array);
+        return matrix.det() > 0;
     }
 
 }
