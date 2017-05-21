@@ -53,6 +53,7 @@ public class shadowOperations {
             agentX = agent.getX();
             agentY = agent.getY();
 
+
             i = 0;
             while(i < all.size())   {
                 //System.out.println("For Point = " + all.get(i));
