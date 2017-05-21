@@ -163,6 +163,21 @@ public class GeometryOperations {
         return false;
     }
 
+    public static boolean lineIntersect2(Line l1, Line l2) {
+        //L1 is environment Line2 is ray
+        //System.out.println("Comparing = " + l1 + "\nAND = " + l2 + "\n");
+        Point2D start, end;
+        start = new Point2D(l1.getStartX(), l1.getStartY());
+        end = new Point2D(l1.getEndX(), l1.getEndY());
+        if(onLine(start, l2) || onLine(end, l2))    {
+            return false;
+        }
+        else {
+            return lineIntersect(l1, l2.getStartX(), l2.getStartY(), l2.getEndX(), l2.getEndY());
+        }
+    }
+
+
     public static boolean inPolygon(Polygon polygon, double startX, double startY, double endX, double endY) {
         return polygon.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2));
     }
@@ -210,24 +225,49 @@ public class GeometryOperations {
                 newX = endX + value;
                 newY = endY + value * m;
             } else {
-                System.out.print("why the fuck man");
+                System.out.print("why the fuck man " + m);
                 newX = endX - value;
                 newY = endY - value * m;
             }
         } else {
             if (endY > aY) {
-                System.out.print("wooh its working = " + m);
+                //System.out.print("wooh its working = " + m);
                 newX = endX;
                 newY = endY + value;
             } else {
-                System.out.print("why the fuck man");
+                //System.out.print("why the fuck man");
                 newX = endX;
                 newY = endY - value;
             }
         }
+        /*
 
+        if (endX - aX != 0) {
+            if (aX > endX) {
+                //System.out.print("wooh its working = " + m);
+                newX = aX + value;
+                newY = aY + value * m;
+            } else {
+                //System.out.print("why the fuck man");
+                newX = aX - value;
+                newY = aY - value * m;
+            }
+        } else {
+            if (aY > endY) {
+                //System.out.print("wooh its working = " + m);
+                newX = aY+ value/m;
+                newY = aY + value;
+            } else {
+                //System.out.print("why the fuck man");
+                newX = aX- value/m;
+                newY = aY - value;
+            }
+        }
+*/
 
         Line ray = new Line(endX, endY, newX, newY);
+        ray.setStartX(aX);
+        ray.setStartY(aY);
         //System.out.println("Created Ray = " + ray);
 
         //In case Lines with a negative end are the Problem when we do not find an Intersection where there should be one
@@ -311,6 +351,76 @@ public class GeometryOperations {
 
         return new Point2D(x, y);
     }
+
+
+    public static ArrayList removeFrom(ShadowNode check, ArrayList<ShadowNode> list)    {
+        double x1,x2,y1,y2;
+        Point2D pointCheck, tmpPoint, printP1, printP2;
+        ShadowNode tmp;
+
+        pointCheck = check.getPosition();
+        x1 = Math.round(pointCheck.getX());
+        y1 = Math.round(pointCheck.getY());
+        printP1 = new Point2D(x1,y1);
+
+        if(list.size() != 0)    {
+            for(int i = 0; i < list.size(); i++)    {
+                tmp = list.get(i);
+                tmpPoint = tmp.getPosition();
+                x2 = Math.round(tmpPoint.getX());
+                y2 = Math.round(tmpPoint.getY());
+                printP2 = new Point2D(x2,y2);
+
+
+
+                if(x1 == x2 && y1 == y2)    {
+                    System.out.println("For => " + printP1 + "\tChecking => " + printP2);
+                    list.remove(i);
+                    i--;
+                }
+            }
+        }
+        return list;
+    }
+
+    public static boolean arraycontains(ShadowNode check, ArrayList<ShadowNode> list)    {
+        double x1,x2,y1,y2;
+        Point2D pointCheck, tmpPoint, printP1, printP2;
+        ShadowNode tmp;
+        boolean yesno=false;
+
+        pointCheck = check.getPosition();
+        x1 = Math.round(pointCheck.getX());
+        y1 = Math.round(pointCheck.getY());
+        printP1 = new Point2D(x1,y1);
+
+        if(list.size() != 0)    {
+            for(int i = 0; i < list.size(); i++)    {
+                tmp = list.get(i);
+                tmpPoint = tmp.getPosition();
+                x2 = Math.round(tmpPoint.getX());
+                y2 = Math.round(tmpPoint.getY());
+                printP2 = new Point2D(x2,y2);
+
+
+
+                if(x1 == x2 && y1 == y2)    {
+                    System.out.println("For => " + printP1 + "\tChecking => " + printP2);
+                    yesno=true;
+                    break;
+                }
+            }
+        }
+        return yesno;
+    }
+
+
+
+
+
+
+
+
 
     public static Point2D pointIntersect2(Line line1, Line line2) {
 
