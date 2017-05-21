@@ -24,8 +24,8 @@ public class StraightLineMovePolicy extends MovePolicy {
         double moveX, moveY;
 
         do {
-            moveX = getSingleAgent().getSpeed() * (directionX / Math.sqrt(Math.pow(directionX, 2) + Math.pow(directionY, 2))) * 1 / 250;
-            moveY = getSingleAgent().getSpeed() * (directionY / Math.sqrt(Math.pow(directionX, 2) + Math.pow(directionY, 2))) * 1 / 250;
+            moveX = getSingleAgent().getSpeed() * (directionX / Math.sqrt(Math.pow(directionX, 2) + Math.pow(directionY, 2))) * 1 / 50;
+            moveY = getSingleAgent().getSpeed() * (directionY / Math.sqrt(Math.pow(directionX, 2) + Math.pow(directionY, 2))) * 1 / 50;
             legalMove = map.getBorderPolygon().contains(getSingleAgent().getXPos() + moveX, getSingleAgent().getYPos() + moveY);
             for (Polygon p : map.getObstaclePolygons()) {
                 legalMove = legalMove && !p.contains(getSingleAgent().getXPos() + moveX, getSingleAgent().getYPos() + moveY);

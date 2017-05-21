@@ -1,6 +1,8 @@
 package ui;
 
+import javafx.scene.Cursor;
 import javafx.scene.Group;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import simulation.AgentSettings;
@@ -52,6 +54,67 @@ public class VisualAgent extends Group {
         fieldOfView.lengthProperty().bind(fieldOfViewAngle);*/
 
         getChildren().addAll(agentBody);
+
+        enableDrag();
+    }
+
+    private void enableDrag() {
+        final Delta dragDelta = new Delta();
+        setOnMousePressed(e -> {
+            if (!e.isPrimaryButtonDown()) {
+                return;
+            }
+            // record a delta distance for the drag and drop operation.
+            dragDelta.x = getCenterX() - e.getX();
+            dragDelta.y = getCenterY() - e.getY();
+            getScene().setCursor(Cursor.MOVE);
+            dragDelta.lastLegalX = getCenterX();
+            dragDelta.lastLegalY = getCenterY();
+        });
+        setOnMouseReleased(e -> {
+            getScene().setCursor(Cursor.HAND);
+            System.out.println(Main.mapPolygons.size());
+            if (!Main.mapPolygons.get(0).contains(e.getX(), e.getY())) {
+                setCenterX(dragDelta.lastLegalX);
+                setCenterY(dragDelta.lastLegalY);
+                return;
+            }
+            for (int i = 1; i < Main.mapPolygons.size(); i++) {
+                if (Main.mapPolygons.get(i).contains(e.getX(), e.getY())) {
+                    setCenterX(dragDelta.lastLegalX);
+                    setCenterY(dragDelta.lastLegalY);
+                    return;
+                }
+            }
+        });
+        setOnMouseDragged(e -> {
+            double newX = e.getX() + dragDelta.x;
+            if (newX > 0 && newX < ((Pane) getParent()).getWidth()) {
+                setCenterX(newX);
+            } else if (newX > 0) {
+                setCenterX(((Pane) getParent()).getWidth());
+            } else {
+                setCenterX(0);
+            }
+            double newY = e.getY() + dragDelta.y;
+            if (newY > 0 && newY < ((Pane) getParent()).getHeight()) {
+                setCenterY(newY);
+            } else if (newY > 0) {
+                setCenterY(((Pane) getParent()).getHeight());
+            } else {
+                setCenterY(0);
+            }
+        });
+        setOnMouseEntered(e -> {
+            if (!e.isPrimaryButtonDown()) {
+                getScene().setCursor(Cursor.HAND);
+            }
+        });
+        setOnMouseExited(e -> {
+            if (!e.isPrimaryButtonDown()) {
+                getScene().setCursor(Cursor.DEFAULT);
+            }
+        });
     }
 
     public void adoptSettings(AgentSettings agentSettings) {
@@ -82,6 +145,22 @@ public class VisualAgent extends Group {
 
     public AgentSettings getSettings() {
         return settings;
+    }
+
+    public double getCenterX() {
+        return agentBody.getCenterX();
+    }
+
+    public double getCenterY() {
+        return agentBody.getCenterY();
+    }
+
+    public void setCenterX(double centerX) {
+        settings.setXPos(centerX);
+    }
+
+    public void setCenterY(double centerY) {
+        settings.setYPos(centerY);
     }
 
 }

@@ -11,7 +11,7 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import simulation.MapRepresentation;
 import simulation.PlannedPath;
-import ui.AltMain;
+import ui.Main;
 
 import java.util.ArrayList;
 
@@ -20,14 +20,13 @@ public class ShortestPathRoadMap {
     private MapRepresentation map;
 
     private SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph;
-    private DijkstraShortestPath<PathVertex, DefaultWeightedEdge> shortestPathCalculator;
 
     public ShortestPathRoadMap(MapRepresentation map) {
         init(map);
         /*ArrayList<PathVertex> reflexVertices = findReflex(map);
         for (PathVertex pv : reflexVertices) {
             Circle circle = new Circle(pv.getX(), pv.getY(), 5, Color.CYAN);
-            AltMain.pane.getChildren().add(circle);
+            Main.pane.getChildren().add(circle);
         }*/
     }
 
@@ -66,7 +65,7 @@ public class ShortestPathRoadMap {
                         shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
                         Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
-                        //AltMain.pane.getChildren().add(circle);
+                        //Main.pane.getChildren().add(circle);
                     }
                 }
             } else {
@@ -83,7 +82,7 @@ public class ShortestPathRoadMap {
                         shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
                         Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
-                        //AltMain.pane.getChildren().add(circle);
+                        //Main.pane.getChildren().add(circle);
                     }
                 }
             }
@@ -95,7 +94,7 @@ public class ShortestPathRoadMap {
                     // add an edge between them
                     Line line = new Line(reflexVertices.get(j).getX(), reflexVertices.get(j).getY(), reflexVertices.get((j + 1) % currentIndeces.size()).getX(), reflexVertices.get((j + 1) % currentIndeces.size()).getY());
                     line.setStroke(Color.GREEN);
-                    //AltMain.pane.getChildren().add(line);
+                    //Main.pane.getChildren().add(line);
 
                     PathVertex v1 = reflexVertices.get(prevNrReflexVertices + j);
                     PathVertex v2 = reflexVertices.get(prevNrReflexVertices + (j + 1) % currentIndeces.size());
@@ -127,7 +126,7 @@ public class ShortestPathRoadMap {
                         // there should be an edge
                         Line line = new Line(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
                         line.setStroke(Color.GREEN);
-                        //AltMain.pane.getChildren().add(line);
+                        //Main.pane.getChildren().add(line);
 
                         PathVertex v1 = reflexVertices.get(i);
                         PathVertex v2 = reflexVertices.get(j);
@@ -179,14 +178,14 @@ public class ShortestPathRoadMap {
         }
 
         // calculate the shortest path and construct the PlannedPath object which will be returned
-        shortestPathCalculator = new DijkstraShortestPath<>(shortestPathGraph);
+        DijkstraShortestPath<PathVertex, DefaultWeightedEdge> shortestPathCalculator = new DijkstraShortestPath<>(shortestPathGraph);
         GraphPath<PathVertex, DefaultWeightedEdge> graphPath = shortestPathCalculator.getPath(sourceVertex, sinkVertex);
         PathVertex pv1, pv2;
         for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
             pv1 = graphPath.getVertexList().get(i);
             pv2 = graphPath.getVertexList().get(i + 1);
             plannedPath.addLine(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
-            AltMain.pane.getChildren().add(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
+            Main.pane.getChildren().add(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
         }
 
         // remove the source and sink vertices
@@ -194,8 +193,8 @@ public class ShortestPathRoadMap {
         shortestPathGraph.removeVertex(sinkVertex);
         return plannedPath;
     }
-
-    /*
+/*
+    *//*
         for (int i = 0; i < reflexPoints.size(); i++) {
             if (map.isVisible(source.getX(), source.getY(), reflexPoints.get(i).getX(), reflexPoints.get(i).getY())) {
                 double differenceSquared = (reflexPoints.get(i).getX() - source.getX()) * (reflexPoints.get(i).getX() - source.getX()) + (reflexPoints.get(i).getY() - source.getY()) * (reflexPoints.get(i).getY() - source.getY());
@@ -212,18 +211,18 @@ public class ShortestPathRoadMap {
         }
         DijkstraShortestPath test = new DijkstraShortestPath(sightList);
         return test.getPath(sourceVertex, sinkVertex);
-     */
+     *//*
 
     public PlannedPath getShortestPathVertices(MapRepresentation map, Point2D source, Point2D sink) {
         reflexInLineOfSight(map, findReflex(map));
         //GraphPath graphPath = calculateShortestPath(map, reflexInLineOfSight(map, findReflex(map)), source, sink);
         PlannedPath plannedPath = new PlannedPath();
-       /* PathVertex pv1, pv2;
+       *//* PathVertex pv1, pv2;
         for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
             pv1 = (PathVertex) graphPath.getVertexList().get(i);
             pv2 = (PathVertex) graphPath.getVertexList().get(i + 1);
             plannedPath.addLine(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
-        }*/
+        }*//*
         return plannedPath;
     }
 
@@ -341,8 +340,8 @@ public class ShortestPathRoadMap {
                     Label label = new Label("" + check);
                     label.setTranslateX(currentPoints.get(j).getX() + 5);
                     label.setTranslateY(currentPoints.get(j).getY() + 5);
-                    //AltMain.pane.getChildren().add(circle);
-                    //AltMain.pane.getChildren().add(label);
+                    //Main.pane.getChildren().add(circle);
+                    //Main.pane.getChildren().add(label);
                 }
             } else {
                 // iterate over the points in reverse order
@@ -370,8 +369,8 @@ public class ShortestPathRoadMap {
                     Label label = new Label("" + check);
                     label.setTranslateX(currentPoints.get(j).getX() + 5);
                     label.setTranslateY(currentPoints.get(j).getY() + 5);
-                    //AltMain.pane.getChildren().add(circle);
-                    //AltMain.pane.getChildren().add(label);
+                    //Main.pane.getChildren().add(circle);
+                    //Main.pane.getChildren().add(label);
                 }
             }
             for (int j = 0; j < currentIndeces.size(); j++) {
@@ -381,13 +380,13 @@ public class ShortestPathRoadMap {
                     Line line = new Line(reflexVertices.get(j).getX(), reflexVertices.get(j).getY(), reflexVertices.get((j + 1) % currentIndeces.size()).getX(), reflexVertices.get((j + 1) % currentIndeces.size()).getY());
                     line.setStroke(Color.BLUE);
                     line.setStrokeWidth(1);
-                    AltMain.pane.getChildren().add(line);
+                    Main.pane.getChildren().add(line);
                 }
             }
 
         }
 
-        /*ArrayList<Polygon> polygons = map.getAllPolygons();
+        *//*ArrayList<Polygon> polygons = map.getAllPolygons();
         GeometryOperations geometryOperations = new GeometryOperations();
         ArrayList<PathVertex> reflex = new ArrayList<>();
         int reflexIndex = 0;
@@ -440,7 +439,7 @@ public class ShortestPathRoadMap {
 
 
 
-                *//*
+                *//**//*
 take 2 neighbouring points
 find line between 2
 make a line from any point on this line to the orriginal point
@@ -470,7 +469,7 @@ STILL TODO
 
                 }
 
-                *//*
+                *//**//*
                 double leftvector = Math.toDegrees(Math.atan2(left.getX() - polygon.get(j).getX(), left.getY() - polygon.get(j).getY()));
                 double rightvector = Math.toDegrees(Math.atan2(right.getX() - polygon.get(j).getX(), right.getY() - polygon.get(j).getY()));
 
@@ -485,13 +484,13 @@ STILL TODO
                     reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
                     reflexIndex++;
                 }
-*//*
+*//**//*
             }
 
 
         }
 
-        return reflex;*/
+        return reflex;*//*
         return reflexVertices;
     }
 
@@ -539,7 +538,7 @@ STILL TODO
                             Line line = new Line(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
                             line.setStroke(Color.BLUE);
                             line.setStrokeWidth(1);
-                            AltMain.pane.getChildren().add(line);
+                            Main.pane.getChildren().add(line);
                         }
                     }
                 }
@@ -578,7 +577,7 @@ STILL TODO
         }
         DijkstraShortestPath test = new DijkstraShortestPath(sightList);
         return test.getPath(sourceVertex, sinkVertex);
-    }
+    }*/
 
     //o
     // how to find reflex vertices

@@ -31,8 +31,8 @@ public class DummyPolicy extends MovePolicy {
         if (tree == null) {
             // initialise the tree and get an initial path to move to a leaf node
             initTree(map);
-            currentPath = tree.getRandomTraversal(tree.getNode(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
-            currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));
+            currentPath = tree.getRandomTraversal(getSingleAgent().getXPos(), getSingleAgent().getYPos());
+            //currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));
             test = currentPath.getPathLines();
             testCounter = 0;
             //return new Move(currentPath.getStartX() - getSingleAgent().getXPos(), currentPath.getStartY() - getSingleAgent().getYPos(), 0);
@@ -50,8 +50,9 @@ public class DummyPolicy extends MovePolicy {
         if (tree.getNodeIndex(getSingleAgent().getXPos(), getSingleAgent().getYPos()) == currentPath.getEndIndex()) {
             // TODO: there should probably be a better check that takes into account that an entire branch might be cleared if there is vision of it
             // end of path reached, compute new path
-            currentPath = tree.getRandomTraversal(tree.getNode(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
-            currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));
+            /*currentPath = tree.getRandomTraversal(tree.getNode(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
+            currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));*/
+            currentPath = tree.getRandomTraversal(getSingleAgent().getXPos(), getSingleAgent().getYPos());
             test = currentPath.getPathLines();
             testCounter = 0;
         }

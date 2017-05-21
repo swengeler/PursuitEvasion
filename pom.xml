@@ -50,6 +50,12 @@
             <artifactId>jama</artifactId>
             <version>1.0.3</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.javatuples/javatuples -->
+        <dependency>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
+        </dependency>
         <dependency>
             <groupId>groupId</groupId>
             <artifactId>RobinsRuthlessRobbers</artifactId>

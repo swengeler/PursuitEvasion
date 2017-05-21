@@ -137,6 +137,53 @@ public class SimplyConnectedTree {
         return getNodes();
     }
 
+    public PlannedPath getRandomTraversal(double xPos, double yPos) {
+        // chooses a path through the tree/map according to the random selection described in the paper
+        ArrayList<Integer> path = new ArrayList<>();
+        int startIndex = getNodeIndex(xPos, yPos);
+        int currentIndex = startIndex;
+        int lastIndex = currentIndex;
+        ArrayList<Integer> childIndeces = new ArrayList<>();
+        path.add(startIndex);
+        int counter = 1;
+        while (currentIndex == startIndex || !isLeaf(currentIndex)) {
+            // collect the children (not going back)
+            for (int i = 0; i < adjacencyMatrix[0].length; i++) {
+                if (i != currentIndex && i != lastIndex && adjacencyMatrix[currentIndex][i]) {
+                    childIndeces.add(i);
+                }
+            }
+            if (PRINT_PATH_CONSTRUCT) {
+                System.out.println("\nChildren on iteration " + counter++);
+                for (Integer i : childIndeces) {
+                    System.out.print("Index: " + i + ", ");
+                    nodes.get(i).print();
+                }
+            }
+            // get new node to visit
+            lastIndex = currentIndex;
+            currentIndex = childIndeces.get((int) (Math.random() * childIndeces.size())); // needs proper probability distribution
+            path.add(currentIndex);
+            childIndeces.clear();
+        }
+        if (PRINT_PATH_CONSTRUCT) {
+            System.out.println("\nFinal path:");
+            for (Integer i : path) {
+                System.out.print("Index: " + i + ", ");
+                nodes.get(i).print();
+            }
+        }
+        PlannedPath plannedPath = null;
+        try {
+            plannedPath = roadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+        } catch (DelaunayError delaunayError) {
+            delaunayError.printStackTrace();
+        }
+        plannedPath.setStartIndex(startIndex);
+        plannedPath.setEndIndex(currentIndex);
+        return plannedPath;
+    }
+
     public PlannedPath getRandomTraversal(TGNode startLeaf) {
         return getRandomTraversal(nodes.indexOf(startLeaf));
     }
@@ -184,14 +231,13 @@ public class SimplyConnectedTree {
         }
         plannedPath.setEndIndex(currentIndex);
         plannedPath.getPathLines().remove(0);
-        /*if (PRINT_PATH_CONSTRUCT) {
+        if (PRINT_PATH_CONSTRUCT) {
             System.out.println("\nFinal path:");
             for (Integer i : path) {
                 System.out.print("Index: " + i + ", ");
                 nodes.get(i).print();
             }
-        }*/
-        //return plannedPath;
+        }
         plannedPath = roadMap.getShortestPath(new Point2D(plannedPath.getStartX(), plannedPath.getStartY()), new Point2D(plannedPath.getEndX(), plannedPath.getEndY()));
         plannedPath.setStartIndex(startIndex);
         plannedPath.setEndIndex(currentIndex);

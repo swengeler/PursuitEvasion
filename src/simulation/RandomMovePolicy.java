@@ -17,14 +17,20 @@ public class RandomMovePolicy extends MovePolicy {
         /*
         CODED BY WINSTON 2K17
          */
-        double randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * getSingleAgent().getSpeed() /* * timeStep */ * 1 / 250;
-        double randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * getSingleAgent().getSpeed() /* * timeStep */ * 1 / 250;
+        double randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1))/* * timeStep */;
+        double randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) /* * timeStep */;
+        double length = Math.sqrt(Math.pow(randDeltaX, 2) + Math.pow(randDeltaY, 2));
+        randDeltaX /= length * 50 / getSingleAgent().getSpeed() ;
+        randDeltaY /= length * 50 / getSingleAgent().getSpeed() ;
         //double randAngle = Math.atan2(randDeltaY, randDeltaX) * (180 / Math.PI);
         double randAngle = (ThreadLocalRandom.current().nextInt(-360, 360)) * getSingleAgent().getTurnSpeed() /* * timeStep */ * 1 / 1000;
 
         while (!map.legalPosition(getSingleAgent().getXPos() + randDeltaX, getSingleAgent().getYPos() + randDeltaY)) {
-            randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * getSingleAgent().getSpeed() /* * timeStep */ * 1 / 250;
-            randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) * getSingleAgent().getSpeed() /* * timeStep */ * 1 / 250;
+            randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1))/* * timeStep */;
+            randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1))/* * timeStep */;
+            length = Math.sqrt(Math.pow(randDeltaX, 2) + Math.pow(randDeltaY, 2));
+            randDeltaX /= length * 50 / getSingleAgent().getSpeed();
+            randDeltaY /= length * 50 / getSingleAgent().getSpeed();
             randAngle = (ThreadLocalRandom.current().nextInt(0, 360)) * getSingleAgent().getTurnSpeed() /* * timeStep */ * 1 / 1000;
         }
         return new Move(randDeltaX, randDeltaY, 0);
