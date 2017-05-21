@@ -44,48 +44,47 @@ public class shadowOperations {
 
         Line temp;
         double agentX, agentY, x2, y2;
-        int i = 0;
+        int i;
         boolean visib = true;
 
 
-        while (i < all.size()) {
-            x2 = all.get(i).getX();
-            y2 = all.get(i).getY();
-
-            //System.out.println("\nFor point: \tX = " + x2 + "\tY = " + y2);
-
-
-            for (Point2D agent : agents) {
-                agentX = agent.getX();
-                agentY = agent.getY();
+        for(Point2D agent : agents) {
+            //System.out.println("For Agent = " + agent);
+            agentX = agent.getX();
+            agentY = agent.getY();
 
 
+            i = 0;
+            while(i < all.size())   {
+                //System.out.println("For Point = " + all.get(i));
+                x2 = all.get(i).getX();
+                y2 = all.get(i).getY();
+
+                //System.out.println("\nFor point: \tX = " + x2 + "\tY = " + y2);
                 temp = new Line(agentX, agentY, x2, y2);
-                //System.out.println("Line => " + temp);
-
 
                 visib = true;
-                //Not blocked by environment
                 if (!lineIntersectInPoly(environment, temp)) {
-
                     for (int j = 0; j < obstacles.size(); j++) {
                         //And if just one obstacle blocks ths view for the controlledAgents this controlledAgents cannnot see the point
                         if (lineIntersectInPoly(obstacles.get(j), temp)) {
                             visib = false;
-                            break;
+                            //break;
                         }
                     }
-                } else {
-                    visib = false;
+                    if(visib == true)   {
+                        //System.out.println("Removed = " + all.get(i));
+                        all.remove(i);
+                        i = i - 1;
+                    }
                 }
-            }
-            if (visib == false) {
                 i++;
-            } else {
-                all.remove(i);
             }
-            //System.out.println("New i = " + i);
+            System.out.println();
+
         }
+
+        System.out.println(all);
 
         return all;
     }
