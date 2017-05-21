@@ -36,7 +36,7 @@ public class Controller {
             subList.add(obstaclePolygons.get(i));
         }
         MapRepresentation mapRepresentation = new GridMapRepresentation(obstaclePolygons.get(0), subList);*/
-        MapRepresentation mapRepresentation = new MapRepresentation(map);
+        MapRepresentation mapRepresentation = new MapRepresentation(map, null, null);
 
         // adding internal representations of the agents
         ArrayList<Agent> agents = new ArrayList<>();

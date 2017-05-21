@@ -6,6 +6,7 @@ import javafx.scene.shape.*;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
+import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 import ui.Main;
 
@@ -19,7 +20,7 @@ public class DCREntity extends CentralisedEntity {
     private Agent searcher, catcher;
     private ArrayList<Agent> guards;
 
-    private TraversalHandler mapTree;
+    private TraversalHandler traversalHandler;
 
     public DCREntity(MapRepresentation map) {
         super(map);
@@ -89,6 +90,11 @@ public class DCREntity extends CentralisedEntity {
         availableAgents.add(a);
     }
 
+    @Override
+    public boolean isActive() {
+        return false;
+    }
+
     private void computeRequirements() {
         // build needed data structures and analyse map to see how many agents are required
         try {
@@ -147,8 +153,7 @@ public class DCREntity extends CentralisedEntity {
 
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
-
-
+            traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, null, separatingTriangles, spanningTreeAdjacencyMatrix);
             requiredAgents = 2 + separatingTriangles.size();
         } catch (DelaunayError error) {
             error.printStackTrace();

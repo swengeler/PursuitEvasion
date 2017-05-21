@@ -15,9 +15,17 @@ public abstract class CentralisedEntity extends Entity {
     }
 
     public abstract int totalRequiredAgents();
-
     public abstract int remainingRequiredAgents();
-
     public abstract void addAgent(Agent a);
+
+    @Override
+    public boolean isActive() {
+        for (Agent a : availableAgents) {
+            if (a.isActive()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

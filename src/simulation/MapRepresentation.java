@@ -1,6 +1,7 @@
 package simulation;
 
 import additionalOperations.GeometryOperations;
+import entities.Entity;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import ui.MapPolygon;
@@ -14,7 +15,10 @@ public class MapRepresentation {
     private ArrayList<Polygon> allPolygons;
     private ArrayList<Line> polygonEdges;
 
-    public MapRepresentation(ArrayList<MapPolygon> map) {
+    private ArrayList<Entity> pursuingEntities;
+    private ArrayList<Entity> evadingEntities;
+
+    public MapRepresentation(ArrayList<MapPolygon> map, ArrayList<Entity> pursuingEntities, ArrayList<Entity> evadingEntities) {
         allPolygons = new ArrayList<>();
         obstaclePolygons = new ArrayList<>();
         for (MapPolygon p : map) {
@@ -32,6 +36,9 @@ public class MapRepresentation {
                 polygonEdges.add(new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size()))));
             }
         }
+
+        this.pursuingEntities = pursuingEntities == null ? new ArrayList<>() : pursuingEntities;
+        this.evadingEntities = evadingEntities == null ? new ArrayList<>() : evadingEntities;
     }
 
     public boolean legalPosition(double xPos, double yPos) {
@@ -60,6 +67,14 @@ public class MapRepresentation {
 
     public ArrayList<Line> getPolygonEdges() {
         return polygonEdges;
+    }
+
+    public ArrayList<Entity> getPursuingEntities() {
+        return pursuingEntities;
+    }
+
+    public ArrayList<Entity> getEvadingEntities() {
+        return evadingEntities;
     }
 
     public boolean isVisible(double x1, double y1, double x2, double y2) {

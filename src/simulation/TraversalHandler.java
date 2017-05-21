@@ -1,6 +1,5 @@
 package simulation;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
@@ -21,7 +20,7 @@ public class TraversalHandler {
     private Line[][] adjacencyLineMatrix;
     private DEdge[][] adjacencyEdgeMatrix;
 
-    public ShortestPathRoadMap roadMap;
+    public ShortestPathRoadMap shortestPathRoadMap;
     public MapRepresentation map;
 
     private ArrayList<DTriangle> nodess;
@@ -34,14 +33,14 @@ public class TraversalHandler {
         init(triangles);
     }
 
-    public TraversalHandler(MapRepresentation map, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<DTriangle> separatingTriangles, int[][] adjacencyMatrix) {
+    public TraversalHandler(ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<DTriangle> separatingTriangles, int[][] adjacencyMatrix) {
         // this constructor should be able to handle any input where the map has been converted into
         // one or multiple SIMPLY-CONNECTED components
         // then this class can deal with transitions between components as well as traversals within components
-        roadMap = new ShortestPathRoadMap(map);
+        this.shortestPathRoadMap = shortestPathRoadMap;
         this.nodess = nodes;
         this.components = components;
-        this.separatingTriangles = separatingTriangles;
+        this.separatingTriangles = separatingTriangles; // might not actually be needed
         this.adjacencyMatrix = adjacencyMatrix;
     }
 
@@ -165,7 +164,7 @@ public class TraversalHandler {
         // 4. run is over, repeat
 
         // for now chosen uniformly at random
-        ArrayList<DTriangle> currentComponent = components.get((int) (Math.random() * components.size()));
+        ArrayList<DTriangle> currentComponent = components == null ? nodess : components.get((int) (Math.random() * components.size()));
         // check whether we're already in that component, then the movement to one of its leaves can be skipped
         boolean inComponentLeaf = false;
         for (DTriangle dt : currentComponent) {
@@ -195,7 +194,7 @@ public class TraversalHandler {
 
             // choose one of the leaves uniformly at random (because all subtres would have the same number of leaves anyway)
             chosenLeafIndex = (int) (Math.random() * childIndeces.size());
-            moveToLeaf = roadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY()));
+            moveToLeaf = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY()));
         }
 
         // chooses a path through the tree/map according to the random selection described in the paper
@@ -240,14 +239,14 @@ public class TraversalHandler {
             currentIndex = rng.sample(); // needs proper probability distribution
             childIndeces.clear();
         }
-        //PlannedPath plannedPath = roadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getX(), nodess.get(currentIndex).getBarycenter().getY()));
+        //PlannedPath plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getX(), nodess.get(currentIndex).getBarycenter().getY()));
         PlannedPath plannedPath = null;
         if (!inComponentLeaf) {
-            plannedPath = roadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
             moveToLeaf.addPathToEnd(plannedPath);
             plannedPath = moveToLeaf;
         } else {
-            plannedPath = roadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
         }
         plannedPath.setStartIndex(startIndex);
         plannedPath.setEndIndex(currentIndex);
@@ -308,7 +307,7 @@ public class TraversalHandler {
                 nodes.get(i).print();
             }
         }
-        plannedPath = roadMap.getShortestPath(new Point2D(plannedPath.getStartX(), plannedPath.getStartY()), new Point2D(plannedPath.getEndX(), plannedPath.getEndY()));
+        plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(plannedPath.getStartX(), plannedPath.getStartY()), new Point2D(plannedPath.getEndX(), plannedPath.getEndY()));
         plannedPath.setStartIndex(startIndex);
         plannedPath.setEndIndex(currentIndex);
         return plannedPath;

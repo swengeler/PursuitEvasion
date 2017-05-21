@@ -228,7 +228,7 @@ public class DeprecatedMain extends Application {
 
         Button testCentralisedButton = new Button("Test centralised policy");
         testCentralisedButton.setOnAction(e -> {
-            MapRepresentation map = new MapRepresentation(mapPolygons);
+            MapRepresentation map = new MapRepresentation(mapPolygons, null, null);
             CentralisedEntity entity = new DCREntity(map);
             int requiredAgents = entity.remainingRequiredAgents();
             System.out.println("Required agents: " + requiredAgents);

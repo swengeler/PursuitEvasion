@@ -2,8 +2,7 @@ package ui;
 
 import control.Controller;
 import conversion.GridConversion;
-import entities.CentralisedEntity;
-import entities.DCREntity;
+import entities.*;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -58,12 +57,15 @@ public class Main extends Application {
     private ProgramState currentState;
 
     // ************************************************************************************************************** //
-    // Test stuff for centralised algorithm
+    // Test stuff for entities
     // ************************************************************************************************************** //
-    private boolean testCentralised;
-    private CentralisedEntity testCentralisedEntity;
+    private Entity testEntity;
+    private BooleanProperty useEntities = new SimpleBooleanProperty(false);
+    private ArrayList<Entity> evadingEntities = new ArrayList<>();
+    private MapRepresentation map;
+    private AdaptedSimulation adaptedSimulation;
     // ************************************************************************************************************** //
-    // Test stuff for centralised algorithm
+    // Test stuff for entities
     // ************************************************************************************************************** //
 
     @Override
@@ -166,16 +168,10 @@ public class Main extends Application {
 
         Button theBestTestButton = new Button("The best simulation");
         theBestTestButton.setOnAction(e -> {
-            //
-
-            Polygon outer = new Polygon();
-
-
             for (int i = 1; i < mapPolygons.size(); i++) {
                 mapPolygons.get(i).setFill(Color.WHITE);
                 mapPolygons.get(i).toFront();
             }
-
             Controller.theBestTest(mapPolygons, visualAgents);
             RevealedMap.showMapDebug(pane);
         });
@@ -225,35 +221,30 @@ public class Main extends Application {
             }
         });
 
-        Button testCentralisedButton = new Button("Test centralised policy");
-        testCentralisedButton.setOnAction(e -> {
-            MapRepresentation map = new MapRepresentation(mapPolygons);
-            testCentralisedEntity = new DCREntity(map);
-            testCentralised = true;
-            int requiredAgents = testCentralisedEntity.remainingRequiredAgents();
-            System.out.println("Required agents: " + requiredAgents);
+        CheckBox useEntitiesCheckBox = new CheckBox("Use entities");
+        useEntitiesCheckBox.selectedProperty().bindBidirectional(useEntities);
+        menu.getChildren().add(useEntitiesCheckBox);
+
+        Button prepareEntityTestButton = new Button("Prepare entity test");
+        prepareEntityTestButton.setOnAction(e -> {
+            map = new MapRepresentation(mapPolygons, null, evadingEntities);
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
-        menu.getChildren().add(testCentralisedButton);
+        menu.getChildren().add(prepareEntityTestButton);
 
-        Button startTestCentralisedButton = new Button("Start centralised test");
-        startTestCentralisedButton.setOnAction(e -> {
-            Simulation.testCentralisedEntity = this.testCentralisedEntity;
-            Simulation sim = Controller.getSimulation();
-            if (sim == null) {
-                if (mapPolygons == null || visualAgents == null || mapPolygons.isEmpty() || visualAgents.isEmpty()) {
-                    System.out.println("Not enough data to construct simulation!");
-                } else {
-                    Controller.theBestTest(mapPolygons, visualAgents);
-                    currentState = ProgramState.SIMULATION;
-                }
-            } else {
-                sim.unPause();
+        Button runEntityTestButton = new Button("Run entity test");
+        runEntityTestButton.setOnAction(e -> {
+            if (evadingEntities.size() == 0) {
+                System.exit(-5);
             }
+            adaptedSimulation = new AdaptedSimulation(map);
+            // show required number of agents and settings for the algorithm
+            // add the next <required number> agents to this entity
+            // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
-        menu.getChildren().add(startTestCentralisedButton);
+        menu.getChildren().add(runEntityTestButton);
 
         Button triangulationButton = new Button("Show triangulation");
         triangulationButton.setOnAction(e -> {
@@ -1606,7 +1597,11 @@ public class Main extends Application {
 
         slider.valueProperty().addListener((ov, oldValue, newValue) -> {
             //System.out.println("val = " + newValue);
-            Controller.getSimulation().setTimeStep((int) (double) newValue);
+            if (!useEntities.getValue()) {
+                Controller.getSimulation().setTimeStep((int) (double) newValue);
+            } else {
+                adaptedSimulation.setTimeStep((int) (double) newValue);
+            }
         });
 
         pursuers = new ArrayList<>();
@@ -1963,7 +1958,6 @@ public class Main extends Application {
                     }
                 } else if (currentState == ProgramState.AGENT_PLACING) {
                     if (mapPolygons.get(0).isClosed()) {
-                        boolean placedInHole = false;
                         for (int i = 1; i < mapPolygons.size(); i++) {
                             if (mapPolygons.get(i).contains(e.getX(), e.getY())) {
                                 return;
@@ -1978,7 +1972,8 @@ public class Main extends Application {
                             if (visualAgents == null) {
                                 visualAgents = new ArrayList<>();
                             }
-                            if (!testCentralised) {
+                            if (!useEntities.getValue()) {
+                                // old behaviour
                                 VisualAgent visualAgent = new VisualAgent(e.getX(), e.getY());
                                 visualAgents.add(visualAgent);
                                 pane.getChildren().add(visualAgent);
@@ -1990,13 +1985,21 @@ public class Main extends Application {
                                 mapPolygons.get(0).toFront();
                                 mapPolygons.get(0).setMouseTransparent(true);
                             } else {
-                                VisualAgent va1 = new VisualAgent(e.getX(), e.getY());
+                                // new behaviour
+                                /*VisualAgent va1 = new VisualAgent(e.getX(), e.getY());
                                 va1.getAgentBody().setFill(Color.LAWNGREEN);
                                 VisualAgent va2 = new VisualAgent(e.getX(), e.getY());
                                 va2.getAgentBody().setFill(Color.LAWNGREEN);
                                 pane.getChildren().addAll(va1, va2);
-                                testCentralisedEntity.addAgent(new Agent(va1.getSettings()));
-                                testCentralisedEntity.addAgent(new Agent(va2.getSettings()));
+                                testEntity.addAgent(new Agent(va1.getSettings()));
+                                testEntity.addAgent(new Agent(va2.getSettings()));*/
+
+                                VisualAgent va1 = new VisualAgent(e.getX(), e.getY());
+                                va1.getAgentBody().setFill(Color.LAWNGREEN);
+                                pane.getChildren().add(va1);
+                                testEntity = new RandomEntity(map);
+                                ((DistributedEntity) testEntity).setAgent(new Agent(va1.getSettings()));
+                                evadingEntities.add(testEntity);
                             }
                         }
                     }
@@ -2080,7 +2083,7 @@ public class Main extends Application {
 
                             dialog.getDialogPane().setContent(grid);
 
-                            Platform.runLater(() -> xpos.requestFocus());
+                            Platform.runLater(xpos::requestFocus);
 
                             dialog.setResultConverter(b -> {
                                 if (b == applyType) {
@@ -2113,9 +2116,7 @@ public class Main extends Application {
 
                             Optional<AgentSettings> result = dialog.showAndWait();
 
-                            result.ifPresent(res -> {
-                                va.adoptSettings(res);
-                            });
+                            result.ifPresent(va::adoptSettings);
                         });
 
                         deleteItem.setOnAction(ae -> {

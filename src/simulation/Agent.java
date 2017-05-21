@@ -16,7 +16,6 @@ public class Agent {
         settings = agentSettings;
     }
 
-
     public double getSpeed() {
         return settings.getSpeed();
     }
@@ -71,6 +70,12 @@ public class Agent {
 
     public void setYPos(double yPos) {
         settings.setYPos(yPos);
+    }
+
+    public void moveBy(double deltaX, double deltaY) {
+        setXPos(getXPos() + deltaX);
+        setYPos(getYPos() + deltaY);
+        //System.out.printf("Agent moved by (%.4f|%.4f)\n", deltaX, deltaY);
     }
 
     public MovePolicy getPolicy() {
