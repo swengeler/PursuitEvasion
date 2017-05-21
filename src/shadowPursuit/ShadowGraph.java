@@ -65,7 +65,7 @@ public class ShadowGraph {
             System.out.println(point);
         }
 
-
+        System.out.println("\n");
         this.agents = agents;
 
         Nodes = new ArrayList<>();
@@ -82,8 +82,8 @@ public class ShadowGraph {
         calculateType3();
         //printGraph();
         //printGraph();
-
         printGraph();
+
     }
 
 

@@ -129,6 +129,9 @@ public class ShadowNode {
         this.occLine = new Line(position.getX(), position.getY(), left.getPosition().getX(), left.getPosition().getY());
     }
 
+
+
+
     //For Type4
     public ShadowNode(Point2D position, ShadowNode type2Neighbor1, ShadowNode type2Neighbor2) {
         this.position = position;
