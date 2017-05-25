@@ -2,9 +2,11 @@ package shadowPursuit;
 
 import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import simulation.Agent;
+import sun.security.provider.SHA;
 
 import java.util.ArrayList;
 
@@ -289,6 +291,28 @@ public class shadowOperations {
 
     }
 
+    public static ArrayList<ShadowNode> orderByClosestToPoint(ArrayList<ShadowNode> shadNodes, Point2D start)    {
+        ArrayList<ShadowNode> returnList = new ArrayList<>();
+        double minDist;
+        ShadowNode tmp;
+        int pos;
+        while(shadNodes.size() != 0)    {
+            minDist = Double.MAX_VALUE;
+            pos = 0;
+            for(int i = 0; i < shadNodes.size(); i++)   {
+                tmp = shadNodes.get(i);
+                if(distance(tmp.getPosition(), start) < minDist)    {
+                    minDist = distance(tmp.getPosition(), start);
+                    pos = i;
+                }
+            }
+            returnList.add(shadNodes.remove(pos));
+        }
+        return returnList;
+    }
+
+
+
     public static ArrayList<Point2D> getAdjacentPoints(Point2D point, ArrayList<Polygon> allPolys) {
 
 
@@ -390,11 +414,11 @@ public class shadowOperations {
     public static boolean isVisible(double x1, double y1, double x2, double y2, ArrayList<Line> polygonEdges) {
         // check whether the second controlledAgents is visible from the position of the first controlledAgents
         // (given its field of view and the structure of the map)
+
         for (Line l : polygonEdges) {
             if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
-                Line l1 = new Line(x1, y1, x2, y2);
 
-                //System.out.println("Intersect between Line " + l + " and Line = " + l1);
+                System.out.println("Intersect between " + l + " and " + new Line(x1,y1,x2,y2));
                 return false;
             }
         }
