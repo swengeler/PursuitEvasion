@@ -5,12 +5,7 @@ import java.util.ArrayList;
 public class SimpleEvaderPolicy extends MovePolicy {
 
     /*This simple evader policy steers evaders away from pursuers within a certain range (set by maxSeparationDistance)
-    it also steers evaders towards the center of the pursuers if they are in a wider range (set by maxCohesionDistance) (not working perfectly yet)
-
-    TODO:
-    Come up with a way to handle bounds
-    In the case of multiple evaders, we need to consider them too since we can't collide with them either.
-     */
+    it also steers evaders towards the center of the pursuers if they are in a wider range (set by maxCohesionDistance)*/
 
     public SimpleEvaderPolicy(Agent agent, boolean pursuing, MapRepresentation map) {
         super(agent, pursuing);
@@ -81,11 +76,16 @@ public class SimpleEvaderPolicy extends MovePolicy {
             deltaY = (deltaY - evader.getYPos());
         }
 
+        double length = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+
+        deltaX /= length;
+        deltaY /= length;
+
+
         //check out of bounds, for now we just don't do anything if the move would be out of bounds
         if (!map.legalPosition(evader.getXPos() + deltaX * evader.getSpeed() * 1 / 4000, evader.getYPos() + deltaY * evader.getSpeed() * 1 / 4000)) {
             System.out.println("Move impossible: out of bounds");
             return new Move(0, 0, 0);
-            //TODO: fix
         }
 
         //if there are no seperation and no cohesion pursuers near, do nothing (for now)
