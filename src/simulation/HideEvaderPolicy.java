@@ -66,16 +66,7 @@ public class HideEvaderPolicy extends MovePolicy {
 
         }
 
-        //mode 0 = eucl dist
-        //mode 1 = num of verts
-
-        //idea:
-        //num of verts is more important, but if equal eucl distance determines
-
-
-        target = getMin(midpointData, 0);
-        double dx = 0;
-        double dy = 0;
+        target = getMin(midpointData, 2);
 
         if (target != null) {
             currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
@@ -119,6 +110,21 @@ public class HideEvaderPolicy extends MovePolicy {
                     numberOfVertices = triplet.getValue2();
                     target = triplet.getValue0();
                     s = "NUM OF VERTS";
+                }
+            } else if (mode == 2) {
+
+                //idea:
+                //num of verts is more important, but if equal eucl distance determines
+
+                if (triplet.getValue2() > numberOfVertices) {
+                    numberOfVertices = triplet.getValue2();
+                    target = triplet.getValue0();
+                    s = "NUM OF VERTS + DIST BKUP";
+                } else if (triplet.getValue2() == numberOfVertices) {
+                    if (triplet.getValue1() > euclideanDistance) {
+                        euclideanDistance = triplet.getValue1();
+                        target = triplet.getValue0();
+                    }
                 }
             }
 
