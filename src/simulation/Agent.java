@@ -93,7 +93,7 @@ public class Agent {
         } else if (policyEncoding.equals("straight_line_policy")) {
             policy = new StraightLineMovePolicy(this, settings.isPursuing(), map);
         } else if (policyEncoding.equals("evader_policy")) {
-            policy = new SimpleEvaderPolicy(this, settings.isPursuing(), map);
+            policy = new FlockingEvaderPolicy(this, settings.isPursuing(), map);
         } else if (policyEncoding.equals("dummy_policy")) {
             policy = new DummyPolicy(this, settings.isPursuing());
         }

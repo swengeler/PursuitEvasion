@@ -2,12 +2,12 @@ package simulation;
 
 import java.util.ArrayList;
 
-public class SimpleEvaderPolicy extends MovePolicy {
+public class FlockingEvaderPolicy extends MovePolicy {
 
     /*This simple evader policy steers evaders away from pursuers within a certain range (set by maxSeparationDistance)
     it also steers evaders towards the center of the pursuers if they are in a wider range (set by maxCohesionDistance)*/
 
-    public SimpleEvaderPolicy(Agent agent, boolean pursuing, MapRepresentation map) {
+    public FlockingEvaderPolicy(Agent agent, boolean pursuing, MapRepresentation map) {
         super(agent, pursuing);
     }
 
