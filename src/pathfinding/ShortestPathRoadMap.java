@@ -2,6 +2,7 @@ package pathfinding;
 
 import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import org.jgrapht.GraphPath;
@@ -33,6 +34,8 @@ public class ShortestPathRoadMap {
         this.map = map;
         shortestPathGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
+        System.out.println(map.getAllPolygons().size());
+
         // calculate reflex vertices
         ArrayList<PathVertex> reflexVertices = new ArrayList<>();
         ArrayList<int[]> pointers = new ArrayList<>();
@@ -50,12 +53,13 @@ public class ShortestPathRoadMap {
             currentPoints = GeometryOperations.polyToPoints(polygons.get(i));
             allPoints.add(currentPoints);
             currentIndeces = new ArrayList<>();
-            if (isClockwise) {
+            if (!isClockwise) {
                 for (int j = currentPoints.size() - 1; j >= 0; j--) {
                     prevPoint = currentPoints.get((j + 1) % currentPoints.size());
                     nextPoint = j == 0 ? currentPoints.get(currentPoints.size() - 1) : currentPoints.get(j - 1);
 
-                    if (GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint)) {
+                    if ((polygons.get(i) != map.getBorderPolygon() && GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint)) ||
+                            (polygons.get(i) == map.getBorderPolygon() && !GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint))) {
                         reflexVertices.add(new PathVertex(currentPoints.get(j)));
                         singlePointer = new int[]{i, (j + 1) % currentPoints.size(), j, j == 0 ? currentPoints.size() - 1 : j - 1};
                         pointers.add(singlePointer);
@@ -64,7 +68,11 @@ public class ShortestPathRoadMap {
                         shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
                         Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
-                        //Main.pane.getChildren().add(circle);
+                        Main.pane.getChildren().add(circle);
+                        Label index = new Label("" + j);
+                        index.setTranslateX(circle.getCenterX() + 5);
+                        index.setTranslateY(circle.getCenterY() + 5);
+                        Main.pane.getChildren().add(index);
                     }
                 }
             } else {
@@ -72,7 +80,8 @@ public class ShortestPathRoadMap {
                     prevPoint = j == 0 ? currentPoints.get(currentPoints.size() - 1) : currentPoints.get(j - 1);
                     nextPoint = currentPoints.get((j + 1) % currentPoints.size());
 
-                    if (GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint)) {
+                    if ((polygons.get(i) != map.getBorderPolygon() && GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint)) ||
+                            (polygons.get(i) == map.getBorderPolygon() && !GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint))) {
                         reflexVertices.add(new PathVertex(currentPoints.get(j)));
                         singlePointer = new int[]{i, j == 0 ? currentPoints.size() - 1 : j - 1, j, (j + 1) % currentPoints.size()};
                         pointers.add(singlePointer);
@@ -81,7 +90,11 @@ public class ShortestPathRoadMap {
                         shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
                         Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
-                        //Main.pane.getChildren().add(circle);
+                        Main.pane.getChildren().add(circle);
+                        Label index = new Label("" + j);
+                        index.setTranslateX(circle.getCenterX() + 5);
+                        index.setTranslateY(circle.getCenterY() + 5);
+                        Main.pane.getChildren().add(index);
                     }
                 }
             }
@@ -89,16 +102,22 @@ public class ShortestPathRoadMap {
             for (int j = 0; j < currentIndeces.size(); j++) {
                 // if the points are adjacent in the polygon, i.e. their indeces are one apart
                 //if (Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == 1 || Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == currentPoints.size() - 1) {
-                if (Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == 1) {
+                System.out.println("Vertex " + currentIndeces.get(j) + " checked.");
+                if (Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == 1 || Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == currentPoints.size() - 1) {
                     // add an edge between them
-                    Line line = new Line(reflexVertices.get(j).getX(), reflexVertices.get(j).getY(), reflexVertices.get((j + 1) % currentIndeces.size()).getX(), reflexVertices.get((j + 1) % currentIndeces.size()).getY());
-                    line.setStroke(Color.GREEN);
-                    //Main.pane.getChildren().add(line);
-
                     PathVertex v1 = reflexVertices.get(prevNrReflexVertices + j);
                     PathVertex v2 = reflexVertices.get(prevNrReflexVertices + (j + 1) % currentIndeces.size());
                     double differenceSquared = Math.pow(v1.getX() - v2.getX(), 2) + Math.pow(v1.getY() - v2.getY(), 2);
                     shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(v1, v2), Math.sqrt(differenceSquared));
+
+                    Line line = new Line(v1.getX(), v1.getY(), v2.getX(), v2.getY());
+                    line.setStroke(Color.GREEN);
+                    Main.pane.getChildren().add(line);
+
+                    /*System.out.println("Edge added between " + currentIndeces.get(j) + " and " + currentIndeces.get((j + 1) % currentIndeces.size()));
+                    System.out.printf("(%.3f|%.3f) and (%.3f|%.3f)\n", v1.getX(), v2.getX(), v2.getX(), v2.getY());
+                    //System.out.println(shortestPathGraph.vertexSet().contains(v1) + " " + shortestPathGraph.vertexSet().contains(v2));
+                    System.out.printf("Line from (%.3f|%.3f) to (%.3f|%.3f)\n", line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());*/
                 }
             }
         }
@@ -125,7 +144,7 @@ public class ShortestPathRoadMap {
                         // there should be an edge
                         Line line = new Line(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
                         line.setStroke(Color.GREEN);
-                        //Main.pane.getChildren().add(line);
+                        Main.pane.getChildren().add(line);
 
                         PathVertex v1 = reflexVertices.get(i);
                         PathVertex v2 = reflexVertices.get(j);
@@ -135,8 +154,6 @@ public class ShortestPathRoadMap {
                 }
             }
         }
-
-
     }
 
     public PlannedPath getShortestPath(double sourceX, double sourceY, double sinkX, double sinkY) {

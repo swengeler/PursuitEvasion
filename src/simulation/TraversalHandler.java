@@ -31,6 +31,7 @@ public class TraversalHandler {
 
     public TraversalHandler(ArrayList<DTriangle> triangles) {
         init(triangles);
+        nodess = triangles;
     }
 
     public TraversalHandler(ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<DTriangle> separatingTriangles, int[][] adjacencyMatrix) {
