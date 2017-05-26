@@ -13,7 +13,7 @@ public class FlockingEvaderPolicy extends MovePolicy {
 
     @Override
     public Move getNextMove(MapRepresentation map, ArrayList<Agent> agents) {
-        double maxSeperationDistance = 100;
+        double maxSeperationDistance = 150;
         //separation -> move 180 degrees from the average position of the pursuers within maxSeperationDistance
 
         double maxCohesionDistance = 250;
@@ -83,7 +83,7 @@ public class FlockingEvaderPolicy extends MovePolicy {
 
 
         //check out of bounds, for now we just don't do anything if the move would be out of bounds
-        if (!map.legalPosition(evader.getXPos() + deltaX * evader.getSpeed() * 1 / 4000, evader.getYPos() + deltaY * evader.getSpeed() * 1 / 4000)) {
+        if (!map.legalPosition(evader.getXPos() + deltaX * evader.getSpeed() * 1 / 250, evader.getYPos() + deltaY * evader.getSpeed() * 1 / 250)) {
             System.out.println("Move impossible: out of bounds");
             return new Move(0, 0, 0);
         }
@@ -93,7 +93,7 @@ public class FlockingEvaderPolicy extends MovePolicy {
         if (deltaX == 0 && deltaY == 0) {
             return new Move(0, 0, 0);
         } else {
-            return new Move(deltaX * evader.getSpeed() * 1 / 4000, deltaY * evader.getSpeed() * 1 / 4000, 0);
+            return new Move(deltaX * evader.getSpeed() * 1 / 250, deltaY * evader.getSpeed() * 1 / 250, 0);
         }
     }
 }
