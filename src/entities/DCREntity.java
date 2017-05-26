@@ -74,6 +74,16 @@ public class DCREntity extends CentralisedEntity {
             }
         }
 
+        if (pathLines == null) {
+            try {
+                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+            } catch (DelaunayError delaunayError) {
+                delaunayError.printStackTrace();
+            }
+            pathLines = currentSearcherPath.getPathLines();
+            pathLineCounter = 0;
+        }
+
         if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
             // TODO: there should probably be a better check that takes into account that an entire branch might be cleared if there is vision of it
             // end of path reached, compute new path
@@ -151,11 +161,6 @@ public class DCREntity extends CentralisedEntity {
     @Override
     public void addAgent(Agent a) {
         availableAgents.add(a);
-    }
-
-    @Override
-    public boolean isActive() {
-        return false;
     }
 
     private void assignTasks() {
@@ -246,12 +251,14 @@ public class DCREntity extends CentralisedEntity {
                     componentNodes.add(dt);
                 }
             }
-            ArrayList<ArrayList<DTriangle>> simplyConnectedComponents = computeConnectedComponents(nodes, componentNodes, spanningTreeAdjacencyMatrix);
+            Tuple<ArrayList<ArrayList<DTriangle>>, int[]> componentInfo = computeConnectedComponents(nodes, componentNodes, spanningTreeAdjacencyMatrix);
+            ArrayList<ArrayList<DTriangle>> simplyConnectedComponents = componentInfo.getFirst();
+            int[] parentNodes = componentInfo.getSecond();
             System.out.println("holes.size(): " + holes.size() + "\nseparatingTriangles.size(): " + separatingTriangles.size() + "\nsimplyConnectedComponents.size(): " + simplyConnectedComponents.size());
 
             // if there are more than 2 components compute change triangles around so that there is only one
             // looks like it may not be needed at all
-            computeSingleConnectedComponent(simplyConnectedComponents, holes, nodes, separatingTriangles, spanningTreeAdjacencyMatrix, originalAdjacencyMatrix, null, tree);
+            computeSingleConnectedComponent(simplyConnectedComponents, holes, nodes, separatingTriangles, spanningTreeAdjacencyMatrix, originalAdjacencyMatrix, parentNodes, tree);
 
             /*ArrayList<Polygon> showTriangles = new ArrayList<>(nodes.size());
             for (DTriangle dt : nodes) {
@@ -272,8 +279,9 @@ public class DCREntity extends CentralisedEntity {
 
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
-            traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, null, separatingTriangles, spanningTreeAdjacencyMatrix);
+            traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, separatingTriangles, spanningTreeAdjacencyMatrix);
             requiredAgents = 2 + separatingTriangles.size();
+            System.out.println("\nrequiredAgents: " + requiredAgents);
         } catch (DelaunayError error) {
             error.printStackTrace();
         }
@@ -306,7 +314,7 @@ public class DCREntity extends CentralisedEntity {
             if (!mapPolygons.get(0).contains(centerX, centerY)) {
                 inPolygon = false;
             }
-            for (int i = 1; inPolygon && i < mapPolygons.size() - 1; i++) {
+            for (int i = 1; inPolygon && i < mapPolygons.size(); i++) {
                 if (mapPolygons.get(i).contains(centerX, centerY)) {
                     inPolygon = false;
                     inHole = true;
@@ -496,7 +504,7 @@ public class DCREntity extends CentralisedEntity {
         return new Tuple<>(separatingTriangles, spanningTreeAdjacencyMatrix);
     }
 
-    private ArrayList<ArrayList<DTriangle>> computeConnectedComponents(ArrayList<DTriangle> nodes, ArrayList<DTriangle> componentNodes, int[][] spanningTreeAdjacencyMatrix) {
+    private Tuple<ArrayList<ArrayList<DTriangle>>, int[]> computeConnectedComponents(ArrayList<DTriangle> nodes, ArrayList<DTriangle> componentNodes, int[][] spanningTreeAdjacencyMatrix) {
         ArrayList<ArrayList<DTriangle>> simplyConnectedComponents = new ArrayList<>();
         ArrayList<DTriangle> temp;
         ArrayList<Integer> currentLayer, nextLayer;
@@ -536,7 +544,7 @@ public class DCREntity extends CentralisedEntity {
             simplyConnectedComponents.add(temp);
             i--;
         }
-        return simplyConnectedComponents;
+        return new Tuple<>(simplyConnectedComponents, componentParentNodes);
     }
 
     private void computeSingleConnectedComponent(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<ArrayList<DTriangle>> holes, ArrayList<DTriangle> nodes, ArrayList<DTriangle> separatingTriangles, int[][] spanningTreeAdjacencyMatrix, int[][] originalAdjacencyMatrix, int[] parentNodes, ArrayList<Line> tree) throws DelaunayError {

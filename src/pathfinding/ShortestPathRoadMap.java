@@ -205,7 +205,7 @@ public class ShortestPathRoadMap {
             pv1 = graphPath.getVertexList().get(i);
             pv2 = graphPath.getVertexList().get(i + 1);
             plannedPath.addLine(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
-            Main.pane.getChildren().add(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
+            //Main.pane.getChildren().add(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
         }
 
         // remove the source and sink vertices

@@ -3,6 +3,7 @@ package simulation;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
+import org.apache.commons.math3.exception.MathArithmeticException;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
@@ -38,11 +39,18 @@ public class TraversalHandler {
         // this constructor should be able to handle any input where the map has been converted into
         // one or multiple SIMPLY-CONNECTED components
         // then this class can deal with transitions between components as well as traversals within components
+        init(nodes);
         this.shortestPathRoadMap = shortestPathRoadMap;
         this.nodess = nodes;
         this.components = components;
         this.separatingTriangles = separatingTriangles; // might not actually be needed
         this.adjacencyMatrix = adjacencyMatrix;
+        for (int i = 0; i < adjacencyMatrix.length; i++) {
+            for (int j = 0; j < adjacencyMatrix[0].length; j++) {
+                System.out.print(adjacencyMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
     }
 
     private void init(ArrayList<DTriangle> triangles) {
@@ -240,12 +248,27 @@ public class TraversalHandler {
                 discreteProbabilities[i] /= totalLeafSum;
                 //System.out.println(discreteProbabilities[i]);
             }
-            rng = new EnumeratedIntegerDistribution(indecesToGenerate, discreteProbabilities);
+            try {
+                rng = new EnumeratedIntegerDistribution(indecesToGenerate, discreteProbabilities);
+            } catch (MathArithmeticException e) {
+                System.out.println("Adjacency matrix:");
+                for (int i = 0; i < adjacencyMatrix.length; i++) {
+                    for (int j = 0; j < adjacencyMatrix[0].length; j++) {
+                        System.out.print(adjacencyMatrix[i][j] + " ");
+                    }
+                    System.out.println();
+                }
+                System.out.println("Discrete probabilities:");
+                //System.out.println("Child probabilities (root " + currentIndex + "):");
+                for (int i = 0; i < discreteProbabilities.length; i++) {
+                    System.out.println(indecesToGenerate[i] + " | " + discreteProbabilities[i]);
+                }
+            }
             currentIndex = rng.sample(); // needs proper probability distribution
             childIndeces.clear();
         }
         //PlannedPath plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getX(), nodess.get(currentIndex).getBarycenter().getY()));
-        PlannedPath plannedPath = null;
+        PlannedPath plannedPath;
         if (!inComponentLeaf) {
             plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
             moveToLeaf.addPathToEnd(plannedPath);

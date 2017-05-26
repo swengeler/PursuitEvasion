@@ -2,9 +2,7 @@ package ui;
 
 import control.Controller;
 import conversion.GridConversion;
-import entities.DistributedEntity;
-import entities.Entity;
-import entities.RandomEntity;
+import entities.*;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -81,6 +79,7 @@ public class Main extends Application {
     private MapRepresentation map;
     private AdaptedSimulation adaptedSimulation;
     private Entity activeEntity;
+    private DCREntity testDCREntity;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //
@@ -351,7 +350,7 @@ public class Main extends Application {
                         if (!mapPolygons.get(0).contains(centerX, centerY)) {
                             inPolygon = false;
                         }
-                        for (int i = 1; inPolygon && i < mapPolygons.size() - 1; i++) {
+                        for (int i = 1; inPolygon && i < mapPolygons.size(); i++) {
                             if (mapPolygons.get(i).contains(centerX, centerY)) {
                                 inPolygon = false;
                             }
@@ -1670,7 +1669,6 @@ public class Main extends Application {
             } else {
                 map = new MapRepresentation(mapPolygons);
                 ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
-                System.out.println("sprm");
             }
         });
         menu.getChildren().add(shortestPathMapButton);
@@ -1708,7 +1706,16 @@ public class Main extends Application {
 
         Button placeDCREntityButton = new Button("Place DCR entity");
         placeDCREntityButton.setOnAction(e -> {
-            map = new MapRepresentation(mapPolygons, null, evadingEntities);
+            VisualAgent va = new VisualAgent(500, 500);
+            va.getAgentBody().setFill(Color.LAWNGREEN);
+            pane.getChildren().add(va);
+            RandomEntity randomEntity = new RandomEntity(map);
+            randomEntity.setAgent(new Agent(va.getSettings()));
+            map.getEvadingEntities().add(randomEntity);
+
+            useEntities.set(true);
+            testDCREntity = new DCREntity(map);
+            map.getPursuingEntities().add(testDCREntity);
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
@@ -1723,6 +1730,42 @@ public class Main extends Application {
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
         menu.getChildren().add(placeRandomEntity);
+
+        Button startAdaptedSimulation = new Button("Start adapted simulation");
+        startAdaptedSimulation.setOnAction(e -> {
+            adaptedSimulation = new AdaptedSimulation(map);
+            // show required number of agents and settings for the algorithm
+            // add the next <required number> agents to this entity
+            // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
+        });
+        menu.getChildren().add(startAdaptedSimulation);
+
+        Button pauseAdaptedSimulation = new Button("Pause adapted simulation");
+        pauseAdaptedSimulation.setOnAction(e -> {
+            if (adaptedSimulation != null && adaptedSimulation.isPaused()) {
+                adaptedSimulation.unPause();
+            } else if (adaptedSimulation != null) {
+                adaptedSimulation.pause();
+            }
+            // show required number of agents and settings for the algorithm
+            // add the next <required number> agents to this entity
+            // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
+        });
+        menu.getChildren().add(pauseAdaptedSimulation);
+
+        Slider adaptedSlider = new Slider(5, 105, 50);
+        adaptedSlider.setShowTickMarks(true);
+        adaptedSlider.setShowTickLabels(true);
+        adaptedSlider.setMajorTickUnit(20);
+        adaptedSlider.setMaxWidth(180);
+        menu.getChildren().add(adaptedSlider);
+
+        adaptedSlider.valueProperty().addListener((ov, oldValue, newValue) -> {
+            //System.out.println("val = " + newValue);
+            if (adaptedSimulation != null) {
+                adaptedSimulation.setTimeStep((int) (double) newValue);
+            }
+        });
 
         // ****************************************************************************************************** //
         // JavaFX stuff
@@ -2108,12 +2151,10 @@ public class Main extends Application {
                             } else {
                                 // new behaviour
                                 VisualAgent va = new VisualAgent(e.getX(), e.getY());
-                                va.getAgentBody().setFill(Color.LAWNGREEN);
+                                va.getAgentBody().setFill(Color.INDIANRED);
                                 pane.getChildren().add(va);
-                                visualAgents.add(va);
-                                testEntity = new RandomEntity(map);
-                                ((DistributedEntity) testEntity).setAgent(new Agent(va.getSettings()));
-                                evadingEntities.add(testEntity);
+
+                                testDCREntity.addAgent(new Agent(va.getSettings()));
 
                                 for (Shape s : covers) {
                                     s.toFront();
