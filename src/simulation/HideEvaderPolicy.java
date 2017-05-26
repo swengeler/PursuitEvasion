@@ -3,7 +3,10 @@ package simulation;
 
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import javafx.util.Pair;
+import org.javatuples.Triplet;
 import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
@@ -20,8 +23,7 @@ public class HideEvaderPolicy extends MovePolicy {
         ShortestPathRoadMap shortestPathMap = new ShortestPathRoadMap(map);
 
         Agent evader = getSingleAgent();
-        //double maxDistance = Double.MIN_VALUE;
-        //int maxVertices = Integer.MIN_VALUE;
+        ArrayList<Triplet<Point2D, Double, Integer>> midpointData = new ArrayList<>();
         Point2D target = null;
 
         for (Point2D midpoint: polygonMidpoints) {
@@ -33,26 +35,64 @@ public class HideEvaderPolicy extends MovePolicy {
 
                 if (pursuer.isPursuer()) {
 
-                    double dist = Math.sqrt(Math.pow(pursuer.getXPos() - midpoint.getX(), 2) + Math.pow(pursuer.getYPos() - midpoint.getY(), 2));
-                    midpointDistance += dist;
-
                     PlannedPath shortestPath = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
-                    int shortestPathSize = 0;
-                    numberOfVertices += shortestPathSize;
-                    //size?
+                    midpointDistance += shortestPath.getTotalLength();
+                    numberOfVertices += shortestPath.pathLength();
 
                 }
 
             }
 
+            midpointData.add(new Triplet<Point2D, Double, Integer>(midpoint, midpointDistance, numberOfVertices));
+
         }
 
+        target = getMin(midpointData, 0);
+        double dx = 0;
+        double dy = 0;
+
         if (target != null) {
-            return new Move(target.getX() * evader.getSpeed() * 1/250, target.getY() * evader.getSpeed() * 1/250, 0);
-        } else {
+            PlannedPath pathToTarget = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
+            dx = pathToTarget.getPathLines().get(0).getEndX();
+            dy = pathToTarget.getPathLines().get(0).getEndY();
+
+        }
+
+        if (map.legalPosition(dx * evader.getSpeed() * 1/250, dy * evader.getSpeed() * 1/250)) {
+            return new Move(dx * evader.getSpeed() * 1 / 250, target.getY() * evader.getSpeed() * 1 / 250, 0);
+        }  else {
+            System.out.println("MOVE OUT OF BOUNDS: STAND STILL");
             return new Move(0, 0, 0);
         }
 
+    }
+
+    private Point2D getMin(ArrayList<Triplet<Point2D, Double, Integer>> midpointData, int mode) {
+        Point2D target = null;
+        double euclideanDistance = Double.MIN_VALUE;
+        int numberOfVertices = Integer.MIN_VALUE;
+        String s = "";
+
+        for (Triplet<Point2D, Double, Integer> triplet: midpointData) {
+
+            if (mode == 0) {
+                if (triplet.getValue1() > euclideanDistance) {
+                    euclideanDistance = triplet.getValue1();
+                    target = triplet.getValue0();
+                    s = "EUCLIDEAN DIST";
+                }
+            } else if (mode == 1) {
+                if (triplet.getValue2() > numberOfVertices)  {
+                    numberOfVertices = triplet.getValue2();
+                    target = triplet.getValue0();
+                    s = "NUM OF VERTS";
+                }
+            }
+
+        }
+
+        System.out.println("BEST POINT IS " + target.getX() + ":" + target.getY() + " | " + s);
+        return target;
     }
 
     private ArrayList<Point2D> getPolygonMidpoints(MapRepresentation map) {

@@ -2166,7 +2166,7 @@ public class Main extends Application {
                             agentType.getItems().addAll("Pursuer", "Evader");
                             agentType.setValue(va.getSettings().isPursuing() ? "Pursuer" : "Evader");
                             ComboBox<String> agentPolicy = new ComboBox<>();
-                            agentPolicy.getItems().addAll("Random policy", "Straight line policy", "Flocking evader policy", "Dummy policy");
+                            agentPolicy.getItems().addAll("Random policy", "Straight line policy", "Flocking evader policy", "Hide evader policy", "Dummy policy");
                             agentPolicy.setValue("Random policy");
 
                             grid.add(new Label("X:"), 0, 0);
@@ -2210,10 +2210,12 @@ public class Main extends Application {
                                         s.setMovePolicy("random_policy");
                                     } else if (agentPolicy.getValue().equals("Straight line policy")) {
                                         s.setMovePolicy("straight_line_policy");
-                                    } else if (agentPolicy.getValue().equals("Evader policy")) {
-                                        s.setMovePolicy("evader_policy");
+                                    } else if (agentPolicy.getValue().equals("Flocking evader policy")) {
+                                        s.setMovePolicy("flocking_evader_policy");
                                     } else if (agentPolicy.getValue().equals("Dummy policy")) {
                                         s.setMovePolicy("dummy_policy");
+                                    } else if (agentPolicy.getValue().equals("Hide evader policy")) {
+                                        s.setMovePolicy("hide_evader_policy");
                                     }
 
                                     return s;
