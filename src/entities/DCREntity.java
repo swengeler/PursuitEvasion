@@ -22,18 +22,81 @@ public class DCREntity extends CentralisedEntity {
 
     private TraversalHandler traversalHandler;
 
+    private ArrayList<PlannedPath> initGuardPaths;
+    private ArrayList<Integer> guardPathLineCounters;
+    private ArrayList<Line> guardPathLines;
+    private boolean guardsPositioned;
+
+    private PlannedPath currentSearcherPath;
+    private ArrayList<Line> pathLines;
+    private int pathLineCounter;
+
     public DCREntity(MapRepresentation map) {
         super(map);
-        availableAgents = new ArrayList<>();
         computeRequirements();
     }
 
     @Override
     public void move() {
+        double length, deltaX, deltaY;
+
         // it is assumed that the required number of agents is provided by the GUI
         // could change this to throw an exception if it is not the case, giving the user a warning
         if (searcher == null) {
             assignTasks();
+            try {
+                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+            } catch (DelaunayError e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (!guardsPositioned()) {
+            // let the guards move along their respective paths
+            for (int i = 0; i < guards.size(); i++) {
+                if (guards.get(i).getXPos() != initGuardPaths.get(i).getEndX() || guards.get(i).getYPos() != initGuardPaths.get(i).getEndY()) {
+                    // this guard is not at its final destination and will be moved along the path
+                    guardPathLines = initGuardPaths.get(i).getPathLines();
+
+                    length = Math.sqrt(Math.pow(guardPathLines.get(guardPathLineCounters.get(i)).getEndX() - guardPathLines.get(guardPathLineCounters.get(i)).getStartX(), 2) + Math.pow(guardPathLines.get(guardPathLineCounters.get(i)).getEndY() - guardPathLines.get(guardPathLineCounters.get(i)).getStartY(), 2));
+                    deltaX = (guardPathLines.get(guardPathLineCounters.get(i)).getEndX() - guardPathLines.get(guardPathLineCounters.get(i)).getStartX()) / length * guards.get(i).getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                    deltaY = (guardPathLines.get(guardPathLineCounters.get(i)).getEndY() - guardPathLines.get(guardPathLineCounters.get(i)).getStartY()) / length * guards.get(i).getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+
+                    if (guardPathLines.get(guardPathLineCounters.get(i)).contains(guards.get(i).getXPos() + deltaX, guards.get(i).getYPos() + deltaY)) {
+                        // move along line
+                        guards.get(i).moveBy(deltaX, deltaY);
+                    } else {
+                        // move to end of line
+                        guards.get(i).moveBy(guardPathLines.get(guardPathLineCounters.get(i)).getEndX() - guards.get(i).getXPos(), guardPathLines.get(guardPathLineCounters.get(i)).getEndY() - guards.get(i).getYPos());
+                        guardPathLineCounters.set(i, guardPathLineCounters.get(i) + 1);
+                    }
+                }
+            }
+        }
+
+        if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
+            // TODO: there should probably be a better check that takes into account that an entire branch might be cleared if there is vision of it
+            // end of path reached, compute new path
+            try {
+                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+            } catch (DelaunayError delaunayError) {
+                delaunayError.printStackTrace();
+            }
+            pathLines = currentSearcherPath.getPathLines();
+            pathLineCounter = 0;
+        }
+
+        length = Math.sqrt(Math.pow(pathLines.get(pathLineCounter).getEndX() - pathLines.get(pathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(pathLineCounter).getEndY() - pathLines.get(pathLineCounter).getStartY(), 2));
+        deltaX = (pathLines.get(pathLineCounter).getEndX() - pathLines.get(pathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+        deltaY = (pathLines.get(pathLineCounter).getEndY() - pathLines.get(pathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+        if (pathLines.get(pathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
+            // move along line
+            searcher.moveBy(deltaX, deltaY);
+        } else {
+            // move to end of line
+            // TODO: instead take a "shortcut" to the next line
+            searcher.moveBy(pathLines.get(pathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(pathLineCounter).getEndY() - searcher.getYPos());
+            pathLineCounter++;
         }
 
         // TODO: For now implement the 2 agent randomised approach for a simply-connected environment
@@ -93,6 +156,62 @@ public class DCREntity extends CentralisedEntity {
     @Override
     public boolean isActive() {
         return false;
+    }
+
+    private void assignTasks() {
+        // assign a certain number of agents to be guards for separating triangles
+        try {
+            initGuardPaths = new ArrayList<>();
+            guards = new ArrayList<>();
+            guardPathLineCounters = new ArrayList<>();
+            double bestDistance = Double.MAX_VALUE;
+            double currentDistance;
+            PlannedPath currentShortestPath;
+            PlannedPath bestShortestPath = null;
+            Agent tempClosestAgent = null;
+            for (DTriangle dt : traversalHandler.getSeparatingTriangles()) {
+                for (Agent a : availableAgents) {
+                    if (!guards.contains(a)) {
+                        // compute distance to current triangle
+                        currentShortestPath = shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), dt.getBarycenter().getX(), dt.getBarycenter().getY());
+                        currentDistance = currentShortestPath.getTotalLength();
+                        if (currentDistance < bestDistance) {
+                            bestDistance = currentDistance;
+                            bestShortestPath = currentShortestPath;
+                            tempClosestAgent = a;
+                        }
+                    }
+                }
+                guards.add(tempClosestAgent);
+                initGuardPaths.add(bestShortestPath);
+            }
+            // the computed PlannedPath objects will initially be used to position all the guards in their correct locations
+            // the (at least 2) remaining agents will be assigned to be searcher (and catcher)
+            for (Agent a : availableAgents) {
+                if (!guards.contains(a)) {
+                    searcher = a;
+                    break;
+                }
+            }
+            for (Agent g : guards) {
+                guardPathLineCounters.add(0);
+            }
+        } catch (DelaunayError e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean guardsPositioned() {
+        if (!guardsPositioned) {
+            for (int i = 0; i < guards.size(); i++) {
+                if (guards.get(i).getXPos() != initGuardPaths.get(i).getEndX() || guards.get(i).getYPos() != initGuardPaths.get(i).getEndY()) {
+                    return false;
+                }
+            }
+            guardsPositioned = true;
+            return true;
+        }
+        return true;
     }
 
     private void computeRequirements() {
@@ -158,11 +277,7 @@ public class DCREntity extends CentralisedEntity {
         } catch (DelaunayError error) {
             error.printStackTrace();
         }
-        requiredAgents = 2;
-    }
-
-    private void assignTasks() {
-
+        //requiredAgents = 2;
     }
 
     private Tuple<ArrayList<DTriangle>, ArrayList<DTriangle>> triangulate(MapRepresentation map) throws DelaunayError {

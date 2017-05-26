@@ -2,7 +2,6 @@ package pathfinding;
 
 import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
-import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import org.jgrapht.GraphPath;
@@ -138,6 +137,10 @@ public class ShortestPathRoadMap {
         }
 
 
+    }
+
+    public PlannedPath getShortestPath(double sourceX, double sourceY, double sinkX, double sinkY) {
+        return getShortestPath(new Point2D(sourceX, sourceY), new Point2D(sinkX, sinkY));
     }
 
     public PlannedPath getShortestPath(Point2D source, Point2D sink) {

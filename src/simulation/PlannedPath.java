@@ -50,6 +50,10 @@ public class PlannedPath {
         return pathLines;
     }
 
+    public Line getPathLine(double xPos, double yPos) {
+        return null;
+    }
+
     public double getStartX() {
         return pathLines.get(0).getStartX();
     }
@@ -64,6 +68,14 @@ public class PlannedPath {
 
     public double getEndY() {
         return pathLines.get(pathLines.size() - 1).getEndY();
+    }
+
+    public double getTotalLength() {
+        double length = 0;
+        for (Line l : pathLines) {
+            length += Math.sqrt(Math.pow(l.getEndX() - l.getStartX(), 2) + Math.pow(l.getEndY() - l.getStartY(), 2));
+        }
+        return length;
     }
 
 }
