@@ -17,6 +17,7 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
+import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -70,6 +71,11 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
+        // ****************************************************************************************************** //
+        // Setup of all the UI elements and internal data structures
+        // ****************************************************************************************************** //
+
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Overwrite current map?");
         alert.setHeaderText("Loading a saved map will overwrite the one you are editing right now.");
@@ -125,6 +131,23 @@ public class Main extends Application {
         mapPolygons.add(currentMapPolygon);
         visualAgents = new ArrayList<>();
         addListeners();
+
+        pursuers = new ArrayList<>();
+        evaders = new ArrayList<>();
+
+        // ****************************************************************************************************** //
+        // The old/normal controls for the simulation; still using the old project structure
+        // ****************************************************************************************************** //
+
+        Label menuLabel1 = new Label("Old controls");
+        menuLabel1.setFont(Font.font("Arial", 14));
+
+        Separator menuSeparator1 = new Separator(Orientation.HORIZONTAL);
+        menuSeparator1.setStyle("-fx-background-color: #ffffff");
+        menuSeparator1.setMinHeight(10);
+        menuSeparator1.setPrefHeight(10);
+        menuSeparator1.setMaxHeight(10);
+        menu.getChildren().addAll(menuLabel1, menuSeparator1);
 
         Button clearMapButton = new Button("Clear map");
         clearMapButton.setOnAction(e -> clearMap());
@@ -220,6 +243,42 @@ public class Main extends Application {
                 sim.pause();
             }
         });
+
+        Slider slider = new Slider(0, 150, 100);
+        slider.setShowTickMarks(true);
+        slider.setShowTickLabels(true);
+        slider.setMajorTickUnit(40);
+        slider.setMaxWidth(180);
+        menu.getChildren().add(slider);
+
+        slider.valueProperty().addListener((ov, oldValue, newValue) -> {
+            //System.out.println("val = " + newValue);
+            if (!useEntities.getValue()) {
+                Controller.getSimulation().setTimeStep((int) (double) newValue);
+            } else {
+                adaptedSimulation.setTimeStep((int) (double) newValue);
+            }
+        });
+
+        // ****************************************************************************************************** //
+        // The ten million debugging buttons for dividing the environment for the randomised algorithm
+        // ****************************************************************************************************** //
+
+        Separator menuSeparator2 = new Separator(Orientation.HORIZONTAL);
+        menuSeparator2.setStyle("-fx-background-color: #ffffff");
+        menuSeparator2.setMinHeight(10);
+        menuSeparator2.setPrefHeight(10);
+        menuSeparator2.setMaxHeight(10);
+
+        Label menuLabel2 = new Label("Old debugging stuff");
+        menuLabel2.setFont(Font.font("Arial", 14));
+
+        Separator menuSeparator3 = new Separator(Orientation.HORIZONTAL);
+        menuSeparator3.setStyle("-fx-background-color: #ffffff");
+        menuSeparator3.setMinHeight(10);
+        menuSeparator3.setPrefHeight(10);
+        menuSeparator3.setMaxHeight(10);
+        menu.getChildren().addAll(menuSeparator2, menuLabel2, menuSeparator3);
 
         CheckBox useEntitiesCheckBox = new CheckBox("Use entities");
         useEntitiesCheckBox.selectedProperty().bindBidirectional(useEntities);
@@ -1588,24 +1647,47 @@ public class Main extends Application {
         });
         menu.getChildren().add(theButtonToEndAllButtons);
 
-        Slider slider = new Slider(0, 150, 100);
-        slider.setShowTickMarks(true);
-        slider.setShowTickLabels(true);
-        slider.setMajorTickUnit(40);
-        slider.setMaxWidth(180);
-        menu.getChildren().add(slider);
+        // ****************************************************************************************************** //
+        // New controls to debug the new project structure
+        // ****************************************************************************************************** //
 
-        slider.valueProperty().addListener((ov, oldValue, newValue) -> {
-            //System.out.println("val = " + newValue);
-            if (!useEntities.getValue()) {
-                Controller.getSimulation().setTimeStep((int) (double) newValue);
-            } else {
-                adaptedSimulation.setTimeStep((int) (double) newValue);
-            }
+        Separator menuSeparator4 = new Separator(Orientation.HORIZONTAL);
+        menuSeparator4.setStyle("-fx-background-color: #ffffff");
+        menuSeparator4.setMinHeight(10);
+        menuSeparator4.setPrefHeight(10);
+        menuSeparator4.setMaxHeight(10);
+
+        Label menuLabel3 = new Label("New model debugging");
+        menuLabel3.setFont(Font.font("Arial", 14));
+
+        Separator menuSeparator5 = new Separator(Orientation.HORIZONTAL);
+        menuSeparator5.setStyle("-fx-background-color: #ffffff");
+        menuSeparator5.setMinHeight(10);
+        menuSeparator5.setPrefHeight(10);
+        menuSeparator5.setMaxHeight(10);
+        menu.getChildren().addAll(menuSeparator4, menuLabel3, menuSeparator5);
+
+        Button placeDCREntityButton = new Button("Place DCR entity");
+        placeDCREntityButton.setOnAction(e -> {
+            map = new MapRepresentation(mapPolygons, null, evadingEntities);
+            // show required number of agents and settings for the algorithm
+            // add the next <required number> agents to this entity
+            // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
+        menu.getChildren().add(placeDCREntityButton);
 
-        pursuers = new ArrayList<>();
-        evaders = new ArrayList<>();
+        Button placeRandomEntity = new Button("Place random entity (evading)");
+        placeRandomEntity.setOnAction(e -> {
+            map = new MapRepresentation(mapPolygons, null, evadingEntities);
+            // show required number of agents and settings for the algorithm
+            // add the next <required number> agents to this entity
+            // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
+        });
+        menu.getChildren().add(placeRandomEntity);
+
+        // ****************************************************************************************************** //
+        // JavaFX stuff
+        // ****************************************************************************************************** //
 
         Scene scene = new Scene(outerLayout, 1200, 800);
         primaryStage.setTitle("Robin's Ruthless Robbers");

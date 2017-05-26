@@ -221,11 +221,11 @@ public class GeometryOperations {
 
         if (aX - endX != 0) {
             if (endX > aX) {
-                System.out.print("wooh its working = " + m);
+                //System.out.print("wooh its working = " + m);
                 newX = endX + value;
                 newY = endY + value * m;
             } else {
-                System.out.print("why the fuck man " + m);
+                //System.out.print("why the fuck man " + m);
                 newX = endX - value;
                 newY = endY - value * m;
             }
@@ -420,50 +420,6 @@ public class GeometryOperations {
 
 
 
-
-
-    public static Point2D pointIntersect2(Line line1, Line line2) {
-
-        double px, py, qx, qy, ry, rx, sx, sy, ty, tx;
-
-        px = line1.getStartX();
-        py = line1.getStartY();
-
-        rx = line1.getEndX() - px;
-        ry = line1.getEndY() - py;
-
-        qx = line2.getStartX();
-        qy = line2.getStartY();
-
-        sx = line2.getEndX() - qx;
-        sy = line2.getEndY() - qy;
-
-        ty = (qy - py) * sy / (ry * sy);
-        tx = (qx - px) * sx / (rx * sx);
-
-
-/*
-        t = (q − p) × s / (r × s)
-        q= beginning of 1
-        p= begining of 2
-        P+r= end of 2
-        q+s= end of 1
-
-        p+tr= intersection.
-
-
-
-
-        s = (-s1y * (x1 - x3)  + s1x * (y1 - y3)) / (-s2x * s1y + s1x * s2y);
-        t = (-s1x * (y1 - y3) - s2y * (x1 - x3)) / (-s2x * s1y + s1x * s2y);
- */
-        double xInt, yInt;
-        xInt = px + (tx * sx);
-        yInt = py + (ty * sy);
-
-        return new Point2D(xInt, yInt);
-    }
-
     public static double gradient(Line line) {
 
         double x1, x2, y1, y2;
@@ -534,5 +490,16 @@ public class GeometryOperations {
         Matrix matrix = new Matrix(array);
         return matrix.det() > 0;
     }
+
+    public static Point2D getLineMiddle(Line line)   {
+        Point2D start, end;
+        start = new Point2D(line.getStartX(), line.getStartY());
+        end = new Point2D(line.getEndX(), line.getEndY());
+        line = scaleRay(start, end, 0.5);
+        end = new Point2D(line.getEndX(), line.getEndY());
+        return end;
+    }
+
+
 
 }

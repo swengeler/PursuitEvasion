@@ -19,6 +19,8 @@ public class ShadowNode {
     private Line occLeft, occRight;
     private int type;
     private Point2D position;
+    boolean inCircle = false;
+
 
     private Point2D neighbourRightAgent, neighbourLeftAgent;
 
@@ -143,6 +145,7 @@ public class ShadowNode {
 
         type = type4;
 
+
         this.occLine = this.placedOn = placedOn;
         this.occLeft = new Line(position.getX(), position.getY(), type2Neighbor1.getPosition().getX(), type2Neighbor1.getPosition().getY());
         this.occRight = new Line(position.getX(), position.getY(), type2Neighbor2.getPosition().getX(), type2Neighbor2.getPosition().getY());
@@ -175,6 +178,50 @@ public class ShadowNode {
 
         type = type4;
 
+
+    }
+    public Point2D getLeftAgent(){
+        return neighbourLeftAgent;
+    }
+    public Point2D getRightAgent(){
+        return neighbourRightAgent;
+    }
+
+    public void isInCircle() {
+        if(right != null)   {
+            this.inCircle = true;
+            if(right.inCircle == false) {
+                right.isInCircle();
+            }
+        }
+        else    {
+            System.exit(00000);
+        }
+    }
+
+
+
+    public void connect(ShadowNode next)    {
+        if(this.getLeft() != null && this.getLeft() != next && this.getRight() == null)   {
+            right = next;
+            next.left = this;
+        }
+        else if(this.getRight() != null && this.getRight() != next && this.getLeft() == null)  {
+            right = next;
+            next.left = this;
+        }
+    }
+
+
+    public int numberOfLinks()  {
+        int count = 0;
+        if(this.getLeft() != null)  {
+            count++;
+        }
+        if(this.getRight() != null)  {
+            count++;
+        }
+        return count;
 
     }
 
@@ -291,4 +338,48 @@ public class ShadowNode {
     }
 
 
+    //For Type3
+    public ShadowNode getConnectedType2()   {
+        if(left.getType() == 2) {
+            return left;
+        }
+        else if(right.getType() == 2) {
+            return right;
+        }
+        else
+            return null;
+    }
+
+    //For Type3
+    public ShadowNode getConnectedType3()   {
+        if(left.getType() == 3) {
+            return left;
+        }
+        else if(right.getType() == 3) {
+            return right;
+        }
+        else
+            return null;
+    }
+
+    public void connectT2() {
+        //System.out.println("BITCH = " + this);
+
+        if(this.getType() == 3) {
+            if (this.getLeft().getType() == 2) {
+                this.getLeft().right = this;
+            } else if (this.getRight().getType() == 2) {
+                System.out.println("!!!!");
+                this.getRight().left = this;
+            }
+        }
+        else if(this.getType() == 4) {
+            if (this.getLeft().getType() == 2) {
+                this.getLeft().right = this;
+            }
+            if (this.getRight().getType() == 2) {
+                this.getRight().left = this;
+            }
+        }
+    }
 }
