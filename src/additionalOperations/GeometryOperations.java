@@ -176,7 +176,6 @@ public class GeometryOperations {
         }
     }
 
-
     public static boolean inPolygon(Polygon polygon, double startX, double startY, double endX, double endY) {
         return polygon.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2));
     }

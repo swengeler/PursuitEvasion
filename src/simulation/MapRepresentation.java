@@ -18,6 +18,29 @@ public class MapRepresentation {
     private ArrayList<Entity> pursuingEntities;
     private ArrayList<Entity> evadingEntities;
 
+    public MapRepresentation(ArrayList<MapPolygon> map) {
+        allPolygons = new ArrayList<>();
+        obstaclePolygons = new ArrayList<>();
+        for (MapPolygon p : map) {
+            if (p.getPoints().size() > 0) {
+                allPolygons.add(p.getPolygon());
+                obstaclePolygons.add(allPolygons.get(allPolygons.size() - 1));
+            }
+        }
+        borderPolygon = allPolygons.get(0);
+        obstaclePolygons.remove(0);
+
+        polygonEdges = new ArrayList<>();
+        for (Polygon p : allPolygons) {
+            for (int i = 0; i < p.getPoints().size(); i += 2) {
+                polygonEdges.add(new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size()))));
+            }
+        }
+
+        pursuingEntities = new ArrayList<>();
+        evadingEntities = new ArrayList<>();
+    }
+
     public MapRepresentation(ArrayList<MapPolygon> map, ArrayList<Entity> pursuingEntities, ArrayList<Entity> evadingEntities) {
         allPolygons = new ArrayList<>();
         obstaclePolygons = new ArrayList<>();
