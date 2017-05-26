@@ -36,6 +36,7 @@ import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DPoint;
 import org.jdelaunay.delaunay.geometries.DTriangle;
+import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 
 import java.io.*;
@@ -1662,6 +1663,18 @@ public class Main extends Application {
         });
         menu.getChildren().add(theButtonToEndAllButtons);
 
+        Button shortestPathMapButton = new Button("Shortest path map");
+        shortestPathMapButton.setOnAction(e -> {
+            if (mapPolygons == null || mapPolygons.isEmpty()) {
+                System.out.println("Not enough data to construct simulation!");
+            } else {
+                map = new MapRepresentation(mapPolygons);
+                ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
+                System.out.println("sprm");
+            }
+        });
+        menu.getChildren().add(shortestPathMapButton);
+
         // ****************************************************************************************************** //
         // New controls to debug the new project structure
         // ****************************************************************************************************** //
@@ -1773,7 +1786,7 @@ public class Main extends Application {
         if (selectedFile != null) {
             // write map to file
             try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
-                for (int i = 0; i < mapPolygons.size() - 1; i++) {
+                for (int i = 0; i < mapPolygons.size(); i++) {
                     for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
                         out.print(mapPolygons.get(i).getPoints().get(j) + " ");
                     }
