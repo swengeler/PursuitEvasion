@@ -22,6 +22,8 @@ public class HideEvaderPolicy extends MovePolicy {
         ArrayList<Point2D> polygonMidpoints = getPolygonMidpoints(map);
         ShortestPathRoadMap shortestPathMap = new ShortestPathRoadMap(map);
 
+        System.out.println(polygonMidpoints.size());
+
         Agent evader = getSingleAgent();
         ArrayList<Triplet<Point2D, Double, Integer>> midpointData = new ArrayList<>();
         Point2D target = null;
@@ -39,6 +41,8 @@ public class HideEvaderPolicy extends MovePolicy {
                     midpointDistance += shortestPath.getTotalLength();
                     numberOfVertices += shortestPath.pathLength();
 
+                    System.out.println("dist: " + midpointDistance);
+
                 }
 
             }
@@ -47,7 +51,7 @@ public class HideEvaderPolicy extends MovePolicy {
 
         }
 
-        target = getMin(midpointData, 0);
+        target = getMin(midpointData, 1);
         double dx = 0;
         double dy = 0;
 
@@ -56,10 +60,11 @@ public class HideEvaderPolicy extends MovePolicy {
             dx = pathToTarget.getPathLines().get(0).getEndX();
             dy = pathToTarget.getPathLines().get(0).getEndY();
 
+            System.out.println("SHOULD MOVE TO " + dx + ":" + dy);
         }
 
-        if (map.legalPosition(dx * evader.getSpeed() * 1/250, dy * evader.getSpeed() * 1/250)) {
-            return new Move(dx * evader.getSpeed() * 1 / 250, target.getY() * evader.getSpeed() * 1 / 250, 0);
+        if (map.legalPosition(dx * evader.getSpeed() * 1 / 250, dy * evader.getSpeed() * 1 / 250)) {
+            return new Move(dx * evader.getSpeed() * 1 / 250, dy * evader.getSpeed() * 1 / 250, 0);
         }  else {
             System.out.println("MOVE OUT OF BOUNDS: STAND STILL");
             return new Move(0, 0, 0);
