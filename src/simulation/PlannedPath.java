@@ -78,4 +78,8 @@ public class PlannedPath {
         return length;
     }
 
+    public int pathLength() {
+        return pathLines.size() - 1;
+    }
+
 }
