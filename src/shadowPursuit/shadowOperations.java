@@ -74,6 +74,10 @@ public class shadowOperations {
                             //break;
                         }
                     }
+                    if(x2 == 658 && y2 == 257) {
+                        Point2D tmp = new Point2D(658, 257);
+                        System.out.println("VISIBLE for " + tmp + " ????? -> " + visib);
+                    }
                     if(visib == true)   {
                         //System.out.println("Removed = " + all.get(i));
                         all.remove(i);

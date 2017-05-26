@@ -42,41 +42,33 @@ public class ShadowTest {
         //Point2D agentPos = new Point2D(556, 303);
 
 
-        environment = new Polygon(
-                168.0,74.0,
-                929.0,74.0,
-                929.0,643.0,
-                651.0,162.0,
-                651.0,643.0,
-                410.0,643.0,
-                410.0,162.0,
-                168.0,643.0);
+        environment = new Polygon(493.0,359.0,447.0,294.0,333.0,334.0,349.0,475.0,211.0,559.0,72.0,364.0,118.0,238.0,232.0,141.0,530.0,80.0,756.0,134.0,864.0,242.0,954.0,396.0,885.0,476.0,733.0,322.0,700.0,222.0,602.0,271.0,724.0,452.0,792.0,564.0,748.0,659.0,558.0,698.0,404.0,693.0,273.0,697.0,208.0,681.0,271.0,577.0,500.0,570.0,591.0,555.0,576.0,454.0,519.0,401.0,487.0,353.0);
 
-        Point2D agent1Pos = new Point2D(288, 140);
-        Point2D agent2Pos = new Point2D(286, 206);
+        Point2D agent1Pos = new Point2D(568, 351);
+        Point2D agent2Pos = new Point2D(548, 640);
         Point2D agent3Pos = new Point2D(801, 140);
         Point2D agent4Pos = new Point2D(798, 220);
 
 
 
-        Polygon obstacle1 = null;//new Polygon(340.0 ,472.0 ,393.0 ,535.0 ,390.0 ,618.0);
+        Polygon obstacle1 = new Polygon(490.0 ,122.0 ,653.0 ,345.0 ,288.0 ,327.0 );//new Polygon(340.0 ,472.0 ,393.0 ,535.0 ,390.0 ,618.0);
         Polygon obstacle2 = null;//new Polygon(766.0 ,509.0 ,747.0 ,596.0 ,804.0 ,612.0);
 
         ArrayList<Polygon> obst = new ArrayList<>();
-        //obst.add(obstacle1);
+       // obst.add(obstacle1);
         //obst.add(obstacle2);
 
 
         ArrayList<Point2D> agents = new ArrayList<>();
         agents.add(agent1Pos);
         //agents.add(agent2Pos);
-        agents.add(agent3Pos);
+       // agents.add(agent3Pos);
         //agents.add(agent4Pos);
 
 
         ArrayList<Polygon> polys = new ArrayList<>();
         polys.add(environment);
-        polys.addAll(obst);
+        //polys.addAll(obst);
 
 
         //System.out.println("Invisible");

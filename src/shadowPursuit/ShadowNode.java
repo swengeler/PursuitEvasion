@@ -207,8 +207,9 @@ public class ShadowNode {
             next.left = this;
         }
         else if(this.getRight() != null && this.getRight() != next && this.getLeft() == null)  {
-            right = next;
-            next.left = this;
+            //System.out.println("THIS = " + this + "\nNEXT = " + next);
+            left = next;
+            next.right = this;
         }
     }
 
@@ -340,14 +341,17 @@ public class ShadowNode {
 
     //For Type3
     public ShadowNode getConnectedType2()   {
-        if(left.getType() == 2) {
+        //System.out.println("PROBLEM FOR =>\n" + this);
+        if(getLeft() != null && getLeft().getType() == 2) {
             return left;
         }
-        else if(right.getType() == 2) {
+        else if(getRight() != null &&getRight().getType() == 2) {
             return right;
         }
-        else
+        else {
+
             return null;
+        }
     }
 
     //For Type3
@@ -363,7 +367,7 @@ public class ShadowNode {
     }
 
     public void connectT2() {
-        //System.out.println("BITCH = " + this);
+
 
         if(this.getType() == 3) {
             if (this.getLeft().getType() == 2) {
@@ -381,5 +385,6 @@ public class ShadowNode {
                 this.getRight().left = this;
             }
         }
+        System.out.println("BITCH = " + this);
     }
 }

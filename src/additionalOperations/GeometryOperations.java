@@ -169,10 +169,9 @@ public class GeometryOperations {
         Point2D start, end;
         start = new Point2D(l1.getStartX(), l1.getStartY());
         end = new Point2D(l1.getEndX(), l1.getEndY());
-        if(onLine(start, l2) || onLine(end, l2))    {
+        if (onLine(start, l2) || onLine(end, l2)) {
             return false;
-        }
-        else {
+        } else {
             return lineIntersect(l1, l2.getStartX(), l2.getStartY(), l2.getEndX(), l2.getEndY());
         }
     }
@@ -301,6 +300,7 @@ public class GeometryOperations {
     }
 
     public static double GetLineYIntesept(Point2D p, double slope) {
+
         return p.getY() - slope * p.getX();
     }
 
@@ -311,18 +311,22 @@ public class GeometryOperations {
 
         double l1x = (line1.getEndX() - line1.getStartX());
         double l2x = (line2.getEndX() - line2.getStartX());
-
+        double slope2, slope1;
         if (l1x == 0) {
-            l1x = 0.000000001;
-        }
+            slope1 = Double.MAX_VALUE;
+            System.out.println("first fuck up");
+            double xvalue = line1.getEndX();
+
+
+        } else
+            slope1 = (line1.getEndY() - line1.getStartY()) / l1x;
+
 
         if (l2x == 0) {
-            l2x = 0.000000001;
-        }
-
-
-        double slope1 = (line1.getEndY() - line1.getStartY()) / l1x;
-        double slope2 = (line2.getEndY() - line2.getStartY()) / l2x;
+            slope2 = Double.MAX_VALUE;
+            System.out.println("second fuck up");
+        } else
+            slope2 = (line2.getEndY() - line2.getStartY()) / l2x;
 
 
         Point2D line1Start, line2Start;
@@ -353,27 +357,26 @@ public class GeometryOperations {
     }
 
 
-    public static ArrayList removeFrom(ShadowNode check, ArrayList<ShadowNode> list)    {
-        double x1,x2,y1,y2;
+    public static ArrayList removeFrom(ShadowNode check, ArrayList<ShadowNode> list) {
+        double x1, x2, y1, y2;
         Point2D pointCheck, tmpPoint, printP1, printP2;
         ShadowNode tmp;
 
         pointCheck = check.getPosition();
         x1 = Math.round(pointCheck.getX());
         y1 = Math.round(pointCheck.getY());
-        printP1 = new Point2D(x1,y1);
+        printP1 = new Point2D(x1, y1);
 
-        if(list.size() != 0)    {
-            for(int i = 0; i < list.size(); i++)    {
+        if (list.size() != 0) {
+            for (int i = 0; i < list.size(); i++) {
                 tmp = list.get(i);
                 tmpPoint = tmp.getPosition();
                 x2 = Math.round(tmpPoint.getX());
                 y2 = Math.round(tmpPoint.getY());
-                printP2 = new Point2D(x2,y2);
+                printP2 = new Point2D(x2, y2);
 
 
-
-                if(x1 == x2 && y1 == y2)    {
+                if (x1 == x2 && y1 == y2) {
                     System.out.println("For => " + printP1 + "\tChecking => " + printP2);
                     list.remove(i);
                     i--;
@@ -383,41 +386,35 @@ public class GeometryOperations {
         return list;
     }
 
-    public static boolean arraycontains(ShadowNode check, ArrayList<ShadowNode> list)    {
-        double x1,x2,y1,y2;
+    public static boolean arraycontains(ShadowNode check, ArrayList<ShadowNode> list) {
+        double x1, x2, y1, y2;
         Point2D pointCheck, tmpPoint, printP1, printP2;
         ShadowNode tmp;
-        boolean yesno=false;
+        boolean yesno = false;
 
         pointCheck = check.getPosition();
         x1 = Math.round(pointCheck.getX());
         y1 = Math.round(pointCheck.getY());
-        printP1 = new Point2D(x1,y1);
+        printP1 = new Point2D(x1, y1);
 
-        if(list.size() != 0)    {
-            for(int i = 0; i < list.size(); i++)    {
+        if (list.size() != 0) {
+            for (int i = 0; i < list.size(); i++) {
                 tmp = list.get(i);
                 tmpPoint = tmp.getPosition();
                 x2 = Math.round(tmpPoint.getX());
                 y2 = Math.round(tmpPoint.getY());
-                printP2 = new Point2D(x2,y2);
+                printP2 = new Point2D(x2, y2);
 
 
-
-                if(x1 == x2 && y1 == y2)    {
+                if (x1 == x2 && y1 == y2) {
                     System.out.println("For => " + printP1 + "\tChecking => " + printP2);
-                    yesno=true;
+                    yesno = true;
                     break;
                 }
             }
         }
         return yesno;
     }
-
-
-
-
-
 
 
     public static double gradient(Line line) {
@@ -491,7 +488,7 @@ public class GeometryOperations {
         return matrix.det() > 0;
     }
 
-    public static Point2D getLineMiddle(Line line)   {
+    public static Point2D getLineMiddle(Line line) {
         Point2D start, end;
         start = new Point2D(line.getStartX(), line.getStartY());
         end = new Point2D(line.getEndX(), line.getEndY());
@@ -499,6 +496,123 @@ public class GeometryOperations {
         end = new Point2D(line.getEndX(), line.getEndY());
         return end;
     }
+
+    public static Point2D findIntersect2(Line line1, Line line2) {
+        Point2D location;
+        location = null;
+
+        double x1, x2, x3, x4,x0;
+        double y1, y2, y3, y4,y0;
+
+        double a1,b1,a2,b2;
+       // a1= 0;
+     //   b1=0;
+      //  a2=0;
+      //  b2=0;
+
+        x1 = line1.getStartX();
+        x2 = line1.getEndX();
+
+        y1 = line1.getStartY();
+        y2 = line1.getEndY();
+
+
+        x3 = line2.getStartX();
+        x4 = line2.getEndX();
+
+        y3 = line2.getStartY();
+        y4 = line2.getEndY();
+
+        if (x1 == x2 && x3 == x4) {
+            //both lines are vertical
+            if (x1 != x3) {
+                //
+                // +System.exit(1);
+                return null;
+            }else
+            if (x1 == x3) {
+                if (y1 <= y3 && y1 >= y4) {
+                    location = new Point2D(x1, y1);
+                    return location;
+                } else if (y1 >= y3 && y1 <= y4) {
+                    location = new Point2D(x1, y1);
+                    return location;
+                } else if ((y2 <= y3 && y2 >= y4) || (y2 >= y3 && y2 <= y4)) {
+                    location = new Point2D(x1, y2);
+                    return location;
+                }
+            } else {
+               // System.exit(2);   return null;
+            }
+
+        }else if(x1 == x2)  {
+            //first line is vertical
+
+            a2=(y4-y3)/(x4-x3);
+            b2 = y3 - a2*x3;
+            x0=x1;
+            y0= b2+a2*x0;
+            location= new Point2D(x0,y0);
+            return location;
+        }else if(x3==x4){
+            a1 = (y2-y1)/(x2-x1);
+            b1 = y1 - a1*x1;
+
+            x0=x3;
+            y0= b1+a1*x0;
+            location= new Point2D(x0,y0);
+            return location;
+        }else{
+            //neither are vertical
+            //check parallel now
+            a1 = (y2-y1)/(x2-x1);
+            b1 = y1 - a1*x1;
+            a2 = (y4-y3)/(x4-x3);
+            b2 = y3 - a2*x3;
+
+
+            if(a1 == a2){
+                //they parallel now are they overlapping?
+                if((y1 <= y3 && y1 >= y4)|| (y1 >= y3 && y1 <= y4) ){
+                    location= new Point2D(x1,y1);
+                    return location;
+                }else if((y2 <= y3 && y2 >= y4) ||
+                        (y2 >= y3 && y2 <= y4)){
+                    location= new Point2D(x2,y2);
+                    return location;
+
+                }else{
+                   // System.exit(3);
+                    return null;
+                }
+            }// now we know they arent vertical or parallel
+            else{
+                x0= -(b1-b2)/(a1-a2);
+                y0=b2+a2*x0;
+                location=new Point2D(x0,y0);
+                if(Math.min(x1,x2)<=x0 && x0 <=Math.max(x1,x2) &&
+                        Math.min(x3,x4)<=x0 && x0 <=Math.max(x3,x4) ){
+                    return location;
+                }
+                else {
+                   // System.exit(4);
+                    return null;
+                }
+            }
+
+        }
+        System.out.println("intersection not working");
+        System.exit(5817);
+
+
+
+
+
+
+
+
+        return location;
+}
 
 
 
