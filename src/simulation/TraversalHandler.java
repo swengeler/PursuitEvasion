@@ -90,6 +90,10 @@ public class TraversalHandler {
         }
     }
 
+    public ArrayList<DTriangle> getSeparatingTriangles() {
+        return separatingTriangles;
+    }
+
     public TGNode getLeaf() {
         for (int i = 0; i < adjacencyMatrix.length; i++) {
             int count = 0;

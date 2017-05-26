@@ -19,7 +19,6 @@ public class Simulation {
 
     private long timeStep = 300;
 
-
     //extra boolean to printout polygons for shadowtests
     private final boolean polyPrint = true;
 

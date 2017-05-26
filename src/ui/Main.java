@@ -7,6 +7,7 @@ import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
@@ -65,6 +66,7 @@ public class Main extends Application {
     private ArrayList<Entity> evadingEntities = new ArrayList<>();
     private MapRepresentation map;
     private AdaptedSimulation adaptedSimulation;
+    private Entity activeEntity;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //
@@ -1667,6 +1669,17 @@ public class Main extends Application {
         menuSeparator5.setMaxHeight(10);
         menu.getChildren().addAll(menuSeparator4, menuLabel3, menuSeparator5);
 
+        Button startIntroducingEntitiesButton = new Button("Start introducing entities");
+        startIntroducingEntitiesButton.setOnAction(e -> {
+            if (mapPolygons == null || mapPolygons.isEmpty()) {
+                System.out.println("Not enough data to construct simulation!");
+            } else {
+                initPlaceAgents();
+                map = new MapRepresentation(mapPolygons);
+            }
+        });
+        menu.getChildren().add(startIntroducingEntitiesButton);
+
         Button placeDCREntityButton = new Button("Place DCR entity");
         placeDCREntityButton.setOnAction(e -> {
             map = new MapRepresentation(mapPolygons, null, evadingEntities);
@@ -1678,7 +1691,7 @@ public class Main extends Application {
 
         Button placeRandomEntity = new Button("Place random entity (evading)");
         placeRandomEntity.setOnAction(e -> {
-            map = new MapRepresentation(mapPolygons, null, evadingEntities);
+            useEntities.set(true);
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
@@ -2068,20 +2081,19 @@ public class Main extends Application {
                                 mapPolygons.get(0).setMouseTransparent(true);
                             } else {
                                 // new behaviour
-                                /*VisualAgent va1 = new VisualAgent(e.getX(), e.getY());
-                                va1.getAgentBody().setFill(Color.LAWNGREEN);
-                                VisualAgent va2 = new VisualAgent(e.getX(), e.getY());
-                                va2.getAgentBody().setFill(Color.LAWNGREEN);
-                                pane.getChildren().addAll(va1, va2);
-                                testEntity.addAgent(new Agent(va1.getSettings()));
-                                testEntity.addAgent(new Agent(va2.getSettings()));*/
-
-                                VisualAgent va1 = new VisualAgent(e.getX(), e.getY());
-                                va1.getAgentBody().setFill(Color.LAWNGREEN);
-                                pane.getChildren().add(va1);
+                                VisualAgent va = new VisualAgent(e.getX(), e.getY());
+                                va.getAgentBody().setFill(Color.LAWNGREEN);
+                                pane.getChildren().add(va);
+                                visualAgents.add(va);
                                 testEntity = new RandomEntity(map);
-                                ((DistributedEntity) testEntity).setAgent(new Agent(va1.getSettings()));
+                                ((DistributedEntity) testEntity).setAgent(new Agent(va.getSettings()));
                                 evadingEntities.add(testEntity);
+
+                                for (Shape s : covers) {
+                                    s.toFront();
+                                }
+                                mapPolygons.get(0).toFront();
+                                mapPolygons.get(0).setMouseTransparent(true);
                             }
                         }
                     }
@@ -2239,4 +2251,5 @@ public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+
 }

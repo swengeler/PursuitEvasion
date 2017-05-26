@@ -12,6 +12,7 @@ public abstract class CentralisedEntity extends Entity {
 
     protected CentralisedEntity(MapRepresentation map) {
         super(map);
+        availableAgents = new ArrayList<>();
     }
 
     public abstract int totalRequiredAgents();
