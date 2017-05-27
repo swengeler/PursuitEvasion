@@ -18,6 +18,8 @@ import java.util.List;
 
 public class HideEvaderPolicy extends MovePolicy {
 
+    public static boolean stopDont = false;
+
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
@@ -51,8 +53,7 @@ public class HideEvaderPolicy extends MovePolicy {
 
             for (Agent pursuer : agents) {
 
-                if (pursuer.isPursuer()) {
-
+                if (pursuer.isPursuer() && !stopDont) {
                     PlannedPath shortestPath = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
                     midpointDistance += shortestPath.getTotalLength();
                     numberOfVertices += shortestPath.pathLength();

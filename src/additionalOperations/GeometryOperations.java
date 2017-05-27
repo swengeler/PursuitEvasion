@@ -177,6 +177,13 @@ public class GeometryOperations {
     }
 
     public static boolean inPolygon(Polygon polygon, double startX, double startY, double endX, double endY) {
+        Line temp;
+        for (int i = 0; i < polygon.getPoints().size(); i += 2) {
+            temp = new Line(polygon.getPoints().get(i), polygon.getPoints().get(i + 1), polygon.getPoints().get((i + 2) % polygon.getPoints().size()), polygon.getPoints().get((i + 3) % polygon.getPoints().size()));
+            if (temp.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2))) {
+                return true;
+            }
+        }
         return polygon.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2));
     }
 

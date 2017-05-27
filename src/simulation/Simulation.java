@@ -12,7 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Simulation {
 
-    private Timer simulationTimer;
+    private static Timer simulationTimer;
 
     private MapRepresentation map;
     private ArrayList<Agent> agents;
@@ -64,6 +64,10 @@ public class Simulation {
                 c.setCenterY(c.getCenterY() + ThreadLocalRandom.current().nextInt(-9, 10));
             }
         });
+    }
+
+    public static void masterPause() {
+        simulationTimer.stop();
     }
 
     private void timerSetup() {

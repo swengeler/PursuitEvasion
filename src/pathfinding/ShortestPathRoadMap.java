@@ -5,12 +5,12 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
+import org.jdelaunay.delaunay.geometries.DPoint;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import simulation.MapRepresentation;
-import simulation.PlannedPath;
+import simulation.*;
 import ui.Main;
 
 import java.util.ArrayList;
@@ -175,6 +175,8 @@ public class ShortestPathRoadMap {
         shortestPathGraph.addVertex(sourceVertex);
         shortestPathGraph.addVertex(sinkVertex);
 
+        System.out.println("nr edges before: " + shortestPathGraph.edgeSet().size());
+
         // add new edges between source and sink and the visible nodes of the graph
         // first for the source
         for (PathVertex pv : shortestPathGraph.vertexSet()) {
@@ -201,11 +203,32 @@ public class ShortestPathRoadMap {
         DijkstraShortestPath<PathVertex, DefaultWeightedEdge> shortestPathCalculator = new DijkstraShortestPath<>(shortestPathGraph);
         GraphPath<PathVertex, DefaultWeightedEdge> graphPath = shortestPathCalculator.getPath(sourceVertex, sinkVertex);
         PathVertex pv1, pv2;
-        for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
-            pv1 = graphPath.getVertexList().get(i);
-            pv2 = graphPath.getVertexList().get(i + 1);
-            plannedPath.addLine(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
-            //Main.pane.getChildren().add(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
+        try {
+            for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
+                pv1 = graphPath.getVertexList().get(i);
+                pv2 = graphPath.getVertexList().get(i + 1);
+                plannedPath.addLine(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
+                //Main.pane.getChildren().add(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
+            }
+        } catch (NullPointerException e) {
+            //e.printStackTrace();
+            System.out.println("graphPath: " + graphPath);
+            System.out.printf("Source: (%.3f|%.3f)\n", source.getX(), source.getY());
+            System.out.printf("Sink: (%.3f|%.3f)\n", sink.getX(), sink.getY());
+            System.out.println("nr edges after: " + shortestPathGraph.edgeSet().size());
+
+            for (PathVertex vertex : shortestPathGraph.vertexSet()) {
+                Main.pane.getChildren().add(new Circle(vertex.getX(), vertex.getY(), 5, Color.CYAN));
+            }
+            Main.pane.getChildren().add(new Circle(source.getX(), source.getY(), 3, Color.ORANGE));
+            Main.pane.getChildren().add(new Circle(sink.getX(), sink.getY(), 3, Color.ORANGE));
+
+            for (DefaultWeightedEdge edge : shortestPathGraph.edgeSet()) {
+                Main.pane.getChildren().add(new Line(shortestPathGraph.getEdgeSource(edge).getX(), shortestPathGraph.getEdgeSource(edge).getY(), shortestPathGraph.getEdgeTarget(edge).getX(), shortestPathGraph.getEdgeTarget(edge).getY()));
+            }
+
+            Simulation.masterPause();
+            HideEvaderPolicy.stopDont = true;
         }
 
         // remove the source and sink vertices
