@@ -6,25 +6,15 @@ import entities.*;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Font;
@@ -33,16 +23,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DPoint;
-import org.jdelaunay.delaunay.geometries.DTriangle;
+import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Main extends Application {
 
@@ -55,7 +41,6 @@ public class Main extends Application {
     private Stage stage;
 
     private HBox outerLayout;
-    private VBox entityMenu;
     private VBox menu;
     public static ZoomablePane pane;
 
@@ -68,7 +53,6 @@ public class Main extends Application {
     private ArrayList<Circle> pursuers;
     private ArrayList<Circle> evaders;
     private ArrayList<VisualAgent> visualAgents;
-    private ArrayList<RadioButton> entitiesList;
 
     private BooleanProperty addPoints;
 
@@ -110,15 +94,7 @@ public class Main extends Application {
 
         // top-level container, partitions window into drawing pane and menu
         outerLayout = new HBox();
-        outerLayout.setPrefSize(1400, 800);
-
-        // entity menu
-        entityMenu = new VBox();
-        entityMenu.setStyle("-fx-background-color: #ffffff");
-        entityMenu.setMinWidth(190);
-        entityMenu.setPrefSize(190, 600);
-        entityMenu.setMaxWidth(190);
-
+        outerLayout.setPrefSize(1200, 800);
 
         // sidebar menu, currently with dummy buttons
         menu = new VBox();
@@ -130,13 +106,6 @@ public class Main extends Application {
         // zoomable drawing pane
         pane = new ZoomablePane();
 
-        // separator between menus
-        Separator menuSeparator = new Separator(Orientation.VERTICAL);
-        menuSeparator.setStyle("-fx-background-color: #ffffff");
-        menuSeparator.setMinWidth(10);
-        menuSeparator.setPrefWidth(10);
-        menuSeparator.setMaxWidth(10);
-
         // separator between pane and menu
         Separator separator = new Separator(Orientation.VERTICAL);
         separator.setStyle("-fx-background-color: #ffffff");
@@ -145,10 +114,9 @@ public class Main extends Application {
         separator.setMaxWidth(10);
 
         // adding elements to the top-level container
-        outerLayout.getChildren().addAll(pane, separator, entityMenu, menuSeparator, menu);
+        outerLayout.getChildren().addAll(pane, separator, menu);
         menu.toFront();
         HBox.setHgrow(pane, Priority.ALWAYS);
-        HBox.setHgrow(entityMenu, Priority.NEVER);
         HBox.setHgrow(menu, Priority.NEVER);
 
         // line indicating where a line will be drawn when clicked
@@ -1741,6 +1709,10 @@ public class Main extends Application {
 
         Button placeDCREntityButton = new Button("Place random entity (evading)");
         placeDCREntityButton.setOnAction(e -> {
+            if (map == null) {
+                map = new MapRepresentation(mapPolygons);
+            }
+
             VisualAgent va = new VisualAgent(500, 500);
             va.getAgentBody().setFill(Color.LAWNGREEN);
             pane.getChildren().add(va);
@@ -1799,77 +1771,6 @@ public class Main extends Application {
             //System.out.println("val = " + newValue);
             if (adaptedSimulation != null) {
                 adaptedSimulation.setTimeStep((int) (double) newValue);
-            }
-        });
-
-        // entity Menu stuff
-        Label entityLabel = new Label("Entity menu");
-        entityLabel.setFont(Font.font("Arial", 14));
-
-        Separator entityLabelSeparator = new Separator(Orientation.HORIZONTAL);
-        entityLabelSeparator.setStyle("-fx-background-color: #ffffff");
-        entityLabelSeparator.setMinHeight(10);
-        entityLabelSeparator.setPrefHeight(10);
-        entityLabelSeparator.setMaxHeight(10);
-
-        entityMenu.getChildren().addAll(entityLabel, entityLabelSeparator);
-
-        ComboBox<String> entities = new ComboBox<>();
-        entities.getItems().addAll("Random entity", "Straight line entity", "Flocking evader entity", "Hide evader entity", "Dummy entity");
-        entities.setValue("Random entity");
-
-        Button addEntity = new Button("Add");
-
-        entityMenu.getChildren().addAll(entities, addEntity);
-
-        Label entityLabel2 = new Label("Entities in use");
-        entityLabel2.setFont(Font.font("Arial", 14));
-
-        Separator entityLabel2Separator = new Separator(Orientation.HORIZONTAL);
-        entityLabel2Separator.setStyle("-fx-background-color: #ffffff");
-        entityLabel2Separator.setMinHeight(10);
-        entityLabel2Separator.setPrefHeight(10);
-        entityLabel2Separator.setMaxHeight(10);
-
-        entityMenu.getChildren().addAll(entityLabel2, entityLabel2Separator);
-
-        entitiesList = new ArrayList<>();
-
-        ToggleGroup toggleGroup = new ToggleGroup();
-
-        toggleGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
-            public void changed(ObservableValue<? extends Toggle> ov, Toggle old_toggle, Toggle new_toggle) {
-
-                if (old_toggle != null) {
-                    RadioButton old = (RadioButton) old_toggle;
-                    old.setStyle("-fx-text-fill: #e74c3c");
-                }
-
-                if (toggleGroup.getSelectedToggle() != null) {
-                    RadioButton selected = (RadioButton) toggleGroup.getSelectedToggle();
-                    selected.setStyle("-fx-text-fill: #2ecc71");
-                }
-
-            }
-        });
-
-        addEntity.setOnAction(ae -> {
-            boolean flag = false;
-            RadioButton entButton = new RadioButton(entities.getValue());
-            entButton.setStyle("-fx-text-fill: #2ecc71");
-
-            for (RadioButton entButton2: entitiesList) {
-                if (entButton.getText().equals(entButton2.getText())) {
-                    System.out.println("Entity already present!");
-                    flag = true;
-                }
-            }
-
-            if (!flag) {
-                entButton.setToggleGroup(toggleGroup);
-                entButton.setSelected(true);
-                entitiesList.add(entButton);
-                entityMenu.getChildren().add(entButton);
             }
         });
 

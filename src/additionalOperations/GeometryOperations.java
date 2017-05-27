@@ -324,15 +324,17 @@ public class GeometryOperations {
             double xvalue = line1.getEndX();
 
 
-        } else
+        } else {
             slope1 = (line1.getEndY() - line1.getStartY()) / l1x;
+        }
 
 
         if (l2x == 0) {
             slope2 = Double.MAX_VALUE;
             System.out.println("second fuck up");
-        } else
+        } else {
             slope2 = (line2.getEndY() - line2.getStartY()) / l2x;
+        }
 
 
         Point2D line1Start, line2Start;
@@ -507,14 +509,14 @@ public class GeometryOperations {
         Point2D location;
         location = null;
 
-        double x1, x2, x3, x4,x0;
-        double y1, y2, y3, y4,y0;
+        double x1, x2, x3, x4, x0;
+        double y1, y2, y3, y4, y0;
 
-        double a1,b1,a2,b2;
-       // a1= 0;
-     //   b1=0;
-      //  a2=0;
-      //  b2=0;
+        double a1, b1, a2, b2;
+        // a1= 0;
+        //   b1=0;
+        //  a2=0;
+        //  b2=0;
 
         x1 = line1.getStartX();
         x2 = line1.getEndX();
@@ -535,8 +537,7 @@ public class GeometryOperations {
                 //
                 // +System.exit(1);
                 return null;
-            }else
-            if (x1 == x3) {
+            } else if (x1 == x3) {
                 if (y1 <= y3 && y1 >= y4) {
                     location = new Point2D(x1, y1);
                     return location;
@@ -548,60 +549,59 @@ public class GeometryOperations {
                     return location;
                 }
             } else {
-               // System.exit(2);   return null;
+                // System.exit(2);   return null;
             }
 
-        }else if(x1 == x2)  {
+        } else if (x1 == x2) {
             //first line is vertical
 
-            a2=(y4-y3)/(x4-x3);
-            b2 = y3 - a2*x3;
-            x0=x1;
-            y0= b2+a2*x0;
-            location= new Point2D(x0,y0);
+            a2 = (y4 - y3) / (x4 - x3);
+            b2 = y3 - a2 * x3;
+            x0 = x1;
+            y0 = b2 + a2 * x0;
+            location = new Point2D(x0, y0);
             return location;
-        }else if(x3==x4){
-            a1 = (y2-y1)/(x2-x1);
-            b1 = y1 - a1*x1;
+        } else if (x3 == x4) {
+            a1 = (y2 - y1) / (x2 - x1);
+            b1 = y1 - a1 * x1;
 
-            x0=x3;
-            y0= b1+a1*x0;
-            location= new Point2D(x0,y0);
+            x0 = x3;
+            y0 = b1 + a1 * x0;
+            location = new Point2D(x0, y0);
             return location;
-        }else{
+        } else {
             //neither are vertical
             //check parallel now
-            a1 = (y2-y1)/(x2-x1);
-            b1 = y1 - a1*x1;
-            a2 = (y4-y3)/(x4-x3);
-            b2 = y3 - a2*x3;
+            a1 = (y2 - y1) / (x2 - x1);
+            b1 = y1 - a1 * x1;
+            a2 = (y4 - y3) / (x4 - x3);
+            b2 = y3 - a2 * x3;
 
 
-            if(a1 == a2){
+            if (a1 == a2) {
                 //they parallel now are they overlapping?
-                if((y1 <= y3 && y1 >= y4)|| (y1 >= y3 && y1 <= y4) ){
-                    location= new Point2D(x1,y1);
+                if ((y1 <= y3 && y1 >= y4) || (y1 >= y3 && y1 <= y4)) {
+                    location = new Point2D(x1, y1);
                     return location;
-                }else if((y2 <= y3 && y2 >= y4) ||
-                        (y2 >= y3 && y2 <= y4)){
-                    location= new Point2D(x2,y2);
+                } else if ((y2 <= y3 && y2 >= y4) ||
+                        (y2 >= y3 && y2 <= y4)) {
+                    location = new Point2D(x2, y2);
                     return location;
 
-                }else{
-                   // System.exit(3);
+                } else {
+                    // System.exit(3);
                     return null;
                 }
             }// now we know they arent vertical or parallel
-            else{
-                x0= -(b1-b2)/(a1-a2);
-                y0=b2+a2*x0;
-                location=new Point2D(x0,y0);
-                if(Math.min(x1,x2)<=x0 && x0 <=Math.max(x1,x2) &&
-                        Math.min(x3,x4)<=x0 && x0 <=Math.max(x3,x4) ){
+            else {
+                x0 = -(b1 - b2) / (a1 - a2);
+                y0 = b2 + a2 * x0;
+                location = new Point2D(x0, y0);
+                if (Math.min(x1, x2) <= x0 && x0 <= Math.max(x1, x2) &&
+                        Math.min(x3, x4) <= x0 && x0 <= Math.max(x3, x4)) {
                     return location;
-                }
-                else {
-                   // System.exit(4);
+                } else {
+                    // System.exit(4);
                     return null;
                 }
             }
@@ -611,15 +611,8 @@ public class GeometryOperations {
         System.exit(5817);
 
 
-
-
-
-
-
-
         return location;
-}
-
+    }
 
 
 }

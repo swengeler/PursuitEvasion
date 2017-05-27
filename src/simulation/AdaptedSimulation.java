@@ -2,14 +2,10 @@ package simulation;
 
 import entities.CentralisedEntity;
 import entities.Entity;
-import javafx.collections.ObservableList;
-import javafx.scene.shape.Circle;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class AdaptedSimulation {
 

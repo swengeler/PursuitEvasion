@@ -1,16 +1,18 @@
 package entities;
 
 import additionalOperations.Tuple;
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.*;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
-import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 import ui.Main;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DCR = Divide and Conquer, Randomized
@@ -54,6 +56,7 @@ public class DCREntity extends CentralisedEntity {
         if (!guardsPositioned()) {
             // let the guards move along their respective paths
             for (int i = 0; i < guards.size(); i++) {
+                System.out.println("Guard " + (i + 1) + " moved towards initial position");
                 if (guards.get(i).getXPos() != initGuardPaths.get(i).getEndX() || guards.get(i).getYPos() != initGuardPaths.get(i).getEndY()) {
                     // this guard is not at its final destination and will be moved along the path
                     guardPathLines = initGuardPaths.get(i).getPathLines();
@@ -188,8 +191,14 @@ public class DCREntity extends CentralisedEntity {
                     }
                 }
                 guards.add(tempClosestAgent);
+                Label l = new Label("guard");
+                l.setTranslateX(tempClosestAgent.getXPos());
+                l.setTranslateY(tempClosestAgent.getYPos());
+                Main.pane.getChildren().add(l);
                 initGuardPaths.add(bestShortestPath);
             }
+            System.out.println("guards: " + guards.size());
+
             // the computed PlannedPath objects will initially be used to position all the guards in their correct locations
             // the (at least 2) remaining agents will be assigned to be searcher (and catcher)
             for (Agent a : availableAgents) {
@@ -279,7 +288,7 @@ public class DCREntity extends CentralisedEntity {
 
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
-            traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, separatingTriangles, spanningTreeAdjacencyMatrix);
+            traversalHandler = new TraversalHandler(map, shortestPathRoadMap, nodes, simplyConnectedComponents, separatingTriangles, spanningTreeAdjacencyMatrix);
             requiredAgents = 2 + separatingTriangles.size();
             System.out.println("\nrequiredAgents: " + requiredAgents);
         } catch (DelaunayError error) {

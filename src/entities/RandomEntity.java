@@ -1,6 +1,7 @@
 package entities;
 
-import simulation.*;
+import simulation.Agent;
+import simulation.MapRepresentation;
 
 public class RandomEntity extends DistributedEntity {
 

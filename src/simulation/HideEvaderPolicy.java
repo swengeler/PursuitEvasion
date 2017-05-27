@@ -7,9 +7,7 @@ import javafx.scene.shape.Polygon;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DPoint;
-import org.jdelaunay.delaunay.geometries.DTriangle;
+import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
@@ -101,7 +99,7 @@ public class HideEvaderPolicy extends MovePolicy {
         double separationDeltaX = 0;
         double separationDeltaY = 0;
 
-        for (Agent pursuer: agents) {
+        for (Agent pursuer : agents) {
 
             if (pursuer.isPursuer()) {
                 double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
@@ -127,8 +125,8 @@ public class HideEvaderPolicy extends MovePolicy {
             separationDeltaX /= dlength;
             separationDeltaY /= dlength;
 
-            separationDeltaX *= evader.getSpeed() * 1/250;
-            separationDeltaY *= evader.getSpeed() * 1/250;
+            separationDeltaX *= evader.getSpeed() * 1 / 250;
+            separationDeltaY *= evader.getSpeed() * 1 / 250;
 
         }
 
@@ -154,7 +152,7 @@ public class HideEvaderPolicy extends MovePolicy {
         int numberOfVertices = Integer.MIN_VALUE;
         String s = "";
 
-        for (Triplet<Point2D, Double, Integer> triplet: midpointData) {
+        for (Triplet<Point2D, Double, Integer> triplet : midpointData) {
 
             if (mode == 0) {
                 if (triplet.getValue1() > euclideanDistance) {
@@ -163,7 +161,7 @@ public class HideEvaderPolicy extends MovePolicy {
                     s = "EUCLIDEAN DIST";
                 }
             } else if (mode == 1) {
-                if (triplet.getValue2() > numberOfVertices)  {
+                if (triplet.getValue2() > numberOfVertices) {
                     numberOfVertices = triplet.getValue2();
                     target = triplet.getValue0();
                     s = "NUM OF VERTS";

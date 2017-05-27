@@ -16,6 +16,7 @@ public abstract class Entity {
     }
 
     public abstract void move();
+
     public abstract boolean isActive();
 
 }
