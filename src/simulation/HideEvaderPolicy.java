@@ -18,6 +18,8 @@ import java.util.List;
 
 public class HideEvaderPolicy extends MovePolicy {
 
+    //add separation force
+
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
@@ -57,7 +59,7 @@ public class HideEvaderPolicy extends MovePolicy {
                     midpointDistance += shortestPath.getTotalLength();
                     numberOfVertices += shortestPath.pathLength();
 
-                    System.out.println("dist: " + midpointDistance);
+                    //System.out.println("dist: " + midpointDistance);
 
                 }
 
@@ -81,8 +83,6 @@ public class HideEvaderPolicy extends MovePolicy {
             }
         }
 
-        // || traversalHandler.getNodeIndex(evader.getXPos(), evader.getYPos()) == currentPath.getEndIndex()
-
         pathLines = currentPath.getPathLines();
 
         if ((i > (pathLines.size() - 1))) {
@@ -94,8 +94,38 @@ public class HideEvaderPolicy extends MovePolicy {
         double deltaX = (pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length * getSingleAgent().getSpeed() / 50;
         double deltaY = (pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length * getSingleAgent().getSpeed() / 50;
 
+
+        //separation to be done here
+
+        int numberOfSeparationPursuers = 0;
+        double separationDeltaX = 0;
+        double separationDeltaY = 0;
+
+        for (Agent pursuer: agents) {
+
+            if (pursuer.isPursuer()) {
+                double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
+                if (dist <= 100) {
+                    separationDeltaX += (pursuer.getXPos() - evader.getXPos());
+                    separationDeltaY += (pursuer.getYPos() - evader.getYPos());
+                    numberOfSeparationPursuers++;
+                }
+            }
+
+        }
+
+        if (numberOfSeparationPursuers != 0) {
+            //if there are seperation pursuers, do further calculations (normalizing, reversing (180 degrees))
+
+            System.out.println("should separate");
+
+            separationDeltaX = -separationDeltaX / numberOfSeparationPursuers;
+            separationDeltaY = -separationDeltaY / numberOfSeparationPursuers;
+        }
+
+        //how to actually connect deltaX & separationdeltaX ?
+
         if (pathLines.get(i).contains(evader.getXPos() + deltaX, evader.getYPos() + deltaY)) {
-            // move along line
             result = new Move(deltaX, deltaY, 0);
         } else {
             result = new Move(pathLines.get(i).getEndX() - getSingleAgent().getXPos(), pathLines.get(i).getEndY() - getSingleAgent().getYPos(), 0);
@@ -145,7 +175,7 @@ public class HideEvaderPolicy extends MovePolicy {
 
         }
 
-        System.out.println("BEST POINT IS " + target.getX() + ":" + target.getY() + " | " + s);
+        //System.out.println("BEST POINT IS " + target.getX() + ":" + target.getY() + " | " + s);
         return target;
     }
 
