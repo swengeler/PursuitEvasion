@@ -18,6 +18,8 @@ public class AdaptedSimulation {
     private MapRepresentation map;
     private long timeStep = 300;
 
+    private boolean isPaused;
+
     public AdaptedSimulation(MapRepresentation map) {
         this.map = map;
         timerSetup();
@@ -63,14 +65,21 @@ public class AdaptedSimulation {
                 System.out.println("All evaders captured");
             }
         });
+        isPaused = false;
+    }
+
+    public boolean isPaused() {
+        return isPaused;
     }
 
     public void pause() {
         simulationTimer.stop();
+        isPaused = true;
     }
 
     public void unPause() {
         simulationTimer.restart();
+        isPaused = false;
     }
 
     public void setTimeStep(long timeStep) {
