@@ -1668,7 +1668,22 @@ public class Main extends Application {
                 System.out.println("Not enough data to construct simulation!");
             } else {
                 map = new MapRepresentation(mapPolygons);
-                ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
+                ArrayList<DTriangle> excluded = new ArrayList<>();
+                try {
+                    excluded.add(new DTriangle(
+                            new DPoint(969.0, 759.0, 0.0),
+                            new DPoint(41.0, 750.0, 0.0),
+                            new DPoint(506.0, 624.0, 0.0)
+                    ));
+                    /*excluded.add(new DTriangle(
+                            new DPoint(120.0, 443.0, 0.0),
+                            new DPoint(41.0, 750.0, 0.0),
+                            new DPoint(506.0, 624.0, 0.0)
+                    ));*/
+                } catch (DelaunayError delaunayError) {
+                    delaunayError.printStackTrace();
+                }
+                ShortestPathRoadMap sprm = new ShortestPathRoadMap(map, excluded);
             }
         });
         menu.getChildren().add(shortestPathMapButton);
@@ -1964,7 +1979,9 @@ public class Main extends Application {
                     // map data only
                     String[] coords;
                     double[] coordsDouble;
-                    do {
+                    boolean firstLoop = true;
+                    while (firstLoop || ((line = in.readLine()) != null && !line.isEmpty())) {
+                        firstLoop = false;
                         coords = line.split(" ");
                         coordsDouble = new double[coords.length];
                         for (int i = 0; i < coords.length; i++) {
@@ -2001,7 +2018,7 @@ public class Main extends Application {
                                 pane.getChildren().add(currentMapPolygon);
                             }
                         }
-                    } while ((line = in.readLine()) != null);
+                    }
 
                     indicatorLine.setVisible(false);
                 }
