@@ -20,6 +20,7 @@ public class HideEvaderPolicy extends MovePolicy {
 
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
+    private Point2D ctarget;
 
     ArrayList<Line> pathLines;
     int i = 0;
@@ -69,10 +70,22 @@ public class HideEvaderPolicy extends MovePolicy {
         target = getMin(midpointData, 2);
 
         if (target != null) {
-            currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
+            if (ctarget == null) {
+                currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
+                i = 0;
+            } else if (!ctarget.equals(target)) {
+                currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
+                i = 0;
+            }
         }
 
+        // || traversalHandler.getNodeIndex(evader.getXPos(), evader.getYPos()) == currentPath.getEndIndex()
+
         pathLines = currentPath.getPathLines();
+
+        if ((i > (pathLines.size() - 1))) {
+            return new Move(0, 0, 0);
+        }
 
         Move result;
         double length = Math.sqrt(Math.pow(pathLines.get(i).getEndX() - pathLines.get(i).getStartX(), 2) + Math.pow(pathLines.get(i).getEndY() - pathLines.get(i).getStartY(), 2));
