@@ -1,6 +1,5 @@
 package simulation;
 
-
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
@@ -19,6 +18,7 @@ import java.util.List;
 public class HideEvaderPolicy extends MovePolicy {
 
     //add separation force
+    //only recompute every XX timestep
 
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
@@ -121,9 +121,21 @@ public class HideEvaderPolicy extends MovePolicy {
 
             separationDeltaX = -separationDeltaX / numberOfSeparationPursuers;
             separationDeltaY = -separationDeltaY / numberOfSeparationPursuers;
+
+
+            double dlength = Math.sqrt(Math.pow(separationDeltaX, 2) + Math.pow(separationDeltaY, 2));
+            separationDeltaX /= dlength;
+            separationDeltaY /= dlength;
+
+            separationDeltaX *= evader.getSpeed() * 1/250;
+            separationDeltaY *= evader.getSpeed() * 1/250;
+
         }
 
         //how to actually connect deltaX & separationdeltaX ?
+
+        //deltaX = deltaX + separationDeltaX;
+        //deltaY = deltaY + separationDeltaY;
 
         if (pathLines.get(i).contains(evader.getXPos() + deltaX, evader.getYPos() + deltaY)) {
             result = new Move(deltaX, deltaY, 0);
