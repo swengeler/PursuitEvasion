@@ -105,18 +105,15 @@ public class MapRepresentation {
         // (given its field of view and the structure of the map)
         for (Line l : polygonEdges) {
             if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
-                System.out.printf("GeometryOperations.lineIntersect(l, %.3f, %.3f, %.3f, %.3f) = true\n", x1, y1, x2, y2);
                 return false;
             }
         }
         for (Polygon p : obstaclePolygons) {
             if (GeometryOperations.inPolygonWithoutBorder(p, x1, y1, x2, y2)) {
-                System.out.printf("GeometryOperations.inPolygonWithoutBorder(p, %.3f, %.3f, %.3f, %.3f) = true\n", x1, y1, x2, y2);
                 return false;
             }
         }
         if (!GeometryOperations.inPolygon(borderPolygon, x1, y1, x2, y2)) {
-            System.out.printf("!GeometryOperations.inPolygon(borderPolygon, %.3f, %.3f, %.3f, %.3f) = true\n", x1, y1, x2, y2);
             return false;
         }
         return true;

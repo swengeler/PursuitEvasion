@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import org.jdelaunay.delaunay.geometries.DPoint;
+import org.jdelaunay.delaunay.geometries.DTriangle;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -22,7 +23,8 @@ public class ShortestPathRoadMap {
     private SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph;
 
     public ShortestPathRoadMap(MapRepresentation map) {
-        init(map);
+        this.map = map;
+        init(null);
         /*ArrayList<PathVertex> reflexVertices = findReflex(map);
         for (PathVertex pv : reflexVertices) {
             Circle circle = new Circle(pv.getX(), pv.getY(), 5, Color.CYAN);
@@ -30,8 +32,11 @@ public class ShortestPathRoadMap {
         }*/
     }
 
-    private void init(MapRepresentation map) {
-        this.map = map;
+    public ShortestPathRoadMap(MapRepresentation map, ArrayList<DTriangle> excludedTriangles) {
+        init(excludedTriangles);
+    }
+
+    private void init(ArrayList<DTriangle> excludedTriangles) {
         shortestPathGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
         System.out.println(map.getAllPolygons().size());
@@ -40,7 +45,13 @@ public class ShortestPathRoadMap {
         ArrayList<PathVertex> reflexVertices = new ArrayList<>();
         ArrayList<int[]> pointers = new ArrayList<>();
 
-        ArrayList<Polygon> polygons = map.getAllPolygons();
+        ArrayList<Polygon> polygons;
+        if (excludedTriangles == null) {
+            polygons = map.getAllPolygons();
+        } else {
+            polygons = new ArrayList<>();
+            // TODO: select reflex vertices and edges of the graph while accounting for separating triangles being encluded from it (and possibly creating new reflex vertices)
+        }
         ArrayList<ArrayList<Point2D>> allPoints = new ArrayList<>();
         ArrayList<Point2D> currentPoints;
         ArrayList<Integer> currentIndeces;
@@ -175,8 +186,6 @@ public class ShortestPathRoadMap {
         shortestPathGraph.addVertex(sourceVertex);
         shortestPathGraph.addVertex(sinkVertex);
 
-        System.out.println("nr edges before: " + shortestPathGraph.edgeSet().size());
-
         // add new edges between source and sink and the visible nodes of the graph
         // first for the source
         for (PathVertex pv : shortestPathGraph.vertexSet()) {
@@ -211,11 +220,10 @@ public class ShortestPathRoadMap {
                 //Main.pane.getChildren().add(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
             }
         } catch (NullPointerException e) {
-            //e.printStackTrace();
-            System.out.println("graphPath: " + graphPath);
+            e.printStackTrace();
+            /*System.out.println("graphPath: " + graphPath);
             System.out.printf("Source: (%.3f|%.3f)\n", source.getX(), source.getY());
             System.out.printf("Sink: (%.3f|%.3f)\n", sink.getX(), sink.getY());
-            System.out.println("nr edges after: " + shortestPathGraph.edgeSet().size());
 
             for (PathVertex vertex : shortestPathGraph.vertexSet()) {
                 Main.pane.getChildren().add(new Circle(vertex.getX(), vertex.getY(), 5, Color.CYAN));
@@ -225,9 +233,7 @@ public class ShortestPathRoadMap {
 
             for (DefaultWeightedEdge edge : shortestPathGraph.edgeSet()) {
                 Main.pane.getChildren().add(new Line(shortestPathGraph.getEdgeSource(edge).getX(), shortestPathGraph.getEdgeSource(edge).getY(), shortestPathGraph.getEdgeTarget(edge).getX(), shortestPathGraph.getEdgeTarget(edge).getY()));
-            }
-
-            Simulation.masterPause();
+            }*/
         }
 
         // remove the source and sink vertices

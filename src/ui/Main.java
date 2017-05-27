@@ -1704,7 +1704,7 @@ public class Main extends Application {
         });
         menu.getChildren().add(startIntroducingEntitiesButton);
 
-        Button placeDCREntityButton = new Button("Place DCR entity");
+        Button placeDCREntityButton = new Button("Place random entity (evading)");
         placeDCREntityButton.setOnAction(e -> {
             VisualAgent va = new VisualAgent(500, 500);
             va.getAgentBody().setFill(Color.LAWNGREEN);
@@ -1722,7 +1722,7 @@ public class Main extends Application {
         });
         menu.getChildren().add(placeDCREntityButton);
 
-        Button placeRandomEntity = new Button("Place random entity (evading)");
+        Button placeRandomEntity = new Button("Place DCR entity");
         placeRandomEntity.setOnAction(e -> {
             useEntities.set(true);
             // show required number of agents and settings for the algorithm
