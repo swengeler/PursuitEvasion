@@ -228,7 +228,6 @@ public class ShortestPathRoadMap {
             }
 
             Simulation.masterPause();
-            HideEvaderPolicy.stopDont = true;
         }
 
         // remove the source and sink vertices
