@@ -71,9 +71,11 @@ public class HideEvaderPolicy extends MovePolicy {
 
         if (target != null) {
             if (ctarget == null) {
+                ctarget = target;
                 currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
                 i = 0;
             } else if (!ctarget.equals(target)) {
+                ctarget = target;
                 currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
                 i = 0;
             }

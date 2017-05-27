@@ -12,6 +12,7 @@ public class ObstacleEvaderPolicy extends MovePolicy {
     //velo vector - polygon centroid
     //normalize * max avoidance
     //add to flocking?
+    //screw intersecting polygons
 
 
     public ObstacleEvaderPolicy(Agent agent, boolean pursuing, MapRepresentation map) {
@@ -26,7 +27,6 @@ public class ObstacleEvaderPolicy extends MovePolicy {
         for (Polygon p: obstacles) {
 
         }
-
 
         return new Move(0, 0, 0);
     }
