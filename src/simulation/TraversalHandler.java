@@ -58,6 +58,25 @@ public class TraversalHandler {
         }
     }
 
+    /*public TraversalHandler(MapRepresentation map, ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<Line> separatingLines, int[][] adjacencyMatrix) {
+        // this constructor should be able to handle any input where the map has been converted into
+        // one or multiple SIMPLY-CONNECTED components
+        // then this class can deal with transitions between components as well as traversals within components
+        init(nodes);
+        this.shortestPathRoadMap = shortestPathRoadMap;
+        this.restrictedShortestPathRoadMap = new ShortestPathRoadMap(map, separatingTriangles);
+        this.nodess = nodes;
+        this.components = components;
+        this.separatingTriangles = separatingTriangles; // might not actually be needed
+        this.adjacencyMatrix = adjacencyMatrix;
+        for (int i = 0; i < adjacencyMatrix.length; i++) {
+            for (int j = 0; j < adjacencyMatrix[0].length; j++) {
+                System.out.print(adjacencyMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }*/
+
     private void init(ArrayList<DTriangle> triangles) {
         // initialising list of nodes and adjacency matrix
         nodes = new ArrayList<>(triangles.size());

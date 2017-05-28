@@ -40,6 +40,20 @@ public class DCREntity extends CentralisedEntity {
 
     @Override
     public void move() {
+        for (Entity e : map.getEvadingEntities()) {
+            if (e.isActive()) {
+                for (Agent a1 : e.getControlledAgents()) {
+                    if (a1.isActive()) {
+                        for (Agent a2 : availableAgents) {
+                            if (map.isVisible(a1, a2)) {
+                                a1.setActive(false);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         double length, deltaX, deltaY;
 
         // it is assumed that the required number of agents is provided by the GUI
@@ -269,6 +283,8 @@ public class DCREntity extends CentralisedEntity {
             // looks like it may not be needed at all
             computeSingleConnectedComponent(simplyConnectedComponents, holes, nodes, separatingTriangles, spanningTreeAdjacencyMatrix, originalAdjacencyMatrix, parentNodes, tree);
 
+            ArrayList<Line> separatingLines = computeGuardingLines(separatingTriangles);
+
             /*ArrayList<Polygon> showTriangles = new ArrayList<>(nodes.size());
             for (DTriangle dt : nodes) {
                 if (separatingTriangles.contains(dt)) {
@@ -289,12 +305,18 @@ public class DCREntity extends CentralisedEntity {
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
             traversalHandler = new TraversalHandler(map, shortestPathRoadMap, nodes, simplyConnectedComponents, separatingTriangles, spanningTreeAdjacencyMatrix);
+            //traversalHandler = new TraversalHandler(map, shortestPathRoadMap, nodes, simplyConnectedComponents, separatingLines, spanningTreeAdjacencyMatrix);
             requiredAgents = 1 + separatingTriangles.size();
             System.out.println("\nrequiredAgents: " + requiredAgents);
         } catch (DelaunayError error) {
             error.printStackTrace();
         }
         //requiredAgents = 2;
+    }
+
+    private ArrayList<Line> computeGuardingLines(ArrayList<DTriangle> separatingTriangles) {
+        // for now its enough to just cover one side of each separating triangle because they are computed to have one edge adjacent to a polygon (i.e. they have degree 2 in the dual triangulation graph)
+        return null;
     }
 
     private Tuple<ArrayList<DTriangle>, ArrayList<DTriangle>> triangulate(MapRepresentation map) throws DelaunayError {

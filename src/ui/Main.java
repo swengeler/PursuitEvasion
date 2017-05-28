@@ -1,5 +1,6 @@
 package ui;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import control.Controller;
 import conversion.GridConversion;
 import entities.*;
@@ -450,6 +451,20 @@ public class Main extends Application {
                             includedTriangles.add(dt);
                         }
                     }
+
+                    /*Coordinate coord;
+                    Circle c;
+                    double length0, length1, length2;
+                    for (DTriangle dt : includedTriangles) {
+                        coord = dt.getCircumCenter();
+                        length0 = Math.sqrt(Math.pow(coord.x - dt.getPoint(0).getX(), 2) + Math.pow(coord.y - dt.getPoint(0).getY(), 2));
+                        length1 = Math.sqrt(Math.pow(coord.x - dt.getPoint(1).getX(), 2) + Math.pow(coord.y - dt.getPoint(1).getY(), 2));
+                        length2 = Math.sqrt(Math.pow(coord.x - dt.getPoint(2).getX(), 2) + Math.pow(coord.y - dt.getPoint(2).getY(), 2));
+                        c = new Circle(coord.x, coord.y, Math.max(length0, Math.max(length1, length2)), Color.TRANSPARENT);
+                        c.setStroke(Color.BLACK);
+                        c.setStrokeWidth(1.5);
+                        pane.getChildren().add(c);
+                    }*/
 
                     ArrayList<DEdge> checkedEdges = new ArrayList<>();
                     for (DTriangle dt1 : includedTriangles) {
@@ -1826,7 +1841,11 @@ public class Main extends Application {
 
         Button startAdaptedSimulation = new Button("Start adapted simulation");
         startAdaptedSimulation.setOnAction(e -> {
-            adaptedSimulation = new AdaptedSimulation(map);
+            if (adaptedSimulation == null) {
+                adaptedSimulation = new AdaptedSimulation(map);
+            } else {
+                adaptedSimulation.unPause();
+            }
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
@@ -1835,9 +1854,7 @@ public class Main extends Application {
 
         Button pauseAdaptedSimulation = new Button("Pause adapted simulation");
         pauseAdaptedSimulation.setOnAction(e -> {
-            if (adaptedSimulation != null && adaptedSimulation.isPaused()) {
-                adaptedSimulation.unPause();
-            } else if (adaptedSimulation != null) {
+            if (adaptedSimulation != null && !adaptedSimulation.isPaused()) {
                 adaptedSimulation.pause();
             }
             // show required number of agents and settings for the algorithm
