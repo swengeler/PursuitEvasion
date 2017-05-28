@@ -3,10 +3,12 @@ package simulation;
 import javafx.scene.shape.Line;
 
 import java.util.ArrayList;
+import java.util.Formatter;
 
 public class PlannedPath {
 
-    private int startIndex, endIndex;
+    private int startIndex = -1;
+    private int endIndex = -1;
 
     private ArrayList<Line> pathLines;
 
@@ -80,6 +82,17 @@ public class PlannedPath {
 
     public int pathLength() {
         return pathLines.size() - 1;
+    }
+
+    @Override
+    public String toString() {
+        Formatter f = new Formatter();
+        StringBuilder result = new StringBuilder("PlannedPath [startIndex=" + startIndex + ", ");
+        for (Line l : pathLines) {
+            result.append(f.format("(%.3f|%.3f)-(%.3f|%.3f), ", l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY()));
+        }
+        result.append("endIndex=").append(endIndex).append("]");
+        return result.toString();
     }
 
 }

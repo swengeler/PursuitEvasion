@@ -223,7 +223,6 @@ public class TraversalHandler {
             chosenLeafIndex = childIndeces.get((int) (Math.random() * childIndeces.size()));
             moveToLeaf = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY()));
             childIndeces.clear();
-            Main.pane.getChildren().add(new Circle(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY(), 7, Color.BROWN));
         }
 
         // chooses a path through the tree/map according to the random selection described in the paper

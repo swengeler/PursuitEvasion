@@ -1846,7 +1846,7 @@ public class Main extends Application {
         });
         menu.getChildren().add(pauseAdaptedSimulation);
 
-        Slider adaptedSlider = new Slider(5, 105, 50);
+        Slider adaptedSlider = new Slider(1, 101, 51);
         adaptedSlider.setShowTickMarks(true);
         adaptedSlider.setShowTickLabels(true);
         adaptedSlider.setMajorTickUnit(20);

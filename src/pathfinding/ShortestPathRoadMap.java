@@ -213,6 +213,7 @@ public class ShortestPathRoadMap {
                             if (!excludedPolygons.isEmpty()) {
                                 Line line = new Line(v1.getX(), v1.getY(), v2.getX(), v2.getY());
                                 line.setStroke(Color.GREEN);
+                                line.setStrokeWidth(2);
                                 Main.pane.getChildren().add(line);
                                 line.toFront();
                             }
@@ -266,6 +267,7 @@ public class ShortestPathRoadMap {
                             Line line = new Line(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
                             if (!excludedPolygons.isEmpty()) {
                                 line.setStroke(Color.GREEN);
+                                line.setStrokeWidth(2);
                                 Main.pane.getChildren().add(line);
                                 line.toFront();
                             }
@@ -291,7 +293,9 @@ public class ShortestPathRoadMap {
         PlannedPath plannedPath = new PlannedPath();
 
         // if there is a straight line between source and sink point just use that as shortest path
-        if (map.isVisible(source.getX(), source.getY(), sink.getX(), sink.getY()) && !isEdgeIntersectingPolygon(source.getX(), source.getY(), sink.getX(), sink.getY())) {
+        if (map.isVisible(source.getX(), source.getY(), sink.getX(), sink.getY()) && !
+                isEdgeIntersectingPolygon(source.getX(), source.getY(), sink.getX(), sink.getY()) &&
+                !isEdgeAdjacentToPolygon(source.getX(), source.getY(), sink.getX(), sink.getY())) {
             plannedPath.addLine(new Line(source.getX(), source.getY(), sink.getX(), sink.getY()));
             Line line = new Line(source.getX(), source.getY(), sink.getX(), sink.getY());
             if (excludedPolygons.size() != 0) {
@@ -301,7 +305,7 @@ public class ShortestPathRoadMap {
             Label l = new Label("sz: " + excludedPolygons.size());
             l.setTranslateX(sink.getX());
             l.setTranslateY(sink.getY());
-            Main.pane.getChildren().addAll(line, l);
+            //Main.pane.getChildren().addAll(line, l);
             return plannedPath;
         }
 
@@ -316,7 +320,9 @@ public class ShortestPathRoadMap {
         for (PathVertex pv : shortestPathGraph.vertexSet()) {
             if (!pv.equals(sourceVertex) && !pv.equals(sinkVertex)) {
                 // check whether pv is visible from source (and whether there are separating polygons in between)
-                if (map.isVisible(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY()) && !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY())) {
+                if (map.isVisible(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY()) &&
+                        !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY()) &&
+                        !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY())) {
                     double differenceSquared = Math.pow(pv.getX() - sourceVertex.getX(), 2) + Math.pow(pv.getY() - sourceVertex.getY(), 2);
                     shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(sourceVertex, pv), Math.sqrt(differenceSquared));
                 }
@@ -326,7 +332,9 @@ public class ShortestPathRoadMap {
         for (PathVertex pv : shortestPathGraph.vertexSet()) {
             if (!pv.equals(sourceVertex) && !pv.equals(sinkVertex)) {
                 // check whether pv is visible from source (and whether there are separating polygons in between)
-                if (map.isVisible(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY()) && !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY())) {
+                if (map.isVisible(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY()) &&
+                        !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY()) &&
+                        !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY())) {
                     double differenceSquared = Math.pow(pv.getX() - sinkVertex.getX(), 2) + Math.pow(pv.getY() - sinkVertex.getY(), 2);
                     shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(pv, sinkVertex), Math.sqrt(differenceSquared));
                 }
@@ -350,7 +358,7 @@ public class ShortestPathRoadMap {
                 Label l = new Label("sz: " + excludedPolygons.size());
                 l.setTranslateX(sink.getX());
                 l.setTranslateY(sink.getY());
-                Main.pane.getChildren().addAll(line, l);
+                //Main.pane.getChildren().addAll(line, l);
             }
         } catch (NullPointerException e) {
             e.printStackTrace();

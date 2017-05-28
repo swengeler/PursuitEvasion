@@ -56,7 +56,6 @@ public class DCREntity extends CentralisedEntity {
         if (!guardsPositioned()) {
             // let the guards move along their respective paths
             for (int i = 0; i < guards.size(); i++) {
-                System.out.println("Guard " + (i + 1) + " moved towards initial position");
                 if (guards.get(i).getXPos() != initGuardPaths.get(i).getEndX() || guards.get(i).getYPos() != initGuardPaths.get(i).getEndY()) {
                     // this guard is not at its final destination and will be moved along the path
                     guardPathLines = initGuardPaths.get(i).getPathLines();
@@ -172,12 +171,13 @@ public class DCREntity extends CentralisedEntity {
             initGuardPaths = new ArrayList<>();
             guards = new ArrayList<>();
             guardPathLineCounters = new ArrayList<>();
-            double bestDistance = Double.MAX_VALUE;
-            double currentDistance;
-            PlannedPath currentShortestPath;
-            PlannedPath bestShortestPath = null;
-            Agent tempClosestAgent = null;
+            double bestDistance, currentDistance;
+            PlannedPath bestShortestPath, currentShortestPath;
+            Agent tempClosestAgent;
             for (DTriangle dt : traversalHandler.getSeparatingTriangles()) {
+                bestDistance = Double.MAX_VALUE;
+                bestShortestPath = null;
+                tempClosestAgent = null;
                 for (Agent a : availableAgents) {
                     if (!guards.contains(a)) {
                         // compute distance to current triangle
@@ -289,7 +289,7 @@ public class DCREntity extends CentralisedEntity {
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
             traversalHandler = new TraversalHandler(map, shortestPathRoadMap, nodes, simplyConnectedComponents, separatingTriangles, spanningTreeAdjacencyMatrix);
-            requiredAgents = 2 + separatingTriangles.size();
+            requiredAgents = 1 + separatingTriangles.size();
             System.out.println("\nrequiredAgents: " + requiredAgents);
         } catch (DelaunayError error) {
             error.printStackTrace();

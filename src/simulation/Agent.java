@@ -1,6 +1,7 @@
 package simulation;
 
 import java.util.ArrayList;
+import java.util.Formatter;
 
 public class Agent {
 
@@ -132,5 +133,11 @@ public class Agent {
         setYPos(getYPos() + nextMove.getYDelta());
         setTurnAngle(getTurnAngle() + nextMove.getTurnDelta());
     }
+
+    /*@Override
+    public String toString() {
+        Formatter f = new Formatter();
+        return f.format("Agent [xPos=%.3f, yPos=%.3f, speed=%.1f]", getXPos(), getYPos(), getSpeed()).toString();
+    }*/
 
 }
