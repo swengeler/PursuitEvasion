@@ -2300,6 +2300,17 @@ public class Main extends Application {
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Straight line entity")) {
                                     //Assume evader
+
+                                    //Testing purposes
+                                    va.getAgentBody().setFill(Color.AZURE);
+                                    visualAgents.add(va);
+                                    pane.getChildren().add(va);
+
+                                    StraightLineEntity straightLineEntity = new StraightLineEntity(map);
+                                    straightLineEntity.setAgent(new Agent(va.getSettings()));
+                                    map.getEvadingEntities().add(straightLineEntity);
+
+                                    selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Flocking evader entity")) {
                                     //Must be evader
                                 } else if (selectedEntityButton.getText().equals("Hide evader entity")) {
