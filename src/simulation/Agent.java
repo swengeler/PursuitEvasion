@@ -1,7 +1,6 @@
 package simulation;
 
 import java.util.ArrayList;
-import java.util.Formatter;
 
 public class Agent {
 

@@ -1,6 +1,5 @@
 package ui;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import control.Controller;
 import conversion.GridConversion;
 import entities.*;

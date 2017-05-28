@@ -20,12 +20,14 @@ public class ShortestPathRoadMap {
 
     private MapRepresentation map;
     private ArrayList<Polygon> excludedPolygons;
+    private ArrayList<Line> excludedLines;
 
     private SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph;
 
     public ShortestPathRoadMap(MapRepresentation map) {
         this.map = map;
         excludedPolygons = new ArrayList<>();
+        excludedLines = new ArrayList<>();
         init();
         /*ArrayList<PathVertex> reflexVertices = findReflex(map);
         for (PathVertex pv : reflexVertices) {
@@ -37,6 +39,7 @@ public class ShortestPathRoadMap {
     public ShortestPathRoadMap(MapRepresentation map, ArrayList<DTriangle> excludedTriangles) {
         this.map = map;
         excludedPolygons = new ArrayList<>();
+        excludedLines = new ArrayList<>();
         Polygon p;
         for (DTriangle dt : excludedTriangles) {
             p = new Polygon();
@@ -48,6 +51,20 @@ public class ShortestPathRoadMap {
             p.setFill(Color.BLACK.deriveColor(1, 1, 1, 0.2));
             Main.pane.getChildren().add(p);
             excludedPolygons.add(p);
+        }
+        init();
+    }
+
+    public ShortestPathRoadMap(ArrayList<Line> excludedLines, MapRepresentation map) {
+        this.map = map;
+        excludedPolygons = new ArrayList<>();
+        this.excludedLines = excludedLines;
+        Line temp;
+        for (Line l : excludedLines) {
+            temp = new Line(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
+            temp.setStroke(Color.RED);
+            temp.setStrokeWidth(2);
+            Main.pane.getChildren().add(temp);
         }
         init();
     }
@@ -281,6 +298,10 @@ public class ShortestPathRoadMap {
                 }
             }
         }
+    }
+
+    public MapRepresentation getMap() {
+        return map;
     }
 
     public PlannedPath getShortestPath(double sourceX, double sourceY, double sinkX, double sinkY) {

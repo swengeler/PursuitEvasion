@@ -1,15 +1,12 @@
 package simulation;
 
 import javafx.geometry.Point2D;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.apache.commons.math3.exception.MathArithmeticException;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
-import ui.Main;
 
 import java.util.ArrayList;
 
@@ -31,6 +28,7 @@ public class TraversalHandler {
     private ArrayList<DTriangle> nodess;
     private ArrayList<ArrayList<DTriangle>> components;
     private ArrayList<DTriangle> separatingTriangles;
+    private ArrayList<Line> separatingLines;
 
     private EnumeratedIntegerDistribution rng;
 
@@ -39,16 +37,15 @@ public class TraversalHandler {
         nodess = triangles;
     }
 
-    public TraversalHandler(MapRepresentation map, ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<DTriangle> separatingTriangles, int[][] adjacencyMatrix) {
+    public TraversalHandler(ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, int[][] adjacencyMatrix) {
         // this constructor should be able to handle any input where the map has been converted into
         // one or multiple SIMPLY-CONNECTED components
         // then this class can deal with transitions between components as well as traversals within components
         init(nodes);
         this.shortestPathRoadMap = shortestPathRoadMap;
-        this.restrictedShortestPathRoadMap = new ShortestPathRoadMap(map, separatingTriangles);
+        this.restrictedShortestPathRoadMap = shortestPathRoadMap;
         this.nodess = nodes;
         this.components = components;
-        this.separatingTriangles = separatingTriangles; // might not actually be needed
         this.adjacencyMatrix = adjacencyMatrix;
         for (int i = 0; i < adjacencyMatrix.length; i++) {
             for (int j = 0; j < adjacencyMatrix[0].length; j++) {
@@ -56,6 +53,16 @@ public class TraversalHandler {
             }
             System.out.println();
         }
+    }
+
+    public void separatingTriangleBased(ArrayList<DTriangle> separatingTriangles) {
+        this.separatingTriangles = separatingTriangles;
+        restrictedShortestPathRoadMap = new ShortestPathRoadMap(shortestPathRoadMap.getMap(), separatingTriangles);
+    }
+
+    public void separatingLineBased(ArrayList<Line> separatingLines) {
+        this.separatingLines = separatingLines;
+        restrictedShortestPathRoadMap = new ShortestPathRoadMap(separatingLines, shortestPathRoadMap.getMap());
     }
 
     /*public TraversalHandler(MapRepresentation map, ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<Line> separatingLines, int[][] adjacencyMatrix) {
