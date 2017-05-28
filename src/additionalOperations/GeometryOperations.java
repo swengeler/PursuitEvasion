@@ -203,6 +203,8 @@ public class GeometryOperations {
     }
 
     public static Line scaleRay(Point2D agentPos, Point2D t2Point, double value) {
+
+        //note this method extends the ray by value x if you insert a value >1 if the value is less than one it will scale it by that %
         //System.out.println("Passed value = " + value);
 
         double endX, endY, aX, aY;
@@ -222,27 +224,53 @@ public class GeometryOperations {
         System.out.println("ENDy= " +endY);
         System.out.println("endx= " +endX);
 */
+        if (value > 1) {
 
-        if (aX - endX != 0) {
-            if (endX > aX) {
-                //System.out.print("wooh its working = " + m);
-                newX = endX + value;
-                newY = endY + value * m;
+            if (aX - endX != 0) {
+                if (endX > aX) {
+                    //System.out.print("wooh its working = " + m);
+                    newX = endX + value;
+                    newY = endY + value * m;
+                } else {
+                    //System.out.print("why the fuck man " + m);
+                    newX = endX - value;
+                    newY = endY - value * m;
+                }
             } else {
-                //System.out.print("why the fuck man " + m);
-                newX = endX - value;
-                newY = endY - value * m;
+                if (endY > aY) {
+                    //System.out.print("wooh its working = " + m);
+                    newX = endX;
+                    newY = endY + value;
+                } else {
+                    //System.out.print("why the fuck man");
+                    newX = endX;
+                    newY = endY - value;
+                }
             }
+
         } else {
-            if (endY > aY) {
-                //System.out.print("wooh its working = " + m);
-                newX = endX;
-                newY = endY + value;
+            if (aX - endX != 0) {
+                if (endX > aX) {
+                    //System.out.print("wooh its working = " + m);
+                    newX = endX - value * (endX - aX);
+                    newY = endY - value * (endX - aX) * m;
+                } else {
+                    //System.out.print("why the fuck man " + m);
+                    newX = endX + value * (endX - aX);
+                    newY = endY + value * (endX - aX) * m;
+                }
             } else {
-                //System.out.print("why the fuck man");
-                newX = endX;
-                newY = endY - value;
+                if (endY > aY) {
+                    //System.out.print("wooh its working = " + m);
+                    newX = endX;
+                    newY = endY + value * (endX - aX);
+                } else {
+                    //System.out.print("why the fuck man");
+                    newX = endX;
+                    newY = endY - value * (endX - aX);
+                }
             }
+
         }
         /*
 
@@ -270,8 +298,7 @@ public class GeometryOperations {
 */
 
         Line ray = new Line(endX, endY, newX, newY);
-        ray.setStartX(aX);
-        ray.setStartY(aY);
+
         //System.out.println("Created Ray = " + ray);
 
         //In case Lines with a negative end are the Problem when we do not find an Intersection where there should be one
