@@ -43,11 +43,15 @@ public class Main extends Application {
     private HBox outerLayout;
     private VBox menu;
     private VBox entityMenu;
+    private VBox entitiesInUse;
     public static ZoomablePane pane;
 
     private Line indicatorLine;
     public static ArrayList<MapPolygon> mapPolygons;
     private MapPolygon currentMapPolygon;
+
+    private ToggleGroup toggleGroup;
+    private boolean atLeastOneEntity;
 
     private ArrayList<Shape> covers;
 
@@ -55,6 +59,8 @@ public class Main extends Application {
     private ArrayList<Circle> evaders;
     private ArrayList<VisualAgent> visualAgents;
     private ArrayList<RadioButton> entitiesList;
+
+    //List all unique centralised entities here?
 
     private BooleanProperty addPoints;
 
@@ -102,8 +108,15 @@ public class Main extends Application {
         entityMenu = new VBox();
         entityMenu.setStyle("-fx-background-color: #ffffff");
         entityMenu.setMinWidth(190);
-        entityMenu.setPrefSize(190, 600);
+        //entityMenu.setPrefSize(190, 600);
         entityMenu.setMaxWidth(190);
+
+        // container for entities
+        entitiesInUse = new VBox();
+        entitiesInUse.setStyle("-fx-background-color: #ffffff");
+        entitiesInUse.setMinWidth(190);
+        //entitiesInUse.setPrefSize(190, 600);
+        entitiesInUse.setMaxWidth(190);
 
         // sidebar menu, currently with dummy buttons
         menu = new VBox();
@@ -130,7 +143,7 @@ public class Main extends Application {
         separator.setMaxWidth(10);
 
         // adding elements to the top-level container
-        outerLayout.getChildren().addAll(pane, separator, entityMenu, menuSeparator, menu);
+        outerLayout.getChildren().addAll(pane, separator, entityMenu, entitiesInUse, menuSeparator, menu);
         menu.toFront();
         HBox.setHgrow(pane, Priority.ALWAYS);
         HBox.setHgrow(entityMenu, Priority.NEVER);
@@ -173,7 +186,7 @@ public class Main extends Application {
 
         Button addEntity = new Button("Add");
 
-        entityMenu.getChildren().addAll(entities, addEntity);
+        entityMenu.getChildren().addAll(entities, addEntity, entitiesInUse);
 
         Label entityLabel2 = new Label("Entities in use");
         entityLabel2.setFont(Font.font("Arial", 14));
@@ -186,9 +199,17 @@ public class Main extends Application {
 
         entityMenu.getChildren().addAll(entityLabel2, entityLabel2Separator);
 
+        ScrollPane scroll = new ScrollPane();
+        scroll.setContent(entitiesInUse);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scroll.setStyle("-fx-background-insets: 0; -fx-padding: 0; -fx-background: #ffffff");
+        entityMenu.getChildren().add(scroll);
+
         entitiesList = new ArrayList<>();
 
-        ToggleGroup toggleGroup = new ToggleGroup();
+        atLeastOneEntity = false;
+        toggleGroup = new ToggleGroup();
 
         toggleGroup.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
 
@@ -205,23 +226,22 @@ public class Main extends Application {
         });
 
         addEntity.setOnAction(ae -> {
-            boolean flag = false;
             RadioButton entButton = new RadioButton(entities.getValue());
             entButton.setStyle("-fx-text-fill: #2ecc71");
 
-            for (RadioButton entButton2 : entitiesList) {
-                if (entButton.getText().equals(entButton2.getText())) {
-                    System.out.println("Entity already present!");
-                    flag = true;
-                }
+
+            //needs check for map (to avoid crashes)
+            if (!atLeastOneEntity) {
+                useEntities.set(true);
+                atLeastOneEntity = true;
+                initPlaceAgents();
+                map = new MapRepresentation(mapPolygons, null, evadingEntities);
             }
 
-            if (!flag) {
-                entButton.setToggleGroup(toggleGroup);
-                entButton.setSelected(true);
-                entitiesList.add(entButton);
-                entityMenu.getChildren().add(entButton);
-            }
+            entButton.setToggleGroup(toggleGroup);
+            entButton.setSelected(true);
+            entitiesList.add(entButton);
+            entitiesInUse.getChildren().add(entButton);
         });
 
         // ****************************************************************************************************** //
@@ -2259,7 +2279,55 @@ public class Main extends Application {
                                 }
                                 mapPolygons.get(0).toFront();
                                 mapPolygons.get(0).setMouseTransparent(true);
-                            } else {
+
+                                //Probably replace this condition by (useEntities && atLeastOneEntity) or perhaps only (atLeastOneEntity)
+                            } else if (atLeastOneEntity){
+                                RadioButton selectedEntityButton = (RadioButton) toggleGroup.getSelectedToggle();
+                                VisualAgent va = new VisualAgent(e.getX(), e.getY());
+
+                                if (selectedEntityButton.getText().equals("Random entity")) {
+                                    //Assume evader
+
+                                    //Testing purposes
+                                    va.getAgentBody().setFill(Color.BLANCHEDALMOND);
+                                    visualAgents.add(va);
+                                    pane.getChildren().add(va);
+
+                                    RandomEntity randomEntity = new RandomEntity(map);
+                                    randomEntity.setAgent(new Agent(va.getSettings()));
+                                    map.getEvadingEntities().add(randomEntity);
+
+                                    selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
+                                } else if (selectedEntityButton.getText().equals("Straight line entity")) {
+                                    //Assume evader
+
+                                    //Testing purposes
+                                    va.getAgentBody().setFill(Color.AZURE);
+                                    visualAgents.add(va);
+                                    pane.getChildren().add(va);
+
+                                    StraightLineEntity straightLineEntity = new StraightLineEntity(map);
+                                    straightLineEntity.setAgent(new Agent(va.getSettings()));
+                                    map.getEvadingEntities().add(straightLineEntity);
+
+                                    selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
+                                } else if (selectedEntityButton.getText().equals("Flocking evader entity")) {
+                                    //Must be evader
+                                } else if (selectedEntityButton.getText().equals("Hide evader entity")) {
+                                    //Must be evader
+                                } else if (selectedEntityButton.getText().equals("Dummy entity")) {
+                                    //??
+                                }
+
+                                //for centralised entities we can use startsWith() ?
+
+                                for (Shape s : covers) {
+                                    s.toFront();
+                                }
+                                mapPolygons.get(0).toFront();
+                                mapPolygons.get(0).setMouseTransparent(true);
+                                pane.requestFocus();
+                            }  else {
                                 // new behaviour
                                 VisualAgent va = new VisualAgent(e.getX(), e.getY());
                                 va.getAgentBody().setFill(Color.INDIANRED);
