@@ -49,6 +49,9 @@ public class Main extends Application {
     public static ArrayList<MapPolygon> mapPolygons;
     private MapPolygon currentMapPolygon;
 
+    private ToggleGroup toggleGroup;
+    private boolean atLeastOneEntity;
+
     private ArrayList<Shape> covers;
 
     private ArrayList<Circle> pursuers;
@@ -188,7 +191,8 @@ public class Main extends Application {
 
         entitiesList = new ArrayList<>();
 
-        ToggleGroup toggleGroup = new ToggleGroup();
+        atLeastOneEntity = false;
+        toggleGroup = new ToggleGroup();
 
         toggleGroup.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
 
@@ -217,6 +221,11 @@ public class Main extends Application {
             }
 
             if (!flag) {
+                if (!atLeastOneEntity) {
+                    useEntities.set(true);
+                    atLeastOneEntity = true;
+                    initPlaceAgents();
+                }
                 entButton.setToggleGroup(toggleGroup);
                 entButton.setSelected(true);
                 entitiesList.add(entButton);
@@ -2259,7 +2268,33 @@ public class Main extends Application {
                                 }
                                 mapPolygons.get(0).toFront();
                                 mapPolygons.get(0).setMouseTransparent(true);
-                            } else {
+
+                                //Probably replace this condition by (useEntities && atLeastOneEntity) or perhaps only (atLeastOneEntity)
+                            } else if (atLeastOneEntity){
+                                String selectedEntityString = ((RadioButton) toggleGroup.getSelectedToggle()).getText();
+                                VisualAgent va = new VisualAgent(e.getX(), e.getY());
+
+                                if (selectedEntityString.equals("Random entity")) {
+                                    //Assume evader
+                                    //Testing purposes
+                                    va.getAgentBody().setFill(Color.BLANCHEDALMOND);
+                                    pane.getChildren().add(va);
+                                } else if (selectedEntityString.equals("Straight line entity")) {
+                                    //Assume evader
+                                } else if (selectedEntityString.equals("Flocking evader entity")) {
+                                    //Must be evader
+                                } else if (selectedEntityString.equals("Hide evader entity")) {
+                                    //Must be evader
+                                } else if (selectedEntityString.equals("Dummy entity")) {
+                                    //??
+                                }
+
+                                for (Shape s : covers) {
+                                    s.toFront();
+                                }
+                                mapPolygons.get(0).toFront();
+                                mapPolygons.get(0).setMouseTransparent(true);
+                            }  else {
                                 // new behaviour
                                 VisualAgent va = new VisualAgent(e.getX(), e.getY());
                                 va.getAgentBody().setFill(Color.INDIANRED);
