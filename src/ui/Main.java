@@ -42,6 +42,7 @@ public class Main extends Application {
 
     private HBox outerLayout;
     private VBox menu;
+    private VBox entityMenu;
     public static ZoomablePane pane;
 
     private Line indicatorLine;
@@ -53,6 +54,7 @@ public class Main extends Application {
     private ArrayList<Circle> pursuers;
     private ArrayList<Circle> evaders;
     private ArrayList<VisualAgent> visualAgents;
+    private ArrayList<RadioButton> entitiesList;
 
     private BooleanProperty addPoints;
 
@@ -94,7 +96,14 @@ public class Main extends Application {
 
         // top-level container, partitions window into drawing pane and menu
         outerLayout = new HBox();
-        outerLayout.setPrefSize(1200, 800);
+        outerLayout.setPrefSize(1400, 800);
+
+        // entity menu
+        entityMenu = new VBox();
+        entityMenu.setStyle("-fx-background-color: #ffffff");
+        entityMenu.setMinWidth(190);
+        entityMenu.setPrefSize(190, 600);
+        entityMenu.setMaxWidth(190);
 
         // sidebar menu, currently with dummy buttons
         menu = new VBox();
@@ -106,6 +115,13 @@ public class Main extends Application {
         // zoomable drawing pane
         pane = new ZoomablePane();
 
+        // separator between menus
+        Separator menuSeparator = new Separator(Orientation.VERTICAL);
+        menuSeparator.setStyle("-fx-background-color: #ffffff");
+        menuSeparator.setMinWidth(10);
+        menuSeparator.setPrefWidth(10);
+        menuSeparator.setMaxWidth(10);
+
         // separator between pane and menu
         Separator separator = new Separator(Orientation.VERTICAL);
         separator.setStyle("-fx-background-color: #ffffff");
@@ -114,9 +130,10 @@ public class Main extends Application {
         separator.setMaxWidth(10);
 
         // adding elements to the top-level container
-        outerLayout.getChildren().addAll(pane, separator, menu);
+        outerLayout.getChildren().addAll(pane, separator, entityMenu, menuSeparator, menu);
         menu.toFront();
         HBox.setHgrow(pane, Priority.ALWAYS);
+        HBox.setHgrow(entityMenu, Priority.NEVER);
         HBox.setHgrow(menu, Priority.NEVER);
 
         // line indicating where a line will be drawn when clicked
@@ -137,6 +154,75 @@ public class Main extends Application {
 
         pursuers = new ArrayList<>();
         evaders = new ArrayList<>();
+
+        // entity menu stuff
+        Label entityLabel = new Label("Entity menu");
+        entityLabel.setFont(Font.font("Arial", 14));
+
+        Separator entityLabelSeparator = new Separator(Orientation.HORIZONTAL);
+        entityLabelSeparator.setStyle("-fx-background-color: #ffffff");
+        entityLabelSeparator.setMinHeight(10);
+        entityLabelSeparator.setPrefHeight(10);
+        entityLabelSeparator.setMaxHeight(10);
+
+        entityMenu.getChildren().addAll(entityLabel, entityLabelSeparator);
+
+        ComboBox<String> entities = new ComboBox<>();
+        entities.getItems().addAll("Random entity", "Straight line entity", "Flocking evader entity", "Hide evader entity", "Dummy entity");
+        entities.setValue("Random entity");
+
+        Button addEntity = new Button("Add");
+
+        entityMenu.getChildren().addAll(entities, addEntity);
+
+        Label entityLabel2 = new Label("Entities in use");
+        entityLabel2.setFont(Font.font("Arial", 14));
+
+        Separator entityLabel2Separator = new Separator(Orientation.HORIZONTAL);
+        entityLabel2Separator.setStyle("-fx-background-color: #ffffff");
+        entityLabel2Separator.setMinHeight(10);
+        entityLabel2Separator.setPrefHeight(10);
+        entityLabel2Separator.setMaxHeight(10);
+
+        entityMenu.getChildren().addAll(entityLabel2, entityLabel2Separator);
+
+        entitiesList = new ArrayList<>();
+
+        ToggleGroup toggleGroup = new ToggleGroup();
+
+        toggleGroup.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
+
+            if (old_toggle != null) {
+                RadioButton old = (RadioButton) old_toggle;
+                old.setStyle("-fx-text-fill: #e74c3c");
+            }
+
+            if (toggleGroup.getSelectedToggle() != null) {
+                RadioButton selected = (RadioButton) toggleGroup.getSelectedToggle();
+                selected.setStyle("-fx-text-fill: #2ecc71");
+            }
+
+        });
+
+        addEntity.setOnAction(ae -> {
+            boolean flag = false;
+            RadioButton entButton = new RadioButton(entities.getValue());
+            entButton.setStyle("-fx-text-fill: #2ecc71");
+
+            for (RadioButton entButton2 : entitiesList) {
+                if (entButton.getText().equals(entButton2.getText())) {
+                    System.out.println("Entity already present!");
+                    flag = true;
+                }
+            }
+
+            if (!flag) {
+                entButton.setToggleGroup(toggleGroup);
+                entButton.setSelected(true);
+                entitiesList.add(entButton);
+                entityMenu.getChildren().add(entButton);
+            }
+        });
 
         // ****************************************************************************************************** //
         // The old/normal controls for the simulation; still using the old project structure
@@ -1778,7 +1864,7 @@ public class Main extends Application {
         // JavaFX stuff
         // ****************************************************************************************************** //
 
-        Scene scene = new Scene(outerLayout, 1200, 800);
+        Scene scene = new Scene(outerLayout, 1400, 800);
         primaryStage.setTitle("Robin's Ruthless Robbers");
 
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/rrr_icon.png")));
