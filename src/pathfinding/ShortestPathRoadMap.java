@@ -66,6 +66,8 @@ public class ShortestPathRoadMap {
             temp.setStrokeWidth(2);
             Main.pane.getChildren().add(temp);
         }
+        System.out.println("excludedLines.size(): " + this.excludedLines.size());
+        System.out.println("excludedPolygons.size(): " + excludedPolygons.size());
         init();
     }
 
@@ -102,7 +104,7 @@ public class ShortestPathRoadMap {
                         // if there are separating triangles (or polygons, technically), check whether the vertex should be moved)
                         // polygons which touch with a corner take precedence
                         boolean removePoint = false;
-                        if (excludedPolygons != null && excludedPolygons.size() != 0) {
+                        if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
                             // get point "just off the tip" of the reflex vertex
                             double prevDeltaX = currentPoints.get(j).getX() - currentPoints.get((j + 1) % currentPoints.size()).getX();
                             double prevDeltaY = currentPoints.get(j).getY() - currentPoints.get((j + 1) % currentPoints.size()).getY();
@@ -119,17 +121,30 @@ public class ShortestPathRoadMap {
                             double averageX = (prevDeltaX + nextDeltaX) / 2;
                             double averageY = (prevDeltaY + nextDeltaY) / 2;
 
-                            double newX = currentPoints.get(j).getX() + averageX * 0.01;
-                            double newY = currentPoints.get(j).getY() + averageY * 0.01;
+                            double newX = currentPoints.get(j).getX() + averageX * 0.1;
+                            double newY = currentPoints.get(j).getY() + averageY * 0.1;
 
-                            ArrayList<Polygon> p = getCornerAdjacentPolygons(currentPoints.get(j), polygons.get(i));
-                            for (int k = 0; !removePoint && k < p.size(); k++) {
-                                if (p.get(k).contains(newX, newY)) {
-                                    removePoint = true;
+                            if (!excludedPolygons.isEmpty()) {
+                                ArrayList<Polygon> p = getCornerAdjacentPolygons(currentPoints.get(j), polygons.get(i));
+                                for (int k = 0; !removePoint && k < p.size(); k++) {
+                                    if (p.get(k).contains(newX, newY)) {
+                                        removePoint = true;
+                                    }
                                 }
-                            }
-                            if (!removePoint && !p.isEmpty()) {
-                                currentPoints.set(j, new Point2D(newX, newY));
+                                if (!removePoint && !p.isEmpty()) {
+                                    currentPoints.set(j, new Point2D(newX, newY));
+                                }
+                            } else if (!excludedLines.isEmpty()) {
+                                ArrayList<Line> l = getPointAdjacentLines(currentPoints.get(j));
+                                System.out.printf("Point (%.3f|%.3f) has %d adjacent separating lines\n", currentPoints.get(j).getX(), currentPoints.get(j).getY(), l.size());
+                                for (int k = 0; !removePoint && k < l.size(); k++) {
+                                    if (GeometryOperations.angle(newX, newY, l.get(k).getStartX() - l.get(k).getEndX(), l.get(k).getStartY() - l.get(k).getEndY()) < 2) {
+                                        removePoint = true;
+                                    }
+                                }
+                                if (!removePoint && !l.isEmpty()) {
+                                    currentPoints.set(j, new Point2D(newX, newY));
+                                }
                             }
                         }
 
@@ -141,7 +156,7 @@ public class ShortestPathRoadMap {
 
                             shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
-                            if (!excludedPolygons.isEmpty()) {
+                            if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
                                 Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
                                 Main.pane.getChildren().add(circle);
                                 Label index = new Label("" + j);
@@ -161,7 +176,7 @@ public class ShortestPathRoadMap {
                             (polygons.get(i) == map.getBorderPolygon() && !GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint))) {
 
                         boolean removePoint = false;
-                        if (excludedPolygons != null && excludedPolygons.size() != 0) {
+                        if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
                             // get point "just off the tip" of the reflex vertex
                             double prevDeltaX = currentPoints.get(j).getX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getX();
                             double prevDeltaY = currentPoints.get(j).getY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getY();
@@ -178,17 +193,30 @@ public class ShortestPathRoadMap {
                             double averageX = (prevDeltaX + nextDeltaX) / 2;
                             double averageY = (prevDeltaY + nextDeltaY) / 2;
 
-                            double newX = currentPoints.get(j).getX() + averageX * 0.01;
-                            double newY = currentPoints.get(j).getY() + averageY * 0.01;
+                            double newX = currentPoints.get(j).getX() + averageX * 0.1;
+                            double newY = currentPoints.get(j).getY() + averageY * 0.1;
 
-                            ArrayList<Polygon> p = getCornerAdjacentPolygons(currentPoints.get(j), polygons.get(i));
-                            for (int k = 0; !removePoint && k < p.size(); k++) {
-                                if (p.get(k).contains(newX, newY)) {
-                                    removePoint = true;
+                            if (!excludedPolygons.isEmpty()) {
+                                ArrayList<Polygon> p = getCornerAdjacentPolygons(currentPoints.get(j), polygons.get(i));
+                                for (int k = 0; !removePoint && k < p.size(); k++) {
+                                    if (p.get(k).contains(newX, newY)) {
+                                        removePoint = true;
+                                    }
                                 }
-                            }
-                            if (!removePoint && !p.isEmpty()) {
-                                currentPoints.set(j, new Point2D(newX, newY));
+                                if (!removePoint && !p.isEmpty()) {
+                                    currentPoints.set(j, new Point2D(newX, newY));
+                                }
+                            } else if (!excludedLines.isEmpty()) {
+                                ArrayList<Line> l = getPointAdjacentLines(currentPoints.get(j));
+                                System.out.printf("Point (%.3f|%.3f) has %d adjacent separating lines\n", currentPoints.get(j).getX(), currentPoints.get(j).getY(), l.size());
+                                for (int k = 0; !removePoint && k < l.size(); k++) {
+                                    if (GeometryOperations.angle(newX, newY, l.get(k).getStartX() - l.get(k).getEndX(), l.get(k).getStartY() - l.get(k).getEndY()) < 2) {
+                                        removePoint = true;
+                                    }
+                                }
+                                if (!removePoint && !l.isEmpty()) {
+                                    currentPoints.set(j, new Point2D(newX, newY));
+                                }
                             }
                         }
 
@@ -199,7 +227,8 @@ public class ShortestPathRoadMap {
                             currentIndeces.add(j);
 
                             shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
-                            if (!excludedPolygons.isEmpty()) {
+
+                            if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
                                 Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
                                 Main.pane.getChildren().add(circle);
                                 Label index = new Label("" + j);
@@ -223,15 +252,15 @@ public class ShortestPathRoadMap {
                     double differenceSquared = Math.pow(v1.getX() - v2.getX(), 2) + Math.pow(v1.getY() - v2.getY(), 2);
 
                     // check if edge is "covered" by excluded polygon
-                    if (!isEdgeAdjacentToPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY())) {
+                    if (!isEdgeAdjacentToPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingLine(v1.getX(), v1.getY(), v2.getX(), v2.getY())) {
                         DefaultWeightedEdge edge = shortestPathGraph.addEdge(v1, v2);
                         if (edge != null) {
                             shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
-                            if (!excludedPolygons.isEmpty()) {
+                            if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
                                 Line line = new Line(v1.getX(), v1.getY(), v2.getX(), v2.getY());
                                 line.setStroke(Color.GREEN);
                                 line.setStrokeWidth(2);
-                                Main.pane.getChildren().add(line);
+                                //Main.pane.getChildren().add(line);
                                 line.toFront();
                             }
                         }
@@ -265,11 +294,16 @@ public class ShortestPathRoadMap {
                     p6 = allPoints.get(singlePointer[0]).get(singlePointer[3]);
 
                     boolean intersection = false;
-                    if (excludedPolygons != null && excludedPolygons.size() != 0) {
+                    if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
                         excludedIntersectionLine.setEndX(p5.getX());
                         excludedIntersectionLine.setEndY(p5.getY());
                         for (int k = 0; !intersection && k < excludedPolygons.size(); k++) {
                             if (GeometryOperations.lineIntersectInPoly(excludedPolygons.get(k), excludedIntersectionLine)) {
+                                intersection = true;
+                            }
+                        }
+                        for (int k = 0; !intersection && k < excludedLines.size(); k++) {
+                            if (GeometryOperations.lineIntersect(excludedLines.get(k), excludedIntersectionLine)) {
                                 intersection = true;
                             }
                         }
@@ -282,10 +316,10 @@ public class ShortestPathRoadMap {
                         if (!check) {
                             // there should be an edge
                             Line line = new Line(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
-                            if (!excludedPolygons.isEmpty()) {
+                            if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
                                 line.setStroke(Color.GREEN);
                                 line.setStrokeWidth(2);
-                                Main.pane.getChildren().add(line);
+                                //Main.pane.getChildren().add(line);
                                 line.toFront();
                             }
 
@@ -309,19 +343,16 @@ public class ShortestPathRoadMap {
     }
 
     public PlannedPath getShortestPath(Point2D source, Point2D sink) {
-        // TODO: add visibility check through separating triangles
 
         PlannedPath plannedPath = new PlannedPath();
 
         // if there is a straight line between source and sink point just use that as shortest path
-        if (map.isVisible(source.getX(), source.getY(), sink.getX(), sink.getY()) && !
-                isEdgeIntersectingPolygon(source.getX(), source.getY(), sink.getX(), sink.getY()) &&
-                !isEdgeAdjacentToPolygon(source.getX(), source.getY(), sink.getX(), sink.getY())) {
+        if (map.isVisible(source.getX(), source.getY(), sink.getX(), sink.getY()) &&
+                !isEdgeIntersectingPolygon(source.getX(), source.getY(), sink.getX(), sink.getY()) &&
+                !isEdgeAdjacentToPolygon(source.getX(), source.getY(), sink.getX(), sink.getY()) &&
+                !isEdgeIntersectingLine(source.getX(), source.getY(), sink.getX(), sink.getY())) {
             plannedPath.addLine(new Line(source.getX(), source.getY(), sink.getX(), sink.getY()));
             Line line = new Line(source.getX(), source.getY(), sink.getX(), sink.getY());
-            if (excludedPolygons.size() != 0) {
-                line.setFill(Color.RED);
-            }
             line.setStrokeWidth(2);
             Label l = new Label("sz: " + excludedPolygons.size());
             l.setTranslateX(sink.getX());
@@ -343,7 +374,8 @@ public class ShortestPathRoadMap {
                 // check whether pv is visible from source (and whether there are separating polygons in between)
                 if (map.isVisible(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY()) &&
                         !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY()) &&
-                        !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY())) {
+                        !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY()) &&
+                        !isEdgeIntersectingLine(pv.getX(), pv.getY(), sourceVertex.getX(), sourceVertex.getY())) {
                     double differenceSquared = Math.pow(pv.getX() - sourceVertex.getX(), 2) + Math.pow(pv.getY() - sourceVertex.getY(), 2);
                     shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(sourceVertex, pv), Math.sqrt(differenceSquared));
                 }
@@ -355,7 +387,8 @@ public class ShortestPathRoadMap {
                 // check whether pv is visible from source (and whether there are separating polygons in between)
                 if (map.isVisible(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY()) &&
                         !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY()) &&
-                        !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY())) {
+                        !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY()) &&
+                        !isEdgeIntersectingLine(pv.getX(), pv.getY(), sinkVertex.getX(), sinkVertex.getY())) {
                     double differenceSquared = Math.pow(pv.getX() - sinkVertex.getX(), 2) + Math.pow(pv.getY() - sinkVertex.getY(), 2);
                     shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(pv, sinkVertex), Math.sqrt(differenceSquared));
                 }
@@ -372,9 +405,6 @@ public class ShortestPathRoadMap {
                 pv2 = graphPath.getVertexList().get(i + 1);
                 plannedPath.addLine(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
                 Line line = new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY());
-                if (excludedPolygons.size() != 0) {
-                    line.setFill(Color.RED);
-                }
                 line.setStrokeWidth(2);
                 Label l = new Label("sz: " + excludedPolygons.size());
                 l.setTranslateX(sink.getX());
@@ -402,6 +432,19 @@ public class ShortestPathRoadMap {
         shortestPathGraph.removeVertex(sourceVertex);
         shortestPathGraph.removeVertex(sinkVertex);
         return plannedPath;
+    }
+
+    private ArrayList<Line> getPointAdjacentLines(Point2D cornerPoint) {
+        ArrayList<Line> result = new ArrayList<>();
+        if (excludedLines == null) {
+            return result;
+        }
+        for (Line l : excludedLines) {
+            if ((l.getStartX() == cornerPoint.getX() && l.getStartY() == cornerPoint.getY()) || (l.getEndX() == cornerPoint.getX() && l.getEndY() == cornerPoint.getY())) {
+                result.add(l);
+            }
+        }
+        return result;
     }
 
     private ArrayList<Polygon> getCornerAdjacentPolygons(Point2D cornerPoint, Polygon restOfPolygon) {
@@ -451,14 +494,22 @@ public class ShortestPathRoadMap {
 
     private boolean isEdgeIntersectingPolygon(double x1, double y1, double x2, double y2) {
         for (Polygon p : excludedPolygons) {
-            for (int i = 0; i < p.getPoints().size(); i += 2) {
-                if (GeometryOperations.lineIntersectInPoly(p, new Line(x1, y1, x2, y2))) {
-                    return true;
-                }
+            if (GeometryOperations.lineIntersectInPoly(p, new Line(x1, y1, x2, y2))) {
+                return true;
             }
         }
         return false;
     }
+
+    private boolean isEdgeIntersectingLine(double x1, double y1, double x2, double y2) {
+        for (Line l : excludedLines) {
+            if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 /*
     *//*

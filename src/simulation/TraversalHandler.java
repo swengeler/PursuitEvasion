@@ -1,12 +1,16 @@
 package simulation;
 
 import javafx.geometry.Point2D;
+import javafx.scene.control.Label;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.apache.commons.math3.exception.MathArithmeticException;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
+import ui.Main;
 
 import java.util.ArrayList;
 
@@ -233,15 +237,15 @@ public class TraversalHandler {
             for (int i = 0; i < currentComponent.size(); i++) {
                 if (isLeaf(nodess.indexOf(currentComponent.get(i)))) {
                     childIndeces.add(i);
-                    /*Label l = new Label("leaf");
+                    Label l = new Label("leaf");
                     l.setTranslateX(currentComponent.get(i).getBarycenter().getX());
                     l.setTranslateY(currentComponent.get(i).getBarycenter().getY());
-                    Main.pane.getChildren().add(l);*/
+                    Main.pane.getChildren().add(l);
                 } else {
-                    /*Label l = new Label("not leaf");
+                    Label l = new Label("not leaf");
                     l.setTranslateX(currentComponent.get(i).getBarycenter().getX());
                     l.setTranslateY(currentComponent.get(i).getBarycenter().getY());
-                    Main.pane.getChildren().add(l);*/
+                    Main.pane.getChildren().add(l);
                 }
             }
 
@@ -249,6 +253,8 @@ public class TraversalHandler {
             chosenLeafIndex = childIndeces.get((int) (Math.random() * childIndeces.size()));
             moveToLeaf = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY()));
             childIndeces.clear();
+            Main.pane.getChildren().add(new Circle(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY(), 7, Color.BROWN));
+            System.out.println("moveToLeaf computed");
         }
 
         // chooses a path through the tree/map according to the random selection described in the paper
