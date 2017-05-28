@@ -299,8 +299,7 @@ public class GeometryOperations {
 */
 
         Line ray = new Line(endX, endY, newX, newY);
-        ray.setStartX(aX);
-        ray.setStartY(aY);
+
         //System.out.println("Created Ray = " + ray);
 
         //In case Lines with a negative end are the Problem when we do not find an Intersection where there should be one

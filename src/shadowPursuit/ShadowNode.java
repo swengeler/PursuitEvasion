@@ -203,10 +203,10 @@ public class ShadowNode {
 
     public void connect(ShadowNode next) {
         if (this.getLeft() != null && this.getLeft() != next && this.getRight() == null) {
+            System.out.println("THIS = " + this + "\nNEXT = " + next);
             right = next;
             next.left = this;
         } else if (this.getRight() != null && this.getRight() != next && this.getLeft() == null) {
-            //System.out.println("THIS = " + this + "\nNEXT = " + next);
             left = next;
             next.right = this;
         }
