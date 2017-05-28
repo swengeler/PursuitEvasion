@@ -143,7 +143,6 @@ public class GeometryOperations {
         return false;
     }
 
-
     public static boolean lineIntersect(Line l1, Line l2) {
         //System.out.println("Comparing = " + l1 + "\nAND = " + l2 + "\n");
         return lineIntersect(l1, l2.getStartX(), l2.getStartY(), l2.getEndX(), l2.getEndY());
@@ -364,7 +363,6 @@ public class GeometryOperations {
         return new Point2D(x, y);
     }
 
-
     public static ArrayList removeFrom(ShadowNode check, ArrayList<ShadowNode> list) {
         double x1, x2, y1, y2;
         Point2D pointCheck, tmpPoint, printP1, printP2;
@@ -423,7 +421,6 @@ public class GeometryOperations {
         }
         return yesno;
     }
-
 
     public static double gradient(Line line) {
 
@@ -614,5 +611,14 @@ public class GeometryOperations {
         return location;
     }
 
+    public static double angle(double dx1, double dy1, double dx2, double dy2) {
+        double length1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+        dx1 /= length1;
+        dy1 /= length1;
+        double length2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        dx2 /= length2;
+        dy2 /= length2;
+        return Math.toDegrees(Math.cos(dx1 * dx2 + dy1 * dy2));
+    }
 
 }

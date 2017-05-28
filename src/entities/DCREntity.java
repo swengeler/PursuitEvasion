@@ -3,8 +3,7 @@ package entities;
 import additionalOperations.Tuple;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Polygon;
+import javafx.scene.shape.*;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
@@ -47,7 +46,7 @@ public class DCREntity extends CentralisedEntity {
                     if (a1.isActive()) {
                         for (Agent a2 : availableAgents) {
                             if (map.isVisible(a1, a2)) {
-                                a1.setActive(false);
+                                //a1.setActive(false);
                             }
                         }
                     }
@@ -189,6 +188,7 @@ public class DCREntity extends CentralisedEntity {
             double bestDistance, currentDistance;
             PlannedPath bestShortestPath, currentShortestPath;
             Agent tempClosestAgent;
+            if (false) {
             for (DTriangle dt : traversalHandler.getSeparatingTriangles()) {
                 bestDistance = Double.MAX_VALUE;
                 bestShortestPath = null;
@@ -213,6 +213,7 @@ public class DCREntity extends CentralisedEntity {
                 initGuardPaths.add(bestShortestPath);
             }
             System.out.println("guards: " + guards.size());
+            }
 
             // the computed PlannedPath objects will initially be used to position all the guards in their correct locations
             // the (at least 2) remaining agents will be assigned to be searcher (and catcher)
@@ -285,30 +286,27 @@ public class DCREntity extends CentralisedEntity {
             // looks like it may not be needed at all
             computeSingleConnectedComponent(simplyConnectedComponents, holes, nodes, separatingTriangles, spanningTreeAdjacencyMatrix, originalAdjacencyMatrix, parentNodes, tree);
 
-            ArrayList<Line> separatingLines = computeGuardingLines(separatingTriangles, nonSeparatingLines);
+            Tuple<ArrayList<Line>, ArrayList<DEdge>> lineSeparation = computeGuardingLines(separatingTriangles, nonSeparatingLines);
+            ArrayList<Line> separatingLines = lineSeparation.getFirst();
 
-            /*ArrayList<Polygon> showTriangles = new ArrayList<>(nodes.size());
-            for (DTriangle dt : nodes) {
-                if (separatingTriangles.contains(dt)) {
-                    currentColor = Color.MEDIUMVIOLETRED.deriveColor(1, 1, 1, 0.7);
-                } else {
-                    currentColor = Color.LAWNGREEN.deriveColor(1, 1, 1, 0.7);
-                }
-                tempTriangle = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                tempTriangle.setStroke(Color.BLACK);
-                tempTriangle.setFill(currentColor);
-                showTriangles.add(tempTriangle);
-                //pane.getChildren().add(tempTriangle);
-            }
-            Main.pane.getChildren().addAll(showTriangles);
-            Main.pane.getChildren().addAll(tree);
-            Main.pane.getChildren().add(new Circle(nodes.get(0).getBarycenter().getX(), nodes.get(0).getBarycenter().getY(), 5, Color.BLACK));*/
+            System.out.println(nodes.size() + " " + spanningTreeAdjacencyMatrix.length + " " + lineSeparation.getSecond().size());
+
+            Tuple<int[][], ArrayList<ArrayList<DTriangle>>> reconnectedAdjacency = computeReconnectedAdjacency(nodes, simplyConnectedComponents, lineSeparation.getSecond(), spanningTreeAdjacencyMatrix, separatingTriangles);
+            int[][] reconnectedAdjacencyMatrix = reconnectedAdjacency.getFirst();
+            ArrayList<ArrayList<DTriangle>> reconnectedComponents = reconnectedAdjacency.getSecond();
 
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
-            traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
+
+            // if separating triangles are used
+            //traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
+            //traversalHandler.separatingTriangleBased(separatingTriangles);
+
+            // if separating lines are used
+            simplyConnectedComponents.set(0, nodes);
+            traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, reconnectedComponents, reconnectedAdjacencyMatrix);
             traversalHandler.separatingLineBased(separatingLines);
-            //traversalHandler = new TraversalHandler(map, shortestPathRoadMap, nodes, simplyConnectedComponents, separatingLines, spanningTreeAdjacencyMatrix);
+
             requiredAgents = 1 + separatingTriangles.size();
             System.out.println("\nrequiredAgents: " + requiredAgents);
         } catch (DelaunayError error) {
@@ -317,23 +315,80 @@ public class DCREntity extends CentralisedEntity {
         //requiredAgents = 2;
     }
 
-    private ArrayList<Line> computeGuardingLines(ArrayList<DTriangle> separatingTriangles, ArrayList<DEdge> nonSeparatingLines) {
+    private Tuple<ArrayList<Line>, ArrayList<DEdge>> computeGuardingLines(ArrayList<DTriangle> separatingTriangles, ArrayList<DEdge> nonSeparatingLines) {
         // for now its enough to just cover one side of each separating triangle because they are computed to have one edge adjacent to a polygon (i.e. they have degree 2 in the dual triangulation graph)
         ArrayList<Line> separatingLines = new ArrayList<>();
-        double minLength, currentLengthSquared;
-        DEdge minLengthEdge;
+        ArrayList<DEdge> reconnectingEdges = new ArrayList<>();
+        double minLength, maxLength, currentLengthSquared;
+        DEdge minLengthEdge, maxLengthEdge;
         for (DTriangle dt : separatingTriangles) {
             minLength = Double.MAX_VALUE;
+            maxLength = -Double.MAX_VALUE;
             minLengthEdge = null;
+            maxLengthEdge = null;
             for (DEdge de : dt.getEdges()) {
-                if (!nonSeparatingLines.contains(de) && (currentLengthSquared = de.getSquared2DLength()) < minLength) {
-                    minLength = currentLengthSquared;
-                    minLengthEdge = de;
+                if (!nonSeparatingLines.contains(de)) {
+                    currentLengthSquared = de.getSquared2DLength();
+                    if (currentLengthSquared < minLength) {
+                        minLength = currentLengthSquared;
+                        minLengthEdge = de;
+                    }
+                    if (currentLengthSquared > maxLength) {
+                        maxLength = currentLengthSquared;
+                        maxLengthEdge = de;
+                    }
                 }
             }
             separatingLines.add(new Line(minLengthEdge.getPointLeft().getX(), minLengthEdge.getPointLeft().getY(), minLengthEdge.getPointRight().getX(), minLengthEdge.getPointRight().getY()));
+            reconnectingEdges.add(maxLengthEdge);
         }
-        return separatingLines;
+        return new Tuple<>(separatingLines, reconnectingEdges);
+    }
+
+    private Tuple<int[][], ArrayList<ArrayList<DTriangle>>> computeReconnectedAdjacency(ArrayList<DTriangle> triangles, ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> reconnectingEdges, int[][] disconnectedAdjacencyMatrix, ArrayList<DTriangle> separatingTriangles) {
+        int[][] reconnectedAdjacencyMatrix = disconnectedAdjacencyMatrix.clone();
+        for (int i = 0; i < disconnectedAdjacencyMatrix.length; i++) {
+            for (int j = 0; j < disconnectedAdjacencyMatrix.length; j++) {
+                reconnectedAdjacencyMatrix[i][j] = disconnectedAdjacencyMatrix[i][j];
+            }
+        }
+        ArrayList<ArrayList<DTriangle>> reconnectedComponents = new ArrayList<>();
+        ArrayList<DTriangle> temp;
+        for (ArrayList<DTriangle> al : simplyConnectedComponents) {
+            temp = new ArrayList<>();
+            temp.addAll(al);
+            reconnectedComponents.add(temp);
+        }
+        int index1, index2, connectingTriangleIndex, reconnectingTriangleIndex;
+        for (DEdge de : reconnectingEdges) {
+            index1 = -1;
+            index2 = -1;
+            for (int i = 0; i < triangles.size(); i++) {
+                if (triangles.get(i).isEdgeOf(de)) {
+                    if (index1 == -1) {
+                        index1 = i;
+                    } else {
+                        index2 = i;
+                    }
+                }
+            }
+            reconnectedAdjacencyMatrix[index1][index2] = 1;
+            reconnectedAdjacencyMatrix[index2][index1] = 1;
+
+            if (!separatingTriangles.contains(triangles.get(index1))) {
+                connectingTriangleIndex = index1;
+                reconnectingTriangleIndex = index2;
+            } else {
+                connectingTriangleIndex = index2;
+                reconnectingTriangleIndex = index1;
+            }
+            for (ArrayList<DTriangle> al : reconnectedComponents) {
+                if (al.contains(triangles.get(connectingTriangleIndex))) {
+                    al.add(triangles.get(reconnectingTriangleIndex));
+                }
+            }
+        }
+        return new Tuple<>(reconnectedAdjacencyMatrix, reconnectedComponents);
     }
 
     private Tuple<ArrayList<DTriangle>, ArrayList<DTriangle>> triangulate(MapRepresentation map) throws DelaunayError {
