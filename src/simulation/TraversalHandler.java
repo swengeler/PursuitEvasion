@@ -320,6 +320,7 @@ public class TraversalHandler {
             plannedPath = restrictedShortestPathRoadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
             moveToLeaf.addPathToEnd(plannedPath);
             plannedPath = moveToLeaf;
+            System.out.println("moveToLeaf added");
         } else {
             plannedPath = restrictedShortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
         }

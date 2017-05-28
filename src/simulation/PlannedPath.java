@@ -52,8 +52,8 @@ public class PlannedPath {
         return pathLines;
     }
 
-    public Line getPathLine(double xPos, double yPos) {
-        return null;
+    public Line getPathLine(int index) {
+        return pathLines.get(index);
     }
 
     public double getStartX() {
@@ -89,7 +89,7 @@ public class PlannedPath {
         Formatter f = new Formatter();
         StringBuilder result = new StringBuilder("PlannedPath [startIndex=" + startIndex + ", ");
         for (Line l : pathLines) {
-            result.append(f.format("(%.3f|%.3f)-(%.3f|%.3f), ", l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY()));
+            result.append(f.format("(%.3f|%.3f)-(%.3f|%.3f), ", l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY()).toString());
         }
         result.append("endIndex=").append(endIndex).append("]");
         return result.toString();

@@ -648,4 +648,14 @@ public class GeometryOperations {
         return Math.toDegrees(Math.cos(dx1 * dx2 + dy1 * dy2));
     }
 
+    public static Point2D closestPoint(double x, double y, Line line) {
+        // line equation x = a + t * n
+        Point2D a = new Point2D(line.getStartX(), line.getStartY());
+        Point2D n = new Point2D(line.getStartX() - line.getEndX(), line.getStartY() - line.getEndY());
+        Point2D p = new Point2D(x, y);
+
+        //Point2D closestPoint = new Point2D((a.getX() - p.getX()) *  );
+        return null;
+    }
+
 }

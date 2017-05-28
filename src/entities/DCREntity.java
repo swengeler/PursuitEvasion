@@ -1,6 +1,7 @@
 package entities;
 
 import additionalOperations.Tuple;
+import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
@@ -19,19 +20,27 @@ import java.util.List;
  */
 public class DCREntity extends CentralisedEntity {
 
-    private Agent searcher, catcher;
-    private ArrayList<Agent> guards;
+    private enum Stage {
+        CATCHER_TO_SEARCHER, LIONS_MOVE, TO_PSEUDO_BLOCKING_VERTEX, FIND_TARGET, INIT_FIND_TARGET, FOLLOW_TARGET
+    }
 
     private TraversalHandler traversalHandler;
 
+    private Agent target;
+    private Point2D origin;
+    private boolean ignoreSightings;
+    private Stage currentStage;
+
+    private Agent searcher, catcher;
+    private PlannedPath currentSearcherPath, currentCatcherPath;
+    private ArrayList<Line> pathLines;
+    private int searcherPathLineCounter, catcherPathLineCounter;
+
+    private ArrayList<Agent> guards;
     private ArrayList<PlannedPath> initGuardPaths;
     private ArrayList<Integer> guardPathLineCounters;
     private ArrayList<Line> guardPathLines;
     private boolean guardsPositioned;
-
-    private PlannedPath currentSearcherPath;
-    private ArrayList<Line> pathLines;
-    private int pathLineCounter;
 
     public DCREntity(MapRepresentation map) {
         super(map);
@@ -40,6 +49,10 @@ public class DCREntity extends CentralisedEntity {
 
     @Override
     public void move() {
+        // initialising some local variables
+        double length, deltaX, deltaY;
+
+        // check if any agent is caught
         for (Entity e : map.getEvadingEntities()) {
             if (e.isActive()) {
                 for (Agent a1 : e.getControlledAgents()) {
@@ -54,18 +67,20 @@ public class DCREntity extends CentralisedEntity {
             }
         }
 
-        double length, deltaX, deltaY;
-
         // it is assumed that the required number of agents is provided by the GUI
         // could change this to throw an exception if it is not the case, giving the user a warning
         if (searcher == null) {
             assignTasks();
-            try {
+            /*try {
                 currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
             } catch (DelaunayError e) {
                 e.printStackTrace();
-            }
+            }*/
         }
+
+        // ******************************************************************************************************************************** //
+        // Guard movement
+        // ******************************************************************************************************************************** //
 
         if (!guardsPositioned()) {
             // let the guards move along their respective paths
@@ -90,14 +105,129 @@ public class DCREntity extends CentralisedEntity {
             }
         }
 
-        if (pathLines == null) {
+        // ******************************************************************************************************************************** //
+
+
+        // ******************************************************************************************************************************** //
+        // Searcher and catcher movement
+        // ******************************************************************************************************************************** //
+
+        if (currentStage == Stage.CATCHER_TO_SEARCHER) {
+            // only move catcher
+            pathLines = currentCatcherPath.getPathLines();
+            length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+            deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+
+            if (pathLines.get(catcherPathLineCounter).contains(catcher.getXPos() + deltaX, catcher.getYPos() + deltaY)) {
+                // move along line
+                catcher.moveBy(deltaX, deltaY);
+            } else {
+                // move to end of line
+                // TODO: instead take a "shortcut" to the next line
+                catcher.moveBy(pathLines.get(catcherPathLineCounter).getEndX() - catcher.getXPos(), pathLines.get(catcherPathLineCounter).getEndY() - catcher.getYPos());
+                catcherPathLineCounter++;
+            }
+
+            // check if searcher position reached and the next stage can begin
+            if (catcher.getXPos() == searcher.getXPos() && catcher.getYPos() == searcher.getYPos()) {
+                currentStage = Stage.INIT_FIND_TARGET;
+            }
+        } else if (currentStage == Stage.INIT_FIND_TARGET) {
+            // move searcher and catcher together (for its assumed they have the same speed
+            if (currentSearcherPath == null) {
+                try {
+                    currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                    currentCatcherPath = currentSearcherPath;
+                    searcherPathLineCounter = 0;
+                    catcherPathLineCounter = 0;
+                } catch (DelaunayError e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
+                // end of path reached, compute new path
+                try {
+                    currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                    currentCatcherPath = currentSearcherPath;
+                } catch (DelaunayError e) {
+                    e.printStackTrace();
+                }
+                searcherPathLineCounter = 0;
+                catcherPathLineCounter = 0;
+            }
+
+            // move searcher and catcher using same paths
+            pathLines = currentSearcherPath.getPathLines();
+            length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
+            deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
+                // move along line
+                searcher.moveBy(deltaX, deltaY);
+            } else {
+                // move to end of line
+                searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
+                searcherPathLineCounter++;
+            }
+
+            // move catcher using same path
+            pathLines = currentCatcherPath.getPathLines();
+            length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+            deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            if (pathLines.get(catcherPathLineCounter).contains(catcher.getXPos() + deltaX, catcher.getYPos() + deltaY)) {
+                // move along line
+                catcher.moveBy(deltaX, deltaY);
+            } else {
+                // move to end of line
+                catcher.moveBy(pathLines.get(catcherPathLineCounter).getEndX() - catcher.getXPos(), pathLines.get(catcherPathLineCounter).getEndY() - catcher.getYPos());
+                catcherPathLineCounter++;
+            }
+
+            // check whether an evader is visible
+            for (Entity e : map.getEvadingEntities()) {
+                if (e.isActive()) {
+                    for (Agent a1 : e.getControlledAgents()) {
+                        if (a1.isActive() && map.isVisible(a1, searcher)) {
+                            target = a1;
+                            currentStage = Stage.FOLLOW_TARGET;
+                        }
+                    }
+                }
+            }
+        } else if (currentStage == Stage.FOLLOW_TARGET) {
+            // behaviour changes based on visibility
+            // if the target is still visible, first check whether it can simply be caught
+            length = Math.sqrt(Math.pow(target.getXPos() - catcher.getXPos(), 2) + Math.pow(target.getYPos() - catcher.getYPos(), 2));
+            if (map.isVisible(target, catcher) && length <= catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
+                catcher.moveBy(target.getXPos() - catcher.getXPos(), target.getYPos() - catcher.getYPos());
+                target.setActive(false);
+                target = null;
+                currentStage = Stage.CATCHER_TO_SEARCHER;
+            } else if (map.isVisible(target, catcher)) {
+                // first case: target is visible
+                // perform simple lion's move
+                // TODO: CHANGE THIS TO BE THE RESTRICTED ROADMAP INSTEAD, OTHERWISE IT MIGHT NOT WORK
+                PlannedPath temp = shortestPathRoadMap.getShortestPath(new Point2D(target.getXPos(), target.getYPos()), origin);
+                Line lionsMoveLine = temp.getPathLine(0);
+
+                // calculate the perpendicular distance of the catcher's position to the line
+                // based on this find the parallel distance in either direction that will give the legal distance of movement
+                // find the two points and take the one closer to the target as the point to move to
+            }
+
+        }
+
+        /*if (pathLines == null) {
             try {
                 currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
             } catch (DelaunayError delaunayError) {
                 delaunayError.printStackTrace();
             }
             pathLines = currentSearcherPath.getPathLines();
-            pathLineCounter = 0;
+            searcherPathLineCounter = 0;
         }
 
         if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
@@ -109,59 +239,22 @@ public class DCREntity extends CentralisedEntity {
                 delaunayError.printStackTrace();
             }
             pathLines = currentSearcherPath.getPathLines();
-            pathLineCounter = 0;
+            searcherPathLineCounter = 0;
         }
 
-        length = Math.sqrt(Math.pow(pathLines.get(pathLineCounter).getEndX() - pathLines.get(pathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(pathLineCounter).getEndY() - pathLines.get(pathLineCounter).getStartY(), 2));
-        deltaX = (pathLines.get(pathLineCounter).getEndX() - pathLines.get(pathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-        deltaY = (pathLines.get(pathLineCounter).getEndY() - pathLines.get(pathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-        if (pathLines.get(pathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
+        length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
+        deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+        deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+        if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
             // move along line
             searcher.moveBy(deltaX, deltaY);
         } else {
             // move to end of line
             // TODO: instead take a "shortcut" to the next line
-            searcher.moveBy(pathLines.get(pathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(pathLineCounter).getEndY() - searcher.getYPos());
-            pathLineCounter++;
-        }
-
-        // TODO: For now implement the 2 agent randomised approach for a simply-connected environment
-        // if the evader is not visible, use the 2 agents to search for the pursuer together
-        // if the evader was located before and just needs to be followed and caught:
-        // use one agent as searcher and the other as catcher
-
-        // five possibilities:
-        // 1. no target and no agent visible
-        // 2. no target but agent visible
-        // 3. target but no agent visible
-        // 4. target and target visible
-        // 5. target and other agent visible
-
-        // might be an idea to give individual agents specific tasks
-        // e.g. the searcher just does the searcher thing when target not visible
-
-        /*if (testTarget == null) {
-            // have to search for target
-            boolean targetFound = false;
-            for (Agent a : evaders) {
-                if (map.isVisible(searcher, a)) {
-                    testTarget = a;
-                    targetFound = true;
-                    break;
-                }
-            }
-            if (!targetFound) {
-                // keep searching
-            } else {
-                // pursue target
-            }
-        } else {
-            if (map.isVisible(searcher, testTarget)) {
-                // perform lion's move
-            } else {
-                // get to pocket or smth
-            }
+            searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
+            searcherPathLineCounter++;
         }*/
+
     }
 
     @Override
@@ -214,6 +307,9 @@ public class DCREntity extends CentralisedEntity {
             }
             System.out.println("guards: " + guards.size());
             }
+            for (Agent g : guards) {
+                guardPathLineCounters.add(0);
+            }
 
             // the computed PlannedPath objects will initially be used to position all the guards in their correct locations
             // the (at least 2) remaining agents will be assigned to be searcher (and catcher)
@@ -223,9 +319,14 @@ public class DCREntity extends CentralisedEntity {
                     break;
                 }
             }
-            for (Agent g : guards) {
-                guardPathLineCounters.add(0);
+            for (Agent a : availableAgents) {
+                if (!guards.contains(a) && !a.equals(searcher)) {
+                    catcher = a;
+                    break;
+                }
             }
+            currentStage = Stage.CATCHER_TO_SEARCHER;
+            currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
         } catch (DelaunayError e) {
             e.printStackTrace();
         }
@@ -307,7 +408,7 @@ public class DCREntity extends CentralisedEntity {
             traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, reconnectedComponents, reconnectedAdjacencyMatrix);
             traversalHandler.separatingLineBased(separatingLines);
 
-            requiredAgents = 1 + separatingTriangles.size();
+            requiredAgents = 2 + separatingTriangles.size();
             System.out.println("\nrequiredAgents: " + requiredAgents);
         } catch (DelaunayError error) {
             error.printStackTrace();

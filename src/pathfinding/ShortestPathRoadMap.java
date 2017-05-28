@@ -101,29 +101,29 @@ public class ShortestPathRoadMap {
                     if ((polygons.get(i) != map.getBorderPolygon() && GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint)) ||
                             (polygons.get(i) == map.getBorderPolygon() && !GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint))) {
 
+                        // get point "just off the tip" of the reflex vertex
+                        double prevDeltaX = currentPoints.get(j).getX() - currentPoints.get((j + 1) % currentPoints.size()).getX();
+                        double prevDeltaY = currentPoints.get(j).getY() - currentPoints.get((j + 1) % currentPoints.size()).getY();
+                        double prevLength = Math.sqrt(Math.pow(prevDeltaX, 2) + Math.pow(prevDeltaY, 2));
+                        prevDeltaX /= prevLength;
+                        prevDeltaY /= prevLength;
+
+                        double nextDeltaX = currentPoints.get(j).getX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getX();
+                        double nextDeltaY = currentPoints.get(j).getY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getY();
+                        double nextLength = Math.sqrt(Math.pow(nextDeltaX, 2) + Math.pow(nextDeltaY, 2));
+                        nextDeltaX /= nextLength;
+                        nextDeltaY /= nextLength;
+
+                        double averageX = (prevDeltaX + nextDeltaX) / 2;
+                        double averageY = (prevDeltaY + nextDeltaY) / 2;
+
+                        double newX = currentPoints.get(j).getX() + averageX * 0.1;
+                        double newY = currentPoints.get(j).getY() + averageY * 0.1;
+
                         // if there are separating triangles (or polygons, technically), check whether the vertex should be moved)
                         // polygons which touch with a corner take precedence
                         boolean removePoint = false;
                         if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
-                            // get point "just off the tip" of the reflex vertex
-                            double prevDeltaX = currentPoints.get(j).getX() - currentPoints.get((j + 1) % currentPoints.size()).getX();
-                            double prevDeltaY = currentPoints.get(j).getY() - currentPoints.get((j + 1) % currentPoints.size()).getY();
-                            double prevLength = Math.sqrt(Math.pow(prevDeltaX, 2) + Math.pow(prevDeltaY, 2));
-                            prevDeltaX /= prevLength;
-                            prevDeltaY /= prevLength;
-
-                            double nextDeltaX = currentPoints.get(j).getX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getX();
-                            double nextDeltaY = currentPoints.get(j).getY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getY();
-                            double nextLength = Math.sqrt(Math.pow(nextDeltaX, 2) + Math.pow(nextDeltaY, 2));
-                            nextDeltaX /= nextLength;
-                            nextDeltaY /= nextLength;
-
-                            double averageX = (prevDeltaX + nextDeltaX) / 2;
-                            double averageY = (prevDeltaY + nextDeltaY) / 2;
-
-                            double newX = currentPoints.get(j).getX() + averageX * 0.1;
-                            double newY = currentPoints.get(j).getY() + averageY * 0.1;
-
                             if (!excludedPolygons.isEmpty()) {
                                 ArrayList<Polygon> p = getCornerAdjacentPolygons(currentPoints.get(j), polygons.get(i));
                                 for (int k = 0; !removePoint && k < p.size(); k++) {
@@ -142,11 +142,13 @@ public class ShortestPathRoadMap {
                                         removePoint = true;
                                     }
                                 }
-                                if (!removePoint && !l.isEmpty()) {
+                                /*if (!removePoint && !l.isEmpty()) {
                                     currentPoints.set(j, new Point2D(newX, newY));
-                                }
+                                }*/
                             }
                         }
+
+                        currentPoints.set(j, new Point2D(newX, newY));
 
                         if (!removePoint) {
                             reflexVertices.add(new PathVertex(currentPoints.get(j)));
@@ -175,27 +177,27 @@ public class ShortestPathRoadMap {
                     if ((polygons.get(i) != map.getBorderPolygon() && GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint)) ||
                             (polygons.get(i) == map.getBorderPolygon() && !GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint))) {
 
+                        // get point "just off the tip" of the reflex vertex
+                        double prevDeltaX = currentPoints.get(j).getX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getX();
+                        double prevDeltaY = currentPoints.get(j).getY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getY();
+                        double prevLength = Math.sqrt(Math.pow(prevDeltaX, 2) + Math.pow(prevDeltaY, 2));
+                        prevDeltaX /= prevLength;
+                        prevDeltaY /= prevLength;
+
+                        double nextDeltaX = currentPoints.get(j).getX() - currentPoints.get((j + 1) % currentPoints.size()).getX();
+                        double nextDeltaY = currentPoints.get(j).getY() - currentPoints.get((j + 1) % currentPoints.size()).getY();
+                        double nextLength = Math.sqrt(Math.pow(nextDeltaX, 2) + Math.pow(nextDeltaY, 2));
+                        nextDeltaX /= nextLength;
+                        nextDeltaY /= nextLength;
+
+                        double averageX = (prevDeltaX + nextDeltaX) / 2;
+                        double averageY = (prevDeltaY + nextDeltaY) / 2;
+
+                        double newX = currentPoints.get(j).getX() + averageX * 0.1;
+                        double newY = currentPoints.get(j).getY() + averageY * 0.1;
+
                         boolean removePoint = false;
                         if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
-                            // get point "just off the tip" of the reflex vertex
-                            double prevDeltaX = currentPoints.get(j).getX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getX();
-                            double prevDeltaY = currentPoints.get(j).getY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getY();
-                            double prevLength = Math.sqrt(Math.pow(prevDeltaX, 2) + Math.pow(prevDeltaY, 2));
-                            prevDeltaX /= prevLength;
-                            prevDeltaY /= prevLength;
-
-                            double nextDeltaX = currentPoints.get(j).getX() - currentPoints.get((j + 1) % currentPoints.size()).getX();
-                            double nextDeltaY = currentPoints.get(j).getY() - currentPoints.get((j + 1) % currentPoints.size()).getY();
-                            double nextLength = Math.sqrt(Math.pow(nextDeltaX, 2) + Math.pow(nextDeltaY, 2));
-                            nextDeltaX /= nextLength;
-                            nextDeltaY /= nextLength;
-
-                            double averageX = (prevDeltaX + nextDeltaX) / 2;
-                            double averageY = (prevDeltaY + nextDeltaY) / 2;
-
-                            double newX = currentPoints.get(j).getX() + averageX * 0.1;
-                            double newY = currentPoints.get(j).getY() + averageY * 0.1;
-
                             if (!excludedPolygons.isEmpty()) {
                                 ArrayList<Polygon> p = getCornerAdjacentPolygons(currentPoints.get(j), polygons.get(i));
                                 for (int k = 0; !removePoint && k < p.size(); k++) {
@@ -214,11 +216,13 @@ public class ShortestPathRoadMap {
                                         removePoint = true;
                                     }
                                 }
-                                if (!removePoint && !l.isEmpty()) {
+                                /*if (!removePoint && !l.isEmpty()) {
                                     currentPoints.set(j, new Point2D(newX, newY));
-                                }
+                                }*/
                             }
                         }
+
+                        currentPoints.set(j, new Point2D(newX, newY));
 
                         if (!removePoint) {
                             reflexVertices.add(new PathVertex(currentPoints.get(j)));
