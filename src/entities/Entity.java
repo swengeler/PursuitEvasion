@@ -1,7 +1,10 @@
 package entities;
 
 import pathfinding.ShortestPathRoadMap;
+import simulation.Agent;
 import simulation.MapRepresentation;
+
+import java.util.ArrayList;
 
 public abstract class Entity {
 
@@ -16,6 +19,9 @@ public abstract class Entity {
     }
 
     public abstract void move();
+
     public abstract boolean isActive();
+
+    public abstract ArrayList<Agent> getControlledAgents();
 
 }

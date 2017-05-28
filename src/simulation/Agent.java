@@ -92,10 +92,12 @@ public class Agent {
             policy = new RandomMovePolicy(this, settings.isPursuing(), map);
         } else if (policyEncoding.equals("straight_line_policy")) {
             policy = new StraightLineMovePolicy(this, settings.isPursuing(), map);
-        } else if (policyEncoding.equals("evader_policy")) {
+        } else if (policyEncoding.equals("flocking_evader_policy")) {
             policy = new FlockingEvaderPolicy(this, settings.isPursuing(), map);
         } else if (policyEncoding.equals("dummy_policy")) {
             policy = new DummyPolicy(this, settings.isPursuing());
+        } else if (policyEncoding.equals("hide_evader_policy")) {
+            policy = new HideEvaderPolicy(this, settings.isPursuing(), map);
         }
         //policy = new RandomMovePolicy(this, settings.isPursuing(), map);
         //policy = new FollowMovePolicy(this, settings.isPursuing(), map);
@@ -130,5 +132,11 @@ public class Agent {
         setYPos(getYPos() + nextMove.getYDelta());
         setTurnAngle(getTurnAngle() + nextMove.getTurnDelta());
     }
+
+    /*@Override
+    public String toString() {
+        Formatter f = new Formatter();
+        return f.format("Agent [xPos=%.3f, yPos=%.3f, speed=%.1f]", getXPos(), getYPos(), getSpeed()).toString();
+    }*/
 
 }

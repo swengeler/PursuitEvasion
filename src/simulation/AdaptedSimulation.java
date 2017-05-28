@@ -2,14 +2,10 @@ package simulation;
 
 import entities.CentralisedEntity;
 import entities.Entity;
-import javafx.collections.ObservableList;
-import javafx.scene.shape.Circle;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class AdaptedSimulation {
 
@@ -17,6 +13,8 @@ public class AdaptedSimulation {
 
     private MapRepresentation map;
     private long timeStep = 300;
+
+    private boolean isPaused;
 
     public AdaptedSimulation(MapRepresentation map) {
         this.map = map;
@@ -63,14 +61,21 @@ public class AdaptedSimulation {
                 System.out.println("All evaders captured");
             }
         });
+        isPaused = false;
+    }
+
+    public boolean isPaused() {
+        return isPaused;
     }
 
     public void pause() {
         simulationTimer.stop();
+        isPaused = true;
     }
 
     public void unPause() {
         simulationTimer.restart();
+        isPaused = false;
     }
 
     public void setTimeStep(long timeStep) {

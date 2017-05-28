@@ -119,6 +119,10 @@ public class MapRepresentation {
         return true;
     }
 
+    public boolean isVisible(Agent a1, Agent a2) {
+        return isVisible(a1.getXPos(), a1.getYPos(), a2.getXPos(), a2.getYPos());
+    }
+
     // methods for the controlledAgents to extract the knowledge it has access to
 
 }

@@ -2,29 +2,19 @@ package ui;
 
 import control.Controller;
 import conversion.GridConversion;
-import entities.DistributedEntity;
-import entities.Entity;
-import entities.RandomEntity;
+import entities.*;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Font;
@@ -33,15 +23,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DPoint;
-import org.jdelaunay.delaunay.geometries.DTriangle;
+import org.jdelaunay.delaunay.geometries.*;
+import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Main extends Application {
 
@@ -55,6 +42,7 @@ public class Main extends Application {
 
     private HBox outerLayout;
     private VBox menu;
+    private VBox entityMenu;
     public static ZoomablePane pane;
 
     private Line indicatorLine;
@@ -66,6 +54,7 @@ public class Main extends Application {
     private ArrayList<Circle> pursuers;
     private ArrayList<Circle> evaders;
     private ArrayList<VisualAgent> visualAgents;
+    private ArrayList<RadioButton> entitiesList;
 
     private BooleanProperty addPoints;
 
@@ -80,6 +69,7 @@ public class Main extends Application {
     private MapRepresentation map;
     private AdaptedSimulation adaptedSimulation;
     private Entity activeEntity;
+    private DCREntity testDCREntity;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //
@@ -106,7 +96,14 @@ public class Main extends Application {
 
         // top-level container, partitions window into drawing pane and menu
         outerLayout = new HBox();
-        outerLayout.setPrefSize(1200, 800);
+        outerLayout.setPrefSize(1400, 800);
+
+        // entity menu
+        entityMenu = new VBox();
+        entityMenu.setStyle("-fx-background-color: #ffffff");
+        entityMenu.setMinWidth(190);
+        entityMenu.setPrefSize(190, 600);
+        entityMenu.setMaxWidth(190);
 
         // sidebar menu, currently with dummy buttons
         menu = new VBox();
@@ -118,6 +115,13 @@ public class Main extends Application {
         // zoomable drawing pane
         pane = new ZoomablePane();
 
+        // separator between menus
+        Separator menuSeparator = new Separator(Orientation.VERTICAL);
+        menuSeparator.setStyle("-fx-background-color: #ffffff");
+        menuSeparator.setMinWidth(10);
+        menuSeparator.setPrefWidth(10);
+        menuSeparator.setMaxWidth(10);
+
         // separator between pane and menu
         Separator separator = new Separator(Orientation.VERTICAL);
         separator.setStyle("-fx-background-color: #ffffff");
@@ -126,9 +130,10 @@ public class Main extends Application {
         separator.setMaxWidth(10);
 
         // adding elements to the top-level container
-        outerLayout.getChildren().addAll(pane, separator, menu);
+        outerLayout.getChildren().addAll(pane, separator, entityMenu, menuSeparator, menu);
         menu.toFront();
         HBox.setHgrow(pane, Priority.ALWAYS);
+        HBox.setHgrow(entityMenu, Priority.NEVER);
         HBox.setHgrow(menu, Priority.NEVER);
 
         // line indicating where a line will be drawn when clicked
@@ -149,6 +154,75 @@ public class Main extends Application {
 
         pursuers = new ArrayList<>();
         evaders = new ArrayList<>();
+
+        // entity menu stuff
+        Label entityLabel = new Label("Entity menu");
+        entityLabel.setFont(Font.font("Arial", 14));
+
+        Separator entityLabelSeparator = new Separator(Orientation.HORIZONTAL);
+        entityLabelSeparator.setStyle("-fx-background-color: #ffffff");
+        entityLabelSeparator.setMinHeight(10);
+        entityLabelSeparator.setPrefHeight(10);
+        entityLabelSeparator.setMaxHeight(10);
+
+        entityMenu.getChildren().addAll(entityLabel, entityLabelSeparator);
+
+        ComboBox<String> entities = new ComboBox<>();
+        entities.getItems().addAll("Random entity", "Straight line entity", "Flocking evader entity", "Hide evader entity", "Dummy entity");
+        entities.setValue("Random entity");
+
+        Button addEntity = new Button("Add");
+
+        entityMenu.getChildren().addAll(entities, addEntity);
+
+        Label entityLabel2 = new Label("Entities in use");
+        entityLabel2.setFont(Font.font("Arial", 14));
+
+        Separator entityLabel2Separator = new Separator(Orientation.HORIZONTAL);
+        entityLabel2Separator.setStyle("-fx-background-color: #ffffff");
+        entityLabel2Separator.setMinHeight(10);
+        entityLabel2Separator.setPrefHeight(10);
+        entityLabel2Separator.setMaxHeight(10);
+
+        entityMenu.getChildren().addAll(entityLabel2, entityLabel2Separator);
+
+        entitiesList = new ArrayList<>();
+
+        ToggleGroup toggleGroup = new ToggleGroup();
+
+        toggleGroup.selectedToggleProperty().addListener((ov, old_toggle, new_toggle) -> {
+
+            if (old_toggle != null) {
+                RadioButton old = (RadioButton) old_toggle;
+                old.setStyle("-fx-text-fill: #e74c3c");
+            }
+
+            if (toggleGroup.getSelectedToggle() != null) {
+                RadioButton selected = (RadioButton) toggleGroup.getSelectedToggle();
+                selected.setStyle("-fx-text-fill: #2ecc71");
+            }
+
+        });
+
+        addEntity.setOnAction(ae -> {
+            boolean flag = false;
+            RadioButton entButton = new RadioButton(entities.getValue());
+            entButton.setStyle("-fx-text-fill: #2ecc71");
+
+            for (RadioButton entButton2 : entitiesList) {
+                if (entButton.getText().equals(entButton2.getText())) {
+                    System.out.println("Entity already present!");
+                    flag = true;
+                }
+            }
+
+            if (!flag) {
+                entButton.setToggleGroup(toggleGroup);
+                entButton.setSelected(true);
+                entitiesList.add(entButton);
+                entityMenu.getChildren().add(entButton);
+            }
+        });
 
         // ****************************************************************************************************** //
         // The old/normal controls for the simulation; still using the old project structure
@@ -350,7 +424,7 @@ public class Main extends Application {
                         if (!mapPolygons.get(0).contains(centerX, centerY)) {
                             inPolygon = false;
                         }
-                        for (int i = 1; inPolygon && i < mapPolygons.size() - 1; i++) {
+                        for (int i = 1; inPolygon && i < mapPolygons.size(); i++) {
                             if (mapPolygons.get(i).contains(centerX, centerY)) {
                                 inPolygon = false;
                             }
@@ -376,6 +450,20 @@ public class Main extends Application {
                             includedTriangles.add(dt);
                         }
                     }
+
+                    /*Coordinate coord;
+                    Circle c;
+                    double length0, length1, length2;
+                    for (DTriangle dt : includedTriangles) {
+                        coord = dt.getCircumCenter();
+                        length0 = Math.sqrt(Math.pow(coord.x - dt.getPoint(0).getX(), 2) + Math.pow(coord.y - dt.getPoint(0).getY(), 2));
+                        length1 = Math.sqrt(Math.pow(coord.x - dt.getPoint(1).getX(), 2) + Math.pow(coord.y - dt.getPoint(1).getY(), 2));
+                        length2 = Math.sqrt(Math.pow(coord.x - dt.getPoint(2).getX(), 2) + Math.pow(coord.y - dt.getPoint(2).getY(), 2));
+                        c = new Circle(coord.x, coord.y, Math.max(length0, Math.max(length1, length2)), Color.TRANSPARENT);
+                        c.setStroke(Color.BLACK);
+                        c.setStrokeWidth(1.5);
+                        pane.getChildren().add(c);
+                    }*/
 
                     ArrayList<DEdge> checkedEdges = new ArrayList<>();
                     for (DTriangle dt1 : includedTriangles) {
@@ -1662,6 +1750,32 @@ public class Main extends Application {
         });
         menu.getChildren().add(theButtonToEndAllButtons);
 
+        Button shortestPathMapButton = new Button("Shortest path map");
+        shortestPathMapButton.setOnAction(e -> {
+            if (mapPolygons == null || mapPolygons.isEmpty()) {
+                System.out.println("Not enough data to construct simulation!");
+            } else {
+                map = new MapRepresentation(mapPolygons);
+                ArrayList<DTriangle> excluded = new ArrayList<>();
+                try {
+                    excluded.add(new DTriangle(
+                            new DPoint(969.0, 759.0, 0.0),
+                            new DPoint(41.0, 750.0, 0.0),
+                            new DPoint(506.0, 624.0, 0.0)
+                    ));
+                    /*excluded.add(new DTriangle(
+                            new DPoint(120.0, 443.0, 0.0),
+                            new DPoint(41.0, 750.0, 0.0),
+                            new DPoint(506.0, 624.0, 0.0)
+                    ));*/
+                } catch (DelaunayError delaunayError) {
+                    delaunayError.printStackTrace();
+                }
+                ShortestPathRoadMap sprm = new ShortestPathRoadMap(map, excluded);
+            }
+        });
+        menu.getChildren().add(shortestPathMapButton);
+
         // ****************************************************************************************************** //
         // New controls to debug the new project structure
         // ****************************************************************************************************** //
@@ -1693,16 +1807,29 @@ public class Main extends Application {
         });
         menu.getChildren().add(startIntroducingEntitiesButton);
 
-        Button placeDCREntityButton = new Button("Place DCR entity");
+        Button placeDCREntityButton = new Button("Place random entity (evading)");
         placeDCREntityButton.setOnAction(e -> {
-            map = new MapRepresentation(mapPolygons, null, evadingEntities);
+            if (map == null) {
+                map = new MapRepresentation(mapPolygons);
+            }
+
+            VisualAgent va = new VisualAgent(500, 500);
+            va.getAgentBody().setFill(Color.LAWNGREEN);
+            pane.getChildren().add(va);
+            RandomEntity randomEntity = new RandomEntity(map);
+            randomEntity.setAgent(new Agent(va.getSettings()));
+            map.getEvadingEntities().add(randomEntity);
+
+            useEntities.set(true);
+            testDCREntity = new DCREntity(map);
+            map.getPursuingEntities().add(testDCREntity);
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
         menu.getChildren().add(placeDCREntityButton);
 
-        Button placeRandomEntity = new Button("Place random entity (evading)");
+        Button placeRandomEntity = new Button("Place DCR entity");
         placeRandomEntity.setOnAction(e -> {
             useEntities.set(true);
             // show required number of agents and settings for the algorithm
@@ -1711,11 +1838,49 @@ public class Main extends Application {
         });
         menu.getChildren().add(placeRandomEntity);
 
+        Button startAdaptedSimulation = new Button("Start adapted simulation");
+        startAdaptedSimulation.setOnAction(e -> {
+            if (adaptedSimulation == null) {
+                adaptedSimulation = new AdaptedSimulation(map);
+            } else {
+                adaptedSimulation.unPause();
+            }
+            // show required number of agents and settings for the algorithm
+            // add the next <required number> agents to this entity
+            // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
+        });
+        menu.getChildren().add(startAdaptedSimulation);
+
+        Button pauseAdaptedSimulation = new Button("Pause adapted simulation");
+        pauseAdaptedSimulation.setOnAction(e -> {
+            if (adaptedSimulation != null && !adaptedSimulation.isPaused()) {
+                adaptedSimulation.pause();
+            }
+            // show required number of agents and settings for the algorithm
+            // add the next <required number> agents to this entity
+            // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
+        });
+        menu.getChildren().add(pauseAdaptedSimulation);
+
+        Slider adaptedSlider = new Slider(1, 101, 51);
+        adaptedSlider.setShowTickMarks(true);
+        adaptedSlider.setShowTickLabels(true);
+        adaptedSlider.setMajorTickUnit(20);
+        adaptedSlider.setMaxWidth(180);
+        menu.getChildren().add(adaptedSlider);
+
+        adaptedSlider.valueProperty().addListener((ov, oldValue, newValue) -> {
+            //System.out.println("val = " + newValue);
+            if (adaptedSimulation != null) {
+                adaptedSimulation.setTimeStep((int) (double) newValue);
+            }
+        });
+
         // ****************************************************************************************************** //
         // JavaFX stuff
         // ****************************************************************************************************** //
 
-        Scene scene = new Scene(outerLayout, 1200, 800);
+        Scene scene = new Scene(outerLayout, 1400, 800);
         primaryStage.setTitle("Robin's Ruthless Robbers");
 
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/rrr_icon.png")));
@@ -1773,7 +1938,7 @@ public class Main extends Application {
         if (selectedFile != null) {
             // write map to file
             try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
-                for (int i = 0; i < mapPolygons.size() - 1; i++) {
+                for (int i = 0; i < mapPolygons.size(); i++) {
                     for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
                         out.print(mapPolygons.get(i).getPoints().get(j) + " ");
                     }
@@ -1908,7 +2073,9 @@ public class Main extends Application {
                     // map data only
                     String[] coords;
                     double[] coordsDouble;
-                    do {
+                    boolean firstLoop = true;
+                    while (firstLoop || ((line = in.readLine()) != null && !line.isEmpty())) {
+                        firstLoop = false;
                         coords = line.split(" ");
                         coordsDouble = new double[coords.length];
                         for (int i = 0; i < coords.length; i++) {
@@ -1945,7 +2112,7 @@ public class Main extends Application {
                                 pane.getChildren().add(currentMapPolygon);
                             }
                         }
-                    } while ((line = in.readLine()) != null);
+                    }
 
                     indicatorLine.setVisible(false);
                 }
@@ -2095,12 +2262,10 @@ public class Main extends Application {
                             } else {
                                 // new behaviour
                                 VisualAgent va = new VisualAgent(e.getX(), e.getY());
-                                va.getAgentBody().setFill(Color.LAWNGREEN);
+                                va.getAgentBody().setFill(Color.INDIANRED);
                                 pane.getChildren().add(va);
-                                visualAgents.add(va);
-                                testEntity = new RandomEntity(map);
-                                ((DistributedEntity) testEntity).setAgent(new Agent(va.getSettings()));
-                                evadingEntities.add(testEntity);
+
+                                testDCREntity.addAgent(new Agent(va.getSettings()));
 
                                 for (Shape s : covers) {
                                     s.toFront();
@@ -2166,7 +2331,7 @@ public class Main extends Application {
                             agentType.getItems().addAll("Pursuer", "Evader");
                             agentType.setValue(va.getSettings().isPursuing() ? "Pursuer" : "Evader");
                             ComboBox<String> agentPolicy = new ComboBox<>();
-                            agentPolicy.getItems().addAll("Random policy", "Straight line policy", "Flocking evader policy", "Dummy policy");
+                            agentPolicy.getItems().addAll("Random policy", "Straight line policy", "Flocking evader policy", "Hide evader policy", "Dummy policy");
                             agentPolicy.setValue("Random policy");
 
                             grid.add(new Label("X:"), 0, 0);
@@ -2210,10 +2375,12 @@ public class Main extends Application {
                                         s.setMovePolicy("random_policy");
                                     } else if (agentPolicy.getValue().equals("Straight line policy")) {
                                         s.setMovePolicy("straight_line_policy");
-                                    } else if (agentPolicy.getValue().equals("Evader policy")) {
-                                        s.setMovePolicy("evader_policy");
+                                    } else if (agentPolicy.getValue().equals("Flocking evader policy")) {
+                                        s.setMovePolicy("flocking_evader_policy");
                                     } else if (agentPolicy.getValue().equals("Dummy policy")) {
                                         s.setMovePolicy("dummy_policy");
+                                    } else if (agentPolicy.getValue().equals("Hide evader policy")) {
+                                        s.setMovePolicy("hide_evader_policy");
                                     }
 
                                     return s;

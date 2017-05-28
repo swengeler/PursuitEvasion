@@ -16,7 +16,9 @@ public abstract class CentralisedEntity extends Entity {
     }
 
     public abstract int totalRequiredAgents();
+
     public abstract int remainingRequiredAgents();
+
     public abstract void addAgent(Agent a);
 
     @Override
@@ -27,6 +29,11 @@ public abstract class CentralisedEntity extends Entity {
             }
         }
         return false;
+    }
+
+    @Override
+    public ArrayList<Agent> getControlledAgents() {
+        return availableAgents;
     }
 
 }

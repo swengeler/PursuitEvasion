@@ -20,8 +20,8 @@ public class RandomMovePolicy extends MovePolicy {
         double randDeltaX = (ThreadLocalRandom.current().nextInt(-10, 10 + 1))/* * timeStep */;
         double randDeltaY = (ThreadLocalRandom.current().nextInt(-10, 10 + 1)) /* * timeStep */;
         double length = Math.sqrt(Math.pow(randDeltaX, 2) + Math.pow(randDeltaY, 2));
-        randDeltaX /= length * 50 / getSingleAgent().getSpeed() ;
-        randDeltaY /= length * 50 / getSingleAgent().getSpeed() ;
+        randDeltaX /= length * 50 / getSingleAgent().getSpeed();
+        randDeltaY /= length * 50 / getSingleAgent().getSpeed();
         //double randAngle = Math.atan2(randDeltaY, randDeltaX) * (180 / Math.PI);
         double randAngle = (ThreadLocalRandom.current().nextInt(-360, 360)) * getSingleAgent().getTurnSpeed() /* * timeStep */ * 1 / 1000;
 

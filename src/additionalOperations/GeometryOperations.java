@@ -177,6 +177,13 @@ public class GeometryOperations {
     }
 
     public static boolean inPolygon(Polygon polygon, double startX, double startY, double endX, double endY) {
+        Line temp;
+        for (int i = 0; i < polygon.getPoints().size(); i += 2) {
+            temp = new Line(polygon.getPoints().get(i), polygon.getPoints().get(i + 1), polygon.getPoints().get((i + 2) % polygon.getPoints().size()), polygon.getPoints().get((i + 3) % polygon.getPoints().size()));
+            if (temp.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2))) {
+                return true;
+            }
+        }
         return polygon.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2));
     }
 
@@ -345,15 +352,17 @@ public class GeometryOperations {
             double xvalue = line1.getEndX();
 
 
-        } else
+        } else {
             slope1 = (line1.getEndY() - line1.getStartY()) / l1x;
+        }
 
 
         if (l2x == 0) {
             slope2 = Double.MAX_VALUE;
             System.out.println("second fuck up");
-        } else
+        } else {
             slope2 = (line2.getEndY() - line2.getStartY()) / l2x;
+        }
 
 
         Point2D line1Start, line2Start;

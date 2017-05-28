@@ -3,6 +3,7 @@ package simulation;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
+import org.apache.commons.math3.exception.MathArithmeticException;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
@@ -21,28 +22,67 @@ public class TraversalHandler {
     private DEdge[][] adjacencyEdgeMatrix;
 
     public ShortestPathRoadMap shortestPathRoadMap;
+    private ShortestPathRoadMap restrictedShortestPathRoadMap;
     public MapRepresentation map;
 
     private ArrayList<DTriangle> nodess;
     private ArrayList<ArrayList<DTriangle>> components;
     private ArrayList<DTriangle> separatingTriangles;
+    private ArrayList<Line> separatingLines;
 
     private EnumeratedIntegerDistribution rng;
 
     public TraversalHandler(ArrayList<DTriangle> triangles) {
         init(triangles);
+        nodess = triangles;
     }
 
-    public TraversalHandler(ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<DTriangle> separatingTriangles, int[][] adjacencyMatrix) {
+    public TraversalHandler(ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, int[][] adjacencyMatrix) {
         // this constructor should be able to handle any input where the map has been converted into
         // one or multiple SIMPLY-CONNECTED components
         // then this class can deal with transitions between components as well as traversals within components
+        init(nodes);
         this.shortestPathRoadMap = shortestPathRoadMap;
+        this.restrictedShortestPathRoadMap = shortestPathRoadMap;
+        this.nodess = nodes;
+        this.components = components;
+        this.adjacencyMatrix = adjacencyMatrix;
+        for (int i = 0; i < adjacencyMatrix.length; i++) {
+            for (int j = 0; j < adjacencyMatrix[0].length; j++) {
+                System.out.print(adjacencyMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public void separatingTriangleBased(ArrayList<DTriangle> separatingTriangles) {
+        this.separatingTriangles = separatingTriangles;
+        restrictedShortestPathRoadMap = new ShortestPathRoadMap(shortestPathRoadMap.getMap(), separatingTriangles);
+    }
+
+    public void separatingLineBased(ArrayList<Line> separatingLines) {
+        this.separatingLines = separatingLines;
+        restrictedShortestPathRoadMap = new ShortestPathRoadMap(separatingLines, shortestPathRoadMap.getMap());
+    }
+
+    /*public TraversalHandler(MapRepresentation map, ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, ArrayList<Line> separatingLines, int[][] adjacencyMatrix) {
+        // this constructor should be able to handle any input where the map has been converted into
+        // one or multiple SIMPLY-CONNECTED components
+        // then this class can deal with transitions between components as well as traversals within components
+        init(nodes);
+        this.shortestPathRoadMap = shortestPathRoadMap;
+        this.restrictedShortestPathRoadMap = new ShortestPathRoadMap(map, separatingTriangles);
         this.nodess = nodes;
         this.components = components;
         this.separatingTriangles = separatingTriangles; // might not actually be needed
         this.adjacencyMatrix = adjacencyMatrix;
-    }
+        for (int i = 0; i < adjacencyMatrix.length; i++) {
+            for (int j = 0; j < adjacencyMatrix[0].length; j++) {
+                System.out.print(adjacencyMatrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }*/
 
     private void init(ArrayList<DTriangle> triangles) {
         // initialising list of nodes and adjacency matrix
@@ -193,12 +233,22 @@ public class TraversalHandler {
             for (int i = 0; i < currentComponent.size(); i++) {
                 if (isLeaf(nodess.indexOf(currentComponent.get(i)))) {
                     childIndeces.add(i);
+                    /*Label l = new Label("leaf");
+                    l.setTranslateX(currentComponent.get(i).getBarycenter().getX());
+                    l.setTranslateY(currentComponent.get(i).getBarycenter().getY());
+                    Main.pane.getChildren().add(l);*/
+                } else {
+                    /*Label l = new Label("not leaf");
+                    l.setTranslateX(currentComponent.get(i).getBarycenter().getX());
+                    l.setTranslateY(currentComponent.get(i).getBarycenter().getY());
+                    Main.pane.getChildren().add(l);*/
                 }
             }
 
-            // choose one of the leaves uniformly at random (because all subtres would have the same number of leaves anyway)
-            chosenLeafIndex = (int) (Math.random() * childIndeces.size());
+            // choose one of the leaves uniformly at random (because all subtrees would have the same number of leaves anyway)
+            chosenLeafIndex = childIndeces.get((int) (Math.random() * childIndeces.size()));
             moveToLeaf = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY()));
+            childIndeces.clear();
         }
 
         // chooses a path through the tree/map according to the random selection described in the paper
@@ -239,18 +289,33 @@ public class TraversalHandler {
                 discreteProbabilities[i] /= totalLeafSum;
                 //System.out.println(discreteProbabilities[i]);
             }
-            rng = new EnumeratedIntegerDistribution(indecesToGenerate, discreteProbabilities);
+            try {
+                rng = new EnumeratedIntegerDistribution(indecesToGenerate, discreteProbabilities);
+            } catch (MathArithmeticException e) {
+                System.out.println("Adjacency matrix:");
+                for (int i = 0; i < adjacencyMatrix.length; i++) {
+                    for (int j = 0; j < adjacencyMatrix[0].length; j++) {
+                        System.out.print(adjacencyMatrix[i][j] + " ");
+                    }
+                    System.out.println();
+                }
+                System.out.println("Discrete probabilities:");
+                //System.out.println("Child probabilities (root " + currentIndex + "):");
+                for (int i = 0; i < discreteProbabilities.length; i++) {
+                    System.out.println(indecesToGenerate[i] + " | " + discreteProbabilities[i]);
+                }
+            }
             currentIndex = rng.sample(); // needs proper probability distribution
             childIndeces.clear();
         }
         //PlannedPath plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getX(), nodess.get(currentIndex).getBarycenter().getY()));
-        PlannedPath plannedPath = null;
+        PlannedPath plannedPath;
         if (!inComponentLeaf) {
-            plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            plannedPath = restrictedShortestPathRoadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
             moveToLeaf.addPathToEnd(plannedPath);
             plannedPath = moveToLeaf;
         } else {
-            plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            plannedPath = restrictedShortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
         }
         plannedPath.setStartIndex(startIndex);
         plannedPath.setEndIndex(currentIndex);
