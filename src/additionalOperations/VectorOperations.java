@@ -4,6 +4,7 @@ package additionalOperations;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 
@@ -78,6 +79,18 @@ public class VectorOperations {
         v2 = new Line(q.getX(), q.getY(), s.getX(), s.getY());
 
         System.out.println("intersect at = " + pointIntersect(v1, v2));
+    }
+
+    public static PointVector add(PointVector v1, PointVector v2) {
+        return new PointVector(v1.getX() + v2.getX(), v1.getY() + v2.getY());
+    }
+
+    public static PointVector subtract(PointVector v1, PointVector v2) {
+        return new PointVector(v1.getX() - v2.getX(), v1.getY() - v2.getY());
+    }
+
+    public static PointVector multiply(PointVector v, double scalar) {
+        return new PointVector(v.getX() * scalar, v.getY() * scalar);
     }
 
     public static double dotProduct(PointVector v1, PointVector v2) {

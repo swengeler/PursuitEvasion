@@ -1,6 +1,6 @@
 package entities;
 
-import additionalOperations.Tuple;
+import additionalOperations.*;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
@@ -187,11 +187,16 @@ public class DCREntity extends CentralisedEntity {
             }
 
             // check whether an evader is visible
-            for (Entity e : map.getEvadingEntities()) {
-                if (e.isActive()) {
-                    for (Agent a1 : e.getControlledAgents()) {
-                        if (a1.isActive() && map.isVisible(a1, searcher)) {
-                            target = a1;
+            for (int i = 0; currentStage == Stage.INIT_FIND_TARGET && i < map.getEvadingEntities().size(); i++) {
+                if (map.getEvadingEntities().get(i).isActive()) {
+                    for (int j = 0; currentStage == Stage.INIT_FIND_TARGET && j < map.getEvadingEntities().get(i).getControlledAgents().size(); j++) {
+                        if (map.getEvadingEntities().get(i).getControlledAgents().get(j).isActive() && map.isVisible(map.getEvadingEntities().get(i).getControlledAgents().get(j), searcher)) {
+                            target = map.getEvadingEntities().get(i).getControlledAgents().get(j);
+                            origin = new Point2D(catcher.getXPos(), catcher.getYPos());
+                            Label l = new Label("Origin");
+                            l.setTranslateX(origin.getX() + 5);
+                            l.setTranslateY(origin.getY() + 5);
+                            Main.pane.getChildren().addAll(new Circle(origin.getX(), origin.getY(), 7, Color.GRAY), l);
                             currentStage = Stage.FOLLOW_TARGET;
                         }
                     }
@@ -207,6 +212,7 @@ public class DCREntity extends CentralisedEntity {
                 target = null;
                 currentStage = Stage.CATCHER_TO_SEARCHER;
             } else if (map.isVisible(target, catcher)) {
+                System.out.println("Lion's move to be made");
                 // first case: target is visible
                 // perform simple lion's move
                 // TODO: CHANGE THIS TO BE THE RESTRICTED ROADMAP INSTEAD, OTHERWISE IT MIGHT NOT WORK
@@ -216,9 +222,29 @@ public class DCREntity extends CentralisedEntity {
                 // calculate the perpendicular distance of the catcher's position to the line
                 // based on this find the parallel distance in either direction that will give the legal distance of movement
                 // find the two points and take the one closer to the target as the point to move to
-            }
+                PointVector closestPoint = GeometryOperations.closestPoint(catcher.getXPos(), catcher.getYPos(), lionsMoveLine);
+                PointVector normal = new PointVector(closestPoint.getX() - catcher.getXPos(), closestPoint.getY() - catcher.getYPos());
+                double parallelLength = Math.sqrt(Math.pow(catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER, 2) - Math.pow(normal.length(), 2));
+                PointVector gradient = new PointVector(lionsMoveLine.getEndX() - lionsMoveLine.getStartX(), lionsMoveLine.getEndY() - lionsMoveLine.getStartY());
+                gradient = VectorOperations.multiply(gradient, 1 / gradient.length());
+                Point2D candidate1 = VectorOperations.add(closestPoint, VectorOperations.multiply(gradient, parallelLength)).toPoint();
+                Point2D candidate2 = VectorOperations.add(closestPoint, VectorOperations.multiply(gradient, -parallelLength)).toPoint();
 
+                if (Math.sqrt(Math.pow(candidate1.getX() - target.getXPos(), 2) + Math.pow(candidate1.getY() - target.getYPos(), 2)) < Math.sqrt(Math.pow(candidate2.getX() - target.getXPos(), 2) + Math.pow(candidate2.getY() - target.getYPos(), 2))) {
+                    // move to first candidate point
+                    catcher.moveBy(candidate1.getX() - catcher.getXPos(), candidate1.getY() - catcher.getYPos());
+                    searcher.moveBy(candidate1.getX() - searcher.getXPos(), candidate1.getY() - searcher.getYPos());
+                    Main.pane.getChildren().add(new Circle(candidate1.getX(), candidate1.getY(), 1, Color.BLACK));
+                } else {
+                    // move to second candidate point
+                    catcher.moveBy(candidate2.getX() - catcher.getXPos(), candidate2.getY() - catcher.getYPos());
+                    searcher.moveBy(candidate2.getX() - searcher.getXPos(), candidate2.getY() - searcher.getYPos());
+                    Main.pane.getChildren().add(new Circle(candidate2.getX(), candidate2.getY(), 1, Color.BLACK));
+                }
+            }
         }
+
+        System.out.printf("Catcher at (%.3f|%.3f)   |   Searcher at (%.3f|%.3f)\n", catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
 
         /*if (pathLines == null) {
             try {
