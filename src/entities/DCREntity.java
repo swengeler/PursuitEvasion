@@ -27,7 +27,7 @@ public class DCREntity extends CentralisedEntity {
     private TraversalHandler traversalHandler;
 
     private Agent target;
-    private Point2D origin;
+    private Point2D origin, pseudoBlockingVertex;
     private boolean ignoreSightings;
     private Stage currentStage;
 
@@ -207,12 +207,14 @@ public class DCREntity extends CentralisedEntity {
             // if the target is still visible, first check whether it can simply be caught
             length = Math.sqrt(Math.pow(target.getXPos() - catcher.getXPos(), 2) + Math.pow(target.getYPos() - catcher.getYPos(), 2));
             if (map.isVisible(target, catcher) && length <= catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
+                pseudoBlockingVertex = null;
                 catcher.moveBy(target.getXPos() - catcher.getXPos(), target.getYPos() - catcher.getYPos());
                 target.setActive(false);
                 target = null;
+                origin = null;
                 currentStage = Stage.CATCHER_TO_SEARCHER;
             } else if (map.isVisible(target, catcher)) {
-                System.out.println("Lion's move to be made");
+                pseudoBlockingVertex = null;
                 // first case: target is visible
                 // perform simple lion's move
                 // TODO: CHANGE THIS TO BE THE RESTRICTED ROADMAP INSTEAD, OTHERWISE IT MIGHT NOT WORK
@@ -241,7 +243,61 @@ public class DCREntity extends CentralisedEntity {
                     searcher.moveBy(candidate2.getX() - searcher.getXPos(), candidate2.getY() - searcher.getYPos());
                     Main.pane.getChildren().add(new Circle(candidate2.getX(), candidate2.getY(), 1, Color.BLACK));
                 }
+            } else {
+                // second case: target is not visible anymore (disappeared around corner)
+                // the method used here is cheating somewhat but assuming minimum feature size it just makes the computation easier
+                if (pseudoBlockingVertex == null) {
+                    PlannedPath temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
+                    pseudoBlockingVertex = new Point2D(temp.getPathLine(0).getEndX(), temp.getPathLine(0).getEndY());
+
+                    Main.pane.getChildren().add(new Circle(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), 4, Color.BLUEVIOLET));
+
+                    currentSearcherPath = shortestPathRoadMap.getShortestPath(searcher.getXPos(), searcher.getYPos(), pseudoBlockingVertex);
+                    currentCatcherPath = currentSearcherPath;
+                    searcherPathLineCounter = 0;
+                    catcherPathLineCounter = 0;
+                }
+
+                // move searcher
+                pathLines = currentSearcherPath.getPathLines();
+                length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
+                deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
+                    // move along line
+                    searcher.moveBy(deltaX, deltaY);
+                } else {
+                    // move to end of line
+                    searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
+                    searcherPathLineCounter++;
+                }
+
+                Main.pane.getChildren().add(new Circle(searcher.getXPos(), searcher.getYPos(), 1, Color.FUCHSIA));
+
+                // move catcher
+                pathLines = currentCatcherPath.getPathLines();
+                length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+                deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                if (pathLines.get(catcherPathLineCounter).contains(catcher.getXPos() + deltaX, catcher.getYPos() + deltaY)) {
+                    // move along line
+                    catcher.moveBy(deltaX, deltaY);
+                } else {
+                    // move to end of line
+                    catcher.moveBy(pathLines.get(catcherPathLineCounter).getEndX() - catcher.getXPos(), pathLines.get(catcherPathLineCounter).getEndY() - catcher.getYPos());
+                    catcherPathLineCounter++;
+                }
+
+                // if pseudo-blocking vertex has been reached without seeing the evader again
+                // if evader does become visible again, the old strategy is continued (should maybe already do that here)
+                if (catcher.getXPos() == pseudoBlockingVertex.getX() && catcher.getYPos() == pseudoBlockingVertex.getY()) {
+                    // do randomised search in pocket
+                    // pocket to be calculated from blocking vertex and position that the evader was last seen from (?)
+                    currentStage = Stage.FIND_TARGET;
+                }
             }
+        } else if (currentStage == Stage.FIND_TARGET) {
+            // searcher and catcher are "locked onto" a target, but the searcher has to rediscover it
         }
 
         System.out.printf("Catcher at (%.3f|%.3f)   |   Searcher at (%.3f|%.3f)\n", catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
@@ -308,30 +364,30 @@ public class DCREntity extends CentralisedEntity {
             PlannedPath bestShortestPath, currentShortestPath;
             Agent tempClosestAgent;
             if (false) {
-            for (DTriangle dt : traversalHandler.getSeparatingTriangles()) {
-                bestDistance = Double.MAX_VALUE;
-                bestShortestPath = null;
-                tempClosestAgent = null;
-                for (Agent a : availableAgents) {
-                    if (!guards.contains(a)) {
-                        // compute distance to current triangle
-                        currentShortestPath = shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), dt.getBarycenter().getX(), dt.getBarycenter().getY());
-                        currentDistance = currentShortestPath.getTotalLength();
-                        if (currentDistance < bestDistance) {
-                            bestDistance = currentDistance;
-                            bestShortestPath = currentShortestPath;
-                            tempClosestAgent = a;
+                for (DTriangle dt : traversalHandler.getSeparatingTriangles()) {
+                    bestDistance = Double.MAX_VALUE;
+                    bestShortestPath = null;
+                    tempClosestAgent = null;
+                    for (Agent a : availableAgents) {
+                        if (!guards.contains(a)) {
+                            // compute distance to current triangle
+                            currentShortestPath = shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), dt.getBarycenter().getX(), dt.getBarycenter().getY());
+                            currentDistance = currentShortestPath.getTotalLength();
+                            if (currentDistance < bestDistance) {
+                                bestDistance = currentDistance;
+                                bestShortestPath = currentShortestPath;
+                                tempClosestAgent = a;
+                            }
                         }
                     }
+                    guards.add(tempClosestAgent);
+                    Label l = new Label("guard");
+                    l.setTranslateX(tempClosestAgent.getXPos());
+                    l.setTranslateY(tempClosestAgent.getYPos());
+                    Main.pane.getChildren().add(l);
+                    initGuardPaths.add(bestShortestPath);
                 }
-                guards.add(tempClosestAgent);
-                Label l = new Label("guard");
-                l.setTranslateX(tempClosestAgent.getXPos());
-                l.setTranslateY(tempClosestAgent.getYPos());
-                Main.pane.getChildren().add(l);
-                initGuardPaths.add(bestShortestPath);
-            }
-            System.out.println("guards: " + guards.size());
+                System.out.println("guards: " + guards.size());
             }
             for (Agent g : guards) {
                 guardPathLineCounters.add(0);
@@ -475,9 +531,7 @@ public class DCREntity extends CentralisedEntity {
     private Tuple<int[][], ArrayList<ArrayList<DTriangle>>> computeReconnectedAdjacency(ArrayList<DTriangle> triangles, ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> reconnectingEdges, int[][] disconnectedAdjacencyMatrix, ArrayList<DTriangle> separatingTriangles) {
         int[][] reconnectedAdjacencyMatrix = disconnectedAdjacencyMatrix.clone();
         for (int i = 0; i < disconnectedAdjacencyMatrix.length; i++) {
-            for (int j = 0; j < disconnectedAdjacencyMatrix.length; j++) {
-                reconnectedAdjacencyMatrix[i][j] = disconnectedAdjacencyMatrix[i][j];
-            }
+            System.arraycopy(disconnectedAdjacencyMatrix[i], 0, reconnectedAdjacencyMatrix[i], 0, disconnectedAdjacencyMatrix.length);
         }
         ArrayList<ArrayList<DTriangle>> reconnectedComponents = new ArrayList<>();
         ArrayList<DTriangle> temp;

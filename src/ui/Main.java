@@ -1836,9 +1836,12 @@ public class Main extends Application {
             VisualAgent va = new VisualAgent(500, 500);
             va.getAgentBody().setFill(Color.LAWNGREEN);
             pane.getChildren().add(va);
-            RandomEntity randomEntity = new RandomEntity(map);
+            /*RandomEntity randomEntity = new RandomEntity(map);
             randomEntity.setAgent(new Agent(va.getSettings()));
-            map.getEvadingEntities().add(randomEntity);
+            map.getEvadingEntities().add(randomEntity);*/
+            TestEntity testEntity = new TestEntity(map);
+            testEntity.setAgent(new Agent(va.getSettings()));
+            map.getEvadingEntities().add(testEntity);
 
             useEntities.set(true);
             testDCREntity = new DCREntity(map);
@@ -2281,7 +2284,7 @@ public class Main extends Application {
                                 mapPolygons.get(0).setMouseTransparent(true);
 
                                 //Probably replace this condition by (useEntities && atLeastOneEntity) or perhaps only (atLeastOneEntity)
-                            } else if (atLeastOneEntity){
+                            } else if (atLeastOneEntity) {
                                 RadioButton selectedEntityButton = (RadioButton) toggleGroup.getSelectedToggle();
                                 VisualAgent va = new VisualAgent(e.getX(), e.getY());
 
@@ -2327,7 +2330,7 @@ public class Main extends Application {
                                 mapPolygons.get(0).toFront();
                                 mapPolygons.get(0).setMouseTransparent(true);
                                 pane.requestFocus();
-                            }  else {
+                            } else {
                                 // new behaviour
                                 VisualAgent va = new VisualAgent(e.getX(), e.getY());
                                 va.getAgentBody().setFill(Color.INDIANRED);

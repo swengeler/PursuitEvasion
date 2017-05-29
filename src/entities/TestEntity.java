@@ -1,0 +1,82 @@
+package entities;
+
+import additionalOperations.GeometryOperations;
+import javafx.geometry.Point2D;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Polygon;
+import simulation.*;
+
+import java.util.ArrayList;
+
+public class TestEntity extends DistributedEntity {
+
+    private PlannedPath currentPath;
+    private int pathCounter;
+
+    public TestEntity(MapRepresentation map) {
+        super(map);
+    }
+
+    @Override
+    public void move() {
+        // check if any agent is caught
+        if (currentPath == null) {
+            for (Entity e : map.getPursuingEntities()) {
+                for (Agent a : e.getControlledAgents()) {
+                    if (map.isVisible(a, controlledAgent)) {
+                        // find point in polygon to go to
+                        /*double maxVertexDistance = -Double.MAX_VALUE;
+                        PlannedPath maxDistancePath = null, temp;
+                        for (Point2D p : getPolygonPoints()) {
+                            temp = shortestPathRoadMap.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), p);
+                            boolean danger = false;
+                            for (Line l : temp.getPathLines()) {
+                                System.out.println(Math.sqrt(Math.pow(l.getEndX() - a.getXPos(), 2) + Math.pow(l.getEndY() - a.getYPos(), 2) - Math.pow(controlledAgent.getXPos() - a.getXPos(), 2) + Math.pow(controlledAgent.getYPos() - a.getYPos(), 2)));
+                                if (Math.sqrt(Math.pow(l.getEndX() - a.getXPos(), 2) + Math.pow(l.getEndY() - a.getYPos(), 2) - Math.pow(controlledAgent.getXPos() - a.getXPos(), 2) + Math.pow(controlledAgent.getYPos() - a.getYPos(), 2)) < -50) {
+                                    danger = true;
+                                    break;
+                                }
+                            }
+                            if (!danger && temp.getPathLines().size() - 1 > maxVertexDistance) {
+                                maxVertexDistance = temp.getPathLines().size() - 1;
+                                maxDistancePath = temp;
+                            }
+                        }
+                        if (maxDistancePath != null) {*/
+                        currentPath = shortestPathRoadMap.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), new Point2D(111.0, 317.0));
+                        pathCounter = 0;
+                        //}
+                    }
+                }
+            }
+        }
+
+        if (currentPath != null) {
+            ArrayList<Line> pathLines = currentPath.getPathLines();
+            double length = Math.sqrt(Math.pow(pathLines.get(pathCounter).getEndX() - pathLines.get(pathCounter).getStartX(), 2) + Math.pow(pathLines.get(pathCounter).getEndY() - pathLines.get(pathCounter).getStartY(), 2));
+            double deltaX = (pathLines.get(pathCounter).getEndX() - pathLines.get(pathCounter).getStartX()) / length * controlledAgent.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            double deltaY = (pathLines.get(pathCounter).getEndY() - pathLines.get(pathCounter).getStartY()) / length * controlledAgent.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            if (pathLines.get(pathCounter).contains(controlledAgent.getXPos() + deltaX, controlledAgent.getYPos() + deltaY)) {
+                // move along line
+                controlledAgent.moveBy(deltaX, deltaY);
+            } else {
+                // move to end of line
+                controlledAgent.moveBy(pathLines.get(pathCounter).getEndX() - controlledAgent.getXPos(), pathLines.get(pathCounter).getEndY() - controlledAgent.getYPos());
+                pathCounter++;
+                if (pathCounter > pathLines.size() - 1) {
+                    currentPath = null;
+                    pathCounter = 0;
+                }
+            }
+        }
+    }
+
+    private ArrayList<Point2D> getPolygonPoints() {
+        ArrayList<Point2D> result = new ArrayList<>();
+        for (Polygon p : map.getAllPolygons()) {
+            result.addAll(GeometryOperations.polyToPoints(p));
+        }
+        return result;
+    }
+
+}

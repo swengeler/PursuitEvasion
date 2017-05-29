@@ -1,6 +1,5 @@
 package entities;
 
-import simulation.Agent;
 import simulation.MapRepresentation;
 
 public class RandomEntity extends DistributedEntity {
@@ -30,11 +29,6 @@ public class RandomEntity extends DistributedEntity {
         }
 
         controlledAgent.moveBy(randDeltaX, randDeltaY);
-    }
-
-    @Override
-    public void setAgent(Agent a) {
-        controlledAgent = a;
     }
 
 }

@@ -1,7 +1,6 @@
 package entities;
 
 import javafx.scene.shape.Polygon;
-import simulation.Agent;
 import simulation.MapRepresentation;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,8 +39,4 @@ public class StraightLineEntity extends DistributedEntity {
         controlledAgent.moveBy(moveX, moveY);
     }
 
-    @Override
-    public void setAgent(Agent a) {
-        controlledAgent = a;
-    }
 }

@@ -22,17 +22,12 @@ public class PathVertex {
 
     }
 
-
     public double getX() {
         return x;
     }
 
     public double getY() {
         return y;
-    }
-
-    public ArrayList<Edge> getEdges() {
-        return edges;
     }
 
 }

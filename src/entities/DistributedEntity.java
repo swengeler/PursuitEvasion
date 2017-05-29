@@ -14,7 +14,9 @@ public abstract class DistributedEntity extends Entity {
         super(map);
     }
 
-    public abstract void setAgent(Agent a);
+    public void setAgent(Agent a) {
+        controlledAgent = a;
+    }
 
     @Override
     public boolean isActive() {

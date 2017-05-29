@@ -2,15 +2,10 @@ package shadowPursuit;
 
 import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
-import javafx.scene.effect.Shadow;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import org.apache.commons.math3.ode.sampling.StepNormalizerMode;
-import org.apache.log4j.net.SyslogAppender;
 import simulation.MapRepresentation;
 
-import javax.swing.plaf.synth.SynthUI;
 import java.util.ArrayList;
 
 import static additionalOperations.GeometryOperations.*;
@@ -189,7 +184,7 @@ public class ShadowGraph {
                 }
                 */
 
-                if(tmp.getPosition().getX() == 390 && tmp.getPosition().getY() == 529)    {
+                if (tmp.getPosition().getX() == 390 && tmp.getPosition().getY() == 529) {
                     System.out.println("PROBLEM ANALYSIS for = " + tmp);
                     System.out.println("ADJACENT = " + adj);
                 }
@@ -208,7 +203,7 @@ public class ShadowGraph {
                         }
                     }
                 } else {
-                    if(tmp.getPosition().getX() == 390 && tmp.getPosition().getY() == 529)    {
+                    if (tmp.getPosition().getX() == 390 && tmp.getPosition().getY() == 529) {
                         System.out.println("Keep going...");
                         System.out.println("ADJACENT 0 = " + adj.get(0));
                     }
@@ -225,7 +220,7 @@ public class ShadowGraph {
                     }
                 }
 
-                if(tmp.getPosition().getX() == 390 && tmp.getPosition().getY() == 529)    {
+                if (tmp.getPosition().getX() == 390 && tmp.getPosition().getY() == 529) {
                     for (int k = 0; k < temporary2.size(); k++) {
                         System.out.println("TEMP = " + temporary2.get(k));
                     }
@@ -258,17 +253,14 @@ public class ShadowGraph {
 
             }
 
-            if(tmp.getPosition().getX() == 390 && tmp.getPosition().getY() == 529)    {
+            if (tmp.getPosition().getX() == 390 && tmp.getPosition().getY() == 529) {
                 System.out.println("Curently => " + tmp);
                 System.out.println("left => " + tmp.getLeft());
                 System.out.println("Right => " + tmp.getRight());
             }
 
 
-
-
         }
-
 
 
         ShadowNode tmp3;
@@ -282,11 +274,11 @@ public class ShadowGraph {
 
 
             //left Side
-            if(nodePresent(adj.get(0)) != null) {
+            if (nodePresent(adj.get(0)) != null) {
 
                 System.out.println("Enter 1 for => " + nodePresent(adj.get(0)));
 
-                tmpLine = new Line(tmp3.getPosition().getX(), tmp3.getPosition().getY() , adj.get(0).getX(), adj.get(0).getY());
+                tmpLine = new Line(tmp3.getPosition().getX(), tmp3.getPosition().getY(), adj.get(0).getX(), adj.get(0).getY());
                 if (lineIsVisible2(tmpLine)) {
                     System.out.println("visible Line");
                     System.out.println(new Point2D(tmpLine.getEndX(), tmpLine.getEndY()) + " is visible");
@@ -294,13 +286,12 @@ public class ShadowGraph {
                     tmp3.getLeft().right = null;
                     tmp3.left = null;
 
-                    if(nodePresent(adj.get(1)).getType() == 1) {
+                    if (nodePresent(adj.get(1)).getType() == 1) {
                         tmp3.right = nodePresent(adj.get(1));
                         nodePresent(adj.get(1)).left = tmp3;
                     }
-                }
-                else  {
-                    if(nodePresent(adj.get(0)).getType() == 1) {
+                } else {
+                    if (nodePresent(adj.get(0)).getType() == 1) {
                         tmp3.left = nodePresent(adj.get(0));
                         nodePresent(adj.get(0)).right = tmp3;
                     }
@@ -310,7 +301,7 @@ public class ShadowGraph {
 
                 System.out.println("Enter 2 for => " + nodePresent(adj.get(1)));
 
-                tmpLine = new Line(tmp3.getPosition().getX(), tmp3.getPosition().getY() , adj.get(1).getX(), adj.get(1).getY());
+                tmpLine = new Line(tmp3.getPosition().getX(), tmp3.getPosition().getY(), adj.get(1).getX(), adj.get(1).getY());
                 if (lineIsVisible2(tmpLine)) {
                     System.out.println("visible Line");
                     System.out.println(new Point2D(tmpLine.getEndX(), tmpLine.getEndY()) + " is visible");
@@ -318,20 +309,18 @@ public class ShadowGraph {
                     tmp3.getRight().left = null;
                     tmp3.right = null;
 
-                    if(nodePresent(adj.get(0)).getType() == 1) {
+                    if (nodePresent(adj.get(0)).getType() == 1) {
                         tmp3.left = nodePresent(adj.get(0));
                         nodePresent(adj.get(0)).right = tmp3;
                     }
-                }
-                else    {
-                    if(nodePresent(adj.get(1)).getType() == 1) {
+                } else {
+                    if (nodePresent(adj.get(1)).getType() == 1) {
                         tmp3.right = nodePresent(adj.get(1));
                         nodePresent(adj.get(1)).left = tmp3;
                     }
                 }
             }
             System.out.println();
-
 
 
             if (nodePresent(tmp3.getPosition()) == null) {
@@ -972,15 +961,15 @@ public class ShadowGraph {
         Point2D tmpPoint;
 
 
-        for(double k = 0.9; k >= 0.1; k= k - 0.1) {
+        for (double k = 0.9; k >= 0.1; k = k - 0.1) {
 
             tmpLine = scaleRay(start, end, k);
             tmpPoint = new Point2D(tmpLine.getEndX(), tmpLine.getEndY());
-            if((line.getStartX() == 360 && line.getStartY() == 620) && (line.getEndX() ==390 && line.getEndY() == 529)) {
+            if ((line.getStartX() == 360 && line.getStartY() == 620) && (line.getEndX() == 390 && line.getEndY() == 529)) {
                 System.out.println("K => " + k + "\nLine => " + tmpLine + "\nPoint => " + tmpPoint + "\n");
             }
 
-            if(isVisible2(tmpPoint))    {
+            if (isVisible2(tmpPoint)) {
                 return true;
             }
         }

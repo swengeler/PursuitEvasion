@@ -1,7 +1,5 @@
 package entities;
 
-import javafx.geometry.Point2D;
-
 import java.util.ArrayList;
 import java.util.List;
 
