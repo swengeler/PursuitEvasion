@@ -78,7 +78,6 @@ public class GeometryOperations {
         return intersects;
     }
 
-
     public static boolean polysIntersect(ArrayList<Polygon> allPoly, Line current) {
         boolean intersect = false;
         for (Polygon poly : allPoly) {
@@ -381,12 +380,8 @@ public class GeometryOperations {
         double x = (yinter2 - yinter1) / (slope1 - slope2);
 
         double y = slope1 * x + yinter1;
-
-
         //System.out.println("X = " + x);
         //System.out.println("Y = " + y);
-
-
         return new Point2D(x, y);
     }
 
@@ -659,5 +654,21 @@ public class GeometryOperations {
         return closestPoint;
     }
 
+    // from: https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
+    public static Point2D rayLineSegIntersection(double rayStartX, double rayStartY, double rayDeltaX, double rayDeltaY, Line lineSegment) {
+        /*PointVector lineSegmentEnd = new PointVector(lineSegment.getEndX(), lineSegment.getEndY());
+        PointVector v1 = VectorOperations.subtract(new PointVector(rayStartX, rayStartY), lineSegmentEnd);
+        PointVector v2 = VectorOperations.subtract(new PointVector(lineSegment.getStartX(), lineSegment.getStartY()), lineSegmentEnd);
+        PointVector v3 = new PointVector(-rayDeltaY / length, rayDeltaX / length);
+
+        double t1 = VectorOperations.crossProduct(v2, v1)*/
+
+        double length = Math.sqrt(rayDeltaX * rayDeltaX + rayDeltaY * rayDeltaY);
+        rayDeltaX /= length;
+        rayDeltaY /= length;
+        double rayEndX = rayStartX + Integer.MAX_VALUE * rayDeltaX;
+        double rayEndY = rayStartY + Integer.MAX_VALUE * rayDeltaY;
+        return findIntersect2(new Line(rayStartX, rayStartY, rayEndX, rayEndY), lineSegment);
+    }
 
 }

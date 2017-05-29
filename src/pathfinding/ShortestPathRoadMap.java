@@ -18,6 +18,9 @@ import java.util.ArrayList;
 
 public class ShortestPathRoadMap {
 
+    private static final boolean SHOW_ON_CANVAS = false;
+    public static boolean drawLines = false;
+
     private MapRepresentation map;
     private ArrayList<Polygon> excludedPolygons;
     private ArrayList<Line> excludedLines;
@@ -72,6 +75,7 @@ public class ShortestPathRoadMap {
     }
 
     private void init() {
+        double distanceToActual = 0.1;
         shortestPathGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
         // calculate reflex vertices
@@ -117,8 +121,8 @@ public class ShortestPathRoadMap {
                         double averageX = (prevDeltaX + nextDeltaX) / 2;
                         double averageY = (prevDeltaY + nextDeltaY) / 2;
 
-                        double newX = currentPoints.get(j).getX() + averageX * 10;
-                        double newY = currentPoints.get(j).getY() + averageY * 10;
+                        double newX = currentPoints.get(j).getX() + averageX * distanceToActual;
+                        double newY = currentPoints.get(j).getY() + averageY * distanceToActual;
 
                         // if there are separating triangles (or polygons, technically), check whether the vertex should be moved)
                         // polygons which touch with a corner take precedence
@@ -158,7 +162,7 @@ public class ShortestPathRoadMap {
 
                             shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
-                            if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
+                            if (SHOW_ON_CANVAS) {
                                 Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
                                 Main.pane.getChildren().add(circle);
                                 Label index = new Label("" + j);
@@ -193,8 +197,8 @@ public class ShortestPathRoadMap {
                         double averageX = (prevDeltaX + nextDeltaX) / 2;
                         double averageY = (prevDeltaY + nextDeltaY) / 2;
 
-                        double newX = currentPoints.get(j).getX() + averageX * 10;
-                        double newY = currentPoints.get(j).getY() + averageY * 10;
+                        double newX = currentPoints.get(j).getX() + averageX * distanceToActual;
+                        double newY = currentPoints.get(j).getY() + averageY * distanceToActual;
 
                         boolean removePoint = false;
                         if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
@@ -232,7 +236,7 @@ public class ShortestPathRoadMap {
 
                             shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
-                            if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
+                            if (SHOW_ON_CANVAS) {
                                 Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
                                 Main.pane.getChildren().add(circle);
                                 Label index = new Label("" + j);
@@ -260,11 +264,11 @@ public class ShortestPathRoadMap {
                         DefaultWeightedEdge edge = shortestPathGraph.addEdge(v1, v2);
                         if (edge != null) {
                             shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
-                            if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
+                            if (SHOW_ON_CANVAS) {
                                 Line line = new Line(v1.getX(), v1.getY(), v2.getX(), v2.getY());
                                 line.setStroke(Color.GREEN);
                                 line.setStrokeWidth(2);
-                                //Main.pane.getChildren().add(line);
+                                Main.pane.getChildren().add(line);
                                 line.toFront();
                             }
                         }
@@ -320,10 +324,10 @@ public class ShortestPathRoadMap {
                         if (!check) {
                             // there should be an edge
                             Line line = new Line(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
-                            if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
+                            if (SHOW_ON_CANVAS) {
                                 line.setStroke(Color.GREEN);
                                 line.setStrokeWidth(2);
-                                //Main.pane.getChildren().add(line);
+                                Main.pane.getChildren().add(line);
                                 line.toFront();
                             }
 
@@ -397,6 +401,9 @@ public class ShortestPathRoadMap {
             shortestPathGraph.addVertex(sink);
         }
 
+        double minDistance = Double.MAX_VALUE;
+        double minX = 0, minY = 0;
+
         // add new edges between source and sink and the visible nodes of the graph
         // first for the source
         if (!containsSource) {
@@ -409,10 +416,23 @@ public class ShortestPathRoadMap {
                             !isEdgeIntersectingLine(pv.getX(), pv.getY(), source.getX(), source.getY())) {
                         double differenceSquared = Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2);
                         shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(source, pv), Math.sqrt(differenceSquared));
+                        /*if (drawLines) {
+                            Line l = new Line(pv.getX(), pv.getY(), source.getX(), source.getY());
+                            l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
+                            Main.pane.getChildren().add(l);
+                            Main.pane.getChildren().add(new Circle(pv.getX(), pv.getY(), 1, Color.LIGHTBLUE));
+                        }*/
+                        if (Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2) < minDistance) {
+                            minDistance = Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2);
+                            minX = pv.getX();
+                            minY = pv.getY();
+                        }
                     }
                 }
             }
         }
+        Main.pane.getChildren().add(new Circle(minX, minY, 1.5, Color.RED));
+
         // then for the sink
         if (!containsSink) {
             for (Point2D pv : shortestPathGraph.vertexSet()) {
@@ -424,6 +444,12 @@ public class ShortestPathRoadMap {
                             !isEdgeIntersectingLine(pv.getX(), pv.getY(), sink.getX(), sink.getY())) {
                         double differenceSquared = Math.pow(pv.getX() - sink.getX(), 2) + Math.pow(pv.getY() - sink.getY(), 2);
                         shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(pv, sink), Math.sqrt(differenceSquared));
+                        /*if (drawLines) {
+                            Line l = new Line(pv.getX(), pv.getY(), source.getX(), source.getY());
+                            l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
+                            Main.pane.getChildren().add(l);
+                            Main.pane.getChildren().add(new Circle(pv.getX(), pv.getY(), 1, Color.LIGHTBLUE));
+                        }*/
                     }
                 }
             }
@@ -463,8 +489,12 @@ public class ShortestPathRoadMap {
         }
 
         // remove the source and sink vertices
-        shortestPathGraph.removeVertex(source);
-        shortestPathGraph.removeVertex(sink);
+        if (!containsSource) {
+            shortestPathGraph.removeVertex(source);
+        }
+        if (!containsSink) {
+            shortestPathGraph.removeVertex(sink);
+        }
         return plannedPath;
     }
 

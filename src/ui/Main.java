@@ -511,7 +511,7 @@ public class Main extends Application {
                 }
             }
         });
-        //menu.getChildren().add(triangulationButton);
+        menu.getChildren().add(triangulationButton);
 
         Button simpleComponentButton = new Button("Show simply connected\ncomponents");
         simpleComponentButton.setOnAction(e -> {
@@ -1777,10 +1777,10 @@ public class Main extends Application {
                 } catch (DelaunayError delaunayError) {
                     delaunayError.printStackTrace();
                 }
-                ShortestPathRoadMap sprm = new ShortestPathRoadMap(map, excluded);
+                ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
             }
         });
-        //menu.getChildren().add(shortestPathMapButton);
+        menu.getChildren().add(shortestPathMapButton);
 
         // ****************************************************************************************************** //
         // New controls to debug the new project structure
@@ -1824,12 +1824,21 @@ public class Main extends Application {
             VisualAgent va = new VisualAgent(500, 400);
             va.getAgentBody().setFill(Color.LAWNGREEN);
             pane.getChildren().add(va);
-            /*RandomEntity randomEntity = new RandomEntity(map);
+            /* for the original test
+            RandomEntity randomEntity = new RandomEntity(map);
             randomEntity.setAgent(new Agent(va.getSettings()));
             map.getEvadingEntities().add(randomEntity);*/
+            /* for catcher_searcher_test_6
             TestEntity testEntity = new TestEntity(map, 82.0, 221.0);
             testEntity.setAgent(new Agent(va.getSettings()));
+            map.getEvadingEntities().add(testEntity);*/
+            // for searcher_catcher_test_7
+            TestEntity testEntity = new TestEntity(map, 44.0,569.0);
+            testEntity.setAgent(new Agent(va.getSettings()));
             map.getEvadingEntities().add(testEntity);
+            /*TestEntity testEntity = new TestEntity(map);
+            testEntity.setAgent(new Agent(va.getSettings()));
+            map.getEvadingEntities().add(testEntity);*/
 
             useEntities.set(true);
             testDCREntity = new DCREntity(map);
@@ -1873,10 +1882,10 @@ public class Main extends Application {
         });
         menu.getChildren().add(pauseAdaptedSimulation);
 
-        Slider adaptedSlider = new Slider(1, 101, 51);
+        Slider adaptedSlider = new Slider(1, 151, 51);
         adaptedSlider.setShowTickMarks(true);
         adaptedSlider.setShowTickLabels(true);
-        adaptedSlider.setMajorTickUnit(20);
+        adaptedSlider.setMajorTickUnit(50);
         adaptedSlider.setMaxWidth(180);
         menu.getChildren().add(adaptedSlider);
 
@@ -2161,6 +2170,10 @@ public class Main extends Application {
             if (currentState == ProgramState.SIMULATION) {
                 return;
             }
+            if (e.getButton() == MouseButton.MIDDLE) {
+                TestEntity.targetX = e.getX();
+                TestEntity.targetY = e.getY();
+            }
             if (e.getButton() == MouseButton.PRIMARY) {
                 if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {
                     if (!e.isPrimaryButtonDown() || (mapPolygons.size() > 1 && !mapPolygons.get(0).contains(e.getX(), e.getY()))) {
@@ -2318,7 +2331,7 @@ public class Main extends Application {
                                 mapPolygons.get(0).toFront();
                                 mapPolygons.get(0).setMouseTransparent(true);
                                 pane.requestFocus();
-                            } else {
+                            } else if (!e.isControlDown()) {
                                 // new behaviour
                                 VisualAgent va = new VisualAgent(e.getX(), e.getY());
                                 va.getAgentBody().setFill(Color.INDIANRED);

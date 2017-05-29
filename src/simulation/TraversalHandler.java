@@ -138,6 +138,10 @@ public class TraversalHandler {
         return separatingTriangles;
     }
 
+    public ArrayList<ArrayList<DTriangle>> getComponents() {
+        return components;
+    }
+
     public TGNode getLeaf() {
         for (int i = 0; i < adjacencyMatrix.length; i++) {
             int count = 0;

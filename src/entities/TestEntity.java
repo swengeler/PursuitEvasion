@@ -13,7 +13,8 @@ public class TestEntity extends DistributedEntity {
     private PlannedPath currentPath;
     private int pathCounter;
 
-    private double targetX = 110.0, targetY = 317.0; // default for searcher_catcher_test_2: 111.0, 317.0
+    //private double targetX = 110.0, targetY = 317.0; // default for searcher_catcher_test_2: 111.0, 317.0
+    public static double targetX = 5, targetY = 5;
 
     public TestEntity(MapRepresentation map) {
         super(map);
