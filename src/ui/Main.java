@@ -400,7 +400,7 @@ public class Main extends Application {
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
-        menu.getChildren().add(prepareEntityTestButton);
+        //menu.getChildren().add(prepareEntityTestButton);
 
         Button runEntityTestButton = new Button("Run entity test");
         runEntityTestButton.setOnAction(e -> {
@@ -412,7 +412,7 @@ public class Main extends Application {
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
-        menu.getChildren().add(runEntityTestButton);
+        //menu.getChildren().add(runEntityTestButton);
 
         Button triangulationButton = new Button("Show triangulation");
         triangulationButton.setOnAction(e -> {
@@ -471,20 +471,6 @@ public class Main extends Application {
                         }
                     }
 
-                    /*Coordinate coord;
-                    Circle c;
-                    double length0, length1, length2;
-                    for (DTriangle dt : includedTriangles) {
-                        coord = dt.getCircumCenter();
-                        length0 = Math.sqrt(Math.pow(coord.x - dt.getPoint(0).getX(), 2) + Math.pow(coord.y - dt.getPoint(0).getY(), 2));
-                        length1 = Math.sqrt(Math.pow(coord.x - dt.getPoint(1).getX(), 2) + Math.pow(coord.y - dt.getPoint(1).getY(), 2));
-                        length2 = Math.sqrt(Math.pow(coord.x - dt.getPoint(2).getX(), 2) + Math.pow(coord.y - dt.getPoint(2).getY(), 2));
-                        c = new Circle(coord.x, coord.y, Math.max(length0, Math.max(length1, length2)), Color.TRANSPARENT);
-                        c.setStroke(Color.BLACK);
-                        c.setStrokeWidth(1.5);
-                        pane.getChildren().add(c);
-                    }*/
-
                     ArrayList<DEdge> checkedEdges = new ArrayList<>();
                     for (DTriangle dt1 : includedTriangles) {
                         for (DEdge de1 : dt1.getEdges()) {
@@ -525,7 +511,7 @@ public class Main extends Application {
                 }
             }
         });
-        menu.getChildren().add(triangulationButton);
+        //menu.getChildren().add(triangulationButton);
 
         Button simpleComponentButton = new Button("Show simply connected\ncomponents");
         simpleComponentButton.setOnAction(e -> {
@@ -742,7 +728,7 @@ public class Main extends Application {
                 }
             }
         });
-        menu.getChildren().add(simpleComponentButton);
+        //menu.getChildren().add(simpleComponentButton);
 
         Button spanningTreeButton = new Button("Show spanning tree");
         spanningTreeButton.setOnAction(e -> {
@@ -952,7 +938,7 @@ public class Main extends Application {
                 }
             }
         });
-        menu.getChildren().add(spanningTreeButton);
+        //menu.getChildren().add(spanningTreeButton);
 
         Button loopBreakingButton = new Button("Show loop breaking");
         loopBreakingButton.setOnAction(e -> {
@@ -1444,7 +1430,7 @@ public class Main extends Application {
                 }
             }
         });
-        menu.getChildren().add(loopBreakingButton);
+        //menu.getChildren().add(loopBreakingButton);
 
         Button theButtonToEndAllButtons = new Button("The button to\nend all buttons");
         theButtonToEndAllButtons.setOnAction(e -> {
@@ -1768,7 +1754,7 @@ public class Main extends Application {
                 }
             }
         });
-        menu.getChildren().add(theButtonToEndAllButtons);
+        //menu.getChildren().add(theButtonToEndAllButtons);
 
         Button shortestPathMapButton = new Button("Shortest path map");
         shortestPathMapButton.setOnAction(e -> {
@@ -1794,7 +1780,7 @@ public class Main extends Application {
                 ShortestPathRoadMap sprm = new ShortestPathRoadMap(map, excluded);
             }
         });
-        menu.getChildren().add(shortestPathMapButton);
+        //menu.getChildren().add(shortestPathMapButton);
 
         // ****************************************************************************************************** //
         // New controls to debug the new project structure
@@ -1825,7 +1811,9 @@ public class Main extends Application {
                 map = new MapRepresentation(mapPolygons);
             }
         });
-        menu.getChildren().add(startIntroducingEntitiesButton);
+        //menu.getChildren().add(startIntroducingEntitiesButton);
+
+        pane.getChildren().add(new Circle(500, 500, 2, Color.BLACK));
 
         Button placeDCREntityButton = new Button("Place random entity (evading)");
         placeDCREntityButton.setOnAction(e -> {
@@ -1833,13 +1821,13 @@ public class Main extends Application {
                 map = new MapRepresentation(mapPolygons);
             }
 
-            VisualAgent va = new VisualAgent(500, 500);
+            VisualAgent va = new VisualAgent(500, 400);
             va.getAgentBody().setFill(Color.LAWNGREEN);
             pane.getChildren().add(va);
             /*RandomEntity randomEntity = new RandomEntity(map);
             randomEntity.setAgent(new Agent(va.getSettings()));
             map.getEvadingEntities().add(randomEntity);*/
-            TestEntity testEntity = new TestEntity(map);
+            TestEntity testEntity = new TestEntity(map, 82.0, 221.0);
             testEntity.setAgent(new Agent(va.getSettings()));
             map.getEvadingEntities().add(testEntity);
 
@@ -1859,7 +1847,7 @@ public class Main extends Application {
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
         });
-        menu.getChildren().add(placeRandomEntity);
+        //menu.getChildren().add(placeRandomEntity);
 
         Button startAdaptedSimulation = new Button("Start adapted simulation");
         startAdaptedSimulation.setOnAction(e -> {

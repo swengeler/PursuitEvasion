@@ -117,8 +117,8 @@ public class ShortestPathRoadMap {
                         double averageX = (prevDeltaX + nextDeltaX) / 2;
                         double averageY = (prevDeltaY + nextDeltaY) / 2;
 
-                        double newX = currentPoints.get(j).getX() + averageX * 0.1;
-                        double newY = currentPoints.get(j).getY() + averageY * 0.1;
+                        double newX = currentPoints.get(j).getX() + averageX * 10;
+                        double newY = currentPoints.get(j).getY() + averageY * 10;
 
                         // if there are separating triangles (or polygons, technically), check whether the vertex should be moved)
                         // polygons which touch with a corner take precedence
@@ -193,8 +193,8 @@ public class ShortestPathRoadMap {
                         double averageX = (prevDeltaX + nextDeltaX) / 2;
                         double averageY = (prevDeltaY + nextDeltaY) / 2;
 
-                        double newX = currentPoints.get(j).getX() + averageX * 0.1;
-                        double newY = currentPoints.get(j).getY() + averageY * 0.1;
+                        double newX = currentPoints.get(j).getX() + averageX * 10;
+                        double newY = currentPoints.get(j).getY() + averageY * 10;
 
                         boolean removePoint = false;
                         if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
@@ -374,33 +374,57 @@ public class ShortestPathRoadMap {
         }
 
         // add new vertices to the graph
-        shortestPathGraph.addVertex(source);
-        shortestPathGraph.addVertex(sink);
+        boolean containsSource = false;
+        for (Point2D v : shortestPathGraph.vertexSet()) {
+            if (v.getX() == source.getX() && v.getY() == source.getY()) {
+                containsSource = true;
+                source = v;
+                break;
+            }
+        }
+        if (!containsSource) {
+            shortestPathGraph.addVertex(source);
+        }
+        boolean containsSink = false;
+        for (Point2D v : shortestPathGraph.vertexSet()) {
+            if (v.getX() == sink.getX() && v.getY() == sink.getY()) {
+                containsSink = true;
+                sink = v;
+                break;
+            }
+        }
+        if (!containsSink) {
+            shortestPathGraph.addVertex(sink);
+        }
 
         // add new edges between source and sink and the visible nodes of the graph
         // first for the source
-        for (Point2D pv : shortestPathGraph.vertexSet()) {
-            if (!pv.equals(source) && !pv.equals(sink)) {
-                // check whether pv is visible from source (and whether there are separating polygons in between)
-                if (map.isVisible(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
-                        !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
-                        !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
-                        !isEdgeIntersectingLine(pv.getX(), pv.getY(), source.getX(), source.getY())) {
-                    double differenceSquared = Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2);
-                    shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(source, pv), Math.sqrt(differenceSquared));
+        if (!containsSource) {
+            for (Point2D pv : shortestPathGraph.vertexSet()) {
+                if (!pv.equals(source) && !pv.equals(sink)) {
+                    // check whether pv is visible from source (and whether there are separating polygons in between)
+                    if (map.isVisible(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
+                            !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
+                            !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
+                            !isEdgeIntersectingLine(pv.getX(), pv.getY(), source.getX(), source.getY())) {
+                        double differenceSquared = Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2);
+                        shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(source, pv), Math.sqrt(differenceSquared));
+                    }
                 }
             }
         }
         // then for the sink
-        for (Point2D pv : shortestPathGraph.vertexSet()) {
-            if (!pv.equals(source) && !pv.equals(sink)) {
-                // check whether pv is visible from source (and whether there are separating polygons in between)
-                if (map.isVisible(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
-                        !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
-                        !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
-                        !isEdgeIntersectingLine(pv.getX(), pv.getY(), sink.getX(), sink.getY())) {
-                    double differenceSquared = Math.pow(pv.getX() - sink.getX(), 2) + Math.pow(pv.getY() - sink.getY(), 2);
-                    shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(pv, sink), Math.sqrt(differenceSquared));
+        if (!containsSink) {
+            for (Point2D pv : shortestPathGraph.vertexSet()) {
+                if (!pv.equals(source) && !pv.equals(sink)) {
+                    // check whether pv is visible from source (and whether there are separating polygons in between)
+                    if (map.isVisible(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
+                            !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
+                            !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
+                            !isEdgeIntersectingLine(pv.getX(), pv.getY(), sink.getX(), sink.getY())) {
+                        double differenceSquared = Math.pow(pv.getX() - sink.getX(), 2) + Math.pow(pv.getY() - sink.getY(), 2);
+                        shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(pv, sink), Math.sqrt(differenceSquared));
+                    }
                 }
             }
         }

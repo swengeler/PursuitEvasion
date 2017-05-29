@@ -214,12 +214,15 @@ public class DCREntity extends CentralisedEntity {
                 origin = null;
                 currentStage = Stage.CATCHER_TO_SEARCHER;
             } else if (map.isVisible(target, catcher)) {
+                System.out.println("Target visible");
                 pseudoBlockingVertex = null;
                 // first case: target is visible
                 // perform simple lion's move
                 // TODO: CHANGE THIS TO BE THE RESTRICTED ROADMAP INSTEAD, OTHERWISE IT MIGHT NOT WORK
                 PlannedPath temp = shortestPathRoadMap.getShortestPath(new Point2D(target.getXPos(), target.getYPos()), origin);
                 Line lionsMoveLine = temp.getPathLine(0);
+
+                //System.out.printf("lionsMoveLine: (%.3f|%.3f) to (%.3f|%.3f)\n", lionsMoveLine.getStartX(), lionsMoveLine.getStartY(), lionsMoveLine.getEndX(), lionsMoveLine.getEndY());
 
                 // calculate the perpendicular distance of the catcher's position to the line
                 // based on this find the parallel distance in either direction that will give the legal distance of movement
@@ -232,21 +235,28 @@ public class DCREntity extends CentralisedEntity {
                 Point2D candidate1 = VectorOperations.add(closestPoint, VectorOperations.multiply(gradient, parallelLength)).toPoint();
                 Point2D candidate2 = VectorOperations.add(closestPoint, VectorOperations.multiply(gradient, -parallelLength)).toPoint();
 
+                System.out.printf("candidate1: (%.3f|%.3f)\n", candidate1.getX(), candidate1.getY());
+                System.out.printf("candidate2: (%.3f|%.3f)\n", candidate2.getX(), candidate2.getY());
+                //System.out.printf("normal: (%.3f|%.3f)\n", normal.getX(), normal.getY());
+
                 if (Math.sqrt(Math.pow(candidate1.getX() - target.getXPos(), 2) + Math.pow(candidate1.getY() - target.getYPos(), 2)) < Math.sqrt(Math.pow(candidate2.getX() - target.getXPos(), 2) + Math.pow(candidate2.getY() - target.getYPos(), 2))) {
                     // move to first candidate point
                     catcher.moveBy(candidate1.getX() - catcher.getXPos(), candidate1.getY() - catcher.getYPos());
                     searcher.moveBy(candidate1.getX() - searcher.getXPos(), candidate1.getY() - searcher.getYPos());
                     Main.pane.getChildren().add(new Circle(candidate1.getX(), candidate1.getY(), 1, Color.BLACK));
+                    System.out.println("candidate1 chosen");
                 } else {
                     // move to second candidate point
                     catcher.moveBy(candidate2.getX() - catcher.getXPos(), candidate2.getY() - catcher.getYPos());
                     searcher.moveBy(candidate2.getX() - searcher.getXPos(), candidate2.getY() - searcher.getYPos());
                     Main.pane.getChildren().add(new Circle(candidate2.getX(), candidate2.getY(), 1, Color.BLACK));
+                    System.out.println("candidate2 chosen");
                 }
             } else {
                 // second case: target is not visible anymore (disappeared around corner)
                 // the method used here is cheating somewhat but assuming minimum feature size it just makes the computation easier
                 if (pseudoBlockingVertex == null) {
+                    System.out.println("target around corner, calculate path to first vertex");
                     PlannedPath temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
                     pseudoBlockingVertex = new Point2D(temp.getPathLine(0).getEndX(), temp.getPathLine(0).getEndY());
 
@@ -290,10 +300,14 @@ public class DCREntity extends CentralisedEntity {
 
                 // if pseudo-blocking vertex has been reached without seeing the evader again
                 // if evader does become visible again, the old strategy is continued (should maybe already do that here)
-                if (catcher.getXPos() == pseudoBlockingVertex.getX() && catcher.getYPos() == pseudoBlockingVertex.getY()) {
+                if (catcher.getXPos() == pseudoBlockingVertex.getX() && catcher.getYPos() == pseudoBlockingVertex.getY() && !map.isVisible(catcher, target)) {
                     // do randomised search in pocket
                     // pocket to be calculated from blocking vertex and position that the evader was last seen from (?)
                     currentStage = Stage.FIND_TARGET;
+                    System.out.println("Next stage needed");
+                } else if (catcher.getXPos() == pseudoBlockingVertex.getX() && catcher.getYPos() == pseudoBlockingVertex.getY()) {
+                    currentStage = Stage.FOLLOW_TARGET;
+                    System.out.println("Still visible, following");
                 }
             }
         } else if (currentStage == Stage.FIND_TARGET) {

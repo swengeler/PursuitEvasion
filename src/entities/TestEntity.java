@@ -13,8 +13,16 @@ public class TestEntity extends DistributedEntity {
     private PlannedPath currentPath;
     private int pathCounter;
 
+    private double targetX = 110.0, targetY = 317.0; // default for searcher_catcher_test_2: 111.0, 317.0
+
     public TestEntity(MapRepresentation map) {
         super(map);
+    }
+
+    public TestEntity(MapRepresentation map, double targetX, double targetY) {
+        super(map);
+        this.targetX = targetX;
+        this.targetY = targetY;
     }
 
     @Override
@@ -43,7 +51,7 @@ public class TestEntity extends DistributedEntity {
                             }
                         }
                         if (maxDistancePath != null) {*/
-                        currentPath = shortestPathRoadMap.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), new Point2D(111.0, 317.0));
+                        currentPath = shortestPathRoadMap.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), new Point2D(targetX, targetY));
                         pathCounter = 0;
                         //}
                     }
