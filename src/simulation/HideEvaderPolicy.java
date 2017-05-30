@@ -4,10 +4,11 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.*;
+import org.jdelaunay.delaunay.geometries.DEdge;
+import org.jdelaunay.delaunay.geometries.DPoint;
+import org.jdelaunay.delaunay.geometries.DTriangle;
 import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
@@ -31,43 +32,42 @@ public class HideEvaderPolicy extends MovePolicy {
 
     @Override
     public Move getNextMove(MapRepresentation map, ArrayList<Agent> agents) {
-        //boolean pathChanged = false;
 
         if (traversalHandler == null) {
             initTree(map);
         }
 
+       ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
+
         ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
         ShortestPathRoadMap shortestPathMap = new ShortestPathRoadMap(map);
 
         Agent evader = getSingleAgent();
-        ArrayList<Triplet<Point2D, Double, Integer>> midpointData = new ArrayList<>();
         Point2D target = null;
 
-        for (Point2D midpoint : polygonMidpoints) {
+        for (Agent pursuer : agents) {
+            if (pursuer.isPursuer()) {
 
-            double midpointDistance = 0;
-            int numberOfVertices = 0;
+                ArrayList<PointData> pursuerPointData = new ArrayList<>();
 
-            for (Agent pursuer : agents) {
-
-                if (pursuer.isPursuer()) {
+                for (Point2D midpoint : polygonMidpoints) {
 
                     PlannedPath shortestPath = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
-                    midpointDistance += shortestPath.getTotalLength();
-                    numberOfVertices += shortestPath.pathLength();
-
+                    double midpointDistance = shortestPath.getTotalLength();
+                    int numberOfVertices = shortestPath.pathLength();
+                    PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
+                    pursuerPointData.add(pd);
                     //System.out.println("dist: " + midpointDistance);
 
                 }
 
-            }
+                allPursuerData.add(pursuerPointData);
 
-            midpointData.add(new Triplet<Point2D, Double, Integer>(midpoint, midpointDistance, numberOfVertices));
+            }
 
         }
 
-        target = getMin(midpointData, 2);
+        target = getMin(allPursuerData, 2);
 
         if (target != null) {
             if (ctarget == null) {
@@ -146,43 +146,68 @@ public class HideEvaderPolicy extends MovePolicy {
     }
 
 
-    private Point2D getMin(ArrayList<Triplet<Point2D, Double, Integer>> midpointData, int mode) {
+    private Point2D getMin(ArrayList<ArrayList<PointData>> midpointData, int mode) {
         Point2D target = null;
         double euclideanDistance = Double.MIN_VALUE;
         int numberOfVertices = Integer.MIN_VALUE;
         String s = "";
 
-        for (Triplet<Point2D, Double, Integer> triplet : midpointData) {
+        if (midpointData.size() == 0) {
+            return null;
+        } else if (midpointData.size() == 1) {
+            ArrayList<PointData> pointData = midpointData.get(0);
+            for (PointData pd : pointData) {
+                if (mode == 0) {
+                    if (pd.getDistance() > euclideanDistance) {
+                        euclideanDistance = pd.getDistance();
+                        target = pd.getMidpoint();
+                        s = "EUCLIDEAN DIST";
+                    }
+                } else if (mode == 1) {
+                    if (pd.getNumOfVertices() > numberOfVertices) {
+                        numberOfVertices = pd.getNumOfVertices();
+                        target = pd.getMidpoint();
+                        s = "NUM OF VERTS";
+                    }
+                } else if (mode == 2) {
 
-            if (mode == 0) {
-                if (triplet.getValue1() > euclideanDistance) {
-                    euclideanDistance = triplet.getValue1();
-                    target = triplet.getValue0();
-                    s = "EUCLIDEAN DIST";
-                }
-            } else if (mode == 1) {
-                if (triplet.getValue2() > numberOfVertices) {
-                    numberOfVertices = triplet.getValue2();
-                    target = triplet.getValue0();
-                    s = "NUM OF VERTS";
-                }
-            } else if (mode == 2) {
+                    //idea:
+                    //num of verts is more important, but if equal eucl distance determines
 
-                //idea:
-                //num of verts is more important, but if equal eucl distance determines
-
-                if (triplet.getValue2() > numberOfVertices) {
-                    numberOfVertices = triplet.getValue2();
-                    target = triplet.getValue0();
-                    s = "NUM OF VERTS + DIST BKUP";
-                } else if (triplet.getValue2() == numberOfVertices) {
-                    if (triplet.getValue1() > euclideanDistance) {
-                        euclideanDistance = triplet.getValue1();
-                        target = triplet.getValue0();
+                    if (pd.getNumOfVertices() > numberOfVertices) {
+                        numberOfVertices = pd.getNumOfVertices();
+                        target = pd.getMidpoint();
+                        s = "NUM OF VERTS + DIST BKUP";
+                    } else if (pd.getNumOfVertices() == numberOfVertices) {
+                        if (pd.getDistance() > euclideanDistance) {
+                            euclideanDistance = pd.getDistance();
+                            target = pd.getMidpoint();
+                        }
                     }
                 }
+
             }
 
+        } else {
+            //still needs distance backup calc
+
+            int numOfPursuers = midpointData.size();
+            int numOfMidpoints = midpointData.get(0).size();
+
+            for (int i = 0; i < numOfMidpoints; i++) {
+                int tmpNumberOfVertices = 0;
+
+                for (int j = 0; j < numOfPursuers; j++) {
+                    int numOfVerts = midpointData.get(j).get(i).getNumOfVertices();
+                    tmpNumberOfVertices += numOfVerts;
+                }
+
+                if (tmpNumberOfVertices >= numberOfVertices) {
+                    numberOfVertices = tmpNumberOfVertices;
+                    target = midpointData.get(0).get(i).getMidpoint();
+                }
+
+            }
         }
 
         //System.out.println("BEST POINT IS " + target.getX() + ":" + target.getY() + " | " + s);
