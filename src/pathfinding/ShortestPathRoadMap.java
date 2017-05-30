@@ -10,8 +10,7 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import simulation.MapRepresentation;
-import simulation.PlannedPath;
+import simulation.*;
 import ui.Main;
 
 import java.util.ArrayList;
@@ -25,15 +24,15 @@ public class ShortestPathRoadMap {
     private ArrayList<Polygon> excludedPolygons;
     private ArrayList<Line> excludedLines;
 
-    private SimpleWeightedGraph<Point2D, DefaultWeightedEdge> shortestPathGraph;
+    private SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph;
 
     public ShortestPathRoadMap(MapRepresentation map) {
         this.map = map;
         excludedPolygons = new ArrayList<>();
         excludedLines = new ArrayList<>();
         init();
-        /*ArrayList<Point2D> reflexVertices = findReflex(map);
-        for (Point2D pv : reflexVertices) {
+        /*ArrayList<PathVertex> reflexVertices = findReflex(map);
+        for (PathVertex pv : reflexVertices) {
             Circle circle = new Circle(pv.getEstX(), pv.getEstY(), 5, Color.CYAN);
             Main.pane.getChildren().add(circle);
         }*/
@@ -75,25 +74,25 @@ public class ShortestPathRoadMap {
     }
 
     private void init() {
-        double distanceToActual = 0.1;
+        double distanceToActual = 1;
         shortestPathGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
         // calculate reflex vertices
-        ArrayList<Point2D> reflexVertices = new ArrayList<>();
+        ArrayList<PathVertex> reflexVertices = new ArrayList<>();
         ArrayList<int[]> pointers = new ArrayList<>();
 
         ArrayList<Polygon> polygons = map.getAllPolygons();
 
-        ArrayList<ArrayList<Point2D>> allPoints = new ArrayList<>();
-        ArrayList<Point2D> currentPoints;
+        ArrayList<ArrayList<PathVertex>> allPoints = new ArrayList<>();
+        ArrayList<PathVertex> currentPoints;
         ArrayList<Integer> currentIndeces;
         int[] singlePointer; // {index of polygon, index of previous point, index of next point}
-        Point2D prevPoint, nextPoint;
+        PathVertex prevPoint, nextPoint;
         int prevNrReflexVertices;
         for (int i = 0; i < polygons.size(); i++) {
             prevNrReflexVertices = reflexVertices.size();
             boolean isClockwise = GeometryOperations.isClockwise(polygons.get(i));
-            currentPoints = GeometryOperations.polyToPoints(polygons.get(i));
+            currentPoints = GeometryOperations.polyToPathVertices(polygons.get(i));
             allPoints.add(currentPoints);
             currentIndeces = new ArrayList<>();
             if (!isClockwise) {
@@ -136,7 +135,7 @@ public class ShortestPathRoadMap {
                                     }
                                 }
                                 if (!removePoint && !p.isEmpty()) {
-                                    currentPoints.set(j, new Point2D(newX, newY));
+                                    currentPoints.set(j, new PathVertex(newX, newY));
                                 }
                             } else if (!excludedLines.isEmpty()) {
                                 ArrayList<Line> l = getPointAdjacentLines(currentPoints.get(j));
@@ -147,12 +146,14 @@ public class ShortestPathRoadMap {
                                     }
                                 }
                                 /*if (!removePoint && !l.isEmpty()) {
-                                    currentPoints.set(j, new Point2D(newX, newY));
+                                    currentPoints.set(j, new PathVertex(newX, newY));
                                 }*/
                             }
                         }
 
-                        currentPoints.set(j, new Point2D(newX, newY));
+                        currentPoints.get(j).setEstX(newX);
+                        currentPoints.get(j).setEstY(newY);
+                        //currentPoints.set(j, new PathVertex(newX, newY));
 
                         if (!removePoint) {
                             reflexVertices.add(currentPoints.get(j));
@@ -163,7 +164,7 @@ public class ShortestPathRoadMap {
                             shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
                             if (SHOW_ON_CANVAS) {
-                                Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
+                                Circle circle = new Circle(currentPoints.get(j).getEstX(), currentPoints.get(j).getEstY(), 5, Color.GREEN);
                                 Main.pane.getChildren().add(circle);
                                 Label index = new Label("" + j);
                                 index.setTranslateX(circle.getCenterX() + 5);
@@ -210,7 +211,7 @@ public class ShortestPathRoadMap {
                                     }
                                 }
                                 if (!removePoint && !p.isEmpty()) {
-                                    currentPoints.set(j, new Point2D(newX, newY));
+                                    currentPoints.set(j, new PathVertex(newX, newY));
                                 }
                             } else if (!excludedLines.isEmpty()) {
                                 ArrayList<Line> l = getPointAdjacentLines(currentPoints.get(j));
@@ -221,12 +222,14 @@ public class ShortestPathRoadMap {
                                     }
                                 }
                                 /*if (!removePoint && !l.isEmpty()) {
-                                    currentPoints.set(j, new Point2D(newX, newY));
+                                    currentPoints.set(j, new PathVertex(newX, newY));
                                 }*/
                             }
                         }
 
-                        currentPoints.set(j, new Point2D(newX, newY));
+                        currentPoints.get(j).setEstX(newX);
+                        currentPoints.get(j).setEstY(newY);
+                        //currentPoints.set(j, new PathVertex(newX, newY));
 
                         if (!removePoint) {
                             reflexVertices.add(currentPoints.get(j));
@@ -237,7 +240,7 @@ public class ShortestPathRoadMap {
                             shortestPathGraph.addVertex(reflexVertices.get(reflexVertices.size() - 1));
 
                             if (SHOW_ON_CANVAS) {
-                                Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 5, Color.GREEN);
+                                Circle circle = new Circle(currentPoints.get(j).getEstX(), currentPoints.get(j).getEstY(), 5, Color.GREEN);
                                 Main.pane.getChildren().add(circle);
                                 Label index = new Label("" + j);
                                 index.setTranslateX(circle.getCenterX() + 5);
@@ -251,21 +254,20 @@ public class ShortestPathRoadMap {
             // check for adjacent reflex vertices
             for (int j = 0; j < currentIndeces.size(); j++) {
                 // if the points are adjacent in the polygon, i.e. their indeces are one apart
-                //if (Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == 1 || Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == currentPoints.size() - 1) {
-                //System.out.println("Vertex " + currentIndeces.get(j) + " checked.");
                 if (Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == 1 || Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == currentPoints.size() - 1) {
                     // add an edge between them
-                    Point2D v1 = reflexVertices.get(prevNrReflexVertices + j);
-                    Point2D v2 = reflexVertices.get(prevNrReflexVertices + (j + 1) % currentIndeces.size());
-                    double differenceSquared = Math.pow(v1.getX() - v2.getX(), 2) + Math.pow(v1.getY() - v2.getY(), 2);
+                    PathVertex v1 = reflexVertices.get(prevNrReflexVertices + j);
+                    PathVertex v2 = reflexVertices.get(prevNrReflexVertices + (j + 1) % currentIndeces.size());
+                    double differenceSquared = Math.pow(v1.getEstX() - v2.getEstX(), 2) + Math.pow(v1.getEstY() - v2.getEstY(), 2);
 
                     // check if edge is "covered" by excluded polygon
-                    if (!isEdgeAdjacentToPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingLine(v1.getX(), v1.getY(), v2.getX(), v2.getY())) {
+                    //if (!isEdgeAdjacentToPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingLine(v1.getX(), v1.getY(), v2.getX(), v2.getY())) {
+                    if (!isEdgeAdjacentToPolygon(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY()) && !isEdgeIntersectingPolygon(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY()) && !isEdgeIntersectingLine(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY())) {
                         DefaultWeightedEdge edge = shortestPathGraph.addEdge(v1, v2);
                         if (edge != null) {
                             shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
                             if (SHOW_ON_CANVAS) {
-                                Line line = new Line(v1.getX(), v1.getY(), v2.getX(), v2.getY());
+                                Line line = new Line(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY());
                                 line.setStroke(Color.GREEN);
                                 line.setStrokeWidth(2);
                                 Main.pane.getChildren().add(line);
@@ -273,29 +275,24 @@ public class ShortestPathRoadMap {
                             }
                         }
                     }
-
-                    /*System.out.println("Edge added between " + currentIndeces.get(j) + " and " + currentIndeces.get((j + 1) % currentIndeces.size()));
-                    System.out.printf("(%.3f|%.3f) and (%.3f|%.3f)\n", v1.getEstX(), v2.getEstX(), v2.getEstX(), v2.getEstY());
-                    //System.out.println(shortestPathGraph.vertexSet().contains(v1) + " " + shortestPathGraph.vertexSet().contains(v2));
-                    System.out.printf("Line from (%.3f|%.3f) to (%.3f|%.3f)\n", line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());*/
-
-                    // TODO: recognise when separating triangle is blocking this connection
                 }
             }
         }
 
         // checking for non-adjacent reflex vertices that should have a bitangent edge between them
         // points are assigned as described in "Planning Algorithms" p.264
-        Point2D p1, p2, p3, p4, p5, p6;
+        PathVertex p1, p2, p3, p4, p5, p6;
         Line excludedIntersectionLine;
         for (int i = 0; i < reflexVertices.size(); i++) {
             singlePointer = pointers.get(i);
             p1 = allPoints.get(singlePointer[0]).get(singlePointer[1]); // previous point (counter clockwise order)
             p2 = allPoints.get(singlePointer[0]).get(singlePointer[2]); // reflex vertex point
             p3 = allPoints.get(singlePointer[0]).get(singlePointer[3]); // next point
-            excludedIntersectionLine = new Line(p2.getX(), p2.getY(), 0, 0);
+            //excludedIntersectionLine = new Line(p2.getX(), p2.getY(), 0, 0);
+            excludedIntersectionLine = new Line(p2.getEstX(), p2.getEstY(), 0, 0);
             for (int j = i + 1; j < reflexVertices.size(); j++) {
-                if (map.isVisible(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY())) {
+                //if (map.isVisible(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY())) {
+                if (map.isVisible(reflexVertices.get(i).getEstX(), reflexVertices.get(i).getEstY(), reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY())) {
                     singlePointer = pointers.get(j);
                     p4 = allPoints.get(singlePointer[0]).get(singlePointer[1]);
                     p5 = allPoints.get(singlePointer[0]).get(singlePointer[2]);
@@ -303,8 +300,10 @@ public class ShortestPathRoadMap {
 
                     boolean intersection = false;
                     if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
-                        excludedIntersectionLine.setEndX(p5.getX());
-                        excludedIntersectionLine.setEndY(p5.getY());
+                        //excludedIntersectionLine.setEndX(p5.getX());
+                        //excludedIntersectionLine.setEndY(p5.getY());
+                        excludedIntersectionLine.setEndX(p5.getEstX());
+                        excludedIntersectionLine.setEndY(p5.getEstY());
                         for (int k = 0; !intersection && k < excludedPolygons.size(); k++) {
                             if (GeometryOperations.lineIntersectInPoly(excludedPolygons.get(k), excludedIntersectionLine)) {
                                 intersection = true;
@@ -323,7 +322,7 @@ public class ShortestPathRoadMap {
                         check = check || (GeometryOperations.leftTurnPredicate(p4, p5, p2) ^ GeometryOperations.leftTurnPredicate(p6, p5, p2));
                         if (!check) {
                             // there should be an edge
-                            Line line = new Line(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
+                            Line line = new Line(reflexVertices.get(i).getEstX(), reflexVertices.get(i).getEstY(), reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY());
                             if (SHOW_ON_CANVAS) {
                                 line.setStroke(Color.GREEN);
                                 line.setStrokeWidth(2);
@@ -331,9 +330,9 @@ public class ShortestPathRoadMap {
                                 line.toFront();
                             }
 
-                            Point2D v1 = reflexVertices.get(i);
-                            Point2D v2 = reflexVertices.get(j);
-                            double differenceSquared = Math.pow(v1.getX() - v2.getX(), 2) + Math.pow(v1.getY() - v2.getY(), 2);
+                            PathVertex v1 = reflexVertices.get(i);
+                            PathVertex v2 = reflexVertices.get(j);
+                            double differenceSquared = Math.pow(v1.getEstX() - v2.getEstX(), 2) + Math.pow(v1.getEstY() - v2.getEstY(), 2);
                             shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(v1, v2), Math.sqrt(differenceSquared));
                         }
                     }
@@ -347,42 +346,64 @@ public class ShortestPathRoadMap {
     }
 
     public PlannedPath getShortestPath(Point2D source, double sinkX, double sinkY) {
-        return getShortestPath(source, new Point2D(sinkX, sinkY));
+        return getShortestPath(new PathVertex(source), new PathVertex(sinkX, sinkY));
     }
 
     public PlannedPath getShortestPath(double sourceX, double sourceY, Point2D sink) {
-        return getShortestPath(new Point2D(sourceX, sourceY), sink);
+        return getShortestPath(new PathVertex(sourceX, sourceY), new PathVertex(sink));
     }
 
     public PlannedPath getShortestPath(double sourceX, double sourceY, double sinkX, double sinkY) {
-        return getShortestPath(new Point2D(sourceX, sourceY), new Point2D(sinkX, sinkY));
+        return getShortestPath(new PathVertex(sourceX, sourceY), new PathVertex(sinkX, sinkY));
     }
 
     public PlannedPath getShortestPath(Point2D source, Point2D sink) {
+        return getShortestPath(new PathVertex(source), new PathVertex(sink));
+    }
 
+    public PlannedPath getShortestPath(PathVertex source, PathVertex sink) {
         PlannedPath plannedPath = new PlannedPath();
 
         // if there is a straight line between source and sink point just use that as shortest path
-        if (map.isVisible(source.getX(), source.getY(), sink.getX(), sink.getY()) &&
-                !isEdgeIntersectingPolygon(source.getX(), source.getY(), sink.getX(), sink.getY()) &&
-                !isEdgeAdjacentToPolygon(source.getX(), source.getY(), sink.getX(), sink.getY()) &&
-                !isEdgeIntersectingLine(source.getX(), source.getY(), sink.getX(), sink.getY())) {
-            plannedPath.addLine(new Line(source.getX(), source.getY(), sink.getX(), sink.getY()));
-            Line line = new Line(source.getX(), source.getY(), sink.getX(), sink.getY());
+        if (map.isVisible(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                !isEdgeIntersectingPolygon(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                !isEdgeAdjacentToPolygon(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                !isEdgeIntersectingLine(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY())) {
+
+            for (PathVertex v : shortestPathGraph.vertexSet()) {
+                if (v.getEstX() == source.getEstX() && v.getEstY() == source.getEstY()) {
+                    source = v;
+                    System.out.println("Contains source");
+                    break;
+                }
+            }
+            for (PathVertex v : shortestPathGraph.vertexSet()) {
+                if (v.getEstX() == sink.getEstX() && v.getEstY() == sink.getEstY()) {
+                    sink = v;
+                    System.out.println("Contains sink");
+                    break;
+                }
+            }
+
+            plannedPath.addPathVertex(source);
+            plannedPath.addPathVertex(sink);
+            plannedPath.addLine(new Line(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()));
+            Line line = new Line(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY());
             line.setStrokeWidth(2);
             Label l = new Label("sz: " + excludedPolygons.size());
-            l.setTranslateX(sink.getX());
-            l.setTranslateY(sink.getY());
+            l.setTranslateX(sink.getEstX());
+            l.setTranslateY(sink.getEstY());
             //Main.pane.getChildren().addAll(line, l);
             return plannedPath;
         }
 
         // add new vertices to the graph
         boolean containsSource = false;
-        for (Point2D v : shortestPathGraph.vertexSet()) {
-            if (v.getX() == source.getX() && v.getY() == source.getY()) {
+        for (PathVertex v : shortestPathGraph.vertexSet()) {
+            if (v.getEstX() == source.getEstX() && v.getEstY() == source.getEstY()) {
                 containsSource = true;
                 source = v;
+                System.out.println("Contains source");
                 break;
             }
         }
@@ -390,10 +411,11 @@ public class ShortestPathRoadMap {
             shortestPathGraph.addVertex(source);
         }
         boolean containsSink = false;
-        for (Point2D v : shortestPathGraph.vertexSet()) {
-            if (v.getX() == sink.getX() && v.getY() == sink.getY()) {
+        for (PathVertex v : shortestPathGraph.vertexSet()) {
+            if (v.getEstX() == sink.getEstX() && v.getEstY() == sink.getEstY()) {
                 containsSink = true;
                 sink = v;
+                System.out.println("Contains sink");
                 break;
             }
         }
@@ -407,42 +429,45 @@ public class ShortestPathRoadMap {
         // add new edges between source and sink and the visible nodes of the graph
         // first for the source
         if (!containsSource) {
-            for (Point2D pv : shortestPathGraph.vertexSet()) {
+            for (PathVertex pv : shortestPathGraph.vertexSet()) {
                 if (!pv.equals(source) && !pv.equals(sink)) {
                     // check whether pv is visible from source (and whether there are separating polygons in between)
-                    if (map.isVisible(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
-                            !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
-                            !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), source.getX(), source.getY()) &&
-                            !isEdgeIntersectingLine(pv.getX(), pv.getY(), source.getX(), source.getY())) {
-                        double differenceSquared = Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2);
+                    if (map.isVisible(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
+                            !isEdgeIntersectingPolygon(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
+                            !isEdgeAdjacentToPolygon(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
+                            !isEdgeIntersectingLine(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY())) {
+                        double differenceSquared = Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2);
                         shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(source, pv), Math.sqrt(differenceSquared));
                         /*if (drawLines) {
                             Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
-                            l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
+                            //l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
                             Main.pane.getChildren().add(l);
                             Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
                         }*/
-                        if (Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2) < minDistance) {
-                            minDistance = Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2);
-                            minX = pv.getX();
-                            minY = pv.getY();
+                        System.out.printf("(%.4f|%.4f) visible from source (which is (%.4f|%.4f))\n", pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
+                        Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 0.5, Color.DARKGRAY));
+
+                        if (Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2) < minDistance) {
+                            minDistance = Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2);
+                            minX = pv.getEstX();
+                            minY = pv.getEstY();
                         }
                     }
                 }
             }
         }
-        Main.pane.getChildren().add(new Circle(minX, minY, 1.5, Color.RED));
+        //Main.pane.getChildren().add(new Circle(minX, minY, 1.5, Color.RED));
 
         // then for the sink
         if (!containsSink) {
-            for (Point2D pv : shortestPathGraph.vertexSet()) {
+            for (PathVertex pv : shortestPathGraph.vertexSet()) {
                 if (!pv.equals(source) && !pv.equals(sink)) {
                     // check whether pv is visible from source (and whether there are separating polygons in between)
-                    if (map.isVisible(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
-                            !isEdgeIntersectingPolygon(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
-                            !isEdgeAdjacentToPolygon(pv.getX(), pv.getY(), sink.getX(), sink.getY()) &&
-                            !isEdgeIntersectingLine(pv.getX(), pv.getY(), sink.getX(), sink.getY())) {
-                        double differenceSquared = Math.pow(pv.getX() - sink.getX(), 2) + Math.pow(pv.getY() - sink.getY(), 2);
+                    if (map.isVisible(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                            !isEdgeIntersectingPolygon(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                            !isEdgeAdjacentToPolygon(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                            !isEdgeIntersectingLine(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY())) {
+                        double differenceSquared = Math.pow(pv.getEstX() - sink.getEstX(), 2) + Math.pow(pv.getEstY() - sink.getEstY(), 2);
                         shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(pv, sink), Math.sqrt(differenceSquared));
                         /*if (drawLines) {
                             Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
@@ -456,28 +481,37 @@ public class ShortestPathRoadMap {
         }
 
         // calculate the shortest path and construct the PlannedPath object which will be returned
-        DijkstraShortestPath<Point2D, DefaultWeightedEdge> shortestPathCalculator = new DijkstraShortestPath<>(shortestPathGraph);
-        GraphPath<Point2D, DefaultWeightedEdge> graphPath = shortestPathCalculator.getPath(source, sink);
-        Point2D pv1, pv2;
+        DijkstraShortestPath<PathVertex, DefaultWeightedEdge> shortestPathCalculator = new DijkstraShortestPath<>(shortestPathGraph);
+        GraphPath<PathVertex, DefaultWeightedEdge> graphPath = shortestPathCalculator.getPath(source, sink);
+        PathVertex pv1, pv2;
         try {
+            plannedPath.addPathVertex(graphPath.getVertexList().get(0));
             for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
                 pv1 = graphPath.getVertexList().get(i);
                 pv2 = graphPath.getVertexList().get(i + 1);
-                plannedPath.addLine(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
-                Line line = new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY());
+                plannedPath.addLine(new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY()));
+                plannedPath.addPathVertex(pv2);
+                Line line = new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY());
                 line.setStrokeWidth(2);
                 Label l = new Label("sz: " + excludedPolygons.size());
-                l.setTranslateX(sink.getX());
-                l.setTranslateY(sink.getY());
+                l.setTranslateX(sink.getEstX());
+                l.setTranslateY(sink.getEstY());
                 //Main.pane.getChildren().addAll(line, l);
             }
         } catch (NullPointerException e) {
             e.printStackTrace();
+            System.out.println("containsSource: " + containsSource);
+            System.out.println("containsSink: " + containsSink);
+
+            //Main.pane.getChildren().add(new Circle(source.getEstX(), source.getEstY(), 50, Color.DARKGRAY));
+            //Main.pane.getChildren().add(new Circle(sink.getEstX(), sink.getEstY(), 50, Color.DARKGRAY));
+
+            AdaptedSimulation.masterPause();
             /*System.out.println("graphPath: " + graphPath);
             System.out.printf("Source: (%.3f|%.3f)\n", source.getEstX(), source.getEstY());
             System.out.printf("Sink: (%.3f|%.3f)\n", sink.getEstX(), sink.getEstY());
 
-            for (Point2D vertex : shortestPathGraph.vertexSet()) {
+            for (PathVertex vertex : shortestPathGraph.vertexSet()) {
                 Main.pane.getChildren().add(new Circle(vertex.getEstX(), vertex.getEstY(), 5, Color.CYAN));
             }
             Main.pane.getChildren().add(new Circle(source.getEstX(), source.getEstY(), 3, Color.ORANGE));
@@ -498,7 +532,7 @@ public class ShortestPathRoadMap {
         return plannedPath;
     }
 
-    private ArrayList<Line> getPointAdjacentLines(Point2D cornerPoint) {
+    private ArrayList<Line> getPointAdjacentLines(PathVertex cornerPoint) {
         ArrayList<Line> result = new ArrayList<>();
         if (excludedLines == null) {
             return result;
@@ -511,7 +545,7 @@ public class ShortestPathRoadMap {
         return result;
     }
 
-    private ArrayList<Polygon> getCornerAdjacentPolygons(Point2D cornerPoint, Polygon restOfPolygon) {
+    private ArrayList<Polygon> getCornerAdjacentPolygons(PathVertex cornerPoint, Polygon restOfPolygon) {
         if (excludedPolygons == null) {
             return new ArrayList<>();
         }
@@ -595,24 +629,24 @@ public class ShortestPathRoadMap {
         return test.getPath(sourceVertex, sinkVertex);
      *//*
 
-    public PlannedPath getShortestPathVertices(MapRepresentation map, Point2D source, Point2D sink) {
+    public PlannedPath getShortestPathVertices(MapRepresentation map, PathVertex source, PathVertex sink) {
         reflexInLineOfSight(map, findReflex(map));
         //GraphPath graphPath = calculateShortestPath(map, reflexInLineOfSight(map, findReflex(map)), source, sink);
         PlannedPath plannedPath = new PlannedPath();
-       *//* Point2D pv1, pv2;
+       *//* PathVertex pv1, pv2;
         for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
-            pv1 = (Point2D) graphPath.getVertexList().get(i);
-            pv2 = (Point2D) graphPath.getVertexList().get(i + 1);
+            pv1 = (PathVertex) graphPath.getVertexList().get(i);
+            pv2 = (PathVertex) graphPath.getVertexList().get(i + 1);
             plannedPath.addLine(new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY()));
         }*//*
         return plannedPath;
     }
 
-    public GraphPath getShortestPath(MapRepresentation map, Point2D source, Point2D sink) {
+    public GraphPath getShortestPath(MapRepresentation map, PathVertex source, PathVertex sink) {
         return calculateShortestPath(map, reflexInLineOfSight(map, findReflex(map)), source, sink);
     }
 
-    public GraphPath generateGraphMap(MapRepresentation map, Point2D source, Point2D sink) {
+    public GraphPath generateGraphMap(MapRepresentation map, PathVertex source, PathVertex sink) {
         Polygon polygon = map.getBorderPolygon();
 
         double list[] = new double[polygon.getPoints().size()];
@@ -650,7 +684,7 @@ public class ShortestPathRoadMap {
         }
 
 
-        SimpleWeightedGraph<Point2D, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         int index = 0;
         for (int p = (int) minx; minx < maxx; minx++) {
             for (double l = (int) miny; miny < maxy; miny++) {
@@ -660,15 +694,15 @@ public class ShortestPathRoadMap {
                 // is point(p-1,l) , point(p-1,l-1), point(p,l-1) in the possible area
                 //if yes point(p,l) has neighbour and other one has neighbour as point(p,l)
                 if (map.legalPosition(p, l)) {
-                    graph1.addVertex(new Point2D(p, l));
+                    graph1.addVertex(new PathVertex(p, l));
                     if (map.legalPosition(p, l - 1)) {
-                        graph1.addEdge(new Point2D(p, l), new Point2D(p, l - 1));
+                        graph1.addEdge(new PathVertex(p, l), new PathVertex(p, l - 1));
                     }
                     if (map.legalPosition(p - 1, l)) {
-                        graph1.addEdge(new Point2D(p, l), new Point2D(p - 1, l));
+                        graph1.addEdge(new PathVertex(p, l), new PathVertex(p - 1, l));
                     }
                     if (map.legalPosition(p - 1, l - 1)) {
-                        graph1.addEdge(new Point2D(p, l), new Point2D(p - 1, l - 1));
+                        graph1.addEdge(new PathVertex(p, l), new PathVertex(p - 1, l - 1));
                     }
 
 
@@ -682,13 +716,13 @@ public class ShortestPathRoadMap {
         return test.getPath(source, sink);
     }
 
-    private ArrayList<Point2D> findReflex(MapRepresentation map) {
-        ArrayList<Point2D> reflexVertices = new ArrayList<>();
+    private ArrayList<PathVertex> findReflex(MapRepresentation map) {
+        ArrayList<PathVertex> reflexVertices = new ArrayList<>();
 
         ArrayList<Polygon> polygons = map.getAllPolygons();
-        ArrayList<Point2D> currentPoints;
+        ArrayList<PathVertex> currentPoints;
         ArrayList<Integer> currentIndeces;
-        Point2D prevPoint, nextPoint;
+        PathVertex prevPoint, nextPoint;
         double prevVectorX, prevVectorY, nextVectorX, nextVectorY;
         for (int i = 0; i < polygons.size(); i++) {
             boolean isClockwise = GeometryOperations.isClockwise(polygons.get(i));
@@ -715,7 +749,7 @@ public class ShortestPathRoadMap {
                     boolean check = i > 0 && ((signedAngle < 0 && signedAngle > -Math.PI) || signedAngle > Math.PI);
                     check = check || (i == 0 && ((signedAngle > 0 && signedAngle < Math.PI) || (signedAngle < -Math.PI)));
                     if (check) {
-                        reflexVertices.add(new Point2D(currentPoints.get(j)));
+                        reflexVertices.add(new PathVertex(currentPoints.get(j)));
                         currentIndeces.add(j);
                     }
                     //Circle circle = new Circle(currentPoints.get(j).getEstX(), currentPoints.get(j).getEstY(), 10, Color.RED);
@@ -744,7 +778,7 @@ public class ShortestPathRoadMap {
                     boolean check = i > 0 && ((signedAngle < 0 && signedAngle > -Math.PI) || signedAngle > Math.PI);
                     check = check || (i == 0 && ((signedAngle > 0 && signedAngle < Math.PI) || (signedAngle < -Math.PI)));
                     if (check) {
-                        reflexVertices.add(new Point2D(currentPoints.get(j)));
+                        reflexVertices.add(new PathVertex(currentPoints.get(j)));
                         currentIndeces.add(j);
                     }
                     //Circle circle = new Circle(currentPoints.get(j).getEstX(), currentPoints.get(j).getEstY(), 10, Color.RED);
@@ -770,13 +804,13 @@ public class ShortestPathRoadMap {
 
         *//*ArrayList<Polygon> polygons = map.getAllPolygons();
         GeometryOperations geometryOperations = new GeometryOperations();
-        ArrayList<Point2D> reflex = new ArrayList<>();
+        ArrayList<PathVertex> reflex = new ArrayList<>();
         int reflexIndex = 0;
-        //  ArrayList<javafx.geometry.Point2D> polygon= geometryOperations.polyToPoints(polygons);
-        Point2D left;
-        Point2D right;
+        //  ArrayList<javafx.geometry.PathVertex> polygon= geometryOperations.polyToPoints(polygons);
+        PathVertex left;
+        PathVertex right;
         for (int i = 0; i < polygons.size(); i++) {
-            ArrayList<Point2D> polygon = geometryOperations.polyToPoints(polygons.get(i));
+            ArrayList<PathVertex> polygon = geometryOperations.polyToPoints(polygons.get(i));
 
             for (int j = 0; j < polygon.size(); j++) {
                 if (j != 0 && j != polygon.size() - 1) {
@@ -796,9 +830,9 @@ public class ShortestPathRoadMap {
                 double x = (right.getEstX() - left.getEstX()) / 2;
                 double y = (right.getEstY() - left.getEstY()) / 2;
 
-                Point2D mid = new Point2D(right.getEstX() - x, right.getEstY() - y);
+                PathVertex mid = new PathVertex(right.getEstX() - x, right.getEstY() - y);
 
-                Point2D main = polygon.get(j);
+                PathVertex main = polygon.get(j);
 
                 int count = 0;
                 Line between = new Line(mid.getEstX(), mid.getEstY(), main.getEstX(), main.getEstY());
@@ -806,11 +840,11 @@ public class ShortestPathRoadMap {
                 count = allIntersect(polygons, between).size();
 
                 if (count % 2 == 0 && !legal) {
-                    reflex.add(reflexIndex, new Point2D(polygon.get(j)));
+                    reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
                     reflexIndex++;
 
                 } else if (count % 2 == 1 && legal) {
-                    reflex.add(reflexIndex, new Point2D(polygon.get(j)));
+                    reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
                     reflexIndex++;
                 }
 
@@ -863,7 +897,7 @@ STILL TODO
                 }
 
                 if ((leftvector + rightvector) % 360 > 180) {
-                    reflex.add(reflexIndex, new Point2D(polygon.get(j)));
+                    reflex.add(reflexIndex, new PathVertex(polygon.get(j)));
                     reflexIndex++;
                 }
 *//**//*
@@ -876,10 +910,10 @@ STILL TODO
         return reflexVertices;
     }
 
-    private SimpleWeightedGraph<Point2D, DefaultWeightedEdge> reflexInLineOfSight(MapRepresentation map, ArrayList<Point2D> reflexVertices) {
+    private SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> reflexInLineOfSight(MapRepresentation map, ArrayList<PathVertex> reflexVertices) {
         double eps = 0.0001;
         double angle;
-        SimpleWeightedGraph<Point2D, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> graph1 = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
         for (int i = 0; i < reflexVertices.size(); i++) {
             //for (int j = 9; j >= i; j--) {
@@ -889,11 +923,11 @@ STILL TODO
                         System.out.printf("Visibility between (%.2f|%.2f) and (%.2f|%.2f)\n", reflexVertices.get(i).getEstX(), reflexVertices.get(i).getEstY(), reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY());
 
                         angle = Math.toDegrees(Math.atan2(reflexVertices.get(i).getEstY() - reflexVertices.get(j).getEstY(), reflexVertices.get(i).getEstX() - reflexVertices.get(j).getEstX()));
-                        Point2D above, below, inside1, inside2;
-                        above = new Point2D(reflexVertices.get(i).getEstX() + eps, reflexVertices.get(i).getEstY() + eps * angle);
-                        below = new Point2D(reflexVertices.get(j).getEstX() - eps, reflexVertices.get(j).getEstY() - eps * angle);
-                        inside1 = new Point2D(reflexVertices.get(i).getEstX() - eps, reflexVertices.get(i).getEstY() - eps * angle);
-                        inside2 = new Point2D(reflexVertices.get(j).getEstX() + eps, reflexVertices.get(j).getEstY() + eps * angle);
+                        PathVertex above, below, inside1, inside2;
+                        above = new PathVertex(reflexVertices.get(i).getEstX() + eps, reflexVertices.get(i).getEstY() + eps * angle);
+                        below = new PathVertex(reflexVertices.get(j).getEstX() - eps, reflexVertices.get(j).getEstY() - eps * angle);
+                        inside1 = new PathVertex(reflexVertices.get(i).getEstX() - eps, reflexVertices.get(i).getEstY() - eps * angle);
+                        inside2 = new PathVertex(reflexVertices.get(j).getEstX() + eps, reflexVertices.get(j).getEstY() + eps * angle);
 
                         double xDiff = (reflexVertices.get(i).getEstX() - reflexVertices.get(j).getEstX());
                         double yDiff = (reflexVertices.get(i).getEstY() - reflexVertices.get(j).getEstY());
@@ -902,12 +936,12 @@ STILL TODO
                         yDiff /= length;
                         xDiff *= eps;
                         yDiff *= eps;
-                        inside1 = new Point2D(reflexVertices.get(i).getEstX() + xDiff, reflexVertices.get(i).getEstY() + yDiff);
-                        inside2 = new Point2D(reflexVertices.get(j).getEstX() - xDiff, reflexVertices.get(j).getEstY() - yDiff);
+                        inside1 = new PathVertex(reflexVertices.get(i).getEstX() + xDiff, reflexVertices.get(i).getEstY() + yDiff);
+                        inside2 = new PathVertex(reflexVertices.get(j).getEstX() - xDiff, reflexVertices.get(j).getEstY() - yDiff);
                         //if (map.legalPosition(above.getEstX(), above.getEstY()) && map.legalPosition(below.getEstX(), below.getEstY()) && map.legalPosition(inside1.getEstX(), inside1.getEstY()) && map.legalPosition(inside2.getEstX(), inside2.getEstY())) {
                         if (map.legalPosition(inside1.getEstX(), inside1.getEstY()) && map.legalPosition(inside2.getEstX(), inside2.getEstY())) {
-                            Point2D v1 = reflexVertices.get(i);
-                            Point2D v2 = reflexVertices.get(j);
+                            PathVertex v1 = reflexVertices.get(i);
+                            PathVertex v2 = reflexVertices.get(j);
 
                             graph1.addVertex(v1);
                             graph1.addVertex(v2);
@@ -929,17 +963,17 @@ STILL TODO
         return graph1;
     }
 
-    private GraphPath calculateShortestPath(MapRepresentation map, SimpleWeightedGraph<Point2D, DefaultWeightedEdge> sightList, Point2D source, Point2D sink) {
+    private GraphPath calculateShortestPath(MapRepresentation map, SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> sightList, PathVertex source, PathVertex sink) {
         ArrayList<Polygon> polygons = map.getAllPolygons();
 
-        Point2D sourceVertex = new Point2D(source);
-        Point2D sinkVertex = new Point2D(sink);
+        PathVertex sourceVertex = new PathVertex(source);
+        PathVertex sinkVertex = new PathVertex(sink);
 
         sightList.addVertex(sourceVertex);
         sightList.addVertex(sinkVertex);
-        ArrayList<Point2D> reflexPoints = findReflex(map);
+        ArrayList<PathVertex> reflexPoints = findReflex(map);
 
-        for (Point2D pv : reflexPoints) {
+        for (PathVertex pv : reflexPoints) {
             sightList.addVertex(pv);
         }
 

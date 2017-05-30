@@ -110,6 +110,10 @@ public class Agent {
         return Math.sqrt(Math.pow(getXPos() - x, 2) + Math.pow(getYPos() - y, 2)) <= captureRange;
     }
 
+    public boolean shareLocation(Agent a) {
+        return a.getXPos() == getXPos() && a.getYPos() == getYPos();
+    }
+
     public boolean isPursuer() {
         return policy.pursuingPolicy();
     }

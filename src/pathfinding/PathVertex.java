@@ -3,16 +3,14 @@ package pathfinding;
 
 import javafx.geometry.Point2D;
 
-import java.util.ArrayList;
-
-public class PathVertex {
+public class PathVertex extends Point2D {
 
     private double estX = -1, estY = -1;
 
-    /*public PathVertex(double realX, double realY) {
-        super(realX, realY);
-        estX = realX;
-        estY = realY;
+    public PathVertex(double x, double y) {
+        super(x, y);
+        estX = x;
+        estY = y;
     }
 
     public PathVertex(Point2D point) {
@@ -54,11 +52,11 @@ public class PathVertex {
     }
 
     public double getRealX() {
-        return getX();
+        return super.getX();
     }
 
     public double getRealY() {
-        return getY();
-    }*/
+        return super.getY();
+    }
 
 }

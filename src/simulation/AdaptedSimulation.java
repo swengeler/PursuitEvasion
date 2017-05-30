@@ -9,12 +9,16 @@ import java.time.Duration;
 
 public class AdaptedSimulation {
 
-    private Timer simulationTimer;
+    private static Timer simulationTimer;
 
     private MapRepresentation map;
     private long timeStep = 300;
 
-    private boolean isPaused;
+    private static boolean isPaused;
+
+    public static void masterPause() {
+        simulationTimer.stop();
+    }
 
     public AdaptedSimulation(MapRepresentation map) {
         this.map = map;

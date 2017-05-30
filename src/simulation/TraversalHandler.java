@@ -34,6 +34,10 @@ public class TraversalHandler {
     private ArrayList<DTriangle> separatingTriangles;
     private ArrayList<Line> separatingLines;
 
+    private ArrayList<DTriangle> pocketComponent;
+    private int[][] pocketAdjacencyMatrix;
+    private boolean restrictToPocket;
+
     private EnumeratedIntegerDistribution rng;
 
     public TraversalHandler(ArrayList<DTriangle> triangles) {
@@ -158,6 +162,12 @@ public class TraversalHandler {
         return adjacencyMatrix;
     }
 
+    public void restrictToPocket(ArrayList<DTriangle> pocketComponent, int[][] pocketAdjacencyMatrix) {
+        restrictToPocket = true;
+        this.pocketComponent = pocketComponent;
+        this.pocketAdjacencyMatrix = pocketAdjacencyMatrix;
+    }
+
     public TGNode getLeaf() {
         for (int i = 0; i < adjacencyMatrix.length; i++) {
             int count = 0;
@@ -185,7 +195,7 @@ public class TraversalHandler {
     public boolean isLeaf(int index) {
         int count = 0;
         for (int i = 0; i < adjacencyMatrix.length; i++) {
-            if (adjacencyMatrix[index][i] == 1) {
+            if ((restrictToPocket ? pocketAdjacencyMatrix : adjacencyMatrix)[index][i] == 1) {
                 count++;
             }
         }
@@ -233,6 +243,7 @@ public class TraversalHandler {
 
         // for now chosen uniformly at random
         ArrayList<DTriangle> currentComponent = components == null ? nodess : components.get((int) (Math.random() * components.size()));
+        currentComponent = restrictToPocket ? pocketComponent : currentComponent;
         // check whether we're already in that component, then the movement to one of its leaves can be skipped
         boolean inComponentLeaf = false;
         for (DTriangle dt : currentComponent) {
@@ -284,7 +295,7 @@ public class TraversalHandler {
         while (currentIndex == startIndex || !isLeaf(currentIndex)) {
             // collect the children (not going back)
             for (int i = 0; i < adjacencyMatrix[0].length; i++) {
-                if (i != currentIndex && i != lastIndex && adjacencyMatrix[currentIndex][i] == 1) {
+                if (i != currentIndex && i != lastIndex && (restrictToPocket ? pocketAdjacencyMatrix : adjacencyMatrix)[currentIndex][i] == 1) {
                     childIndeces.add(i);
                 }
             }
@@ -320,7 +331,7 @@ public class TraversalHandler {
                 System.out.println("Adjacency matrix:");
                 for (int i = 0; i < adjacencyMatrix.length; i++) {
                     for (int j = 0; j < adjacencyMatrix[0].length; j++) {
-                        System.out.print(adjacencyMatrix[i][j] + " ");
+                        System.out.print((restrictToPocket ? pocketAdjacencyMatrix : adjacencyMatrix)[i][j] + " ");
                     }
                     System.out.println();
                 }

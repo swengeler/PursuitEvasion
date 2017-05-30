@@ -6,9 +6,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DPoint;
-import org.jdelaunay.delaunay.geometries.DTriangle;
+import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
@@ -39,7 +37,7 @@ public class HideEvaderPolicy extends MovePolicy {
             initTree(map);
         }
 
-       ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
+        ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
 
         ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
         ShortestPathRoadMap shortestPathMap = new ShortestPathRoadMap(map);

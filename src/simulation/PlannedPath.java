@@ -1,6 +1,7 @@
 package simulation;
 
 import javafx.scene.shape.Line;
+import pathfinding.PathVertex;
 
 import java.util.ArrayList;
 import java.util.Formatter;
@@ -11,15 +12,19 @@ public class PlannedPath {
     private int endIndex = -1;
 
     private ArrayList<Line> pathLines;
+    private ArrayList<PathVertex> pathVertices;
 
     public PlannedPath() {
         pathLines = new ArrayList<>();
+        pathVertices = new ArrayList<>();
     }
 
     public void addPathToEnd(PlannedPath path) {
         // assumes that the other path starts where this one ends
-        for (Line l : path.getPathLines()) {
-            addLine(l);
+        addPathVertex(path.getPathVertex(0));
+        for (int i = 0; i < path.getPathLines().size(); i++) {
+            addLine(path.getPathLine(i));
+            addPathVertex(path.getPathVertex(i + 1));
         }
         setEndIndex(path.getEndIndex());
     }
@@ -48,12 +53,40 @@ public class PlannedPath {
         pathLines.add(line);
     }
 
+    public void addPathVertex(PathVertex pv) {
+        pathVertices.add(pv);
+    }
+
     public ArrayList<Line> getPathLines() {
         return pathLines;
     }
 
+    public ArrayList<PathVertex> getPathVertices() {
+        return pathVertices;
+    }
+
     public Line getPathLine(int index) {
         return pathLines.get(index);
+    }
+
+    public Line getFirstPathLine() {
+        return pathLines.get(0);
+    }
+
+    public Line getLastPathLine() {
+        return pathLines.get(pathLines.size() - 1);
+    }
+
+    public PathVertex getPathVertex(int index) {
+        return pathVertices.get(index);
+    }
+
+    public PathVertex getFirstPathVertex() {
+        return pathVertices.get(0);
+    }
+
+    public PathVertex getLastPathVertex() {
+        return pathVertices.get(pathVertices.size() - 1);
     }
 
     public double getStartX() {

@@ -5,7 +5,7 @@ import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 
-public class FlockingEvaderEntity extends DistributedEntity{
+public class FlockingEvaderEntity extends DistributedEntity {
 
     public FlockingEvaderEntity(MapRepresentation map) {
         super(map);
@@ -35,9 +35,9 @@ public class FlockingEvaderEntity extends DistributedEntity{
         ArrayList<Entity> pursuingEntities = map.getPursuingEntities();
         ArrayList<Agent> agents = new ArrayList<>();
 
-        for (Entity e: pursuingEntities) {
+        for (Entity e : pursuingEntities) {
             ArrayList<Agent> entityAgents = e.getControlledAgents();
-            for (Agent a: entityAgents) {
+            for (Agent a : entityAgents) {
                 if (!agents.contains(a)) {
                     agents.add(a);
                 }
@@ -49,22 +49,22 @@ public class FlockingEvaderEntity extends DistributedEntity{
         for (Agent pursuer : agents) {
             //cycle through all agents
 
-                double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
-                //calculate euclidean distance
+            double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
+            //calculate euclidean distance
 
-                if (dist <= maxSeperationDistance) {
-                    //if distance is within maxSeperationDistance, do seperation calculations
+            if (dist <= maxSeperationDistance) {
+                //if distance is within maxSeperationDistance, do seperation calculations
 
-                    deltaX += (pursuer.getXPos() - evader.getXPos());
-                    deltaY += (pursuer.getYPos() - evader.getYPos());
-                    numberOfSeparationPursuers++;
-                } else if (dist <= maxCohesionDistance) {
-                    //if distance is within maxCohesionDistance, do cohesion calculations
+                deltaX += (pursuer.getXPos() - evader.getXPos());
+                deltaY += (pursuer.getYPos() - evader.getYPos());
+                numberOfSeparationPursuers++;
+            } else if (dist <= maxCohesionDistance) {
+                //if distance is within maxCohesionDistance, do cohesion calculations
 
-                    deltaX += pursuer.getXPos();
-                    deltaY += pursuer.getYPos();
-                    numberOfCohesionPursuers++;
-                }
+                deltaX += pursuer.getXPos();
+                deltaY += pursuer.getYPos();
+                numberOfCohesionPursuers++;
+            }
 
 
         }

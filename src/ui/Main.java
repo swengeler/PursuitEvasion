@@ -1777,7 +1777,9 @@ public class Main extends Application {
                 } catch (DelaunayError delaunayError) {
                     delaunayError.printStackTrace();
                 }
+                ShortestPathRoadMap.SHOW_ON_CANVAS = true;
                 ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
+                ShortestPathRoadMap.SHOW_ON_CANVAS = false;
             }
         });
         menu.getChildren().add(shortestPathMapButton);
@@ -1833,7 +1835,7 @@ public class Main extends Application {
             testEntity.setAgent(new Agent(va.getSettings()));
             map.getEvadingEntities().add(testEntity);*/
             // for searcher_catcher_test_7
-            TestEntity testEntity = new TestEntity(map, 44.0,569.0);
+            TestEntity testEntity = new TestEntity(map, 44.0, 569.0);
             testEntity.setAgent(new Agent(va.getSettings()));
             map.getEvadingEntities().add(testEntity);
             /*TestEntity testEntity = new TestEntity(map);

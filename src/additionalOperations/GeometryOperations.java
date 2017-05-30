@@ -46,14 +46,15 @@ public class GeometryOperations {
         return points;
     }
 
-    /*public static ArrayList<PathVertex> polyToPathVertices(Polygon poly) {
+    public static ArrayList<PathVertex> polyToPathVertices(Polygon poly) {
         List<Double> vertices = poly.getPoints();
         ArrayList<PathVertex> points = new ArrayList<>();
         for (int i = 0; i < vertices.size(); i += 2) {
-            points.add(new PathVertex(vertices.get(i), vertices.get(i + 1)));
+            // store real point, estimated to be added later
+            points.add(new PathVertex(-1.0, -1.0, vertices.get(i), vertices.get(i + 1)));
         }
         return points;
-    }*/
+    }
 
     /*
     *Shadowpursuit: will be used to categorize points of type 1
@@ -530,10 +531,9 @@ public class GeometryOperations {
         return leftTurnPredicate(p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
     }
 
-    public static boolean leftTurnPredicate(double p1X, double p1Y, double p2X, double p2Y,double p3X, double p3Y) {
+    public static boolean leftTurnPredicate(double p1X, double p1Y, double p2X, double p2Y, double p3X, double p3Y) {
         double[][] array = {{1, p1X, p1Y}, {1, p2X, p2Y}, {1, p3X, p3Y}};
-        Matrix matrix = new Matrix(array);
-        return matrix.det() > 0;
+        return (new Matrix(array)).det() > 0;
     }
 
     public static Point2D getLineMiddle(Line line) {

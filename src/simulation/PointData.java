@@ -25,5 +25,5 @@ public class PointData {
     public int getNumOfVertices() {
         return numOfVertices;
     }
-    
+
 }

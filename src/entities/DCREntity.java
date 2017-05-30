@@ -9,7 +9,6 @@ import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
-import pathfinding.PathVertex;
 import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 import ui.Main;
@@ -33,6 +32,8 @@ public class DCREntity extends CentralisedEntity {
 
     private Agent target;
     private Point2D origin, pseudoBlockingVertex, lastPointVisible;
+    private ArrayList<DTriangle> currentPocket;
+    private boolean pocketCounterClockwise;
     private boolean ignoreSightings;
     private Stage currentStage;
 
@@ -226,7 +227,8 @@ public class DCREntity extends CentralisedEntity {
                 // first case: target is visible
                 // perform simple lion's move
                 // TODO: CHANGE THIS TO BE THE RESTRICTED ROADMAP INSTEAD, OTHERWISE IT MIGHT NOT WORK
-                PlannedPath temp = shortestPathRoadMap.getShortestPath(new Point2D(target.getXPos(), target.getYPos()), origin);
+                PlannedPath temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), origin);
+                //PlannedPath temp = shortestPathRoadMap.getShortestPath(origin, target.getXPos(), target.getYPos());
                 Line lionsMoveLine = temp.getPathLine(0);
 
                 //System.out.printf("lionsMoveLine: (%.3f|%.3f) to (%.3f|%.3f)\n", lionsMoveLine.getStartX(), lionsMoveLine.getStartY(), lionsMoveLine.getEndX(), lionsMoveLine.getEndY());
@@ -271,8 +273,9 @@ public class DCREntity extends CentralisedEntity {
                     for (Line l : temp.getPathLines()) {
                         //Main.pane.getChildren().add(l);
                     }
-                    pseudoBlockingVertex = new Point2D(temp.getPathLine(0).getEndX(), temp.getPathLine(0).getEndY());
+                    pseudoBlockingVertex = new Point2D(temp.getPathVertex(1).getEstX(), temp.getPathVertex(1).getEstY());
                     lastPointVisible = new Point2D(catcher.getXPos(), catcher.getYPos());
+                    pocketCounterClockwise = GeometryOperations.leftTurnPredicate(lastPointVisible.getX(), -lastPointVisible.getY(), pseudoBlockingVertex.getX(), -pseudoBlockingVertex.getY(), target.getXPos(), -target.getYPos());
 
                     Main.pane.getChildren().add(new Circle(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), 4, Color.BLUEVIOLET));
 
@@ -284,32 +287,42 @@ public class DCREntity extends CentralisedEntity {
 
                 // move searcher
                 pathLines = currentSearcherPath.getPathLines();
-                length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
-                deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-                deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-                if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
-                    // move along line
-                    searcher.moveBy(deltaX, deltaY);
+                if (!(searcher.getXPos() == currentSearcherPath.getEndX() && searcher.getYPos() == currentSearcherPath.getEndY())) {
+                    length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
+                    deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                    deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                    if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
+                        // move along line
+                        searcher.moveBy(deltaX, deltaY);
+                    } else {
+                        // move to end of line
+                        searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
+                        searcherPathLineCounter++;
+                    }
                 } else {
-                    // move to end of line
-                    searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
-                    searcherPathLineCounter++;
+                    // after the last (searcher move) the evader was still visible and the pseudo-blocking vertex was reached
+                    System.out.println("Searcher reached end of line");
+                    System.out.println("Evader still visible: " + map.isVisible(searcher, target));
                 }
 
                 Main.pane.getChildren().add(new Circle(searcher.getXPos(), searcher.getYPos(), 1, Color.FUCHSIA));
 
                 // move catcher
                 pathLines = currentCatcherPath.getPathLines();
-                length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
-                deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-                deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-                if (pathLines.get(catcherPathLineCounter).contains(catcher.getXPos() + deltaX, catcher.getYPos() + deltaY)) {
-                    // move along line
-                    catcher.moveBy(deltaX, deltaY);
+                if (!(catcher.getXPos() == currentCatcherPath.getEndX() && catcher.getYPos() == currentCatcherPath.getEndY())) {
+                    length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+                    deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                    deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                    if (pathLines.get(catcherPathLineCounter).contains(catcher.getXPos() + deltaX, catcher.getYPos() + deltaY)) {
+                        // move along line
+                        catcher.moveBy(deltaX, deltaY);
+                    } else {
+                        // move to end of line
+                        catcher.moveBy(pathLines.get(catcherPathLineCounter).getEndX() - catcher.getXPos(), pathLines.get(catcherPathLineCounter).getEndY() - catcher.getYPos());
+                        catcherPathLineCounter++;
+                    }
                 } else {
-                    // move to end of line
-                    catcher.moveBy(pathLines.get(catcherPathLineCounter).getEndX() - catcher.getXPos(), pathLines.get(catcherPathLineCounter).getEndY() - catcher.getYPos());
-                    catcherPathLineCounter++;
+                    System.out.println("Catcher reached end of line");
                 }
 
                 // if pseudo-blocking vertex has been reached without seeing the evader again
@@ -349,16 +362,24 @@ public class DCREntity extends CentralisedEntity {
                             Main.pane.getChildren().add(new Circle(currentPoint.getEstX(), currentPoint.getEstY(), 2, Color.BLACK));
                         }*/
                     }
-                    Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), catcher.getXPos(), catcher.getYPos());
                     if (/*!found || */pocketBoundaryEndPoint == null) {
                         System.out.println("No pocket boundary end point found.");
                     } else {
+                        Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), catcher.getXPos(), catcher.getYPos());
                         Main.pane.getChildren().add(boundaryLine);
                         Main.pane.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 5, Color.BLACK));
 
                         // find the new "pocket component"
-                        findPocketComponent(boundaryLine, componentIndex, catcher.getXPos(), catcher.getYPos());
+                        System.out.printf("Catcher at (%f|%f)\nReal at (%f|%f)\nFake at (%f|%f)\n", catcher.getXPos(), catcher.getYPos(), currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY(), currentCatcherPath.getLastPathVertex().getEstX(), currentCatcherPath.getLastPathVertex().getEstY());
+                        Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY());
+                        traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond());
 
+                        try {
+                            currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                            searcherPathLineCounter = 0;
+                        } catch (DelaunayError e) {
+                            e.printStackTrace();
+                        }
                     }
                 } else if (catcher.getXPos() == pseudoBlockingVertex.getX() && catcher.getYPos() == pseudoBlockingVertex.getY()) {
                     currentStage = Stage.FOLLOW_TARGET;
@@ -373,6 +394,73 @@ public class DCREntity extends CentralisedEntity {
             //    -> could check which triangles the line cuts through and don't allow movement beyond them
             // b) turning the searcher back when it tries to cross the line
 
+
+            if (map.isVisible(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos())) {
+                pseudoBlockingVertex = null;
+                currentStage = Stage.FOLLOW_TARGET;
+            } else {
+                pathLines = currentSearcherPath.getPathLines();
+                if (!(searcher.getXPos() == currentSearcherPath.getEndX() && searcher.getYPos() == currentSearcherPath.getEndY())) {
+                    length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
+                    deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                    deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+                    if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
+                        // move along line
+                        searcher.moveBy(deltaX, deltaY);
+                    } else {
+                        // move to end of line
+                        searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
+                        searcherPathLineCounter++;
+                    }
+                } else {
+                    // after the last (searcher move) the evader was still visible and the pseudo-blocking vertex was reached
+                    System.out.println("Searcher reached end of line");
+                    System.out.println("Evader still visible: " + map.isVisible(searcher, target));
+                }
+
+                if (map.isVisible(target.getXPos(), target.getYPos(), searcher.getXPos(), searcher.getYPos())) {
+                    System.out.println("target found again by searcher");
+
+                    PlannedPath temp = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), target.getXPos(), target.getYPos());
+                    lastPointVisible = new Point2D(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
+                    pseudoBlockingVertex = new Point2D(temp.getPathVertex(1).getEstX(), temp.getPathVertex(1).getEstY());
+                    pocketCounterClockwise = GeometryOperations.leftTurnPredicate(lastPointVisible.getX(), -lastPointVisible.getY(), pseudoBlockingVertex.getX(), -pseudoBlockingVertex.getY(), target.getXPos(), -target.getYPos());
+
+                    int componentIndex = 0;
+                    if (componentBoundaryLines.size() != 1) {
+                        for (int i = 0; i < traversalHandler.getComponents().size(); i++) {
+                            if (componentBoundaryShapes.get(i).contains(catcher.getXPos(), catcher.getYPos())) {
+                                componentIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                    double rayStartX = lastPointVisible.getX();
+                    double rayStartY = lastPointVisible.getY();
+                    double rayDeltaX = pseudoBlockingVertex.getX() - rayStartX;
+                    double rayDeltaY = pseudoBlockingVertex.getY() - rayStartY;
+                    // determine pocket boundary line
+                    Point2D currentPoint, pocketBoundaryEndPoint = null;
+                    double minLengthSquared = Double.MAX_VALUE, currentLengthSquared;
+                    for (Line line : componentBoundaryLines.get(componentIndex)) {
+                        currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
+                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
+                            minLengthSquared = currentLengthSquared;
+                            pocketBoundaryEndPoint = currentPoint;
+                        }
+                    }
+                    Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), catcher.getXPos(), catcher.getYPos());
+                    Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY());
+                    traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond());
+
+                    Main.pane.getChildren().add(new Circle(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), 4, Color.BLUEVIOLET));
+
+                    currentSearcherPath = shortestPathRoadMap.getShortestPath(searcher.getXPos(), searcher.getYPos(), pseudoBlockingVertex);
+                    currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
+                    searcherPathLineCounter = 0;
+                    catcherPathLineCounter = 0;
+                }
+            }
         }
 
         System.out.printf("Catcher at (%.3f|%.3f)   |   Searcher at (%.3f|%.3f)\n", catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
@@ -569,74 +657,176 @@ public class DCREntity extends CentralisedEntity {
         //requiredAgents = 2;
     }
 
-    private ArrayList<DTriangle> findPocketComponent(Line boundaryLine, int componentIndex, double catcherX, double catcherY) {
+    private Tuple<ArrayList<DTriangle>, int[][]> findPocketComponent(Line boundaryLine, int componentIndex, double catcherVertX, double catcherVertY) {
         // go through all triangles of the current component and find those intersecting the boundary line
         // start to find the rest of the triangles of the pocket component using adjacency matrices
         // if a triangle is adjacent to one of the intersected triangles, test whether the edge connecting them
         // lies to the right or left (clockwise or counter-clockwise) of the boundary line (by checking endpoints)
 
-        ArrayList<DTriangle> pocketBoundaryTriangles = new ArrayList<>();
-        DPoint catcherPosition = null;
+        double length = Math.sqrt(Math.pow(boundaryLine.getEndX() - boundaryLine.getStartX(), 2) + Math.pow(boundaryLine.getEndY() - boundaryLine.getStartY(), 2));
+        double deltaX = (boundaryLine.getStartX() - boundaryLine.getEndX()) / length * 0.001;
+        double deltaY = (boundaryLine.getStartY() - boundaryLine.getEndY()) / length * 0.001;
+        DPoint approxPosition = null;
         try {
-            catcherPosition = new DPoint(catcherX, catcherY, 0);
-        } catch (DelaunayError delaunayError) {
-            delaunayError.printStackTrace();
+            approxPosition = new DPoint(catcherVertX + deltaX, catcherVertY + deltaY, 0);
+        } catch (DelaunayError e) {
+            e.printStackTrace();
         }
+
+        ArrayList<DTriangle> pocketBoundaryTriangles = new ArrayList<>();
         DTriangle currentTriangle = null;
-        DPoint closest = null;
-        double minDistance = Double.MAX_VALUE, curDistance;
+        DPoint currentPoint = null;
+        // find the DPoint corresponding to the vertex where the catcher is positioned
+        outer:
         for (DTriangle dt : traversalHandler.getComponents().get(componentIndex)) {
             for (DPoint dp : dt.getPoints()) {
-                curDistance = Math.pow(dp.getX() - catcherX, 2) + Math.pow(dp.getY() - catcherY, 2);
-                if (curDistance < minDistance) {
-                    minDistance = curDistance;
-                    closest = dp;
+                if (dp.getX() == catcherVertX && dp.getY() == catcherVertY) {
+                    currentPoint = dp;
+                    break outer;
                 }
             }
         }
-
-
 
         for (DTriangle dt : traversalHandler.getComponents().get(componentIndex)) {
-            if (GeometryOperations.lineTriangleIntersectWithPoints(boundaryLine, dt)) {
-                pocketBoundaryTriangles.add(dt);
-                for (DPoint dp : dt.getPoints()) {
-                    curDistance = Math.pow(dp.getX() - catcherX, 2) + Math.pow(dp.getY() - catcherY, 2);
-                    if (curDistance < minDistance) {
-                        minDistance = curDistance;
-                        closest = dp;
-                        currentTriangle = dt;
-                    }
-                }
+            if (dt.contains(approxPosition)) {
+                currentTriangle = dt;
+                break;
             }
         }
 
+        try {
+            System.out.println("Catcher vertex: (" + currentPoint.getX() + "|" + currentPoint.getY() + ")");
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            AdaptedSimulation.masterPause();
+        }
 
+        Polygon p;
+        p = new Polygon(currentTriangle.getPoint(0).getX(), currentTriangle.getPoint(0).getY(), currentTriangle.getPoint(1).getX(), currentTriangle.getPoint(1).getY(), currentTriangle.getPoint(2).getX(), currentTriangle.getPoint(2).getY());
+        p.setFill(Color.BLUE.deriveColor(1, 1, 1, 0.1));
+        Main.pane.getChildren().add(p);
+        pocketBoundaryTriangles.add(currentTriangle);
+        // add all triangles that are intersected by the boundary line to the list
+        for (DTriangle dt : traversalHandler.getComponents().get(componentIndex)) {
+            if (!dt.getPoints().contains(currentPoint) && GeometryOperations.lineTriangleIntersectWithoutPoints(boundaryLine, dt)) {
+                /*p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                p.setFill(Color.BLUE.deriveColor(1, 1, 1, 0.1));
+                Main.pane.getChildren().add(p);*/
+                pocketBoundaryTriangles.add(dt);
+            }
+        }
+
+        /*// find whether to turn clockwise or counter-clockwise
         DPoint otherEdgePoint1 = null, otherEdgePoint2 = null;
         for (DEdge de : currentTriangle.getEdges()) {
-            if (de.getStartPoint().equals(closest)) {
-                if (componentBoundaryEdges.get(componentIndex).contains(de)) {
-                    otherEdgePoint1 = de.getStartPoint();
-                } else {
-                    otherEdgePoint2 = de.getStartPoint();
-                }
-            } else if (de.getEndPoint().equals(closest)) {
+            if (de.getStartPoint().equals(currentPoint)) {
                 if (componentBoundaryEdges.get(componentIndex).contains(de)) {
                     otherEdgePoint1 = de.getEndPoint();
                 } else {
                     otherEdgePoint2 = de.getEndPoint();
                 }
+            } else if (de.getEndPoint().equals(currentPoint)) {
+                if (componentBoundaryEdges.get(componentIndex).contains(de)) {
+                    otherEdgePoint1 = de.getStartPoint();
+                } else {
+                    otherEdgePoint2 = de.getStartPoint();
+                }
             }
         }
 
-        Polygon p = new Polygon(currentTriangle.getPoint(0).getX(), currentTriangle.getPoint(0).getY(), currentTriangle.getPoint(1).getX(), currentTriangle.getPoint(1).getY(), currentTriangle.getPoint(2).getX(), currentTriangle.getPoint(2).getY());
-        p.setFill(Color.BLUE.deriveColor(1, 1, 1, 0.1));
-        Main.pane.getChildren().add(p);
+        Main.pane.getChildren().add(new Circle(otherEdgePoint1.getX(), otherEdgePoint1.getY(), 3, Color.BLUE));
+        Main.pane.getChildren().add(new Circle(otherEdgePoint2.getX(), otherEdgePoint2.getY(), 3, Color.RED));
 
-        // found out whether it is a right/clockwise turn from otherEdgePoint1 to closest to otherEdgePoint2
-        boolean pocketIsCounterClockwise = GeometryOperations.leftTurnPredicate(otherEdgePoint1.getX(), otherEdgePoint1.getY(), closest.getX(), closest.getY(), otherEdgePoint2.getX(), otherEdgePoint2.getY());
-        System.out.println("pocketIsCounterClockwise: " + pocketIsCounterClockwise);
-        return null;
+        // found out whether it is a right/clockwise turn from otherEdgePoint1 to currentPoint to otherEdgePoint2
+        boolean pocketIsCounterClockwise = GeometryOperations.leftTurnPredicate(otherEdgePoint1.getX(), -otherEdgePoint1.getY(), currentPoint.getX(), -currentPoint.getY(), otherEdgePoint2.getX(), -otherEdgePoint2.getY());
+        System.out.println("pocketIsCounterClockwise: " + pocketIsCounterClockwise + " (sanity check: " + GeometryOperations.leftTurnPredicate(otherEdgePoint2.getX(), -otherEdgePoint2.getY(), currentPoint.getX(), -currentPoint.getY(), otherEdgePoint1.getX(), -otherEdgePoint1.getY()) + ")");
+*/
+        ArrayList<DTriangle> connectingTriangles = new ArrayList<>();
+        ArrayList<DEdge> connectingEdges = new ArrayList<>();
+        for (DTriangle dt1 : pocketBoundaryTriangles) {
+            for (DEdge de : dt1.getEdges()) {
+                boolean found = false;
+                for (DTriangle dt2 : pocketBoundaryTriangles) {
+                    if (dt1 != dt2 && dt2.isEdgeOf(de)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found && !componentBoundaryEdges.get(componentIndex).contains(de)) {
+                    Line l = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
+                    l.setStroke(Color.RED);
+                    l.setStrokeWidth(2);
+                    Main.pane.getChildren().add(l);
+                    Label label = new Label("1: " + GeometryOperations.leftTurnPredicate(boundaryLine.getEndX(), boundaryLine.getEndY(), boundaryLine.getStartX(), boundaryLine.getStartY(), de.getPointLeft().getX(), de.getPointLeft().getY()));
+                    label.setTranslateX(GeometryOperations.getLineMiddle(l).getX() + 5);
+                    label.setTranslateY(GeometryOperations.getLineMiddle(l).getY());
+                    Main.pane.getChildren().add(label);
+                    label = new Label("2: " + GeometryOperations.leftTurnPredicate(boundaryLine.getEndX(), boundaryLine.getEndY(), boundaryLine.getStartX(), boundaryLine.getStartY(), de.getPointRight().getX(), de.getPointRight().getY()));
+                    label.setTranslateX(GeometryOperations.getLineMiddle(l).getX() + 5);
+                    label.setTranslateY(GeometryOperations.getLineMiddle(l).getY() + 15);
+                    Main.pane.getChildren().add(label);
+                    if (GeometryOperations.leftTurnPredicate(boundaryLine.getStartX(), boundaryLine.getStartY(), boundaryLine.getEndX(), boundaryLine.getEndY(), de.getPointLeft().getX(), de.getPointLeft().getY()) == pocketCounterClockwise &&
+                            GeometryOperations.leftTurnPredicate(boundaryLine.getStartX(), boundaryLine.getStartY(), boundaryLine.getEndX(), boundaryLine.getEndY(), de.getPointRight().getX(), de.getPointRight().getY()) == pocketCounterClockwise) {
+                        connectingTriangles.add(dt1);
+                        connectingEdges.add(de);
+                        l = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
+                        l.setStroke(Color.BLUE);
+                        l.setStrokeWidth(2);
+                        Main.pane.getChildren().add(l);
+                    }
+                }
+            }
+        }
+
+        int[][] pocketAdjacencyMatrix = new int[traversalHandler.getAdjacencyMatrix().length][traversalHandler.getAdjacencyMatrix().length];
+        ArrayList<DTriangle> pbtClone = new ArrayList<>();
+        pbtClone.addAll(pocketBoundaryTriangles);
+        ArrayList<DTriangle> currentLayer = new ArrayList<>(), nextLayer;
+        boolean unexploredLeft = true;
+        for (DTriangle dt : connectingTriangles) {
+            currentLayer.add(dt);
+            pocketBoundaryTriangles.remove(dt);
+            p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+            p.setFill(Color.GREEN.deriveColor(1, 1, 1, 0.4));
+            Main.pane.getChildren().add(p);
+        }
+        boolean first = true;
+        while (unexploredLeft) {
+            nextLayer = new ArrayList<>();
+            for (DTriangle dt : currentLayer) {
+                pocketBoundaryTriangles.add(dt);
+                for (int i = 0; i < traversalHandler.getAdjacencyMatrix().length; i++) {
+                    if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i))) {
+                        if (!first || (traversalHandler.getTriangles().get(i).equals(connectingEdges.get(connectingTriangles.indexOf(dt)).getOtherTriangle(dt)))) {
+                            nextLayer.add(traversalHandler.getTriangles().get(i));
+                            pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] = 1;
+                            pocketAdjacencyMatrix[i][traversalHandler.getTriangles().indexOf(dt)] = 1;
+                        }
+                    }
+                }
+            }
+            currentLayer = nextLayer;
+            if (nextLayer.size() == 0) {
+                unexploredLeft = false;
+            }
+            first = false;
+        }
+
+        for (DTriangle dt1 : pbtClone) {
+            for (DTriangle dt2 : pbtClone) {
+                if (dt1 != dt2 && (dt1.getEdge(0).getOtherTriangle(dt1).equals(dt2) || dt1.getEdge(1).getOtherTriangle(dt1).equals(dt2) || dt1.getEdge(2).getOtherTriangle(dt1).equals(dt2))) {
+                    pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt1)][traversalHandler.getTriangles().indexOf(dt2)] = 1;
+                    pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt2)][traversalHandler.getTriangles().indexOf(dt1)] = 1;
+                }
+            }
+        }
+
+        for (DTriangle dt : pocketBoundaryTriangles) {
+            p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+            p.setFill(Color.BLUE.deriveColor(1, 1, 1, 0.1));
+            Main.pane.getChildren().add(p);
+        }
+        return new Tuple<>(pocketBoundaryTriangles, pocketAdjacencyMatrix);
     }
 
     // ******************************************************************************************************************************** //
