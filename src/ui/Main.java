@@ -2312,11 +2312,21 @@ public class Main extends Application {
 
                                     StraightLineEntity straightLineEntity = new StraightLineEntity(map);
                                     straightLineEntity.setAgent(new Agent(va.getSettings()));
-                                    map.getEvadingEntities().add(straightLineEntity);
+                                    map.getPursuingEntities().add(straightLineEntity);
+                                    //map.getEvadingEntities().add(straightLineEntity);
 
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Flocking evader entity")) {
                                     //Must be evader
+                                    va.getAgentBody().setFill(Color.DARKORANGE);
+                                    visualAgents.add(va);
+                                    pane.getChildren().add(va);
+
+                                    FlockingEvaderEntity flockingEvaderEntity = new FlockingEvaderEntity(map);
+                                    flockingEvaderEntity.setAgent(new Agent(va.getSettings()));
+                                    map.getEvadingEntities().add(flockingEvaderEntity);
+
+                                    selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Hide evader entity")) {
                                     //Must be evader
                                 } else if (selectedEntityButton.getText().equals("Dummy entity")) {
