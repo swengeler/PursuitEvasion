@@ -509,11 +509,12 @@ public class DCREntity extends CentralisedEntity {
             // looks like it may not be needed at all
             //computeSingleConnectedComponent(simplyConnectedComponents, holes, nodes, separatingTriangles, spanningTreeAdjacencyMatrix, originalAdjacencyMatrix, parentNodes, tree);
 
-            Tuple<ArrayList<Line>, ArrayList<DEdge>> lineSeparation = computeGuardingLines(separatingTriangles, nonSeparatingLines);
-            ArrayList<Line> separatingLines = lineSeparation.getFirst();
-            ArrayList<DEdge> separatingEdges = lineSeparation.getSecond();
+            Triplet<ArrayList<Line>, ArrayList<DEdge>, ArrayList<DEdge>> lineSeparation = computeGuardingLines(separatingTriangles, nonSeparatingLines);
+            ArrayList<Line> separatingLines = lineSeparation.getValue0();
+            ArrayList<DEdge> reconnectingEdges = lineSeparation.getValue1();
+            ArrayList<DEdge> separatingEdges = lineSeparation.getValue2();
 
-            Tuple<int[][], ArrayList<ArrayList<DTriangle>>> reconnectedAdjacency = computeReconnectedAdjacency(nodes, simplyConnectedComponents, lineSeparation.getSecond(), spanningTreeAdjacencyMatrix, separatingTriangles);
+            Tuple<int[][], ArrayList<ArrayList<DTriangle>>> reconnectedAdjacency = computeReconnectedAdjacency(nodes, simplyConnectedComponents, reconnectingEdges, spanningTreeAdjacencyMatrix, separatingTriangles);
             int[][] reconnectedAdjacencyMatrix = reconnectedAdjacency.getFirst();
             ArrayList<ArrayList<DTriangle>> reconnectedComponents = reconnectedAdjacency.getSecond();
 
@@ -537,10 +538,13 @@ public class DCREntity extends CentralisedEntity {
                 }
             }*/
 
+            for (DEdge de : separatingEdges) {
+                Main.pane.getChildren().add(new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY()));
+            }
+
             Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> componentBoundaries = computeComponentBoundaries(reconnectedComponents, separatingEdges);
             componentBoundaryLines = componentBoundaries.getFirst();
             componentBoundaryShapes = componentBoundaries.getSecond();
-
 
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
@@ -551,10 +555,10 @@ public class DCREntity extends CentralisedEntity {
 
             // if separating lines are used
             //simplyConnectedComponents.set(0, nodes);
-            traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, reconnectedComponents, reconnectedAdjacencyMatrix);
-            ShortestPathRoadMap.SHOW_ON_CANVAS = true;
-            traversalHandler.separatingLineBased(separatingLines);
-            //traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
+            traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
+            ShortestPathRoadMap.SHOW_ON_CANVAS = false;
+            //traversalHandler.separatingLineBased(separatingLines);
+            traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
             ShortestPathRoadMap.SHOW_ON_CANVAS = false;
 
             requiredAgents = 2 + separatingTriangles.size();
@@ -639,17 +643,18 @@ public class DCREntity extends CentralisedEntity {
     // Methods for initial computations (before task assignment)
     // ******************************************************************************************************************************** //
 
-    private Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> computeComponentBoundaries(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> separatingLines) {
+    private Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> computeComponentBoundaries(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> separatingEdges) {
         System.out.println("simplyConnectedComponents.size(): " + simplyConnectedComponents.size());
         ArrayList<ArrayList<Line>> boundaryLines = new ArrayList<>();
         componentBoundaryEdges = new ArrayList<>();
         ArrayList<Shape> componentShapes = new ArrayList<>();
         ArrayList<Line> temp;
-        ArrayList<DEdge> tempEdges;
+        ArrayList<DEdge> tempEdges, tempComponentBoundaryEdges;
         Shape tempShape;
         for (ArrayList<DTriangle> arr : simplyConnectedComponents) {
             temp = new ArrayList<>();
             tempEdges = new ArrayList<>();
+            tempComponentBoundaryEdges = new ArrayList<>();
             tempShape = new Polygon(0, 0);
             for (DTriangle dt : arr) {
                 tempEdges.addAll(Arrays.asList(dt.getEdges()));
@@ -659,8 +664,9 @@ public class DCREntity extends CentralisedEntity {
             /*tempShape.setFill(Color.BLACK.brighter().brighter().brighter().brighter());
             Main.pane.getChildren().add(tempShape);*/
             for (DEdge de : tempEdges) {
-                if (tempEdges.indexOf(de) == tempEdges.lastIndexOf(de) || separatingLines.contains(de)) {
+                if (tempEdges.indexOf(de) == tempEdges.lastIndexOf(de) || separatingEdges.contains(de)) {
                     temp.add(new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY()));
+                    tempComponentBoundaryEdges.add(de);
                     /*Line l = new Line(de.getPointLeft().getEstX(), de.getPointLeft().getEstY(), de.getPointRight().getEstX(), de.getPointRight().getEstY());
                     l.setStroke(Color.BLUE);
                     l.setStrokeWidth(2);
@@ -668,7 +674,7 @@ public class DCREntity extends CentralisedEntity {
                 }
             }
             boundaryLines.add(temp);
-            componentBoundaryEdges.add(tempEdges);
+            componentBoundaryEdges.add(tempComponentBoundaryEdges);
         }
         Polygon p;
         /*for (ArrayList<Line> arr : boundaryLines) {
@@ -702,10 +708,10 @@ public class DCREntity extends CentralisedEntity {
         return new Tuple<>(boundaryLines, componentShapes);
     }
 
-    private Tuple<ArrayList<Line>, ArrayList<DEdge>> computeGuardingLines(ArrayList<DTriangle> separatingTriangles, ArrayList<DEdge> nonSeparatingLines) {
+    private Triplet<ArrayList<Line>, ArrayList<DEdge>, ArrayList<DEdge>> computeGuardingLines(ArrayList<DTriangle> separatingTriangles, ArrayList<DEdge> nonSeparatingLines) {
         // for now its enough to just cover one side of each separating triangle because they are computed to have one edge adjacent to a polygon (i.e. they have degree 2 in the dual triangulation graph)
         ArrayList<Line> separatingLines = new ArrayList<>();
-        ArrayList<DEdge> separatingEdges = new ArrayList<>();
+        separatingEdges = new ArrayList<>();
         ArrayList<DEdge> reconnectingEdges = new ArrayList<>();
         double minLength, maxLength, currentLengthSquared;
         DEdge minLengthEdge, maxLengthEdge;
@@ -728,11 +734,14 @@ public class DCREntity extends CentralisedEntity {
                 }
             }
             separatingLines.add(new Line(minLengthEdge.getPointLeft().getX(), minLengthEdge.getPointLeft().getY(), minLengthEdge.getPointRight().getX(), minLengthEdge.getPointRight().getY()));
+            Line l = new Line(minLengthEdge.getPointLeft().getX(), minLengthEdge.getPointLeft().getY(), minLengthEdge.getPointRight().getX(), minLengthEdge.getPointRight().getY());
+            l.setStrokeWidth(6);
+            l.setFill(Color.ALICEBLUE);
+            Main.pane.getChildren().add(l);
             separatingEdges.add(minLengthEdge);
             reconnectingEdges.add(maxLengthEdge);
         }
-        this.separatingEdges = separatingEdges;
-        return new Tuple<>(separatingLines, reconnectingEdges);
+        return new Triplet<>(separatingLines, reconnectingEdges, separatingEdges);
     }
 
     private Tuple<int[][], ArrayList<ArrayList<DTriangle>>> computeReconnectedAdjacency(ArrayList<DTriangle> triangles, ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> reconnectingEdges, int[][] disconnectedAdjacencyMatrix, ArrayList<DTriangle> separatingTriangles) {
@@ -751,7 +760,9 @@ public class DCREntity extends CentralisedEntity {
         for (DEdge de : reconnectingEdges) {
             index1 = triangles.indexOf(de.getLeft());
             index2 = triangles.indexOf(de.getRight());
-            /*for (int i = 0; i < triangles.size(); i++) {
+            //index1 = -1;
+            //index2 = -1;
+            for (int i = 0; i < triangles.size(); i++) {
                 if (triangles.get(i).isEdgeOf(de)) {
                     if (index1 == -1) {
                         index1 = i;
@@ -759,7 +770,7 @@ public class DCREntity extends CentralisedEntity {
                         index2 = i;
                     }
                 }
-            }*/
+            }
             reconnectedAdjacencyMatrix[index1][index2] = 1;
             reconnectedAdjacencyMatrix[index2][index1] = 1;
 
