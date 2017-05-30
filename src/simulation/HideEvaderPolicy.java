@@ -16,6 +16,8 @@ import java.util.List;
 
 public class HideEvaderPolicy extends MovePolicy {
 
+    //somehow take evader position into account
+    //important such that it doesn't make dumb moves but also such that this policy can be ran for multiple evaders (otherwise they all go to the same point)
     //add separation force
     //only recompute every XX timestep
 
@@ -189,20 +191,27 @@ public class HideEvaderPolicy extends MovePolicy {
             }
 
         } else {
-            //still needs distance backup calc
 
             int numOfPursuers = midpointData.size();
             int numOfMidpoints = midpointData.get(0).size();
 
             for (int i = 0; i < numOfMidpoints; i++) {
                 int tmpNumberOfVertices = 0;
+                double tmpEuclideanDistance = 0;
 
                 for (int j = 0; j < numOfPursuers; j++) {
                     int numOfVerts = midpointData.get(j).get(i).getNumOfVertices();
+                    double distance = midpointData.get(j).get(i).getDistance();
                     tmpNumberOfVertices += numOfVerts;
+                    tmpEuclideanDistance += distance;
                 }
 
-                if (tmpNumberOfVertices >= numberOfVertices) {
+                if (tmpNumberOfVertices == numberOfVertices) {
+                    if (tmpEuclideanDistance > euclideanDistance) {
+                        euclideanDistance = tmpEuclideanDistance;
+                        target = midpointData.get(0).get(i).getMidpoint();
+                    }
+                } else if (tmpNumberOfVertices > numberOfVertices) {
                     numberOfVertices = tmpNumberOfVertices;
                     target = midpointData.get(0).get(i).getMidpoint();
                 }
