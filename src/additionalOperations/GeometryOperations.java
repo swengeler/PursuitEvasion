@@ -5,9 +5,14 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import org.jdelaunay.delaunay.geometries.DEdge;
+import org.jdelaunay.delaunay.geometries.DTriangle;
+import pathfinding.PathVertex;
 import shadowPursuit.ShadowNode;
 
+import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.List;
 
 public class GeometryOperations {
 
@@ -27,7 +32,6 @@ public class GeometryOperations {
         return allPoints;
     }
 
-
     public static ArrayList<Point2D> polyToPoints(Polygon poly) {
         //Turn polygon into points
         double xPos, yPos;
@@ -41,6 +45,15 @@ public class GeometryOperations {
         }
         return points;
     }
+
+    /*public static ArrayList<PathVertex> polyToPathVertices(Polygon poly) {
+        List<Double> vertices = poly.getPoints();
+        ArrayList<PathVertex> points = new ArrayList<>();
+        for (int i = 0; i < vertices.size(); i += 2) {
+            points.add(new PathVertex(vertices.get(i), vertices.get(i + 1)));
+        }
+        return points;
+    }*/
 
     /*
     *Shadowpursuit: will be used to categorize points of type 1
@@ -309,15 +322,15 @@ public class GeometryOperations {
             if(lineIntersect(xLine, ray))   {
                 System.out.println("Enter1");
                 intPoint = FindIntersection(xLine, ray);
-                ray.setEndX(intPoint.getX());
-                ray.setEndY(intPoint.getY());
+                ray.setEndX(intPoint.getEstX());
+                ray.setEndY(intPoint.getEstY());
             }
             else if (lineIntersect(yLine, ray))  {
                 System.out.println("Enter2");
                 intPoint = FindIntersection(yLine, ray);
                 System.out.println(intPoint);
-                ray.setEndX(intPoint.getX());
-                ray.setEndY(intPoint.getY());
+                ray.setEndX(intPoint.getEstX());
+                ray.setEndY(intPoint.getEstY());
             }
         }
         */
@@ -457,6 +470,11 @@ public class GeometryOperations {
         return (y2 - y1) / (x2 - x1);
     }
 
+    public static boolean onLine(double pointX, double pointY, Line line) {
+        Line2D.Double geomLine = new Line2D.Double(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());
+        return geomLine.ptLineDist(pointX, pointY) == 0.0;
+    }
+
     public static boolean onLine(Point2D point, Line between) {
         double pX, pY, sX, sY, eX, eY;
         //System.out.print(point);
@@ -472,7 +490,6 @@ public class GeometryOperations {
 
         //System.out.println("Overall Distance = " + distance(sX, sY, eX, eY));
         //System.out.println("Between Dist = " + ((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))));
-
 
         if (Math.round((distance(pX, pY, sX, sY) + distance(pX, pY, eX, eY))) == Math.round(distance(sX, sY, eX, eY))) {
             return true;
@@ -510,7 +527,11 @@ public class GeometryOperations {
     }
 
     public static boolean leftTurnPredicate(Point2D p1, Point2D p2, Point2D p3) {
-        double[][] array = {{1, p1.getX(), p1.getY()}, {1, p2.getX(), p2.getY()}, {1, p3.getX(), p3.getY()}};
+        return leftTurnPredicate(p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
+    }
+
+    public static boolean leftTurnPredicate(double p1X, double p1Y, double p2X, double p2Y,double p3X, double p3Y) {
+        double[][] array = {{1, p1X, p1Y}, {1, p2X, p2Y}, {1, p3X, p3Y}};
         Matrix matrix = new Matrix(array);
         return matrix.det() > 0;
     }
@@ -669,6 +690,37 @@ public class GeometryOperations {
         double rayEndX = rayStartX + Integer.MAX_VALUE * rayDeltaX;
         double rayEndY = rayStartY + Integer.MAX_VALUE * rayDeltaY;
         return findIntersect2(new Line(rayStartX, rayStartY, rayEndX, rayEndY), lineSegment);
+    }
+
+    public static boolean lineTriangleIntersectWithPoints(Line line, DTriangle triangle) {
+        for (DEdge de : triangle.getEdges()) {
+            if (lineIntersect(line, de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY()) ||
+                    onLine(de.getPointLeft().getX(), de.getPointLeft().getY(), line) || onLine(de.getPointRight().getX(), de.getPointRight().getY(), line)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean lineTriangleIntersectWithoutPoints(Line line, DTriangle triangle) {
+        for (DEdge de : triangle.getEdges()) {
+            if (lineIntersect(line, de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY()) &&
+                    !(onLine(de.getPointLeft().getX(), de.getPointLeft().getY(), line) || onLine(de.getPointRight().getX(), de.getPointRight().getY(), line))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static int lineTriangleIntersectNr(Line line, DTriangle triangle) {
+        int result = 0;
+        for (DEdge de : triangle.getEdges()) {
+            if (lineIntersect(line, de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY()) ||
+                    onLine(de.getPointLeft().getX(), de.getPointLeft().getY(), line) || onLine(de.getPointRight().getX(), de.getPointRight().getY(), line)) {
+                result++;
+            }
+        }
+        return result;
     }
 
 }

@@ -391,7 +391,7 @@ public class Main extends Application {
 
         CheckBox useEntitiesCheckBox = new CheckBox("Use entities");
         useEntitiesCheckBox.selectedProperty().bindBidirectional(useEntities);
-        menu.getChildren().add(useEntitiesCheckBox);
+        //menu.getChildren().add(useEntitiesCheckBox);
 
         Button prepareEntityTestButton = new Button("Prepare entity test");
         prepareEntityTestButton.setOnAction(e -> {
@@ -453,7 +453,7 @@ public class Main extends Application {
                             inPolygon = false;
                         }
                         if (inPolygon) {
-                            //System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                            //System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getEstX(), dt.getPoint(0).getEstY(), dt.getPoint(1).getEstX(), dt.getPoint(1).getEstY(), dt.getPoint(2).getEstX(), dt.getPoint(2).getEstY());
                             p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
                             p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
                             p.setFill(Color.WHITE.deriveColor(1, 1, 1, 0.1));
@@ -490,7 +490,7 @@ public class Main extends Application {
                                     }
                                 }
                                 if (otherTriangle != null) {
-                                    /*Line l = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), otherTriangle.getBarycenter().getX(), otherTriangle.getBarycenter().getY());
+                                    /*Line l = new Line(dt1.getBarycenter().getEstX(), dt1.getBarycenter().getEstY(), otherTriangle.getBarycenter().getEstX(), otherTriangle.getBarycenter().getEstY());
                                     l.setStroke(Color.RED);
                                     l.setStrokeWidth(2);
                                     pane.getChildren().add(l);*/

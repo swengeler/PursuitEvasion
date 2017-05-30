@@ -219,7 +219,7 @@ public class HideEvaderPolicy extends MovePolicy {
             }
         }
 
-        //System.out.println("BEST POINT IS " + target.getX() + ":" + target.getY() + " | " + s);
+        //System.out.println("BEST POINT IS " + target.getEstX() + ":" + target.getEstY() + " | " + s);
         return target;
     }
 

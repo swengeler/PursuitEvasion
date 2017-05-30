@@ -14,16 +14,18 @@ public class TestEntity extends DistributedEntity {
     private int pathCounter;
 
     //private double targetX = 110.0, targetY = 317.0; // default for searcher_catcher_test_2: 111.0, 317.0
-    public static double targetX = 5, targetY = 5;
+    public static double targetX, targetY;
 
     public TestEntity(MapRepresentation map) {
         super(map);
+        targetX = map.getBorderPolygon().getPoints().get(0);
+        targetY = map.getBorderPolygon().getPoints().get(1);
     }
 
     public TestEntity(MapRepresentation map, double targetX, double targetY) {
         super(map);
-        this.targetX = targetX;
-        this.targetY = targetY;
+        TestEntity.targetX = targetX;
+        TestEntity.targetY = targetY;
     }
 
     @Override

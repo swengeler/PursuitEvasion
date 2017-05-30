@@ -9,11 +9,11 @@ import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
+import pathfinding.PathVertex;
 import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 import ui.Main;
 
-import javax.xml.stream.events.DTD;
 import java.util.*;
 
 /**
@@ -27,7 +27,9 @@ public class DCREntity extends CentralisedEntity {
 
     private TraversalHandler traversalHandler;
     private ArrayList<ArrayList<Line>> componentBoundaryLines;
+    private ArrayList<ArrayList<DEdge>> componentBoundaryEdges;
     private ArrayList<Shape> componentBoundaryShapes;
+    private ArrayList<DEdge> separatingEdges;
 
     private Agent target;
     private Point2D origin, pseudoBlockingVertex, lastPointVisible;
@@ -242,7 +244,7 @@ public class DCREntity extends CentralisedEntity {
 
                 System.out.printf("candidate1: (%.3f|%.3f)\n", candidate1.getX(), candidate1.getY());
                 System.out.printf("candidate2: (%.3f|%.3f)\n", candidate2.getX(), candidate2.getY());
-                //System.out.printf("normal: (%.3f|%.3f)\n", normal.getX(), normal.getY());
+                //System.out.printf("normal: (%.3f|%.3f)\n", normal.getEstX(), normal.getEstY());
 
                 if (Math.sqrt(Math.pow(candidate1.getX() - target.getXPos(), 2) + Math.pow(candidate1.getY() - target.getYPos(), 2)) < Math.sqrt(Math.pow(candidate2.getX() - target.getXPos(), 2) + Math.pow(candidate2.getY() - target.getYPos(), 2))) {
                     // move to first candidate point
@@ -264,7 +266,7 @@ public class DCREntity extends CentralisedEntity {
                     System.out.println("target around corner, calculate path to first vertex");
                     ShortestPathRoadMap.drawLines = true;
                     PlannedPath temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
-                    //PlannedPath temp = shortestPathRoadMap.getShortestPath(target.getXPos() - 1, target.getYPos(), origin.getX() + 1, origin.getY());
+                    //PlannedPath temp = shortestPathRoadMap.getShortestPath(target.getXPos() - 1, target.getYPos(), origin.getEstX() + 1, origin.getEstY());
                     ShortestPathRoadMap.drawLines = false;
                     for (Line l : temp.getPathLines()) {
                         //Main.pane.getChildren().add(l);
@@ -338,20 +340,25 @@ public class DCREntity extends CentralisedEntity {
                     double minLengthSquared = Double.MAX_VALUE, currentLengthSquared;
                     for (Line line : componentBoundaryLines.get(componentIndex)) {
                         currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
-                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY())*/) {
+                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
                             minLengthSquared = currentLengthSquared;
                             pocketBoundaryEndPoint = currentPoint;
                             //found = true;
                             //break;
                         }/* else if (currentPoint != null) {
-                            Main.pane.getChildren().add(new Circle(currentPoint.getX(), currentPoint.getY(), 2, Color.BLACK));
+                            Main.pane.getChildren().add(new Circle(currentPoint.getEstX(), currentPoint.getEstY(), 2, Color.BLACK));
                         }*/
                     }
+                    Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), catcher.getXPos(), catcher.getYPos());
                     if (/*!found || */pocketBoundaryEndPoint == null) {
                         System.out.println("No pocket boundary end point found.");
                     } else {
-                        Main.pane.getChildren().add(new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), catcher.getXPos(), catcher.getYPos()));
+                        Main.pane.getChildren().add(boundaryLine);
                         Main.pane.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 5, Color.BLACK));
+
+                        // find the new "pocket component"
+                        findPocketComponent(boundaryLine, componentIndex, catcher.getXPos(), catcher.getYPos());
+
                     }
                 } else if (catcher.getXPos() == pseudoBlockingVertex.getX() && catcher.getYPos() == pseudoBlockingVertex.getY()) {
                     currentStage = Stage.FOLLOW_TARGET;
@@ -365,44 +372,10 @@ public class DCREntity extends CentralisedEntity {
             // a) restricting random traversals to the triangles that are in the pocket (at least in part)
             //    -> could check which triangles the line cuts through and don't allow movement beyond them
             // b) turning the searcher back when it tries to cross the line
+
         }
 
         System.out.printf("Catcher at (%.3f|%.3f)   |   Searcher at (%.3f|%.3f)\n", catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
-
-        /*if (pathLines == null) {
-            try {
-                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
-            } catch (DelaunayError delaunayError) {
-                delaunayError.printStackTrace();
-            }
-            pathLines = currentSearcherPath.getPathLines();
-            searcherPathLineCounter = 0;
-        }
-
-        if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
-            // TODO: there should probably be a better check that takes into account that an entire branch might be cleared if there is vision of it
-            // end of path reached, compute new path
-            try {
-                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
-            } catch (DelaunayError delaunayError) {
-                delaunayError.printStackTrace();
-            }
-            pathLines = currentSearcherPath.getPathLines();
-            searcherPathLineCounter = 0;
-        }
-
-        length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
-        deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-        deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-        if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
-            // move along line
-            searcher.moveBy(deltaX, deltaY);
-        } else {
-            // move to end of line
-            // TODO: instead take a "shortcut" to the next line
-            searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
-            searcherPathLineCounter++;
-        }*/
 
     }
 
@@ -534,7 +507,7 @@ public class DCREntity extends CentralisedEntity {
 
             // if there are more than 2 components compute change triangles around so that there is only one
             // looks like it may not be needed at all
-            computeSingleConnectedComponent(simplyConnectedComponents, holes, nodes, separatingTriangles, spanningTreeAdjacencyMatrix, originalAdjacencyMatrix, parentNodes, tree);
+            //computeSingleConnectedComponent(simplyConnectedComponents, holes, nodes, separatingTriangles, spanningTreeAdjacencyMatrix, originalAdjacencyMatrix, parentNodes, tree);
 
             Tuple<ArrayList<Line>, ArrayList<DEdge>> lineSeparation = computeGuardingLines(separatingTriangles, nonSeparatingLines);
             ArrayList<Line> separatingLines = lineSeparation.getFirst();
@@ -544,9 +517,30 @@ public class DCREntity extends CentralisedEntity {
             int[][] reconnectedAdjacencyMatrix = reconnectedAdjacency.getFirst();
             ArrayList<ArrayList<DTriangle>> reconnectedComponents = reconnectedAdjacency.getSecond();
 
+            /*for (int i = 0; i < nodes.size(); i++) {
+                int count = 0;
+                for (int j = 0; j < spanningTreeAdjacencyMatrix.length; j++) {
+                    if (spanningTreeAdjacencyMatrix[i][j] == 1) {
+                        count++;
+                    }
+                }
+                if (count == 1) {
+                    Label l = new Label("leaf");
+                    l.setTranslateX(nodes.get(i).getBarycenter().getX());
+                    l.setTranslateY(nodes.get(i).getBarycenter().getY());
+                    Main.pane.getChildren().add(l);
+                } else {
+                    Label l = new Label("not leaf");
+                    l.setTranslateX(nodes.get(i).getBarycenter().getX());
+                    l.setTranslateY(nodes.get(i).getBarycenter().getY());
+                    Main.pane.getChildren().add(l);
+                }
+            }*/
+
             Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> componentBoundaries = computeComponentBoundaries(reconnectedComponents, separatingEdges);
             componentBoundaryLines = componentBoundaries.getFirst();
             componentBoundaryShapes = componentBoundaries.getSecond();
+
 
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
@@ -558,7 +552,10 @@ public class DCREntity extends CentralisedEntity {
             // if separating lines are used
             //simplyConnectedComponents.set(0, nodes);
             traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, reconnectedComponents, reconnectedAdjacencyMatrix);
+            ShortestPathRoadMap.SHOW_ON_CANVAS = true;
             traversalHandler.separatingLineBased(separatingLines);
+            //traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
+            ShortestPathRoadMap.SHOW_ON_CANVAS = false;
 
             requiredAgents = 2 + separatingTriangles.size();
             System.out.println("\nrequiredAgents: " + requiredAgents);
@@ -568,9 +565,84 @@ public class DCREntity extends CentralisedEntity {
         //requiredAgents = 2;
     }
 
+    private ArrayList<DTriangle> findPocketComponent(Line boundaryLine, int componentIndex, double catcherX, double catcherY) {
+        // go through all triangles of the current component and find those intersecting the boundary line
+        // start to find the rest of the triangles of the pocket component using adjacency matrices
+        // if a triangle is adjacent to one of the intersected triangles, test whether the edge connecting them
+        // lies to the right or left (clockwise or counter-clockwise) of the boundary line (by checking endpoints)
+
+        ArrayList<DTriangle> pocketBoundaryTriangles = new ArrayList<>();
+        DPoint catcherPosition = null;
+        try {
+            catcherPosition = new DPoint(catcherX, catcherY, 0);
+        } catch (DelaunayError delaunayError) {
+            delaunayError.printStackTrace();
+        }
+        DTriangle currentTriangle = null;
+        DPoint closest = null;
+        double minDistance = Double.MAX_VALUE, curDistance;
+        for (DTriangle dt : traversalHandler.getComponents().get(componentIndex)) {
+            for (DPoint dp : dt.getPoints()) {
+                curDistance = Math.pow(dp.getX() - catcherX, 2) + Math.pow(dp.getY() - catcherY, 2);
+                if (curDistance < minDistance) {
+                    minDistance = curDistance;
+                    closest = dp;
+                }
+            }
+        }
+
+
+
+        for (DTriangle dt : traversalHandler.getComponents().get(componentIndex)) {
+            if (GeometryOperations.lineTriangleIntersectWithPoints(boundaryLine, dt)) {
+                pocketBoundaryTriangles.add(dt);
+                for (DPoint dp : dt.getPoints()) {
+                    curDistance = Math.pow(dp.getX() - catcherX, 2) + Math.pow(dp.getY() - catcherY, 2);
+                    if (curDistance < minDistance) {
+                        minDistance = curDistance;
+                        closest = dp;
+                        currentTriangle = dt;
+                    }
+                }
+            }
+        }
+
+
+        DPoint otherEdgePoint1 = null, otherEdgePoint2 = null;
+        for (DEdge de : currentTriangle.getEdges()) {
+            if (de.getStartPoint().equals(closest)) {
+                if (componentBoundaryEdges.get(componentIndex).contains(de)) {
+                    otherEdgePoint1 = de.getStartPoint();
+                } else {
+                    otherEdgePoint2 = de.getStartPoint();
+                }
+            } else if (de.getEndPoint().equals(closest)) {
+                if (componentBoundaryEdges.get(componentIndex).contains(de)) {
+                    otherEdgePoint1 = de.getEndPoint();
+                } else {
+                    otherEdgePoint2 = de.getEndPoint();
+                }
+            }
+        }
+
+        Polygon p = new Polygon(currentTriangle.getPoint(0).getX(), currentTriangle.getPoint(0).getY(), currentTriangle.getPoint(1).getX(), currentTriangle.getPoint(1).getY(), currentTriangle.getPoint(2).getX(), currentTriangle.getPoint(2).getY());
+        p.setFill(Color.BLUE.deriveColor(1, 1, 1, 0.1));
+        Main.pane.getChildren().add(p);
+
+        // found out whether it is a right/clockwise turn from otherEdgePoint1 to closest to otherEdgePoint2
+        boolean pocketIsCounterClockwise = GeometryOperations.leftTurnPredicate(otherEdgePoint1.getX(), otherEdgePoint1.getY(), closest.getX(), closest.getY(), otherEdgePoint2.getX(), otherEdgePoint2.getY());
+        System.out.println("pocketIsCounterClockwise: " + pocketIsCounterClockwise);
+        return null;
+    }
+
+    // ******************************************************************************************************************************** //
+    // Methods for initial computations (before task assignment)
+    // ******************************************************************************************************************************** //
+
     private Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> computeComponentBoundaries(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> separatingLines) {
         System.out.println("simplyConnectedComponents.size(): " + simplyConnectedComponents.size());
         ArrayList<ArrayList<Line>> boundaryLines = new ArrayList<>();
+        componentBoundaryEdges = new ArrayList<>();
         ArrayList<Shape> componentShapes = new ArrayList<>();
         ArrayList<Line> temp;
         ArrayList<DEdge> tempEdges;
@@ -589,13 +661,14 @@ public class DCREntity extends CentralisedEntity {
             for (DEdge de : tempEdges) {
                 if (tempEdges.indexOf(de) == tempEdges.lastIndexOf(de) || separatingLines.contains(de)) {
                     temp.add(new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY()));
-                    /*Line l = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
+                    /*Line l = new Line(de.getPointLeft().getEstX(), de.getPointLeft().getEstY(), de.getPointRight().getEstX(), de.getPointRight().getEstY());
                     l.setStroke(Color.BLUE);
                     l.setStrokeWidth(2);
                     Main.pane.getChildren().add(l);*/
                 }
             }
             boundaryLines.add(temp);
+            componentBoundaryEdges.add(tempEdges);
         }
         Polygon p;
         /*for (ArrayList<Line> arr : boundaryLines) {
@@ -629,10 +702,6 @@ public class DCREntity extends CentralisedEntity {
         return new Tuple<>(boundaryLines, componentShapes);
     }
 
-    // ******************************************************************************************************************************** //
-    // Methods for initial computations (before task assignment)
-    // ******************************************************************************************************************************** //
-
     private Tuple<ArrayList<Line>, ArrayList<DEdge>> computeGuardingLines(ArrayList<DTriangle> separatingTriangles, ArrayList<DEdge> nonSeparatingLines) {
         // for now its enough to just cover one side of each separating triangle because they are computed to have one edge adjacent to a polygon (i.e. they have degree 2 in the dual triangulation graph)
         ArrayList<Line> separatingLines = new ArrayList<>();
@@ -662,11 +731,12 @@ public class DCREntity extends CentralisedEntity {
             separatingEdges.add(minLengthEdge);
             reconnectingEdges.add(maxLengthEdge);
         }
-        return new Tuple<>(separatingLines, separatingEdges);
+        this.separatingEdges = separatingEdges;
+        return new Tuple<>(separatingLines, reconnectingEdges);
     }
 
     private Tuple<int[][], ArrayList<ArrayList<DTriangle>>> computeReconnectedAdjacency(ArrayList<DTriangle> triangles, ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> reconnectingEdges, int[][] disconnectedAdjacencyMatrix, ArrayList<DTriangle> separatingTriangles) {
-        int[][] reconnectedAdjacencyMatrix = disconnectedAdjacencyMatrix.clone();
+        int[][] reconnectedAdjacencyMatrix = new int[disconnectedAdjacencyMatrix.length][disconnectedAdjacencyMatrix.length];
         for (int i = 0; i < disconnectedAdjacencyMatrix.length; i++) {
             System.arraycopy(disconnectedAdjacencyMatrix[i], 0, reconnectedAdjacencyMatrix[i], 0, disconnectedAdjacencyMatrix.length);
         }
@@ -679,9 +749,9 @@ public class DCREntity extends CentralisedEntity {
         }
         int index1, index2, connectingTriangleIndex, reconnectingTriangleIndex;
         for (DEdge de : reconnectingEdges) {
-            index1 = -1;
-            index2 = -1;
-            for (int i = 0; i < triangles.size(); i++) {
+            index1 = triangles.indexOf(de.getLeft());
+            index2 = triangles.indexOf(de.getRight());
+            /*for (int i = 0; i < triangles.size(); i++) {
                 if (triangles.get(i).isEdgeOf(de)) {
                     if (index1 == -1) {
                         index1 = i;
@@ -689,7 +759,7 @@ public class DCREntity extends CentralisedEntity {
                         index2 = i;
                     }
                 }
-            }
+            }*/
             reconnectedAdjacencyMatrix[index1][index2] = 1;
             reconnectedAdjacencyMatrix[index2][index1] = 1;
 
@@ -921,9 +991,7 @@ public class DCREntity extends CentralisedEntity {
         //int[][] spanningTreeAdjacencyMatrix = originalAdjacencyMatrix.clone();
         int[][] spanningTreeAdjacencyMatrix = new int[nodes.size()][nodes.size()];
         for (int i = 0; i < originalAdjacencyMatrix.length; i++) {
-            for (int j = 0; j < originalAdjacencyMatrix[0].length; j++) {
-                spanningTreeAdjacencyMatrix[i][j] = originalAdjacencyMatrix[i][j];
-            }
+            System.arraycopy(originalAdjacencyMatrix[i], 0, spanningTreeAdjacencyMatrix[i], 0, originalAdjacencyMatrix[0].length);
         }
         for (DTriangle dt : separatingTriangles) {
             for (int i = 0; i < nodes.size(); i++) {

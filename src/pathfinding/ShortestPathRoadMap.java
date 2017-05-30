@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class ShortestPathRoadMap {
 
-    private static final boolean SHOW_ON_CANVAS = false;
+    public static boolean SHOW_ON_CANVAS = false;
     public static boolean drawLines = false;
 
     private MapRepresentation map;
@@ -34,7 +34,7 @@ public class ShortestPathRoadMap {
         init();
         /*ArrayList<Point2D> reflexVertices = findReflex(map);
         for (Point2D pv : reflexVertices) {
-            Circle circle = new Circle(pv.getX(), pv.getY(), 5, Color.CYAN);
+            Circle circle = new Circle(pv.getEstX(), pv.getEstY(), 5, Color.CYAN);
             Main.pane.getChildren().add(circle);
         }*/
     }
@@ -275,7 +275,7 @@ public class ShortestPathRoadMap {
                     }
 
                     /*System.out.println("Edge added between " + currentIndeces.get(j) + " and " + currentIndeces.get((j + 1) % currentIndeces.size()));
-                    System.out.printf("(%.3f|%.3f) and (%.3f|%.3f)\n", v1.getX(), v2.getX(), v2.getX(), v2.getY());
+                    System.out.printf("(%.3f|%.3f) and (%.3f|%.3f)\n", v1.getEstX(), v2.getEstX(), v2.getEstX(), v2.getEstY());
                     //System.out.println(shortestPathGraph.vertexSet().contains(v1) + " " + shortestPathGraph.vertexSet().contains(v2));
                     System.out.printf("Line from (%.3f|%.3f) to (%.3f|%.3f)\n", line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());*/
 
@@ -417,10 +417,10 @@ public class ShortestPathRoadMap {
                         double differenceSquared = Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2);
                         shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(source, pv), Math.sqrt(differenceSquared));
                         /*if (drawLines) {
-                            Line l = new Line(pv.getX(), pv.getY(), source.getX(), source.getY());
+                            Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
                             l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
                             Main.pane.getChildren().add(l);
-                            Main.pane.getChildren().add(new Circle(pv.getX(), pv.getY(), 1, Color.LIGHTBLUE));
+                            Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
                         }*/
                         if (Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2) < minDistance) {
                             minDistance = Math.pow(pv.getX() - source.getX(), 2) + Math.pow(pv.getY() - source.getY(), 2);
@@ -445,10 +445,10 @@ public class ShortestPathRoadMap {
                         double differenceSquared = Math.pow(pv.getX() - sink.getX(), 2) + Math.pow(pv.getY() - sink.getY(), 2);
                         shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(pv, sink), Math.sqrt(differenceSquared));
                         /*if (drawLines) {
-                            Line l = new Line(pv.getX(), pv.getY(), source.getX(), source.getY());
+                            Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
                             l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
                             Main.pane.getChildren().add(l);
-                            Main.pane.getChildren().add(new Circle(pv.getX(), pv.getY(), 1, Color.LIGHTBLUE));
+                            Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
                         }*/
                     }
                 }
@@ -474,17 +474,17 @@ public class ShortestPathRoadMap {
         } catch (NullPointerException e) {
             e.printStackTrace();
             /*System.out.println("graphPath: " + graphPath);
-            System.out.printf("Source: (%.3f|%.3f)\n", source.getX(), source.getY());
-            System.out.printf("Sink: (%.3f|%.3f)\n", sink.getX(), sink.getY());
+            System.out.printf("Source: (%.3f|%.3f)\n", source.getEstX(), source.getEstY());
+            System.out.printf("Sink: (%.3f|%.3f)\n", sink.getEstX(), sink.getEstY());
 
             for (Point2D vertex : shortestPathGraph.vertexSet()) {
-                Main.pane.getChildren().add(new Circle(vertex.getX(), vertex.getY(), 5, Color.CYAN));
+                Main.pane.getChildren().add(new Circle(vertex.getEstX(), vertex.getEstY(), 5, Color.CYAN));
             }
-            Main.pane.getChildren().add(new Circle(source.getX(), source.getY(), 3, Color.ORANGE));
-            Main.pane.getChildren().add(new Circle(sink.getX(), sink.getY(), 3, Color.ORANGE));
+            Main.pane.getChildren().add(new Circle(source.getEstX(), source.getEstY(), 3, Color.ORANGE));
+            Main.pane.getChildren().add(new Circle(sink.getEstX(), sink.getEstY(), 3, Color.ORANGE));
 
             for (DefaultWeightedEdge edge : shortestPathGraph.edgeSet()) {
-                Main.pane.getChildren().add(new Line(shortestPathGraph.getEdgeSource(edge).getX(), shortestPathGraph.getEdgeSource(edge).getY(), shortestPathGraph.getEdgeTarget(edge).getX(), shortestPathGraph.getEdgeTarget(edge).getY()));
+                Main.pane.getChildren().add(new Line(shortestPathGraph.getEdgeSource(edge).getEstX(), shortestPathGraph.getEdgeSource(edge).getEstY(), shortestPathGraph.getEdgeTarget(edge).getEstX(), shortestPathGraph.getEdgeTarget(edge).getEstY()));
             }*/
         }
 
@@ -578,15 +578,15 @@ public class ShortestPathRoadMap {
 /*
     *//*
         for (int i = 0; i < reflexPoints.size(); i++) {
-            if (map.isVisible(source.getX(), source.getY(), reflexPoints.get(i).getX(), reflexPoints.get(i).getY())) {
-                double differenceSquared = (reflexPoints.get(i).getX() - source.getX()) * (reflexPoints.get(i).getX() - source.getX()) + (reflexPoints.get(i).getY() - source.getY()) * (reflexPoints.get(i).getY() - source.getY());
+            if (map.isVisible(source.getEstX(), source.getEstY(), reflexPoints.get(i).getEstX(), reflexPoints.get(i).getEstY())) {
+                double differenceSquared = (reflexPoints.get(i).getEstX() - source.getEstX()) * (reflexPoints.get(i).getEstX() - source.getEstX()) + (reflexPoints.get(i).getEstY() - source.getEstY()) * (reflexPoints.get(i).getEstY() - source.getEstY());
                 // sightList.addEdge(source, reflexPoints.get(i));
                 sightList.setEdgeWeight(sightList.addEdge(sourceVertex, reflexPoints.get(i)), Math.sqrt(differenceSquared));
             }
         }
         for (int i = 0; i < reflexPoints.size(); i++) {
-            if (map.isVisible(sink.getX(), sink.getY(), reflexPoints.get(i).getX(), reflexPoints.get(i).getY())) {
-                double differenceSquared = (reflexPoints.get(i).getX() - sink.getX()) * (reflexPoints.get(i).getX() - sink.getX()) + (reflexPoints.get(i).getY() - sink.getY()) * (reflexPoints.get(i).getY() - sink.getY());
+            if (map.isVisible(sink.getEstX(), sink.getEstY(), reflexPoints.get(i).getEstX(), reflexPoints.get(i).getEstY())) {
+                double differenceSquared = (reflexPoints.get(i).getEstX() - sink.getEstX()) * (reflexPoints.get(i).getEstX() - sink.getEstX()) + (reflexPoints.get(i).getEstY() - sink.getEstY()) * (reflexPoints.get(i).getEstY() - sink.getEstY());
                 // sightList.addWeightedEdge(sink, reflexPoints.get(i), Math.sqrt(differenceSquared));
                 sightList.setEdgeWeight(sightList.addEdge(sinkVertex, reflexPoints.get(i)), Math.sqrt(differenceSquared));
             }
@@ -603,7 +603,7 @@ public class ShortestPathRoadMap {
         for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
             pv1 = (Point2D) graphPath.getVertexList().get(i);
             pv2 = (Point2D) graphPath.getVertexList().get(i + 1);
-            plannedPath.addLine(new Line(pv1.getX(), pv1.getY(), pv2.getX(), pv2.getY()));
+            plannedPath.addLine(new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY()));
         }*//*
         return plannedPath;
     }
@@ -701,10 +701,10 @@ public class ShortestPathRoadMap {
                     prevPoint = j == 0 ? currentPoints.get(currentPoints.size() - 1) : currentPoints.get(j - 1);
                     nextPoint = currentPoints.get((j + 1) % currentPoints.size());
 
-                    prevVectorX = currentPoints.get(j).getX() - prevPoint.getX();
-                    prevVectorY = currentPoints.get(j).getY() - prevPoint.getY();
-                    nextVectorX = currentPoints.get(j).getX() - nextPoint.getX();
-                    nextVectorY = currentPoints.get(j).getY() - nextPoint.getY();
+                    prevVectorX = currentPoints.get(j).getEstX() - prevPoint.getEstX();
+                    prevVectorY = currentPoints.get(j).getEstY() - prevPoint.getEstY();
+                    nextVectorX = currentPoints.get(j).getEstX() - nextPoint.getEstX();
+                    nextVectorY = currentPoints.get(j).getEstY() - nextPoint.getEstY();
 
                     // check if smallest rotation angle of first vector to second vector is positive or negative
                     // if it is positive, then the smallest rotation is clockwise
@@ -718,10 +718,10 @@ public class ShortestPathRoadMap {
                         reflexVertices.add(new Point2D(currentPoints.get(j)));
                         currentIndeces.add(j);
                     }
-                    //Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 10, Color.RED);
+                    //Circle circle = new Circle(currentPoints.get(j).getEstX(), currentPoints.get(j).getEstY(), 10, Color.RED);
                     Label label = new Label("" + check);
-                    label.setTranslateX(currentPoints.get(j).getX() + 5);
-                    label.setTranslateY(currentPoints.get(j).getY() + 5);
+                    label.setTranslateX(currentPoints.get(j).getEstX() + 5);
+                    label.setTranslateY(currentPoints.get(j).getEstY() + 5);
                     //Main.pane.getChildren().add(circle);
                     //Main.pane.getChildren().add(label);
                 }
@@ -731,10 +731,10 @@ public class ShortestPathRoadMap {
                     prevPoint = currentPoints.get((j + 1) % currentPoints.size());
                     nextPoint = j == 0 ? currentPoints.get(currentPoints.size() - 1) : currentPoints.get(j - 1);
 
-                    prevVectorX = currentPoints.get(j).getX() - prevPoint.getX();
-                    prevVectorY = currentPoints.get(j).getY() - prevPoint.getY();
-                    nextVectorX = currentPoints.get(j).getX() - nextPoint.getX();
-                    nextVectorY = currentPoints.get(j).getY() - nextPoint.getY();
+                    prevVectorX = currentPoints.get(j).getEstX() - prevPoint.getEstX();
+                    prevVectorY = currentPoints.get(j).getEstY() - prevPoint.getEstY();
+                    nextVectorX = currentPoints.get(j).getEstX() - nextPoint.getEstX();
+                    nextVectorY = currentPoints.get(j).getEstY() - nextPoint.getEstY();
 
                     // check if smallest rotation angle of first vector to second vector is positive or negative
                     // if it is positive, then the smallest rotation is clockwise
@@ -747,10 +747,10 @@ public class ShortestPathRoadMap {
                         reflexVertices.add(new Point2D(currentPoints.get(j)));
                         currentIndeces.add(j);
                     }
-                    //Circle circle = new Circle(currentPoints.get(j).getX(), currentPoints.get(j).getY(), 10, Color.RED);
+                    //Circle circle = new Circle(currentPoints.get(j).getEstX(), currentPoints.get(j).getEstY(), 10, Color.RED);
                     Label label = new Label("" + check);
-                    label.setTranslateX(currentPoints.get(j).getX() + 5);
-                    label.setTranslateY(currentPoints.get(j).getY() + 5);
+                    label.setTranslateX(currentPoints.get(j).getEstX() + 5);
+                    label.setTranslateY(currentPoints.get(j).getEstY() + 5);
                     //Main.pane.getChildren().add(circle);
                     //Main.pane.getChildren().add(label);
                 }
@@ -759,7 +759,7 @@ public class ShortestPathRoadMap {
                 // if the points are adjacent in the polygon, i.e. their indeces are one apart
                 if (Math.abs(currentIndeces.get(j) - currentIndeces.get((j + 1) % currentIndeces.size())) == 1) {
                     // add an edge between them
-                    Line line = new Line(reflexVertices.get(j).getX(), reflexVertices.get(j).getY(), reflexVertices.get((j + 1) % currentIndeces.size()).getX(), reflexVertices.get((j + 1) % currentIndeces.size()).getY());
+                    Line line = new Line(reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY(), reflexVertices.get((j + 1) % currentIndeces.size()).getEstX(), reflexVertices.get((j + 1) % currentIndeces.size()).getEstY());
                     line.setStroke(Color.BLUE);
                     line.setStrokeWidth(1);
                     Main.pane.getChildren().add(line);
@@ -792,17 +792,17 @@ public class ShortestPathRoadMap {
                     right = polygon.get(0);
 
                 }
-                //Line between= new Line(left.getX(),left.getY(), right.getX(),right.getY());
-                double x = (right.getX() - left.getX()) / 2;
-                double y = (right.getY() - left.getY()) / 2;
+                //Line between= new Line(left.getEstX(),left.getEstY(), right.getEstX(),right.getEstY());
+                double x = (right.getEstX() - left.getEstX()) / 2;
+                double y = (right.getEstY() - left.getEstY()) / 2;
 
-                Point2D mid = new Point2D(right.getX() - x, right.getY() - y);
+                Point2D mid = new Point2D(right.getEstX() - x, right.getEstY() - y);
 
                 Point2D main = polygon.get(j);
 
                 int count = 0;
-                Line between = new Line(mid.getX(), mid.getY(), main.getX(), main.getY());
-                boolean legal = map.legalPosition(mid.getX(), mid.getY());
+                Line between = new Line(mid.getEstX(), mid.getEstY(), main.getEstX(), main.getEstY());
+                boolean legal = map.legalPosition(mid.getEstX(), mid.getEstY());
                 count = allIntersect(polygons, between).size();
 
                 if (count % 2 == 0 && !legal) {
@@ -814,7 +814,7 @@ public class ShortestPathRoadMap {
                     reflexIndex++;
                 }
 
-                //map.legalPosition(mid.getX(),mid.getY());
+                //map.legalPosition(mid.getEstX(),mid.getEstY());
 
 
 
@@ -852,8 +852,8 @@ STILL TODO
                 }
 
                 *//**//*
-                double leftvector = Math.toDegrees(Math.atan2(left.getX() - polygon.get(j).getX(), left.getY() - polygon.get(j).getY()));
-                double rightvector = Math.toDegrees(Math.atan2(right.getX() - polygon.get(j).getX(), right.getY() - polygon.get(j).getY()));
+                double leftvector = Math.toDegrees(Math.atan2(left.getEstX() - polygon.get(j).getEstX(), left.getEstY() - polygon.get(j).getEstY()));
+                double rightvector = Math.toDegrees(Math.atan2(right.getEstX() - polygon.get(j).getEstX(), right.getEstY() - polygon.get(j).getEstY()));
 
                 if (rightvector < 0) {
                     rightvector += 360;
@@ -885,39 +885,39 @@ STILL TODO
             //for (int j = 9; j >= i; j--) {
             for (int j = reflexVertices.size() - 1; j >= i; j--) {
                 if (i != j) {
-                    if (map.isVisible(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY())) {
-                        System.out.printf("Visibility between (%.2f|%.2f) and (%.2f|%.2f)\n", reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
+                    if (map.isVisible(reflexVertices.get(i).getEstX(), reflexVertices.get(i).getEstY(), reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY())) {
+                        System.out.printf("Visibility between (%.2f|%.2f) and (%.2f|%.2f)\n", reflexVertices.get(i).getEstX(), reflexVertices.get(i).getEstY(), reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY());
 
-                        angle = Math.toDegrees(Math.atan2(reflexVertices.get(i).getY() - reflexVertices.get(j).getY(), reflexVertices.get(i).getX() - reflexVertices.get(j).getX()));
+                        angle = Math.toDegrees(Math.atan2(reflexVertices.get(i).getEstY() - reflexVertices.get(j).getEstY(), reflexVertices.get(i).getEstX() - reflexVertices.get(j).getEstX()));
                         Point2D above, below, inside1, inside2;
-                        above = new Point2D(reflexVertices.get(i).getX() + eps, reflexVertices.get(i).getY() + eps * angle);
-                        below = new Point2D(reflexVertices.get(j).getX() - eps, reflexVertices.get(j).getY() - eps * angle);
-                        inside1 = new Point2D(reflexVertices.get(i).getX() - eps, reflexVertices.get(i).getY() - eps * angle);
-                        inside2 = new Point2D(reflexVertices.get(j).getX() + eps, reflexVertices.get(j).getY() + eps * angle);
+                        above = new Point2D(reflexVertices.get(i).getEstX() + eps, reflexVertices.get(i).getEstY() + eps * angle);
+                        below = new Point2D(reflexVertices.get(j).getEstX() - eps, reflexVertices.get(j).getEstY() - eps * angle);
+                        inside1 = new Point2D(reflexVertices.get(i).getEstX() - eps, reflexVertices.get(i).getEstY() - eps * angle);
+                        inside2 = new Point2D(reflexVertices.get(j).getEstX() + eps, reflexVertices.get(j).getEstY() + eps * angle);
 
-                        double xDiff = (reflexVertices.get(i).getX() - reflexVertices.get(j).getX());
-                        double yDiff = (reflexVertices.get(i).getY() - reflexVertices.get(j).getY());
+                        double xDiff = (reflexVertices.get(i).getEstX() - reflexVertices.get(j).getEstX());
+                        double yDiff = (reflexVertices.get(i).getEstY() - reflexVertices.get(j).getEstY());
                         double length = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
                         xDiff /= length;
                         yDiff /= length;
                         xDiff *= eps;
                         yDiff *= eps;
-                        inside1 = new Point2D(reflexVertices.get(i).getX() + xDiff, reflexVertices.get(i).getY() + yDiff);
-                        inside2 = new Point2D(reflexVertices.get(j).getX() - xDiff, reflexVertices.get(j).getY() - yDiff);
-                        //if (map.legalPosition(above.getX(), above.getY()) && map.legalPosition(below.getX(), below.getY()) && map.legalPosition(inside1.getX(), inside1.getY()) && map.legalPosition(inside2.getX(), inside2.getY())) {
-                        if (map.legalPosition(inside1.getX(), inside1.getY()) && map.legalPosition(inside2.getX(), inside2.getY())) {
+                        inside1 = new Point2D(reflexVertices.get(i).getEstX() + xDiff, reflexVertices.get(i).getEstY() + yDiff);
+                        inside2 = new Point2D(reflexVertices.get(j).getEstX() - xDiff, reflexVertices.get(j).getEstY() - yDiff);
+                        //if (map.legalPosition(above.getEstX(), above.getEstY()) && map.legalPosition(below.getEstX(), below.getEstY()) && map.legalPosition(inside1.getEstX(), inside1.getEstY()) && map.legalPosition(inside2.getEstX(), inside2.getEstY())) {
+                        if (map.legalPosition(inside1.getEstX(), inside1.getEstY()) && map.legalPosition(inside2.getEstX(), inside2.getEstY())) {
                             Point2D v1 = reflexVertices.get(i);
                             Point2D v2 = reflexVertices.get(j);
 
                             graph1.addVertex(v1);
                             graph1.addVertex(v2);
 
-                            double differenceSquare = (reflexVertices.get(i).getX() - reflexVertices.get(j).getX()) * (reflexVertices.get(i).getX() - reflexVertices.get(j).getX()) + (reflexVertices.get(i).getY() - reflexVertices.get(j).getY()) * (reflexVertices.get(i).getY() - reflexVertices.get(j).getY());
+                            double differenceSquare = (reflexVertices.get(i).getEstX() - reflexVertices.get(j).getEstX()) * (reflexVertices.get(i).getEstX() - reflexVertices.get(j).getEstX()) + (reflexVertices.get(i).getEstY() - reflexVertices.get(j).getEstY()) * (reflexVertices.get(i).getEstY() - reflexVertices.get(j).getEstY());
                             // graph1.addWeightedEdge(v1, v2, Math.sqrt(differenceSquare));
 
                             graph1.setEdgeWeight(graph1.addEdge(v1, v2), Math.sqrt(differenceSquare));
 
-                            Line line = new Line(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY());
+                            Line line = new Line(reflexVertices.get(i).getEstX(), reflexVertices.get(i).getEstY(), reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY());
                             line.setStroke(Color.BLUE);
                             line.setStrokeWidth(1);
                             Main.pane.getChildren().add(line);
@@ -944,15 +944,15 @@ STILL TODO
         }
 
         for (int i = 0; i < reflexPoints.size(); i++) {
-            if (map.isVisible(source.getX(), source.getY(), reflexPoints.get(i).getX(), reflexPoints.get(i).getY())) {
-                double differenceSquared = (reflexPoints.get(i).getX() - source.getX()) * (reflexPoints.get(i).getX() - source.getX()) + (reflexPoints.get(i).getY() - source.getY()) * (reflexPoints.get(i).getY() - source.getY());
+            if (map.isVisible(source.getEstX(), source.getEstY(), reflexPoints.get(i).getEstX(), reflexPoints.get(i).getEstY())) {
+                double differenceSquared = (reflexPoints.get(i).getEstX() - source.getEstX()) * (reflexPoints.get(i).getEstX() - source.getEstX()) + (reflexPoints.get(i).getEstY() - source.getEstY()) * (reflexPoints.get(i).getEstY() - source.getEstY());
                 // sightList.addEdge(source, reflexPoints.get(i));
                 sightList.setEdgeWeight(sightList.addEdge(sourceVertex, reflexPoints.get(i)), Math.sqrt(differenceSquared));
             }
         }
         for (int i = 0; i < reflexPoints.size(); i++) {
-            if (map.isVisible(sink.getX(), sink.getY(), reflexPoints.get(i).getX(), reflexPoints.get(i).getY())) {
-                double differenceSquared = (reflexPoints.get(i).getX() - sink.getX()) * (reflexPoints.get(i).getX() - sink.getX()) + (reflexPoints.get(i).getY() - sink.getY()) * (reflexPoints.get(i).getY() - sink.getY());
+            if (map.isVisible(sink.getEstX(), sink.getEstY(), reflexPoints.get(i).getEstX(), reflexPoints.get(i).getEstY())) {
+                double differenceSquared = (reflexPoints.get(i).getEstX() - sink.getEstX()) * (reflexPoints.get(i).getEstX() - sink.getEstX()) + (reflexPoints.get(i).getEstY() - sink.getEstY()) * (reflexPoints.get(i).getEstY() - sink.getEstY());
                 // sightList.addWeightedEdge(sink, reflexPoints.get(i), Math.sqrt(differenceSquared));
                 sightList.setEdgeWeight(sightList.addEdge(sinkVertex, reflexPoints.get(i)), Math.sqrt(differenceSquared));
             }

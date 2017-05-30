@@ -179,7 +179,7 @@ public class ShadowGraph {
                 adj = getAdjacentPoints(tmpPoint, allPolygons);
 
                 /*
-                if((tmpPoint.getX() == 450 && tmpPoint.getY() == 632) || (tmpPoint.getX() == 177 && tmpPoint.getY() == 619))    {
+                if((tmpPoint.getEstX() == 450 && tmpPoint.getEstY() == 632) || (tmpPoint.getEstX() == 177 && tmpPoint.getEstY() == 619))    {
                     System.out.println("For: " + tmpPoint + "\tAdjacent: " + adj);
                 }
                 */
@@ -516,7 +516,7 @@ public class ShadowGraph {
             if (tmp.getType() == 2) {
                 //System.out.println(tmp.getPosition());
                 newL = new Line(tmp.getPosition().getX(), tmp.getPosition().getY(), agents.get(0).getX(), agents.get(0).getY());
-                //System.out.println("Visible? => " + isVisible(tmp.getPosition().getX(), tmp.getPosition().getY(), agents.get(0).getX(), agents.get(0).getY(),polygonEdges));
+                //System.out.println("Visible? => " + isVisible(tmp.getPosition().getEstX(), tmp.getPosition().getEstY(), agents.get(0).getEstX(), agents.get(0).getEstY(),polygonEdges));
             }
 
             if (tmp.getPosition().getX() < minX) {
@@ -1072,7 +1072,7 @@ public class ShadowGraph {
             l2 = 238;
             r1 = 359;
             r2 = 232;
-            Polygon polygon = new Polygon(currentPoint.getX(), currentPoint.getY(), l1, l2, r1, r2);
+            Polygon polygon = new Polygon(currentPoint.getEstX(), currentPoint.getEstY(), l1, l2, r1, r2);
             */
             Polygon polygon = new Polygon(currentPoint.getX(),
                     currentPoint.getY(),
@@ -1245,7 +1245,7 @@ public class ShadowGraph {
         for(int i = 0; i < Nodes.size() - 1; i++)   {
             tNode = Nodes.get(i);
             if(tNode.getRight() != null && tNode.getRight().getType() == 2)   {
-                tLine = new Line(tNode.getPosition().getX(),tNode.getPosition().getY(), tNode.getRight().getPosition().getX(),tNode.getRight().getPosition().getY());
+                tLine = new Line(tNode.getPosition().getEstX(),tNode.getPosition().getEstY(), tNode.getRight().getPosition().getEstX(),tNode.getRight().getPosition().getEstY());
                 if(onLine(t3, tLine))   {
                     System.out.println("Entered 1\n T3 = " + t3 + "\nPREV: " + tNode + "\nNEXT: " + t2 + "\n");
                     newNode = new ShadowNode(t3, t2, tNode, true);
@@ -1253,7 +1253,7 @@ public class ShadowGraph {
                 }
             }
             else if(tNode.getLeft() != null && tNode.getLeft().getType() == 2)    {
-                tLine = new Line(tNode.getPosition().getX(),tNode.getPosition().getY(), tNode.getLeft().getPosition().getX(),tNode.getLeft().getPosition().getY());
+                tLine = new Line(tNode.getPosition().getEstX(),tNode.getPosition().getEstY(), tNode.getLeft().getPosition().getEstX(),tNode.getLeft().getPosition().getEstY());
                 if(onLine(t3, tLine))   {
                     System.out.println("Entered 2");
                     newNode = new ShadowNode(t3, tNode, t2, true);
@@ -1330,7 +1330,7 @@ public class ShadowGraph {
         for (int i = 0; i < pointy.size(); i++) {
             //find its neighbours left and right.
             //create ray from neigbour to it and extend
-            // Line ray= new Line(pointy.get(i).getX(),pointy.get(i).getY(),)
+            // Line ray= new Line(pointy.get(i).getEstX(),pointy.get(i).getEstY(),)
             // rays.add(ray)
             //check any intersections and set them as points
             //then find any midpoints between the pointy and first intersection

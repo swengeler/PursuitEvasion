@@ -459,7 +459,7 @@ public class shadowOperations {
                     right = polygon.get(0);
                 }
 
-                //Line between= new Line(left.getX(),left.getY(), right.getX(),right.getY());
+                //Line between= new Line(left.getEstX(),left.getEstY(), right.getEstX(),right.getEstY());
 
                 double x = (right.getX() - left.getX()) / 2;
                 double y = (right.getY() - left.getY()) / 2;
@@ -469,9 +469,9 @@ public class shadowOperations {
 
                 Point2D main = polygon.get(j);
                 /*
-                System.out.println("right x = " + right.getX() + " left x = " + left.getX() + " x = " + (right.getX()-x));
-                System.out.println("right y = " + right.getY() + " left y = " + left.getY() + " y = " + (right.getY()-y));
-                System.out.println("x coord = " + mid.getX() +" y coord = " + mid.getY() );
+                System.out.println("right x = " + right.getEstX() + " left x = " + left.getEstX() + " x = " + (right.getEstX()-x));
+                System.out.println("right y = " + right.getEstY() + " left y = " + left.getEstY() + " y = " + (right.getEstY()-y));
+                System.out.println("x coord = " + mid.getEstX() +" y coord = " + mid.getEstY() );
                 */
 
                 int count = 0;

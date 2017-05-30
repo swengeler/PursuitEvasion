@@ -51,8 +51,9 @@ public class TraversalHandler {
         this.nodess = nodes;
         this.components = components;
         this.adjacencyMatrix = adjacencyMatrix;
+
         for (int i = 0; i < adjacencyMatrix.length; i++) {
-            for (int j = 0; j < adjacencyMatrix[0].length; j++) {
+            for (int j = 0; j < adjacencyMatrix.length; j++) {
                 System.out.print(adjacencyMatrix[i][j] + " ");
             }
             System.out.println();
@@ -62,6 +63,13 @@ public class TraversalHandler {
     public void separatingTriangleBased(ArrayList<DTriangle> separatingTriangles) {
         this.separatingTriangles = separatingTriangles;
         restrictedShortestPathRoadMap = new ShortestPathRoadMap(shortestPathRoadMap.getMap(), separatingTriangles);
+    }
+
+    public void separatingLineBased(ArrayList<Line> separatingLines, ArrayList<ArrayList<DTriangle>> reconnectedComponents, int[][] reconnectedAdjacencyMatrix) {
+        this.separatingLines = separatingLines;
+        this.components = reconnectedComponents;
+        this.adjacencyMatrix = reconnectedAdjacencyMatrix;
+        restrictedShortestPathRoadMap = new ShortestPathRoadMap(separatingLines, shortestPathRoadMap.getMap());
     }
 
     public void separatingLineBased(ArrayList<Line> separatingLines) {
@@ -142,6 +150,14 @@ public class TraversalHandler {
         return components;
     }
 
+    public ArrayList<DTriangle> getTriangles() {
+        return nodess;
+    }
+
+    public int[][] getAdjacencyMatrix() {
+        return adjacencyMatrix;
+    }
+
     public TGNode getLeaf() {
         for (int i = 0; i < adjacencyMatrix.length; i++) {
             int count = 0;
@@ -152,7 +168,7 @@ public class TraversalHandler {
             }
             if (count == 1) {
                 /*try {
-                    System.out.println("\nReturning leaf of simply connected tree - Index: " + i + ", Middle: (" + nodes.get(i).getTriangle().getBarycenter().getX() + "|" + nodes.get(i).getTriangle().getBarycenter().getY() + ")");
+                    System.out.println("\nReturning leaf of simply connected tree - Index: " + i + ", Middle: (" + nodes.get(i).getTriangle().getBarycenter().getEstX() + "|" + nodes.get(i).getTriangle().getBarycenter().getEstY() + ")");
                 } catch (DelaunayError e) {
                     e.printStackTrace();
                 }*/
@@ -317,7 +333,7 @@ public class TraversalHandler {
             currentIndex = rng.sample(); // needs proper probability distribution
             childIndeces.clear();
         }
-        //PlannedPath plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getX(), nodess.get(currentIndex).getBarycenter().getY()));
+        //PlannedPath plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getEstX(), nodess.get(currentIndex).getBarycenter().getEstY()));
         PlannedPath plannedPath;
         if (!inComponentLeaf) {
             plannedPath = restrictedShortestPathRoadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
