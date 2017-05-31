@@ -2373,9 +2373,6 @@ public class Main extends Application {
                                     va.getAgentBody().setFill(Color.DARKVIOLET);
                                     visualAgents.add(va);
                                     pane.getChildren().add(va);
-
-
-                                    map.getPursuingEntities().add(null);
                                 }
 
                                 //for centralised entities we can use startsWith() ?
