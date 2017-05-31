@@ -4,14 +4,18 @@ import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 
 import java.util.ArrayList;
 
 public class TestEntity extends DistributedEntity {
 
-    private PlannedPath currentPath;
-    private int pathCounter;
+    private static PlannedPath currentPath;
+    private static int pathCounter;
+    private static ShortestPathRoadMap sprm;
+    private static Agent controlledAgent;
+    private static MapRepresentation mapThing;
 
     //private double targetX = 110.0, targetY = 317.0; // default for searcher_catcher_test_2: 111.0, 317.0
     public static double targetX, targetY;
@@ -20,23 +24,34 @@ public class TestEntity extends DistributedEntity {
         super(map);
         targetX = map.getBorderPolygon().getPoints().get(0);
         targetY = map.getBorderPolygon().getPoints().get(1);
+        sprm = new ShortestPathRoadMap(map);
+        mapThing = map;
     }
 
     public TestEntity(MapRepresentation map, double targetX, double targetY) {
         super(map);
         TestEntity.targetX = targetX;
         TestEntity.targetY = targetY;
+        sprm = new ShortestPathRoadMap(map);
+        mapThing = map;
+    }
+
+    public static void setTargetLocation(double x, double y) {
+        if (mapThing.legalPosition(x, y)) {
+            currentPath = sprm.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), x, y);
+            pathCounter = 0;
+        }
     }
 
     @Override
     public void move() {
         // check if any agent is caught
-        if (currentPath == null) {
+        /*if (currentPath == null) {
             for (Entity e : map.getPursuingEntities()) {
                 for (Agent a : e.getControlledAgents()) {
                     if (map.isVisible(a, controlledAgent)) {
                         // find point in polygon to go to
-                        /*double maxVertexDistance = -Double.MAX_VALUE;
+                        *//*double maxVertexDistance = -Double.MAX_VALUE;
                         PlannedPath maxDistancePath = null, temp;
                         for (Point2D p : getPolygonPoints()) {
                             temp = shortestPathRoadMap.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), p);
@@ -53,14 +68,14 @@ public class TestEntity extends DistributedEntity {
                                 maxDistancePath = temp;
                             }
                         }
-                        if (maxDistancePath != null) {*/
+                        if (maxDistancePath != null) {*//*
                         currentPath = shortestPathRoadMap.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), new Point2D(targetX, targetY));
                         pathCounter = 0;
                         //}
                     }
                 }
             }
-        }
+        }*/
 
         if (currentPath != null) {
             ArrayList<Line> pathLines = currentPath.getPathLines();
@@ -80,6 +95,23 @@ public class TestEntity extends DistributedEntity {
                 }
             }
         }
+    }
+
+    @Override
+    public void setAgent(Agent a) {
+        controlledAgent = a;
+    }
+
+    @Override
+    public boolean isActive() {
+        return controlledAgent.isActive();
+    }
+
+    @Override
+    public ArrayList<Agent> getControlledAgents() {
+        ArrayList<Agent> result = new ArrayList<>();
+        result.add(controlledAgent);
+        return result;
     }
 
     private ArrayList<Point2D> getPolygonPoints() {

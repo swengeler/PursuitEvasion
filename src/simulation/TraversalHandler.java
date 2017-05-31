@@ -168,6 +168,10 @@ public class TraversalHandler {
         this.pocketAdjacencyMatrix = pocketAdjacencyMatrix;
     }
 
+    public void removeRestriction() {
+        restrictToPocket = false;
+    }
+
     public TGNode getLeaf() {
         for (int i = 0; i < adjacencyMatrix.length; i++) {
             int count = 0;

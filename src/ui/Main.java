@@ -2173,8 +2173,7 @@ public class Main extends Application {
                 return;
             }
             if (e.getButton() == MouseButton.MIDDLE) {
-                TestEntity.targetX = e.getX();
-                TestEntity.targetY = e.getY();
+                TestEntity.setTargetLocation(e.getX(), e.getY());
             }
             if (e.getButton() == MouseButton.PRIMARY) {
                 if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {

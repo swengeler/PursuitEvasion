@@ -305,7 +305,7 @@ public class DCREntity extends CentralisedEntity {
                     System.out.println("Evader still visible: " + map.isVisible(searcher, target));
                 }
 
-                Main.pane.getChildren().add(new Circle(searcher.getXPos(), searcher.getYPos(), 1, Color.FUCHSIA));
+                Main.pane.getChildren().add(new Circle(catcher.getXPos(), catcher.getYPos(), 1, Color.FUCHSIA));
 
                 // move catcher
                 pathLines = currentCatcherPath.getPathLines();
@@ -394,11 +394,19 @@ public class DCREntity extends CentralisedEntity {
             //    -> could check which triangles the line cuts through and don't allow movement beyond them
             // b) turning the searcher back when it tries to cross the line
 
-
             if (map.isVisible(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos())) {
                 pseudoBlockingVertex = null;
                 currentStage = Stage.FOLLOW_TARGET;
             } else {
+                if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
+                    try {
+                        currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                    } catch (DelaunayError e) {
+                        e.printStackTrace();
+                    }
+                    searcherPathLineCounter = 0;
+                }
+
                 pathLines = currentSearcherPath.getPathLines();
                 if (!(searcher.getXPos() == currentSearcherPath.getEndX() && searcher.getYPos() == currentSearcherPath.getEndY())) {
                     length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
@@ -449,8 +457,10 @@ public class DCREntity extends CentralisedEntity {
                             pocketBoundaryEndPoint = currentPoint;
                         }
                     }
-                    Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), catcher.getXPos(), catcher.getYPos());
-                    Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY());
+                    Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
+                    Main.pane.getChildren().add(boundaryLine);
+                    Main.pane.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 6, Color.BLACK));
+                    Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
                     traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond());
 
                     Main.pane.getChildren().add(new Circle(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), 4, Color.BLUEVIOLET));
@@ -459,6 +469,8 @@ public class DCREntity extends CentralisedEntity {
                     currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
                     searcherPathLineCounter = 0;
                     catcherPathLineCounter = 0;
+
+                    currentStage = Stage.FOLLOW_TARGET;
                 }
             }
         }
@@ -657,7 +669,7 @@ public class DCREntity extends CentralisedEntity {
         //requiredAgents = 2;
     }
 
-    private Tuple<ArrayList<DTriangle>, int[][]> findPocketComponent(Line boundaryLine, int componentIndex, double catcherVertX, double catcherVertY) {
+    private Tuple<ArrayList<DTriangle>, int[][]> findPocketComponent(Line boundaryLine, int componentIndex, double pseudoBlockingVertX, double pseudoBlockingVertY) {
         // go through all triangles of the current component and find those intersecting the boundary line
         // start to find the rest of the triangles of the pocket component using adjacency matrices
         // if a triangle is adjacent to one of the intersected triangles, test whether the edge connecting them
@@ -668,7 +680,7 @@ public class DCREntity extends CentralisedEntity {
         double deltaY = (boundaryLine.getStartY() - boundaryLine.getEndY()) / length * 0.001;
         DPoint approxPosition = null;
         try {
-            approxPosition = new DPoint(catcherVertX + deltaX, catcherVertY + deltaY, 0);
+            approxPosition = new DPoint(pseudoBlockingVertX + deltaX, pseudoBlockingVertY + deltaY, 0);
         } catch (DelaunayError e) {
             e.printStackTrace();
         }
@@ -680,7 +692,7 @@ public class DCREntity extends CentralisedEntity {
         outer:
         for (DTriangle dt : traversalHandler.getComponents().get(componentIndex)) {
             for (DPoint dp : dt.getPoints()) {
-                if (dp.getX() == catcherVertX && dp.getY() == catcherVertY) {
+                if (dp.getX() == pseudoBlockingVertX && dp.getY() == pseudoBlockingVertY) {
                     currentPoint = dp;
                     break outer;
                 }
@@ -814,7 +826,9 @@ public class DCREntity extends CentralisedEntity {
 
         for (DTriangle dt1 : pbtClone) {
             for (DTriangle dt2 : pbtClone) {
-                if (dt1 != dt2 && (dt1.getEdge(0).getOtherTriangle(dt1).equals(dt2) || dt1.getEdge(1).getOtherTriangle(dt1).equals(dt2) || dt1.getEdge(2).getOtherTriangle(dt1).equals(dt2))) {
+                System.out.println("dt1: " + dt1 + "\ndt2: " + dt2 + "\ndt1.getEdge(0).getOtherTriangle(dt1): " + dt1.getEdge(0).getOtherTriangle(dt1) + "\ndt1.getEdge(1).getOtherTriangle(dt1): " + dt1.getEdge(1).getOtherTriangle(dt1) + "\ndt1.getEdge(2).getOtherTriangle(dt1): " + dt1.getEdge(2).getOtherTriangle(dt1));
+                if (dt1 != dt2 && ((dt1.getEdge(0).getOtherTriangle(dt1) != null && dt1.getEdge(0).getOtherTriangle(dt1).equals(dt2)) ||
+                        (dt1.getEdge(1).getOtherTriangle(dt1) != null && dt1.getEdge(1).getOtherTriangle(dt1).equals(dt2)) || (dt1.getEdge(2).getOtherTriangle(dt1) != null && dt1.getEdge(2).getOtherTriangle(dt1).equals(dt2)))) {
                     pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt1)][traversalHandler.getTriangles().indexOf(dt2)] = 1;
                     pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt2)][traversalHandler.getTriangles().indexOf(dt1)] = 1;
                 }
