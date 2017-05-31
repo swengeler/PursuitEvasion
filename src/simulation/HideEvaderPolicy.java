@@ -16,13 +16,14 @@ public class HideEvaderPolicy extends MovePolicy {
 
     //somehow take evader position into account
     //important such that it doesn't make dumb moves but also such that this policy can be ran for multiple evaders (otherwise they all go to the same point)
-    //add separation force
     //only recompute every XX timestep
+    //class needs to be refactored
 
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
 
+    private final static int separationDistance = 125;
     ArrayList<Line> pathLines;
     int i = 0;
 
@@ -83,16 +84,6 @@ public class HideEvaderPolicy extends MovePolicy {
 
         pathLines = currentPath.getPathLines();
 
-        if ((i > (pathLines.size() - 1))) {
-            return new Move(0, 0, 0);
-        }
-
-        Move result;
-        double length = Math.sqrt(Math.pow(pathLines.get(i).getEndX() - pathLines.get(i).getStartX(), 2) + Math.pow(pathLines.get(i).getEndY() - pathLines.get(i).getStartY(), 2));
-        double deltaX = (pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length * getSingleAgent().getSpeed() / 50;
-        double deltaY = (pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length * getSingleAgent().getSpeed() / 50;
-
-
         //separation to be done here
 
         int numberOfSeparationPursuers = 0;
@@ -103,7 +94,7 @@ public class HideEvaderPolicy extends MovePolicy {
 
             if (pursuer.isPursuer()) {
                 double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
-                if (dist <= 100) {
+                if (dist <= separationDistance) {
                     separationDeltaX += (pursuer.getXPos() - evader.getXPos());
                     separationDeltaY += (pursuer.getYPos() - evader.getYPos());
                     numberOfSeparationPursuers++;
@@ -114,26 +105,34 @@ public class HideEvaderPolicy extends MovePolicy {
 
         if (numberOfSeparationPursuers != 0) {
             //if there are seperation pursuers, do further calculations (normalizing, reversing (180 degrees))
-
             System.out.println("should separate");
 
             separationDeltaX = -separationDeltaX / numberOfSeparationPursuers;
             separationDeltaY = -separationDeltaY / numberOfSeparationPursuers;
 
-
-            double dlength = Math.sqrt(Math.pow(separationDeltaX, 2) + Math.pow(separationDeltaY, 2));
-            separationDeltaX /= dlength;
-            separationDeltaY /= dlength;
-
-            separationDeltaX *= evader.getSpeed() * 1 / 250;
-            separationDeltaY *= evader.getSpeed() * 1 / 250;
-
         }
 
-        //how to actually connect deltaX & separationdeltaX ?
+        if (separationDeltaX != 0 || separationDeltaY != 0) {
+            if (map.legalPosition(getSingleAgent().getXPos() + separationDeltaX, getSingleAgent().getYPos() + separationDeltaY)) {
+                double dlength = Math.sqrt(Math.pow(separationDeltaX, 2) + Math.pow(separationDeltaY, 2));
+                separationDeltaX /= dlength;
+                separationDeltaY /= dlength;
+                ctarget = null;
+                return new Move(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50, 0);
+            } else {
+                //perhaps stand still here?
+                System.out.println("illegal separation");
+            }
+        }
 
-        //deltaX = deltaX + separationDeltaX;
-        //deltaY = deltaY + separationDeltaY;
+        if ((i > (pathLines.size() - 1))) {
+            return new Move(0, 0, 0);
+        }
+
+        Move result;
+        double length = Math.sqrt(Math.pow(pathLines.get(i).getEndX() - pathLines.get(i).getStartX(), 2) + Math.pow(pathLines.get(i).getEndY() - pathLines.get(i).getStartY(), 2));
+        double deltaX = (pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length * getSingleAgent().getSpeed() / 50;
+        double deltaY = (pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length * getSingleAgent().getSpeed() / 50;
 
         if (pathLines.get(i).contains(evader.getXPos() + deltaX, evader.getYPos() + deltaY)) {
             result = new Move(deltaX, deltaY, 0);
@@ -217,7 +216,6 @@ public class HideEvaderPolicy extends MovePolicy {
             }
         }
 
-        //System.out.println("BEST POINT IS " + target.getEstX() + ":" + target.getEstY() + " | " + s);
         return target;
     }
 
