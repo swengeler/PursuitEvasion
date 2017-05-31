@@ -16,13 +16,15 @@ public class HideEvaderPolicy extends MovePolicy {
 
     //somehow take evader position into account
     //important such that it doesn't make dumb moves but also such that this policy can be ran for multiple evaders (otherwise they all go to the same point)
-    //add separation force
     //only recompute every XX timestep
+    //not working perfectly yet (probably has to do with illegal separation stuff)
+    //perhaps only separate when 'visible'?
 
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
 
+    private final static int separationDistance = 100;
     ArrayList<Line> pathLines;
     int i = 0;
 
@@ -45,11 +47,14 @@ public class HideEvaderPolicy extends MovePolicy {
         Agent evader = getSingleAgent();
         Point2D target = null;
 
+        int numberOfSeparationPursuers = 0;
+        double separationDeltaX = 0;
+        double separationDeltaY = 0;
+
         for (Agent pursuer : agents) {
             if (pursuer.isPursuer()) {
 
                 ArrayList<PointData> pursuerPointData = new ArrayList<>();
-
                 for (Point2D midpoint : polygonMidpoints) {
 
                     PlannedPath shortestPath = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
@@ -63,11 +68,30 @@ public class HideEvaderPolicy extends MovePolicy {
 
                 allPursuerData.add(pursuerPointData);
 
+                double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
+                if (dist <= separationDistance) {
+                    separationDeltaX += (pursuer.getXPos() - evader.getXPos());
+                    separationDeltaY += (pursuer.getYPos() - evader.getYPos());
+                    numberOfSeparationPursuers++;
+                }
+
             }
 
         }
 
-        target = getMin(allPursuerData, 2);
+        if (numberOfSeparationPursuers != 0) {
+            //if there are seperation pursuers, do further calculations (normalizing, reversing (180 degrees))
+            System.out.println("should separate");
+
+            separationDeltaX = -separationDeltaX / numberOfSeparationPursuers;
+            separationDeltaY = -separationDeltaY / numberOfSeparationPursuers;
+
+            double dlength = Math.sqrt(Math.pow(separationDeltaX, 2) + Math.pow(separationDeltaY, 2));
+            separationDeltaX /= dlength;
+            separationDeltaY /= dlength;
+        }
+
+        target = getMin(allPursuerData);
 
         if (target != null) {
             if (ctarget == null) {
@@ -83,6 +107,16 @@ public class HideEvaderPolicy extends MovePolicy {
 
         pathLines = currentPath.getPathLines();
 
+        if (separationDeltaX != 0 || separationDeltaY != 0) {
+            if (map.legalPosition(getSingleAgent().getXPos() + separationDeltaX * evader.getSpeed() * 1/50, getSingleAgent().getYPos() + separationDeltaY * evader.getSpeed() * 1/50)) {
+                ctarget = null;
+                return new Move(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50, 0);
+            } else {
+                //perhaps stand still here?
+                System.out.println("illegal separation");
+            }
+        }
+
         if ((i > (pathLines.size() - 1))) {
             return new Move(0, 0, 0);
         }
@@ -91,49 +125,6 @@ public class HideEvaderPolicy extends MovePolicy {
         double length = Math.sqrt(Math.pow(pathLines.get(i).getEndX() - pathLines.get(i).getStartX(), 2) + Math.pow(pathLines.get(i).getEndY() - pathLines.get(i).getStartY(), 2));
         double deltaX = (pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length * getSingleAgent().getSpeed() / 50;
         double deltaY = (pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length * getSingleAgent().getSpeed() / 50;
-
-
-        //separation to be done here
-
-        int numberOfSeparationPursuers = 0;
-        double separationDeltaX = 0;
-        double separationDeltaY = 0;
-
-        for (Agent pursuer : agents) {
-
-            if (pursuer.isPursuer()) {
-                double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
-                if (dist <= 100) {
-                    separationDeltaX += (pursuer.getXPos() - evader.getXPos());
-                    separationDeltaY += (pursuer.getYPos() - evader.getYPos());
-                    numberOfSeparationPursuers++;
-                }
-            }
-
-        }
-
-        if (numberOfSeparationPursuers != 0) {
-            //if there are seperation pursuers, do further calculations (normalizing, reversing (180 degrees))
-
-            System.out.println("should separate");
-
-            separationDeltaX = -separationDeltaX / numberOfSeparationPursuers;
-            separationDeltaY = -separationDeltaY / numberOfSeparationPursuers;
-
-
-            double dlength = Math.sqrt(Math.pow(separationDeltaX, 2) + Math.pow(separationDeltaY, 2));
-            separationDeltaX /= dlength;
-            separationDeltaY /= dlength;
-
-            separationDeltaX *= evader.getSpeed() * 1 / 250;
-            separationDeltaY *= evader.getSpeed() * 1 / 250;
-
-        }
-
-        //how to actually connect deltaX & separationdeltaX ?
-
-        //deltaX = deltaX + separationDeltaX;
-        //deltaY = deltaY + separationDeltaY;
 
         if (pathLines.get(i).contains(evader.getXPos() + deltaX, evader.getYPos() + deltaY)) {
             result = new Move(deltaX, deltaY, 0);
@@ -146,78 +137,38 @@ public class HideEvaderPolicy extends MovePolicy {
     }
 
 
-    private Point2D getMin(ArrayList<ArrayList<PointData>> midpointData, int mode) {
+    private Point2D getMin(ArrayList<ArrayList<PointData>> midpointData) {
         Point2D target = null;
         double euclideanDistance = Double.MIN_VALUE;
         int numberOfVertices = Integer.MIN_VALUE;
-        String s = "";
 
-        if (midpointData.size() == 0) {
-            return null;
-        } else if (midpointData.size() == 1) {
-            ArrayList<PointData> pointData = midpointData.get(0);
-            for (PointData pd : pointData) {
-                if (mode == 0) {
-                    if (pd.getDistance() > euclideanDistance) {
-                        euclideanDistance = pd.getDistance();
-                        target = pd.getMidpoint();
-                        s = "EUCLIDEAN DIST";
-                    }
-                } else if (mode == 1) {
-                    if (pd.getNumOfVertices() > numberOfVertices) {
-                        numberOfVertices = pd.getNumOfVertices();
-                        target = pd.getMidpoint();
-                        s = "NUM OF VERTS";
-                    }
-                } else if (mode == 2) {
 
-                    //idea:
-                    //num of verts is more important, but if equal eucl distance determines
+        int numOfPursuers = midpointData.size();
+        int numOfMidpoints = midpointData.get(0).size();
 
-                    if (pd.getNumOfVertices() > numberOfVertices) {
-                        numberOfVertices = pd.getNumOfVertices();
-                        target = pd.getMidpoint();
-                        s = "NUM OF VERTS + DIST BKUP";
-                    } else if (pd.getNumOfVertices() == numberOfVertices) {
-                        if (pd.getDistance() > euclideanDistance) {
-                            euclideanDistance = pd.getDistance();
-                            target = pd.getMidpoint();
-                        }
-                    }
-                }
+        for (int i = 0; i < numOfMidpoints; i++) {
+            int tmpNumberOfVertices = 0;
+            double tmpEuclideanDistance = 0;
 
+            for (int j = 0; j < numOfPursuers; j++) {
+                int numOfVerts = midpointData.get(j).get(i).getNumOfVertices();
+                double distance = midpointData.get(j).get(i).getDistance();
+                tmpNumberOfVertices += numOfVerts;
+                tmpEuclideanDistance += distance;
             }
 
-        } else {
-
-            int numOfPursuers = midpointData.size();
-            int numOfMidpoints = midpointData.get(0).size();
-
-            for (int i = 0; i < numOfMidpoints; i++) {
-                int tmpNumberOfVertices = 0;
-                double tmpEuclideanDistance = 0;
-
-                for (int j = 0; j < numOfPursuers; j++) {
-                    int numOfVerts = midpointData.get(j).get(i).getNumOfVertices();
-                    double distance = midpointData.get(j).get(i).getDistance();
-                    tmpNumberOfVertices += numOfVerts;
-                    tmpEuclideanDistance += distance;
-                }
-
-                if (tmpNumberOfVertices == numberOfVertices) {
-                    if (tmpEuclideanDistance > euclideanDistance) {
-                        euclideanDistance = tmpEuclideanDistance;
-                        target = midpointData.get(0).get(i).getMidpoint();
-                    }
-                } else if (tmpNumberOfVertices > numberOfVertices) {
-                    numberOfVertices = tmpNumberOfVertices;
+            if (tmpNumberOfVertices == numberOfVertices) {
+                if (tmpEuclideanDistance > euclideanDistance) {
+                    euclideanDistance = tmpEuclideanDistance;
                     target = midpointData.get(0).get(i).getMidpoint();
                 }
-
+            } else if (tmpNumberOfVertices > numberOfVertices) {
+                numberOfVertices = tmpNumberOfVertices;
+                target = midpointData.get(0).get(i).getMidpoint();
             }
+
         }
 
-        //System.out.println("BEST POINT IS " + target.getEstX() + ":" + target.getEstY() + " | " + s);
         return target;
     }
 
