@@ -21,11 +21,13 @@ import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.util.Pair;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 import simulation.*;
+import sun.plugin.javascript.navig.Array;
 
 import java.io.*;
 import java.util.*;
@@ -60,11 +62,14 @@ public class Main extends Application {
     private ArrayList<VisualAgent> visualAgents;
     private ArrayList<RadioButton> entitiesList;
 
-    //List all unique centralised entities here?
+    //list entity colors?
 
     private BooleanProperty addPoints;
 
     private ProgramState currentState;
+
+    private int entityID = 0;
+    private ArrayList<Pair<Integer, CentralisedEntity>> centralisedEntities = new ArrayList<>();
 
     // ************************************************************************************************************** //
     // Test stuff for entities
@@ -181,7 +186,7 @@ public class Main extends Application {
         entityMenu.getChildren().addAll(entityLabel, entityLabelSeparator);
 
         ComboBox<String> entities = new ComboBox<>();
-        entities.getItems().addAll("Random entity", "Straight line entity", "Flocking evader entity", "Hide evader entity", "Dummy entity");
+        entities.getItems().addAll("Random entity", "Straight line entity", "Flocking evader entity", "Hide evader entity", "DCR entity");
         entities.setValue("Random entity");
 
         Button addEntity = new Button("Add");
@@ -1862,8 +1867,23 @@ public class Main extends Application {
 
         Button startAdaptedSimulation = new Button("Start adapted simulation");
         startAdaptedSimulation.setOnAction(e -> {
+
             if (adaptedSimulation == null) {
-                adaptedSimulation = new AdaptedSimulation(map);
+                boolean valid = true;
+
+                for (Pair<Integer, CentralisedEntity> p : centralisedEntities) {
+                    CentralisedEntity en = p.getValue();
+                    if (en.remainingRequiredAgents() > 0) {
+                        valid = false;
+                    }
+                }
+
+                if (valid) {
+                    adaptedSimulation = new AdaptedSimulation(map);
+                } else {
+                    System.out.println("one or more entities do not have required number of agents");
+                }
+
             } else {
                 adaptedSimulation.unPause();
             }
@@ -2330,8 +2350,29 @@ public class Main extends Application {
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Hide evader entity")) {
                                     //Must be evader
-                                } else if (selectedEntityButton.getText().equals("Dummy entity")) {
-                                    //??
+                                } else if (selectedEntityButton.getText().startsWith("DCR entity")) {
+                                    if (selectedEntityButton.getId() == null) {
+                                        DCREntity entity = new DCREntity(map);
+                                        entity.addAgent(new Agent(va.getSettings()));
+                                        map.getPursuingEntities().add(entity);
+                                        centralisedEntities.add(new Pair<Integer, CentralisedEntity>(entityID, entity));
+                                        selectedEntityButton.setId(String.valueOf(entityID));
+                                        selectedEntityButton.setText(selectedEntityButton.getText() + " [1/" + entity.totalRequiredAgents() + "]");
+                                        entityID++;
+                                    } else {
+                                        for (Pair p: centralisedEntities) {
+                                            if (String.valueOf(p.getKey()).equals(selectedEntityButton.getId())) {
+                                                DCREntity entity = (DCREntity) p.getValue();
+                                                entity.addAgent(new Agent(va.getSettings()));
+                                                int noOfAgents = entity.totalRequiredAgents() - entity.remainingRequiredAgents();
+                                                selectedEntityButton.setText("DCR entity [" + noOfAgents + "/" + entity.totalRequiredAgents() + "]");
+                                            }
+                                        }
+                                    }
+
+                                    va.getAgentBody().setFill(Color.DARKVIOLET);
+                                    visualAgents.add(va);
+                                    pane.getChildren().add(va);
                                 }
 
                                 //for centralised entities we can use startsWith() ?
