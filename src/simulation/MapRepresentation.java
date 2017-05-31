@@ -1,6 +1,8 @@
 package simulation;
 
 import additionalOperations.GeometryOperations;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineSegment;
 import entities.Entity;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
@@ -15,33 +17,25 @@ public class MapRepresentation {
     private ArrayList<Polygon> allPolygons;
     private ArrayList<Line> polygonEdges;
 
+    private ArrayList<LineSegment> borderLines;
+    private ArrayList<LineSegment> obstacleLines;
+
     private ArrayList<Entity> pursuingEntities;
     private ArrayList<Entity> evadingEntities;
 
     public MapRepresentation(ArrayList<MapPolygon> map) {
-        allPolygons = new ArrayList<>();
-        obstaclePolygons = new ArrayList<>();
-        for (MapPolygon p : map) {
-            if (p.getPoints().size() > 0) {
-                allPolygons.add(p.getPolygon());
-                obstaclePolygons.add(allPolygons.get(allPolygons.size() - 1));
-            }
-        }
-        borderPolygon = allPolygons.get(0);
-        obstaclePolygons.remove(0);
-
-        polygonEdges = new ArrayList<>();
-        for (Polygon p : allPolygons) {
-            for (int i = 0; i < p.getPoints().size(); i += 2) {
-                polygonEdges.add(new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size()))));
-            }
-        }
-
+        init(map);
         pursuingEntities = new ArrayList<>();
         evadingEntities = new ArrayList<>();
     }
 
     public MapRepresentation(ArrayList<MapPolygon> map, ArrayList<Entity> pursuingEntities, ArrayList<Entity> evadingEntities) {
+        init(map);
+        this.pursuingEntities = pursuingEntities == null ? new ArrayList<>() : pursuingEntities;
+        this.evadingEntities = evadingEntities == null ? new ArrayList<>() : evadingEntities;
+    }
+
+    private void init(ArrayList<MapPolygon> map) {
         allPolygons = new ArrayList<>();
         obstaclePolygons = new ArrayList<>();
         for (MapPolygon p : map) {
@@ -60,8 +54,16 @@ public class MapRepresentation {
             }
         }
 
-        this.pursuingEntities = pursuingEntities == null ? new ArrayList<>() : pursuingEntities;
-        this.evadingEntities = evadingEntities == null ? new ArrayList<>() : evadingEntities;
+        borderLines = new ArrayList<>();
+        for (int i = 0; i < borderPolygon.getPoints().size(); i += 2) {
+            borderLines.add(new LineSegment(borderPolygon.getPoints().get(i), borderPolygon.getPoints().get(i + 1), borderPolygon.getPoints().get((i + 2) % borderPolygon.getPoints().size()), borderPolygon.getPoints().get((i + 3) % borderPolygon.getPoints().size())));
+        }
+        obstacleLines = new ArrayList<>();
+        for (Polygon p : obstaclePolygons) {
+            for (int i = 0; i < p.getPoints().size(); i += 2) {
+                obstacleLines.add(new LineSegment(p.getPoints().get(i), p.getPoints().get(i + 1), p.getPoints().get((i + 2) % p.getPoints().size()), p.getPoints().get((i + 3) % p.getPoints().size())));
+            }
+        }
     }
 
     public boolean legalPosition(double xPos, double yPos) {
@@ -74,6 +76,18 @@ public class MapRepresentation {
             }
         }
         return true;
+    }
+
+    public boolean legalPosition(Coordinate c) {
+        return legalPosition(c.x, c.y);
+    }
+
+    public ArrayList<LineSegment> getBorderLines() {
+        return borderLines;
+    }
+
+    public ArrayList<LineSegment> getObstacleLines() {
+        return obstacleLines;
     }
 
     public Polygon getBorderPolygon() {

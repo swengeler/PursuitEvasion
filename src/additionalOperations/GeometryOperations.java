@@ -191,6 +191,17 @@ public class GeometryOperations {
         }
     }
 
+    public static boolean lineIntersectSeparatingLines(double x1, double y1, double x2, double y2, ArrayList<DEdge> separatingEdges) {
+        Line2D.Double temp = new Line2D.Double();
+        for (DEdge de : separatingEdges) {
+            temp.setLine(de.getPointLeft().getX(), de.getPointLeft().getY(),de.getPointRight().getX(), de.getPointRight().getY());
+            if (temp.intersectsLine(x1, y1, x2, y2)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean inPolygon(Polygon polygon, double startX, double startY, double endX, double endY) {
         Line temp;
         for (int i = 0; i < polygon.getPoints().size(); i += 2) {

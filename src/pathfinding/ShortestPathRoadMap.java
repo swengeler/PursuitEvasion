@@ -428,30 +428,36 @@ public class ShortestPathRoadMap {
 
         // add new edges between source and sink and the visible nodes of the graph
         // first for the source
-        if (!containsSource) {
-            for (PathVertex pv : shortestPathGraph.vertexSet()) {
-                if (!pv.equals(source) && !pv.equals(sink)) {
-                    // check whether pv is visible from source (and whether there are separating polygons in between)
-                    if (map.isVisible(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
-                            !isEdgeIntersectingPolygon(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
-                            !isEdgeAdjacentToPolygon(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
-                            !isEdgeIntersectingLine(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY())) {
-                        double differenceSquared = Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2);
-                        shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(source, pv), Math.sqrt(differenceSquared));
-                        /*if (drawLines) {
-                            Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
-                            //l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
-                            Main.pane.getChildren().add(l);
-                            Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
-                        }*/
-                        System.out.printf("(%.4f|%.4f) visible from source (which is (%.4f|%.4f))\n", pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
-                        Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 0.5, Color.DARKGRAY));
-
-                        if (Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2) < minDistance) {
-                            minDistance = Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2);
-                            minX = pv.getEstX();
-                            minY = pv.getEstY();
+        DefaultWeightedEdge temp;
+        ArrayList<DefaultWeightedEdge> sourceToVisible = new ArrayList<>();
+        for (PathVertex pv : shortestPathGraph.vertexSet()) {
+            if (!pv.equals(source) && !pv.equals(sink)) {
+                // check whether pv is visible from source (and whether there are separating polygons in between)
+                if (map.isVisible(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
+                        !isEdgeIntersectingPolygon(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
+                        !isEdgeAdjacentToPolygon(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY()) &&
+                        !isEdgeIntersectingLine(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY())) {
+                    double differenceSquared = Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2);
+                    temp = shortestPathGraph.addEdge(source, pv);
+                    if (temp != null) {
+                        if (containsSource) {
+                            sourceToVisible.add(temp);
                         }
+                        shortestPathGraph.setEdgeWeight(temp, Math.sqrt(differenceSquared));
+                    }
+                    /*if (drawLines) {
+                        Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
+                        //l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
+                        Main.pane.getChildren().add(l);
+                        Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
+                    }*/
+                    System.out.printf("(%.4f|%.4f) visible from source (which is (%.4f|%.4f))\n", pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
+                    Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 0.5, Color.DARKGRAY));
+
+                    if (Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2) < minDistance) {
+                        minDistance = Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2);
+                        minX = pv.getEstX();
+                        minY = pv.getEstY();
                     }
                 }
             }
@@ -459,23 +465,28 @@ public class ShortestPathRoadMap {
         //Main.pane.getChildren().add(new Circle(minX, minY, 1.5, Color.RED));
 
         // then for the sink
-        if (!containsSink) {
-            for (PathVertex pv : shortestPathGraph.vertexSet()) {
-                if (!pv.equals(source) && !pv.equals(sink)) {
-                    // check whether pv is visible from source (and whether there are separating polygons in between)
-                    if (map.isVisible(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
-                            !isEdgeIntersectingPolygon(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
-                            !isEdgeAdjacentToPolygon(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
-                            !isEdgeIntersectingLine(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY())) {
-                        double differenceSquared = Math.pow(pv.getEstX() - sink.getEstX(), 2) + Math.pow(pv.getEstY() - sink.getEstY(), 2);
-                        shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(pv, sink), Math.sqrt(differenceSquared));
-                        /*if (drawLines) {
-                            Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
-                            l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
-                            Main.pane.getChildren().add(l);
-                            Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
-                        }*/
+        ArrayList<DefaultWeightedEdge> sinkToVisible = new ArrayList<>();
+        for (PathVertex pv : shortestPathGraph.vertexSet()) {
+            if (!pv.equals(source) && !pv.equals(sink)) {
+                // check whether pv is visible from source (and whether there are separating polygons in between)
+                if (map.isVisible(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                        !isEdgeIntersectingPolygon(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                        !isEdgeAdjacentToPolygon(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY()) &&
+                        !isEdgeIntersectingLine(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY())) {
+                    double differenceSquared = Math.pow(pv.getEstX() - sink.getEstX(), 2) + Math.pow(pv.getEstY() - sink.getEstY(), 2);
+                    temp = shortestPathGraph.addEdge(pv, sink);
+                    if (temp != null) {
+                        if (containsSink) {
+                            sinkToVisible.add(temp);
+                        }
+                        shortestPathGraph.setEdgeWeight(temp, Math.sqrt(differenceSquared));
                     }
+                    /*if (drawLines) {
+                        Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
+                        l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
+                        Main.pane.getChildren().add(l);
+                        Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
+                    }*/
                 }
             }
         }
@@ -525,9 +536,13 @@ public class ShortestPathRoadMap {
         // remove the source and sink vertices
         if (!containsSource) {
             shortestPathGraph.removeVertex(source);
+        } else {
+            shortestPathGraph.removeAllEdges(sourceToVisible);
         }
         if (!containsSink) {
             shortestPathGraph.removeVertex(sink);
+        } else {
+            shortestPathGraph.removeAllEdges(sinkToVisible);
         }
         return plannedPath;
     }

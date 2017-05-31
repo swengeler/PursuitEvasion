@@ -1,6 +1,8 @@
 package entities;
 
 import additionalOperations.*;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineSegment;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
@@ -212,6 +214,9 @@ public class DCREntity extends CentralisedEntity {
             // behaviour changes based on visibility
             // if the target is still visible, first check whether it can simply be caught
             length = Math.sqrt(Math.pow(target.getXPos() - catcher.getXPos(), 2) + Math.pow(target.getYPos() - catcher.getYPos(), 2));
+            // TODO: (also elsewhere) need check whether evader is behind a separating line
+            // if it is, then the catcher should simply move towards the separating line to resume capture after the evader has crossed the line again
+            // this should actually already happen once the searcher (or catcher) sees that the evader has crossed the line
             if (map.isVisible(target, catcher) && length <= catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
                 pseudoBlockingVertex = null;
                 System.out.println("pseudoBlockingVertex null because target visible in FOLLOW_TARGET (can capture)");
@@ -222,6 +227,10 @@ public class DCREntity extends CentralisedEntity {
                 origin = null;
                 currentStage = Stage.CATCHER_TO_SEARCHER;
             } else if (map.isVisible(target, catcher)) {
+                if (GeometryOperations.lineIntersectSeparatingLines(catcher.getXPos(), catcher.getYPos(), target.getXPos(), target.getYPos(), separatingEdges)) {
+                    System.out.println("Evader behind separating line");
+                    return;
+                }
                 pseudoBlockingVertex = null;
                 System.out.println("pseudoBlockingVertex null because target visible in FOLLOW_TARGET");
                 lastPointVisible = null;
@@ -635,33 +644,32 @@ public class DCREntity extends CentralisedEntity {
             int[][] reconnectedAdjacencyMatrix = reconnectedAdjacency.getFirst();
             ArrayList<ArrayList<DTriangle>> reconnectedComponents = reconnectedAdjacency.getSecond();
 
-            /*for (int i = 0; i < nodes.size(); i++) {
-                int count = 0;
-                for (int j = 0; j < spanningTreeAdjacencyMatrix.length; j++) {
-                    if (spanningTreeAdjacencyMatrix[i][j] == 1) {
-                        count++;
-                    }
-                }
-                if (count == 1) {
-                    Label l = new Label("leaf");
-                    l.setTranslateX(nodes.get(i).getBarycenter().getX());
-                    l.setTranslateY(nodes.get(i).getBarycenter().getY());
-                    Main.pane.getChildren().add(l);
-                } else {
-                    Label l = new Label("not leaf");
-                    l.setTranslateX(nodes.get(i).getBarycenter().getX());
-                    l.setTranslateY(nodes.get(i).getBarycenter().getY());
-                    Main.pane.getChildren().add(l);
-                }
-            }*/
-
+            /*double length1, length2, deltaX, deltaY;
+            Line l, r;
             for (DEdge de : separatingEdges) {
-                Main.pane.getChildren().add(new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY()));
-            }
+                r = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
+                Main.pane.getChildren().add(r);
+                length1 = Math.sqrt(Math.pow(r.getStartX() - r.getEndX(), 2) + Math.pow(r.getStartY() - r.getEndY(), 2));
+                deltaX = -(r.getStartY() - r.getEndY());
+                deltaY = r.getStartX() - r.getEndX();
+                length2 = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                deltaX /= length2;
+                deltaY /= length2;
+                deltaX *= length1;
+                deltaY *= length1;
+                l = new Line(r.getStartX(), r.getStartY(), r.getStartX() + deltaX, r.getStartY() + deltaY);
+                Main.pane.getChildren().add(l);
+                l = new Line(r.getEndX(), r.getEndY(), r.getEndX() + deltaX, r.getEndY() + deltaY);
+                Main.pane.getChildren().add(l);
+                l = new Line(r.getStartX() + deltaX, r.getStartY() + deltaY, r.getEndX() + deltaX, r.getEndY() + deltaY);
+                Main.pane.getChildren().add(l);
+            }*/
 
             Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> componentBoundaries = computeComponentBoundaries(reconnectedComponents, separatingEdges);
             componentBoundaryLines = componentBoundaries.getFirst();
             componentBoundaryShapes = componentBoundaries.getSecond();
+
+            showGuardingSquares(separatingLines);
 
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
@@ -684,6 +692,56 @@ public class DCREntity extends CentralisedEntity {
             error.printStackTrace();
         }
         //requiredAgents = 2;
+    }
+
+    private void showGuardingSquares(ArrayList<Line> separatingLines) {
+        double length1, length2, deltaX, deltaY;
+        LineSegment[] lines = new LineSegment[4];
+        Coordinate intersectionPoint;
+        for (Line l : separatingLines) {
+            lines[0] = new LineSegment(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
+            length1 = Math.sqrt(Math.pow(lines[0].getCoordinate(0).x - lines[0].getCoordinate(1).x, 2) + Math.pow(lines[0].getCoordinate(0).y - lines[0].getCoordinate(1).y, 2));
+            deltaX = -(lines[0].getCoordinate(0).y - lines[0].getCoordinate(1).y);
+            deltaY = lines[0].getCoordinate(0).x - lines[0].getCoordinate(1).x;
+
+            // construct the square
+            length2 = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            deltaX /= length2 / length1;
+            deltaY /= length2 / length1;
+            lines[1] = new LineSegment(lines[0].getCoordinate(0).x, lines[0].getCoordinate(0).y, lines[0].getCoordinate(0).x + deltaX, lines[0].getCoordinate(0).y + deltaY);
+            lines[2] = new LineSegment(lines[0].getCoordinate(1).x, lines[0].getCoordinate(1).y, lines[0].getCoordinate(1).x + deltaX, lines[0].getCoordinate(1).y + deltaY);
+            lines[3] = new LineSegment(lines[0].getCoordinate(0).x + deltaX, lines[0].getCoordinate(0).y + deltaY, lines[0].getCoordinate(1).x + deltaX, lines[0].getCoordinate(1).y + deltaY);
+
+            for (LineSegment ls : map.getObstacleLines()) {
+                intersectionPoint = ls.intersection(lines[1]);
+                if (intersectionPoint != null && !intersectionPoint.equals2D(lines[1].getCoordinate(0)) && !intersectionPoint.equals2D(lines[1].getCoordinate(1))) {
+                    Main.pane.getChildren().add(new Circle(intersectionPoint.x, intersectionPoint.y, 5, Color.DARKBLUE));
+                }
+                intersectionPoint = ls.intersection(lines[2]);
+                if (intersectionPoint != null && !intersectionPoint.equals2D(lines[2].getCoordinate(0)) && !intersectionPoint.equals2D(lines[2].getCoordinate(1))) {
+                    Main.pane.getChildren().add(new Circle(intersectionPoint.x, intersectionPoint.y, 5, Color.DARKBLUE));
+                }
+                intersectionPoint = ls.intersection(lines[3]);
+                if (intersectionPoint != null && !intersectionPoint.equals2D(lines[3].getCoordinate(0)) && !intersectionPoint.equals2D(lines[3].getCoordinate(1))) {
+                    Main.pane.getChildren().add(new Circle(intersectionPoint.x, intersectionPoint.y, 5, Color.DARKBLUE));
+                }
+            }
+            Main.pane.getChildren().add(l);
+            Main.pane.getChildren().add(new Line(lines[1].getCoordinate(0).x, lines[1].getCoordinate(0).y, lines[1].getCoordinate(1).x, lines[1].getCoordinate(1).y));
+            Main.pane.getChildren().add(new Line(lines[2].getCoordinate(0).x, lines[2].getCoordinate(0).y, lines[2].getCoordinate(1).x, lines[2].getCoordinate(1).y));
+            Main.pane.getChildren().add(new Line(lines[3].getCoordinate(0).x, lines[3].getCoordinate(0).y, lines[3].getCoordinate(1).x, lines[3].getCoordinate(1).y));
+
+            Main.pane.getChildren().add(new Circle(lines[0].getCoordinate(0).x, lines[0].getCoordinate(0).y, 5, Color.DARKRED));
+            Main.pane.getChildren().add(new Circle(lines[0].getCoordinate(1).x, lines[0].getCoordinate(1).y, 5, Color.DARKRED));
+            for (LineSegment ls : new LineSegment[]{lines[1], lines[2],lines[3]}) {
+                if (map.legalPosition(ls.getCoordinate(0))) {
+                    Main.pane.getChildren().add(new Circle(ls.getCoordinate(0).x, ls.getCoordinate(0).y, 5, Color.DARKRED));
+                }
+                if (map.legalPosition(ls.getCoordinate(1))) {
+                    Main.pane.getChildren().add(new Circle(ls.getCoordinate(1).x, ls.getCoordinate(1).y, 5, Color.DARKRED));
+                }
+            }
+        }
     }
 
     private Tuple<ArrayList<DTriangle>, int[][]> findPocketComponent(Line boundaryLine, int componentIndex, double pseudoBlockingVertX, double pseudoBlockingVertY) {
