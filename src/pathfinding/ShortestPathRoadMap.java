@@ -506,7 +506,7 @@ public class ShortestPathRoadMap {
             //Main.pane.getChildren().add(new Circle(source.getEstX(), source.getEstY(), 50, Color.DARKGRAY));
             //Main.pane.getChildren().add(new Circle(sink.getEstX(), sink.getEstY(), 50, Color.DARKGRAY));
 
-            AdaptedSimulation.masterPause();
+            AdaptedSimulation.masterPause("in ShortestPathRoadMap");
             /*System.out.println("graphPath: " + graphPath);
             System.out.printf("Source: (%.3f|%.3f)\n", source.getEstX(), source.getEstY());
             System.out.printf("Sink: (%.3f|%.3f)\n", sink.getEstX(), sink.getEstY());

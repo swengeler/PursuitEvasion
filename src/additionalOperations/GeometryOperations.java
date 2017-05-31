@@ -1,6 +1,8 @@
 package additionalOperations;
 
 import Jama.Matrix;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineSegment;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
@@ -9,6 +11,7 @@ import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DTriangle;
 import pathfinding.PathVertex;
 import shadowPursuit.ShadowNode;
+import ui.Main;
 
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
@@ -552,6 +555,7 @@ public class GeometryOperations {
     }
 
     public static Point2D findIntersect2(Line line1, Line line2) {
+
         Point2D location;
         location = null;
 
@@ -693,9 +697,19 @@ public class GeometryOperations {
         double length = Math.sqrt(rayDeltaX * rayDeltaX + rayDeltaY * rayDeltaY);
         rayDeltaX /= length;
         rayDeltaY /= length;
-        double rayEndX = rayStartX + Integer.MAX_VALUE * rayDeltaX;
-        double rayEndY = rayStartY + Integer.MAX_VALUE * rayDeltaY;
-        return findIntersect2(new Line(rayStartX, rayStartY, rayEndX, rayEndY), lineSegment);
+        double rayEndX = rayStartX + 100000 * rayDeltaX;
+        double rayEndY = rayStartY + 100000 * rayDeltaY;
+
+        LineSegment ray = new LineSegment(rayStartX, rayStartY, rayEndX, rayEndY);
+        LineSegment lineSeg = new LineSegment(lineSegment.getStartX(), lineSegment.getStartY(), lineSegment.getEndX(), lineSegment.getEndY());
+        Coordinate intersectionPoint = ray.intersection(lineSeg);
+
+        /*Line2D.Double ray = new Line2D.Double(rayStartX, rayStartY, rayEndX, rayEndY);
+        Line2D.Double lineSeg = new Line2D.Double(lineSegment.getStartX(), lineSegment.getStartY(), lineSegment.getEndX(), lineSegment.getEndY());
+        if (ray.intersectsLine(lineSeg))
+            System.out.printf("(%.3f|%.3f) to (%.3f|%.3f) intersects (%.3f|%.3f) to (%.3f|%.3f)\n", ray.getX1(), ray.getY1(), ray.getX2(), ray.getY2(), lineSeg.getX1(), lineSeg.getY1(), lineSeg.getX2(), lineSeg.getY2());*/
+        //return findIntersect2(new Line(rayStartX, rayStartY, rayEndX, rayEndY), lineSegment);
+        return intersectionPoint == null ? null : new Point2D(intersectionPoint.x, intersectionPoint.y);
     }
 
     public static boolean lineTriangleIntersectWithPoints(Line line, DTriangle triangle) {

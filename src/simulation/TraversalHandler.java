@@ -162,6 +162,10 @@ public class TraversalHandler {
         return adjacencyMatrix;
     }
 
+    public ShortestPathRoadMap getRestrictedShortestPathRoadMap() {
+        return restrictedShortestPathRoadMap;
+    }
+
     public void restrictToPocket(ArrayList<DTriangle> pocketComponent, int[][] pocketAdjacencyMatrix) {
         restrictToPocket = true;
         this.pocketComponent = pocketComponent;
@@ -275,12 +279,12 @@ public class TraversalHandler {
                     Label l = new Label("leaf");
                     l.setTranslateX(currentComponent.get(i).getBarycenter().getX());
                     l.setTranslateY(currentComponent.get(i).getBarycenter().getY());
-                    Main.pane.getChildren().add(l);
+                    //Main.pane.getChildren().add(l);
                 } else {
                     Label l = new Label("not leaf");
                     l.setTranslateX(currentComponent.get(i).getBarycenter().getX());
                     l.setTranslateY(currentComponent.get(i).getBarycenter().getY());
-                    Main.pane.getChildren().add(l);
+                    //Main.pane.getChildren().add(l);
                 }
             }
 
@@ -288,7 +292,7 @@ public class TraversalHandler {
             chosenLeafIndex = childIndeces.get((int) (Math.random() * childIndeces.size()));
             moveToLeaf = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY()));
             childIndeces.clear();
-            Main.pane.getChildren().add(new Circle(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY(), 7, Color.BROWN));
+            //Main.pane.getChildren().add(new Circle(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY(), 7, Color.BROWN));
         }
 
         // chooses a path through the tree/map according to the random selection described in the paper

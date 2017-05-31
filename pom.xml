@@ -62,6 +62,12 @@
             <artifactId>commons-math3</artifactId>
             <version>3.6.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.vividsolutions/jts-core -->
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts-core</artifactId>
+            <version>1.14.0</version>
+        </dependency>
         <dependency>
             <groupId>groupId</groupId>
             <artifactId>RobinsRuthlessRobbers</artifactId>
