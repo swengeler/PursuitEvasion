@@ -2,9 +2,11 @@ package shadowPursuit;
 
 import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import simulation.Agent;
+import sun.security.provider.SHA;
 
 import java.util.ArrayList;
 
@@ -23,6 +25,10 @@ public class shadowOperations {
 
 
         ArrayList<Point2D> all = polyToPoints(environment);
+
+        //System.out.println(all);
+        //System.out.println(agents);
+
 
 
         ArrayList<Point2D> vis = new ArrayList<>();
@@ -48,14 +54,14 @@ public class shadowOperations {
         boolean visib = true;
 
 
-        for (Point2D agent : agents) {
+        for(Point2D agent : agents) {
             //System.out.println("For Agent = " + agent);
             agentX = agent.getX();
             agentY = agent.getY();
 
 
             i = 0;
-            while (i < all.size()) {
+            while(i < all.size())   {
                 //System.out.println("For Point = " + all.get(i));
                 x2 = all.get(i).getX();
                 y2 = all.get(i).getY();
@@ -72,11 +78,11 @@ public class shadowOperations {
                             //break;
                         }
                     }
-                    if (x2 == 658 && y2 == 257) {
+                    if(x2 == 658 && y2 == 257) {
                         Point2D tmp = new Point2D(658, 257);
                         System.out.println("VISIBLE for " + tmp + " ????? -> " + visib);
                     }
-                    if (visib == true) {
+                    if(visib == true)   {
                         //System.out.println("Removed = " + all.get(i));
                         all.remove(i);
                         i = i - 1;
@@ -88,7 +94,7 @@ public class shadowOperations {
 
         }
 
-        System.out.println(all);
+        //System.out.println(all);
 
         return all;
     }
@@ -293,17 +299,17 @@ public class shadowOperations {
 
     }
 
-    public static ArrayList<ShadowNode> orderByClosestToPoint(ArrayList<ShadowNode> shadNodes, Point2D start) {
+    public static ArrayList<ShadowNode> orderByClosestToPoint(ArrayList<ShadowNode> shadNodes, Point2D start)    {
         ArrayList<ShadowNode> returnList = new ArrayList<>();
         double minDist;
         ShadowNode tmp;
         int pos;
-        while (shadNodes.size() != 0) {
+        while(shadNodes.size() != 0)    {
             minDist = Double.MAX_VALUE;
             pos = 0;
-            for (int i = 0; i < shadNodes.size(); i++) {
+            for(int i = 0; i < shadNodes.size(); i++)   {
                 tmp = shadNodes.get(i);
-                if (distance(tmp.getPosition(), start) < minDist) {
+                if(distance(tmp.getPosition(), start) < minDist)    {
                     minDist = distance(tmp.getPosition(), start);
                     pos = i;
                 }
@@ -312,6 +318,7 @@ public class shadowOperations {
         }
         return returnList;
     }
+
 
 
     public static ArrayList<Point2D> getAdjacentPoints(Point2D point, ArrayList<Polygon> allPolys) {
@@ -416,14 +423,30 @@ public class shadowOperations {
         // check whether the second controlledAgents is visible from the position of the first controlledAgents
         // (given its field of view and the structure of the map)
 
-        for (Line l : polygonEdges) {
-            if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2) ) {
 
-                System.out.println("Intersect between " + l + " and " + new Line(x1, y1, x2, y2));
+
+        for (Line l : polygonEdges) {
+            if(l != getLineOn(new Point2D(x1,y1),polygonEdges) && l != getLineOn(new Point2D(x2,y2),polygonEdges))
+            if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
+
+                //System.out.println("\n\nIntersect between " + l + "\nand " + new Line(x1,y1,x2,y2)+ "\n");
                 return false;
             }
         }
         return true;
+    }
+
+    public static Line getLineOn(ShadowNode node, ArrayList<Line> polygonEdges) {
+        return getLineOn(node.getPosition(), polygonEdges);
+    }
+
+    public  static Line getLineOn(Point2D point, ArrayList<Line> polygonEdges) {
+        for (Line line : polygonEdges) {
+            if (onLine(point, line)) {
+                return line;
+            }
+        }
+        return null;
     }
 
 
@@ -459,7 +482,7 @@ public class shadowOperations {
                     right = polygon.get(0);
                 }
 
-                //Line between= new Line(left.getEstX(),left.getEstY(), right.getEstX(),right.getEstY());
+                //Line between= new Line(left.getX(),left.getY(), right.getX(),right.getY());
 
                 double x = (right.getX() - left.getX()) / 2;
                 double y = (right.getY() - left.getY()) / 2;
@@ -469,9 +492,9 @@ public class shadowOperations {
 
                 Point2D main = polygon.get(j);
                 /*
-                System.out.println("right x = " + right.getEstX() + " left x = " + left.getEstX() + " x = " + (right.getEstX()-x));
-                System.out.println("right y = " + right.getEstY() + " left y = " + left.getEstY() + " y = " + (right.getEstY()-y));
-                System.out.println("x coord = " + mid.getEstX() +" y coord = " + mid.getEstY() );
+                System.out.println("right x = " + right.getX() + " left x = " + left.getX() + " x = " + (right.getX()-x));
+                System.out.println("right y = " + right.getY() + " left y = " + left.getY() + " y = " + (right.getY()-y));
+                System.out.println("x coord = " + mid.getX() +" y coord = " + mid.getY() );
                 */
 
                 int count = 0;
