@@ -18,12 +18,13 @@ public class HideEvaderPolicy extends MovePolicy {
     //important such that it doesn't make dumb moves but also such that this policy can be ran for multiple evaders (otherwise they all go to the same point)
     //only recompute every XX timestep
     //not working perfectly yet (probably has to do with illegal separation stuff)
+    //perhaps only separate when 'visible'?
 
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
 
-    private final static int separationDistance = 125;
+    private final static int separationDistance = 100;
     ArrayList<Line> pathLines;
     int i = 0;
 
@@ -85,6 +86,9 @@ public class HideEvaderPolicy extends MovePolicy {
             separationDeltaX = -separationDeltaX / numberOfSeparationPursuers;
             separationDeltaY = -separationDeltaY / numberOfSeparationPursuers;
 
+            double dlength = Math.sqrt(Math.pow(separationDeltaX, 2) + Math.pow(separationDeltaY, 2));
+            separationDeltaX /= dlength;
+            separationDeltaY /= dlength;
         }
 
         target = getMin(allPursuerData);
@@ -104,16 +108,12 @@ public class HideEvaderPolicy extends MovePolicy {
         pathLines = currentPath.getPathLines();
 
         if (separationDeltaX != 0 || separationDeltaY != 0) {
-            if (map.legalPosition(getSingleAgent().getXPos() + separationDeltaX, getSingleAgent().getYPos() + separationDeltaY)) {
-                double dlength = Math.sqrt(Math.pow(separationDeltaX, 2) + Math.pow(separationDeltaY, 2));
-                separationDeltaX /= dlength;
-                separationDeltaY /= dlength;
+            if (map.legalPosition(getSingleAgent().getXPos() + separationDeltaX * evader.getSpeed() * 1/50, getSingleAgent().getYPos() + separationDeltaY * evader.getSpeed() * 1/50)) {
                 ctarget = null;
                 return new Move(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50, 0);
             } else {
                 //perhaps stand still here?
                 System.out.println("illegal separation");
-                return new Move(0, 0, 0);
             }
         }
 
