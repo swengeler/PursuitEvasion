@@ -40,11 +40,11 @@ public class ShadowTest {
         //Point2D agentPos = new Point2D(556, 303);
 
 
-        environment = new Polygon(150.0, 75.0, 857.0, 78.0, 862.0, 278.0, 792.0, 365.0, 787.0, 528.0, 880.0, 596.0, 892.0, 694.0, 719.0, 715.0, 617.0, 589.0, 624.0, 448.0, 639.0, 329.0, 587.0, 244.0, 478.0, 155.0, 420.0, 455.0, 354.0, 155.0, 325.0, 399.0, 390.0, 529.0, 360.0, 620.0, 505.0, 648.0, 458.0, 732.0, 256.0, 727.0, 161.0, 689.0, 59.0, 602.0, 108.0, 428.0);
+        environment = new Polygon(74.0,58.0,968.0,64.0,949.0,731.0,679.0,159.0,644.0,678.0,517.0,148.0,318.0,353.0,491.0,354.0,231.0,508.0,417.0,509.0,135.0,659.0,262.0,666.0,28.0,722.0);
 
-        Point2D agent1Pos = new Point2D(259, 164);
-        Point2D agent2Pos = new Point2D(548, 640);
-        Point2D agent3Pos = new Point2D(801, 140);
+        Point2D agent1Pos = new Point2D(769, 180);
+        Point2D agent2Pos = new Point2D(238, 171);
+        Point2D agent3Pos = new Point2D(200, 200);
         Point2D agent4Pos = new Point2D(798, 220);
 
 
@@ -58,8 +58,8 @@ public class ShadowTest {
 
         ArrayList<Point2D> agents = new ArrayList<>();
         agents.add(agent1Pos);
-        //agents.add(agent2Pos);
-        // agents.add(agent3Pos);
+        agents.add(agent2Pos);
+       // agents.add(agent3Pos);
         //agents.add(agent4Pos);
 
 

@@ -417,7 +417,7 @@ public class shadowOperations {
         // (given its field of view and the structure of the map)
 
         for (Line l : polygonEdges) {
-            if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2)) {
+            if (GeometryOperations.lineIntersect(l, x1, y1, x2, y2) ) {
 
                 System.out.println("Intersect between " + l + " and " + new Line(x1, y1, x2, y2));
                 return false;

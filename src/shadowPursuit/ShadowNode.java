@@ -111,6 +111,26 @@ public class ShadowNode {
 
 
         this.occLine = Ray;
+    } public ShadowNode(Point2D position, ShadowNode Type2, Line Ray,Point2D agent) {
+
+        //System.out.println("ENTTEREDED");
+        this.position = position;
+
+        if (Type2.getLeft() == null) {
+            this.right = Type2;
+            this.left = null;
+        } else if (Type2.getRight() == null) {
+            this.left = Type2;
+            this.right = null;
+        }
+        this.neighbourLeftAgent=agent;
+
+        type = type3;
+
+        System.out.println(this);
+
+
+        this.occLine = Ray;
     }
 
     //For Type3

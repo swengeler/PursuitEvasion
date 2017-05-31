@@ -263,25 +263,27 @@ public class GeometryOperations {
 
         } else {
             if (aX - endX != 0) {
-                if (endX > aX) {
-                    //System.out.print("wooh its working = " + m);
-                    newX = endX - value * (endX - aX);
-                    newY = endY - value * (endX - aX) * m;
-                } else {
-                    //System.out.print("why the fuck man " + m);
-                    newX = endX + value * (endX - aX);
-                    newY = endY + value * (endX - aX) * m;
+                //if (endX > aX) {
+                //System.out.print("wooh its working = " + m);
+                newX = aX + value * (endX - aX);
+                newY = aY + value * (endX - aX) * m;
+                /*} else {
+                    System.out.print("why the fuck man " + m);
+                    newX = aX + value * (endX - aX);
+                    newY = aY + value * (endX - aX) * m;
                 }
-            } else {
-                if (endY > aY) {
+            } */
+            }else {
+               // if (endY > aY) {
                     //System.out.print("wooh its working = " + m);
+                    newX = aX;
+                    newY = aY + value * (endX - aX);
+             /*   } else {
+                    System.out.print("why the fuck man");
+
                     newX = endX;
-                    newY = endY + value * (endX - aX);
-                } else {
-                    //System.out.print("why the fuck man");
-                    newX = endX;
-                    newY = endY - value * (endX - aX);
-                }
+                    newY = aY + value * (endX - aX);
+                }*/
             }
 
         }
@@ -308,10 +310,14 @@ public class GeometryOperations {
                 newY = aY - value;
             }
         }
-*/
+*/Line ray;
+        if(value>1) {
 
-        Line ray = new Line(endX, endY, newX, newY);
+             ray = new Line(endX, endY, newX, newY);
+        }else{
 
+            ray = new Line(aX,aY,newX,newY);
+        }
         //System.out.println("Created Ray = " + ray);
 
         //In case Lines with a negative end are the Problem when we do not find an Intersection where there should be one
