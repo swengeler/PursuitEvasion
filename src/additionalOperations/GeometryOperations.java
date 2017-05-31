@@ -215,8 +215,8 @@ public class GeometryOperations {
         return scaleRay(agentPos, t2Point.getPosition(), value);
     }
 
-    public static Line scaleRay(Point2D agentPos, Point2D t2Point, double value) {
-
+    public static Line scaleRay(Point2D agentPos, Point2D t2Point, double passed) {
+        double value = passed;
         //note this method extends the ray by value x if you insert a value >1 if the value is less than one it will scale it by that %
         //System.out.println("Passed value = " + value);
 
@@ -288,7 +288,6 @@ public class GeometryOperations {
 
         }
         /*
-
         if (endX - aX != 0) {
             if (aX > endX) {
                 //System.out.print("wooh its working = " + m);

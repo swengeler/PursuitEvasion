@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -26,6 +27,8 @@ import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
+import shadowPursuit.ShadowGraph;
+import shadowPursuit.ShadowNode;
 import simulation.*;
 import sun.plugin.javascript.navig.Array;
 
@@ -517,6 +520,31 @@ public class Main extends Application {
             }
         });
         menu.getChildren().add(triangulationButton);
+
+
+        Button shadowDisplay = new Button("Show Shadows");
+        shadowDisplay.setOnAction(e -> {
+            if (mapPolygons == null || mapPolygons.isEmpty() || visualAgents.size() == 0) {
+                System.out.println("Not enough data to construct simulation!");
+            } else {
+                ArrayList<Point2D> agentPos = new ArrayList<>();
+                map = new MapRepresentation(mapPolygons);
+                for(VisualAgent agent : visualAgents)   {
+                    agentPos.add(new Point2D(agent.getCenterX(), agent.getCenterY()));
+                }
+                ShadowGraph shadGraph = new ShadowGraph(map, agentPos);
+                ArrayList<Polygon> shadows = shadGraph.getShadows();
+
+                for(Polygon p: shadows) {
+                    p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
+                    p.setFill(Color.GREY.deriveColor(1, 1, 1, 0.1));
+                    p.setStrokeWidth(1);
+                    pane.getChildren().add(p);
+                }
+
+            }
+        });
+        menu.getChildren().add(shadowDisplay);
 
         Button simpleComponentButton = new Button("Show simply connected\ncomponents");
         simpleComponentButton.setOnAction(e -> {
