@@ -1,8 +1,7 @@
 package simulation;
 
 import additionalOperations.GeometryOperations;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.LineSegment;
+import com.vividsolutions.jts.geom.*;
 import entities.Entity;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
@@ -17,6 +16,7 @@ public class MapRepresentation {
     private ArrayList<Polygon> allPolygons;
     private ArrayList<Line> polygonEdges;
 
+    private ArrayList<LineSegment> allLines;
     private ArrayList<LineSegment> borderLines;
     private ArrayList<LineSegment> obstacleLines;
 
@@ -54,16 +54,19 @@ public class MapRepresentation {
             }
         }
 
+        allLines = new ArrayList<>();
         borderLines = new ArrayList<>();
         for (int i = 0; i < borderPolygon.getPoints().size(); i += 2) {
             borderLines.add(new LineSegment(borderPolygon.getPoints().get(i), borderPolygon.getPoints().get(i + 1), borderPolygon.getPoints().get((i + 2) % borderPolygon.getPoints().size()), borderPolygon.getPoints().get((i + 3) % borderPolygon.getPoints().size())));
         }
+        allLines.addAll(borderLines);
         obstacleLines = new ArrayList<>();
         for (Polygon p : obstaclePolygons) {
             for (int i = 0; i < p.getPoints().size(); i += 2) {
                 obstacleLines.add(new LineSegment(p.getPoints().get(i), p.getPoints().get(i + 1), p.getPoints().get((i + 2) % p.getPoints().size()), p.getPoints().get((i + 3) % p.getPoints().size())));
             }
         }
+        allLines.addAll(obstacleLines);
     }
 
     public boolean legalPosition(double xPos, double yPos) {
@@ -71,9 +74,12 @@ public class MapRepresentation {
             return false;
         }
         for (Polygon p : obstaclePolygons) {
-            if (p.contains(xPos, yPos)) {
+            if (GeometryOperations.inPolygonWithoutBorder(p, xPos, yPos)) {
                 return false;
             }
+            /*if (p.contains(xPos, yPos)) {
+                return false;
+            }*/
         }
         return true;
     }
@@ -114,7 +120,7 @@ public class MapRepresentation {
         return evadingEntities;
     }
 
-    public boolean isVisible(double x1, double y1, double x2, double y2) {
+    /*public boolean isVisible(double x1, double y1, double x2, double y2) {
         // check whether the second controlledAgents is visible from the position of the first controlledAgents
         // (given its field of view and the structure of the map)
         for (Line l : polygonEdges) {
@@ -129,6 +135,31 @@ public class MapRepresentation {
         }
         if (!GeometryOperations.inPolygon(borderPolygon, x1, y1, x2, y2)) {
             return false;
+        }
+        return true;
+    }*/
+
+    public boolean isVisible(double x1, double y1, double x2, double y2) {
+        // check whether the second controlledAgents is visible from the position of the first controlledAgents
+        // (given its field of view and the structure of the map)
+        if (!GeometryOperations.inPolygon(borderPolygon, x1, y1, x2, y2)) {
+            return false;
+        }
+        for (Polygon p : obstaclePolygons) {
+            if (GeometryOperations.inPolygonWithoutBorder(p, x1, y1, x2, y2) || GeometryOperations.inPolygonWithoutBorder(p, x1, y1) || GeometryOperations.inPolygonWithoutBorder(p, x2, y2)) {
+                return false;
+            }
+        }
+        LineSegment l = new LineSegment(x1, y1, x2, y2);
+        Coordinate c;
+        for (LineSegment ls : allLines) {
+            c = ls.intersection(l);
+            /*if (c != null && !(c.equals2D(l.getCoordinate(0)) || c.equals2D(l.getCoordinate(1)) || c.equals2D(ls.getCoordinate(0)) || c.equals2D(ls.getCoordinate(1)))) {
+                return false;
+            }*/
+            if (c != null && !(c.equals2D(l.getCoordinate(0)) || c.equals2D(l.getCoordinate(1)) || c.equals2D(ls.getCoordinate(0)) || c.equals2D(ls.getCoordinate(1)))) {
+                return false;
+            }
         }
         return true;
     }

@@ -213,12 +213,35 @@ public class GeometryOperations {
         return polygon.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2));
     }
 
+    public static boolean inPolygon(Polygon polygon, double x, double y) {
+        LineSegment temp;
+        for (int i = 0; i < polygon.getPoints().size(); i += 2) {
+            temp = new LineSegment(polygon.getPoints().get(i), polygon.getPoints().get(i + 1), polygon.getPoints().get((i + 2) % polygon.getPoints().size()), polygon.getPoints().get((i + 3) % polygon.getPoints().size()));
+            if (temp.distance(new Coordinate(x, y)) == 0) {
+                return true;
+            }
+        }
+        return polygon.contains(x, y);
+    }
+
     public static boolean inPolygonWithoutBorder(Polygon polygon, double startX, double startY, double endX, double endY) {
         boolean polygonContains = inPolygon(polygon, startX, startY, endX, endY);
         Line temp;
         for (int i = 0; i < polygon.getPoints().size(); i += 2) {
             temp = new Line(polygon.getPoints().get(i), polygon.getPoints().get(i + 1), polygon.getPoints().get((i + 2) % polygon.getPoints().size()), polygon.getPoints().get((i + 3) % polygon.getPoints().size()));
             if (temp.contains((startX + (endX - startX) / 2), (startY + (endY - startY) / 2))) {
+                return false;
+            }
+        }
+        return polygonContains;
+    }
+
+    public static boolean inPolygonWithoutBorder(Polygon polygon, double x, double y) {
+        boolean polygonContains = polygon.contains(x, y);
+        LineSegment temp;
+        for (int i = 0; i < polygon.getPoints().size(); i += 2) {
+            temp = new LineSegment(polygon.getPoints().get(i), polygon.getPoints().get(i + 1), polygon.getPoints().get((i + 2) % polygon.getPoints().size()), polygon.getPoints().get((i + 3) % polygon.getPoints().size()));
+            if (temp.distance(new Coordinate(x, y)) != 0) {
                 return false;
             }
         }
