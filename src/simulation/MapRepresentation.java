@@ -2,6 +2,7 @@ package simulation;
 
 import additionalOperations.GeometryOperations;
 import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 import entities.Entity;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
@@ -16,6 +17,8 @@ public class MapRepresentation {
     private ArrayList<Polygon> allPolygons;
     private ArrayList<Line> polygonEdges;
 
+    private com.vividsolutions.jts.geom.Polygon polygon;
+    private Geometry boundary;
     private ArrayList<LineSegment> allLines;
     private ArrayList<LineSegment> borderLines;
     private ArrayList<LineSegment> obstacleLines;
@@ -67,6 +70,9 @@ public class MapRepresentation {
             }
         }
         allLines.addAll(obstacleLines);
+
+        CoordinateSequence coordinateSequence = new CoordinateArraySequence(1);
+        // TODO: construct LinearRing objects from polygons, construct a Polygon object from that
     }
 
     public boolean legalPosition(double xPos, double yPos) {
@@ -94,6 +100,10 @@ public class MapRepresentation {
 
     public ArrayList<LineSegment> getObstacleLines() {
         return obstacleLines;
+    }
+
+    public ArrayList<LineSegment> getAllLines() {
+        return allLines;
     }
 
     public Polygon getBorderPolygon() {
@@ -161,6 +171,34 @@ public class MapRepresentation {
                 return false;
             }
         }
+        return true;
+    }
+
+    public boolean isVisible(double x1, double y1, double x2, double y2, String string1, String string2) {
+        System.out.println("\nisVisible-check for index " + string1 + " and " + string2);
+        // check whether the second controlledAgents is visible from the position of the first controlledAgents
+        // (given its field of view and the structure of the map)
+        if (!GeometryOperations.inPolygon(borderPolygon, x1, y1, x2, y2)) {
+            return false;
+        }
+        for (Polygon p : obstaclePolygons) {
+            if (GeometryOperations.inPolygonWithoutBorder(p, x1, y1, x2, y2) || GeometryOperations.inPolygonWithoutBorder(p, x1, y1) || GeometryOperations.inPolygonWithoutBorder(p, x2, y2)) {
+                return false;
+            }
+        }
+        LineSegment l = new LineSegment(x1, y1, x2, y2);
+        Coordinate c;
+        for (LineSegment ls : allLines) {
+            c = ls.intersection(l);
+            /*if (c != null && !(c.equals2D(l.getCoordinate(0)) || c.equals2D(l.getCoordinate(1)) || c.equals2D(ls.getCoordinate(0)) || c.equals2D(ls.getCoordinate(1)))) {
+                return false;
+            }*/
+            if (c != null && !(c.equals2D(l.getCoordinate(0)) || c.equals2D(l.getCoordinate(1)) || c.equals2D(ls.getCoordinate(0)) || c.equals2D(ls.getCoordinate(1)))) {
+                System.out.println("There is an intersection\n");
+                return false;
+            }
+        }
+        System.out.println("There is no intersection\n");
         return true;
     }
 

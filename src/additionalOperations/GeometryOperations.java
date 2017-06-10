@@ -2,6 +2,8 @@ package additionalOperations;
 
 import Jama.Matrix;
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineSegment;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
@@ -19,6 +21,7 @@ import java.util.List;
 
 public class GeometryOperations {
 
+    public static final GeometryFactory factory = new GeometryFactory();
 
     public static ArrayList<Point2D> polyToPoints(ArrayList<Polygon> allPoly) {
 

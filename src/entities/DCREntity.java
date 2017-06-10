@@ -731,19 +731,21 @@ public class DCREntity extends CentralisedEntity {
 
             for (int i = 1; i < lines.length; i++) {
                 ArrayList<Coordinate> currentIntersectionPoints = new ArrayList<>();
-                for (LineSegment ls : map.getObstacleLines()) {
+                ArrayList<Coordinate> test = new ArrayList<>();
+                for (LineSegment ls : map.getAllLines()) {
                     intersectionPoint = ls.intersection(lines[i]);
                     if (intersectionPoint != null && !intersectionPoint.equals2D(lines[i].getCoordinate(0)) && !intersectionPoint.equals2D(lines[i].getCoordinate(1))) {
-                        Main.pane.getChildren().add(new Circle(intersectionPoint.x, intersectionPoint.y, 3, Color.DARKBLUE));
+                        Main.pane.getChildren().add(new Circle(intersectionPoint.x, intersectionPoint.y, 3.5, Color.DARKBLUE));
                         currentIntersectionPoints.add(intersectionPoint);
+                        test.add(intersectionPoint);
                     }
                 }
                 // check visibility with endpoints and everything else
                 Coordinate c1, c2;
                 Line help;
-                for (int j = 0; j < currentIntersectionPoints.size(); j++) {
+                for (int j = 0; currentIntersectionPoints.size() > 0 && j < currentIntersectionPoints.size(); j++) {
                     c1 = currentIntersectionPoints.get(j);
-                    System.out.println("Coordinate " + j);
+                    System.out.println("Coordinate (" + separatingLines.indexOf(l) + "|" + test.indexOf(c1) + ")");
                     help = new Line(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y);
                     help.setStroke(Color.LIGHTGREEN);
                     help.setStrokeWidth(3);
@@ -752,7 +754,13 @@ public class DCREntity extends CentralisedEntity {
                     help.setStroke(Color.LIGHTGREEN);
                     help.setStrokeWidth(3);
                     Main.pane.getChildren().add(help);
-                    Main.pane.getChildren().add(new Circle(c1.x, c1.y, 3, Color.WHITE));
+                    if (map.legalPosition(c1)) {
+                        Main.pane.getChildren().add(new Circle(c1.x, c1.y, 2.5, Color.WHITE));
+                        Label label = new Label("(" + separatingLines.indexOf(l) + "|" + test.indexOf(c1) + ")");
+                        label.setTranslateX(c1.x + 5);
+                        label.setTranslateY(c1.y);
+                        Main.pane.getChildren().add(label);
+                    }
                     if (map.isVisible(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y)) {
                         LineSegment lineSegment = new LineSegment(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y);
                         actualSegments.add(lineSegment);
@@ -781,7 +789,7 @@ public class DCREntity extends CentralisedEntity {
                         for (int k = 0; k < currentIntersectionPoints.size(); k++) {
                             c2 = currentIntersectionPoints.get(k);
                             // check visibility with endpoints and everything else
-                            if (c1 != c2 && map.isVisible(c1.x, c1.y, c2.x, c2.y)) {
+                            if (c1 != c2 && map.isVisible(c1.x, c1.y, c2.x, c2.y, "(" + separatingLines.indexOf(l) + "|" + test.indexOf(c1) + ")", "(" + separatingLines.indexOf(l) + "|" + test.indexOf(c2) + ")")) {
                                 LineSegment lineSegment = new LineSegment(c1.x, c1.y, c2.x, c2.y);
                                 actualSegments.add(lineSegment);
                                 parallelInformation.add(j);
@@ -795,7 +803,7 @@ public class DCREntity extends CentralisedEntity {
                                 line.setStroke(Color.BLUE);
                                 line.setStrokeWidth(2);
                                 Main.pane.getChildren().add(line);
-                                j--;
+                                j -= 2;
                                 break;
                             }
                         }
