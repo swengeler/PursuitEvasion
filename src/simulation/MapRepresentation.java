@@ -19,6 +19,8 @@ public class MapRepresentation {
 
     private com.vividsolutions.jts.geom.Polygon polygon;
     private Geometry boundary;
+    private Point tempPoint = new Point(new CoordinateArraySequence(1), GeometryOperations.factory);
+    private LineString tempLine = new LineString(new CoordinateArraySequence(2), GeometryOperations.factory);
     private ArrayList<LineSegment> allLines;
     private ArrayList<LineSegment> borderLines;
     private ArrayList<LineSegment> obstacleLines;
@@ -71,23 +73,51 @@ public class MapRepresentation {
         }
         allLines.addAll(obstacleLines);
 
-        CoordinateSequence coordinateSequence = new CoordinateArraySequence(1);
+        // constructing the outer border polygon
+        Coordinate[] coordinateArray = new Coordinate[borderPolygon.getPoints().size() / 2 + 1];
+        for (int i = 0; i < borderPolygon.getPoints().size(); i += 2) {
+            coordinateArray[i / 2] = new Coordinate(borderPolygon.getPoints().get(i), borderPolygon.getPoints().get(i + 1));
+        }
+        coordinateArray[coordinateArray.length - 1] = new Coordinate(coordinateArray[0]);
+        CoordinateSequence coordinateSequence = new CoordinateArraySequence(coordinateArray);
+        LinearRing shell = new LinearRing(coordinateSequence, GeometryOperations.factory);
+
+        // constructing the inner hole polygons
+        LinearRing[] holes = new LinearRing[obstaclePolygons.size()];
+        for (Polygon p : obstaclePolygons) {
+            coordinateArray = new Coordinate[p.getPoints().size() / 2 + 1];
+            for (int i = 0; i < p.getPoints().size(); i += 2) {
+                coordinateArray[i / 2] = new Coordinate(p.getPoints().get(i), p.getPoints().get(i + 1));
+            }
+            coordinateArray[coordinateArray.length - 1] = new Coordinate(coordinateArray[0]);
+            coordinateSequence = new CoordinateArraySequence(coordinateArray);
+            holes[obstaclePolygons.indexOf(p)] = new LinearRing(coordinateSequence, GeometryOperations.factory);
+        }
+
+        polygon = new com.vividsolutions.jts.geom.Polygon(shell, holes, GeometryOperations.factory);
+        boundary = polygon.getBoundary();
+
         // TODO: construct LinearRing objects from polygons, construct a Polygon object from that
     }
 
     public boolean legalPosition(double xPos, double yPos) {
-        if (!borderPolygon.contains(xPos, yPos)) {
+        tempPoint.getCoordinate().x = xPos;
+        tempPoint.getCoordinate().y = yPos;
+        //return polygon.covers(tempPoint);
+        return polygon.distance(tempPoint) < GeometryOperations.PRECISION_EPSILON;
+
+        /*if (!borderPolygon.contains(xPos, yPos)) {
             return false;
         }
         for (Polygon p : obstaclePolygons) {
             if (GeometryOperations.inPolygonWithoutBorder(p, xPos, yPos)) {
                 return false;
             }
-            /*if (p.contains(xPos, yPos)) {
+            *//*if (p.contains(xPos, yPos)) {
                 return false;
-            }*/
+            }*//*
         }
-        return true;
+        return true;*/
     }
 
     public boolean legalPosition(Coordinate c) {
@@ -122,6 +152,14 @@ public class MapRepresentation {
         return polygonEdges;
     }
 
+    public com.vividsolutions.jts.geom.Polygon getPolygon() {
+        return polygon;
+    }
+
+    public Geometry getBoundary() {
+        return boundary;
+    }
+
     public ArrayList<Entity> getPursuingEntities() {
         return pursuingEntities;
     }
@@ -150,9 +188,36 @@ public class MapRepresentation {
     }*/
 
     public boolean isVisible(double x1, double y1, double x2, double y2) {
+        tempLine.getCoordinates()[0].x = x1;
+        tempLine.getCoordinates()[0].y = y1;
+        tempLine.getCoordinates()[1].x = x2;
+        tempLine.getCoordinates()[1].y = y2;
+        if (polygon.covers(tempLine)) {
+            return true;
+        }
+        if (!legalPosition(tempLine.getCoordinates()[0]) || !legalPosition(tempLine.getCoordinates()[1])) {
+            return false;
+        }
+        tempPoint.getCoordinate().x = tempLine.getCoordinates()[0].x;
+        tempPoint.getCoordinate().y = tempLine.getCoordinates()[0].y;
+        double distance1 = polygon.distance(tempPoint);
+        if (distance1 < GeometryOperations.PRECISION_EPSILON && polygon.intersection(tempLine).getCoordinates().length <= 1) {
+            return true;
+        }
+        tempPoint.getCoordinate().x = tempLine.getCoordinates()[1].x;
+        tempPoint.getCoordinate().y = tempLine.getCoordinates()[1].y;
+        double distance2 = polygon.distance(tempPoint);
+        if (distance2 < GeometryOperations.PRECISION_EPSILON && polygon.intersection(tempLine).getCoordinates().length <= 1) {
+            return true;
+        }
+        if (distance1 < GeometryOperations.PRECISION_EPSILON && distance2 < GeometryOperations.PRECISION_EPSILON && polygon.intersection(tempLine).getCoordinates().length <= 2) {
+            return true;
+        }
+        return false;
+
         // check whether the second controlledAgents is visible from the position of the first controlledAgents
         // (given its field of view and the structure of the map)
-        if (!GeometryOperations.inPolygon(borderPolygon, x1, y1, x2, y2)) {
+        /*if (!GeometryOperations.inPolygon(borderPolygon, x1, y1, x2, y2)) {
             return false;
         }
         for (Polygon p : obstaclePolygons) {
@@ -164,14 +229,14 @@ public class MapRepresentation {
         Coordinate c;
         for (LineSegment ls : allLines) {
             c = ls.intersection(l);
-            /*if (c != null && !(c.equals2D(l.getCoordinate(0)) || c.equals2D(l.getCoordinate(1)) || c.equals2D(ls.getCoordinate(0)) || c.equals2D(ls.getCoordinate(1)))) {
+            *//*if (c != null && !(c.equals2D(l.getCoordinate(0)) || c.equals2D(l.getCoordinate(1)) || c.equals2D(ls.getCoordinate(0)) || c.equals2D(ls.getCoordinate(1)))) {
                 return false;
-            }*/
+            }*//*
             if (c != null && !(c.equals2D(l.getCoordinate(0)) || c.equals2D(l.getCoordinate(1)) || c.equals2D(ls.getCoordinate(0)) || c.equals2D(ls.getCoordinate(1)))) {
                 return false;
             }
         }
-        return true;
+        return true;*/
     }
 
     public boolean isVisible(double x1, double y1, double x2, double y2, String string1, String string2) {

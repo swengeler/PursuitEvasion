@@ -1,10 +1,7 @@
 package additionalOperations;
 
 import Jama.Matrix;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineSegment;
+import com.vividsolutions.jts.geom.*;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
@@ -22,6 +19,7 @@ import java.util.List;
 public class GeometryOperations {
 
     public static final GeometryFactory factory = new GeometryFactory();
+    public static final double PRECISION_EPSILON = 1E-10;
 
     public static ArrayList<Point2D> polyToPoints(ArrayList<Polygon> allPoly) {
 
