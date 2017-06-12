@@ -10,7 +10,6 @@ public class FollowMovePolicy extends MovePolicy {
 
     public FollowMovePolicy(Agent agent, boolean pursuing, MapRepresentation map) {
         super(agent, pursuing);
-        revealedMap = new RevealedMap(map.getBorderPolygon(), map.getObstaclePolygons());
         roadMap = new ShortestPathRoadMap(map);
     }
 

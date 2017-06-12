@@ -1,3 +1,4 @@
+/*
 package simulation;
 
 import conversion.GridConversion;
@@ -18,3 +19,4 @@ public class GridMapRepresentation extends MapRepresentation {
     }
 
 }
+*/

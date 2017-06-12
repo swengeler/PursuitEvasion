@@ -42,7 +42,7 @@ public class Simulation {
         simulationTimer = FxTimer.runPeriodically(Duration.ofMillis(timeStep), () -> {
             for (Agent a : agents) {
                 // should probably also have stuff like time elapsed since last step
-                // so the agent knows how far they can move
+                // so the controlledAgents knows how far they can move
                 // maybe better?: define a static delay between steps that is enforced
                 if (a.isActive()) {
                     a.move(map, agents);
@@ -55,7 +55,7 @@ public class Simulation {
                 if (a1.isEvader()) {
                     for (Agent a2 : agents) {
                         if (a2.isPursuer() && a2.inRange(a1.getXPos(), a1.getYPos())) {
-                            // remove captured agent
+                            // remove captured controlledAgents
                             a1.setActive(false);
                         }
                     }

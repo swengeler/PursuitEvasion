@@ -4,14 +4,18 @@ import java.util.ArrayList;
 
 public abstract class MovePolicy {
 
-    protected RevealedMap revealedMap;
-
-    protected Agent agent;
+    protected ArrayList<Agent> controlledAgents;
 
     protected boolean pursuing;
 
-    public MovePolicy(Agent agent, boolean pursuing) {
-        this.agent = agent;
+    protected MovePolicy(ArrayList<Agent> controlledAgents, boolean pursuing) {
+        this.controlledAgents = controlledAgents;
+        this.pursuing = pursuing;
+    }
+
+    protected MovePolicy(Agent singleAgent, boolean pursuing) {
+        controlledAgents = new ArrayList<>();
+        controlledAgents.add(singleAgent);
         this.pursuing = pursuing;
     }
 
@@ -23,6 +27,13 @@ public abstract class MovePolicy {
 
     public boolean evadingPolicy() {
         return !pursuing;
+    }
+
+    protected Agent getSingleAgent() {
+        if (controlledAgents.size() == 1) {
+            return controlledAgents.get(0);
+        }
+        return null;
     }
 
 }

@@ -10,7 +10,6 @@ public class EvaderPolicy extends MovePolicy {
 
     public EvaderPolicy(Agent agent, boolean pursuing, MapRepresentation map) {
         super(agent, pursuing);
-        revealedMap = new RevealedMap(map.getBorderPolygon(), map.getObstaclePolygons());
     }
 
     @Override
@@ -23,12 +22,12 @@ public class EvaderPolicy extends MovePolicy {
             }
         }
 
-        Point evaderPoint = new Point((int) agent.getXPos(), (int) agent.getYPos());
+        Point evaderPoint = new Point((int) getSingleAgent().getXPos(), (int) getSingleAgent().getYPos());
 
-        Point evaderUp = new Point((int) agent.getXPos(), (int) agent.getYPos() - 1);
-        Point evaderDown = new Point((int) agent.getXPos(), (int) agent.getYPos() + 1);
-        Point evaderLeft = new Point((int) agent.getXPos() - 1, (int) agent.getYPos());
-        Point evaderRight = new Point((int) agent.getXPos() + 1, (int) agent.getYPos());
+        Point evaderUp = new Point((int) getSingleAgent().getXPos(), (int) getSingleAgent().getYPos() - 1);
+        Point evaderDown = new Point((int) getSingleAgent().getXPos(), (int) getSingleAgent().getYPos() + 1);
+        Point evaderLeft = new Point((int) getSingleAgent().getXPos() - 1, (int) getSingleAgent().getYPos());
+        Point evaderRight = new Point((int) getSingleAgent().getXPos() + 1, (int) getSingleAgent().getYPos());
 
 
         Point[] evaderMoves = new Point[]{evaderUp, evaderDown, evaderLeft, evaderRight};
@@ -53,13 +52,13 @@ public class EvaderPolicy extends MovePolicy {
         //check out of bounds
 
         if (winningPoint == 0) {
-            return new Move(0, agent.getSpeed() * 1 / 250, 0);
+            return new Move(0, getSingleAgent().getSpeed() * 1 / 250, 0);
         } else if (winningPoint == 1) {
-            return new Move(0, agent.getSpeed() * -1 / 250, 0);
+            return new Move(0, getSingleAgent().getSpeed() * -1 / 250, 0);
         } else if (winningPoint == 2) {
-            return new Move(agent.getSpeed() * -1 / 250, 0, 0);
+            return new Move(getSingleAgent().getSpeed() * -1 / 250, 0, 0);
         } else if (winningPoint == 3) {
-            return new Move(agent.getSpeed() * 1 / 250, 0, 0);
+            return new Move(getSingleAgent().getSpeed() * 1 / 250, 0, 0);
         } else {
             System.out.println("No valid move found");
             return null;

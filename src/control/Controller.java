@@ -25,17 +25,18 @@ public class Controller {
 
     public static void theBestTest(ArrayList<MapPolygon> map, ArrayList<VisualAgent> visualAgents) {
         // converting the map
-        ArrayList<Polygon> polygons = new ArrayList<>();
+        /*ArrayList<Polygon> obstaclePolygons = new ArrayList<>();
         for (MapPolygon p : map) {
             if (p.getPoints().size() > 0) {
-                polygons.add(p.getPolygon());
+                obstaclePolygons.add(p.getPolygon());
             }
         }
         ArrayList<Polygon> subList = new ArrayList<>();
         for (int i = 1; i < map.size() - 1; i++) {
-            subList.add(polygons.get(i));
+            subList.add(obstaclePolygons.get(i));
         }
-        MapRepresentation mapRepresentation = new GridMapRepresentation(polygons.get(0), subList);
+        MapRepresentation mapRepresentation = new GridMapRepresentation(obstaclePolygons.get(0), subList);*/
+        MapRepresentation mapRepresentation = new MapRepresentation(map);
 
         // adding internal representations of the agents
         ArrayList<Agent> agents = new ArrayList<>();
@@ -58,15 +59,15 @@ public class Controller {
     }
 
     /*public static void betterTest(ArrayList<MapPolygon> map, ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
-        ArrayList<Polygon> polygons = new ArrayList<>();
+        ArrayList<Polygon> obstaclePolygons = new ArrayList<>();
         for (MapPolygon p : map) {
-            polygons.add(p.getPolygon());
+            obstaclePolygons.add(p.getPolygon());
         }
         ArrayList<Polygon> subList = new ArrayList<>();
         for (int i = 1; i < map.size(); i++) {
-            subList.add(polygons.get(i));
+            subList.add(obstaclePolygons.get(i));
         }
-        MapRepresentation mapRepresentation = new GridMapRepresentation(polygons.get(0), subList);
+        MapRepresentation mapRepresentation = new GridMapRepresentation(obstaclePolygons.get(0), subList);
 
         ArrayList<Agent> agents = new ArrayList<>();
         Agent temp;
