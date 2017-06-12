@@ -1848,8 +1848,6 @@ public class Main extends Application {
         });
         //menu.getChildren().add(startIntroducingEntitiesButton);
 
-        pane.getChildren().add(new Circle(500, 500, 2, Color.BLACK));
-
         Button placeDCREntityButton = new Button("Place random entity (evading)");
         placeDCREntityButton.setOnAction(e -> {
             if (map == null) {

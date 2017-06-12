@@ -270,25 +270,25 @@ public class DCREntity extends CentralisedEntity {
                         // move to first candidate point
                         catcher.moveBy(candidate1.getX() - catcher.getXPos(), candidate1.getY() - catcher.getYPos());
                         searcher.moveBy(candidate1.getX() - searcher.getXPos(), candidate1.getY() - searcher.getYPos());
-                        graphics.getChildren().add(new Circle(candidate1.getX(), candidate1.getY(), 1, Color.BLACK));
+                        Main.pane.getChildren().add(new Circle(candidate1.getX(), candidate1.getY(), 1, Color.BLACK));
                         System.out.println("candidate1 chosen");
                     } else {
                         // move to second candidate point
                         catcher.moveBy(candidate2.getX() - catcher.getXPos(), candidate2.getY() - catcher.getYPos());
                         searcher.moveBy(candidate2.getX() - searcher.getXPos(), candidate2.getY() - searcher.getYPos());
-                        graphics.getChildren().add(new Circle(candidate2.getX(), candidate2.getY(), 1, Color.BLACK));
+                        Main.pane.getChildren().add(new Circle(candidate2.getX(), candidate2.getY(), 1, Color.BLACK));
                         System.out.println("candidate2 chosen");
                     }
                 } else {
                     if (Math.sqrt(Math.pow(candidate1.getX() - target.getXPos(), 2) + Math.pow(candidate1.getY() - target.getYPos(), 2)) < Math.sqrt(Math.pow(candidate2.getX() - target.getXPos(), 2) + Math.pow(candidate2.getY() - target.getYPos(), 2))) {
                         // move to first candidate point
                         catcher.moveBy(candidate1.getX() - catcher.getXPos(), candidate1.getY() - catcher.getYPos());
-                        graphics.getChildren().add(new Circle(candidate1.getX(), candidate1.getY(), 1, Color.BLACK));
+                        Main.pane.getChildren().add(new Circle(candidate1.getX(), candidate1.getY(), 1, Color.BLACK));
                         System.out.println("candidate1 chosen");
                     } else {
                         // move to second candidate point
                         catcher.moveBy(candidate2.getX() - catcher.getXPos(), candidate2.getY() - catcher.getYPos());
-                        graphics.getChildren().add(new Circle(candidate2.getX(), candidate2.getY(), 1, Color.BLACK));
+                        Main.pane.getChildren().add(new Circle(candidate2.getX(), candidate2.getY(), 1, Color.BLACK));
                         System.out.println("candidate2 chosen");
                     }
                 }
@@ -335,7 +335,7 @@ public class DCREntity extends CentralisedEntity {
                     }
                 }
 
-                graphics.getChildren().add(new Circle(catcher.getXPos(), catcher.getYPos(), 1, Color.FUCHSIA));
+                Main.pane.getChildren().add(new Circle(catcher.getXPos(), catcher.getYPos(), 1, Color.FUCHSIA));
 
                 // move catcher
                 pathLines = currentCatcherPath.getPathLines();
@@ -748,19 +748,25 @@ public class DCREntity extends CentralisedEntity {
                     Main.pane.getChildren().add(new Circle(c.x, c.y, 4.5, Color.CYAN));
                     //}
                     Point p = new Point(new CoordinateArraySequence(new Coordinate[]{c}), GeometryOperations.factory);
-                    if (map.getPolygon().covers(p)) {
+                    /*if (map.getPolygon().covers(p)) {
                         Main.pane.getChildren().add(new Circle(c.x, c.y, 3, Color.YELLOW));
                     } else if (map.getBoundary().covers(p)) {
                         Main.pane.getChildren().add(new Circle(c.x, c.y, 3, Color.GREEN));
                     } else {
                         Coordinate[] pts = DistanceOp.nearestPoints(map.getPolygon(), p);
-                    }
+                        System.out.println("Nearest point distance: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{pts[0]}), GeometryOperations.factory)));
+                    }*/
                     Label label = new Label(map.getPolygon().distance(p) + "");
                     label.setTranslateX(c.x + 5);
                     label.setTranslateY(c.y);
                     Main.pane.getChildren().add(label);
                     currentIntersectionPoints.add(c);
                     test.add(c);
+                    System.out.println("Distance: " + (map.getPolygon().distance(p) < GeometryOperations.PRECISION_EPSILON) + " (other: " + map.legalPositionSpecial(p.getCoordinate()) + ")");
+                    System.out.printf("(%f|%f) vs (%f|%f)\n", p.getCoordinate().x, p.getCoordinate().y, p.getX(), p.getY());
+                    if (map.legalPosition(p.getCoordinate().x, p.getCoordinate().y)) {
+                        Main.pane.getChildren().add(new Circle(p.getCoordinate().x, p.getCoordinate().y, 2.5, Color.WHITE));
+                    }
                 }
 
                 /*for (Coordinate c1 : currentIntersectionPoints) {
@@ -772,7 +778,7 @@ public class DCREntity extends CentralisedEntity {
                 // check visibility with endpoints and everything else
                 Coordinate c1, c2;
                 Line help;
-                for (int j = 0; currentIntersectionPoints.size() > 0 && j < currentIntersectionPoints.size(); j++) {
+                /*for (int j = 0; currentIntersectionPoints.size() > 0 && j < currentIntersectionPoints.size(); j++) {
                     c1 = currentIntersectionPoints.get(j);
                     System.out.println("Coordinate (" + separatingLines.indexOf(l) + "|" + test.indexOf(c1) + ")");
                     help = new Line(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y);
@@ -783,14 +789,14 @@ public class DCREntity extends CentralisedEntity {
                     help.setStroke(Color.LIGHTGREEN);
                     help.setStrokeWidth(3);
                     Main.pane.getChildren().add(help);
-                   /* if (map.legalPosition(c1)) {
+                    *//*if (map.legalPosition(c1)) {
                         Main.pane.getChildren().add(new Circle(c1.x, c1.y, 2.5, Color.WHITE));
                         Label label = new Label("(" + separatingLines.indexOf(l) + "|" + test.indexOf(c1) + ")");
                         label.setTranslateX(c1.x + 5);
                         label.setTranslateY(c1.y);
                         //Main.pane.getChildren().add(label);
-                    }*/
-                    /*if (map.isVisible(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y)) {
+                    }*//*
+                    if (map.isVisible(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y)) {
                         LineSegment lineSegment = new LineSegment(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y);
                         actualSegments.add(lineSegment);
                         parallelInformation.add(j);
@@ -836,8 +842,8 @@ public class DCREntity extends CentralisedEntity {
                                 break;
                             }
                         }
-                    }*/
-                }
+                    }
+                }*/
                 currentIntersectionPoints.clear();
             }
 

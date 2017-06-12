@@ -9,6 +9,7 @@ import javafx.scene.shape.Polygon;
 import ui.MapPolygon;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MapRepresentation {
 
@@ -101,10 +102,20 @@ public class MapRepresentation {
     }
 
     public boolean legalPosition(double xPos, double yPos) {
-        tempPoint.getCoordinate().x = xPos;
-        tempPoint.getCoordinate().y = yPos;
+        /*tempPoint.getCoordinate().x = xPos;
+        tempPoint.getCoordinate().y = yPos;*/
+        Coordinate what = new Coordinate(xPos, yPos);
+        tempPoint.getCoordinates()[0].x = what.x;
+        tempPoint.getCoordinates()[0].y = what.y;
+        tempPoint.getCoordinateSequence().getCoordinate(0).x = what.x;
+        tempPoint.getCoordinateSequence().getCoordinate(0).y = what.y;
+        tempPoint.getCoordinate().x = what.x;
+        tempPoint.getCoordinate().y = what.y;
+        /*System.out.println(Arrays.toString(tempPoint.getCoordinateSequence().toCoordinateArray()));
+        tempPoint = new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(xPos, yPos)}), GeometryOperations.factory);
+        System.out.println(Arrays.toString(tempPoint.getCoordinateSequence().toCoordinateArray()));*/
         //return polygon.covers(tempPoint);
-        return polygon.distance(tempPoint) < GeometryOperations.PRECISION_EPSILON;
+        return legalPosition(tempPoint);
 
         /*if (!borderPolygon.contains(xPos, yPos)) {
             return false;
@@ -120,8 +131,20 @@ public class MapRepresentation {
         return true;*/
     }
 
+    public boolean legalPositionSpecial(Coordinate c) {
+        tempPoint.getCoordinates()[0].x = c.x;
+        tempPoint.getCoordinates()[0].y = c.y;
+        tempPoint.getCoordinateSequence().getCoordinate(0).x = c.x;
+        tempPoint.getCoordinateSequence().getCoordinate(0).y = c.y;
+        return legalPosition(tempPoint);
+    }
+
     public boolean legalPosition(Coordinate c) {
         return legalPosition(c.x, c.y);
+    }
+
+    public boolean legalPosition(Point p) {
+        return polygon.distance(p) < GeometryOperations.PRECISION_EPSILON;
     }
 
     public ArrayList<LineSegment> getBorderLines() {
@@ -200,17 +223,17 @@ public class MapRepresentation {
         }
         tempPoint.getCoordinate().x = tempLine.getCoordinates()[0].x;
         tempPoint.getCoordinate().y = tempLine.getCoordinates()[0].y;
-        double distance1 = polygon.distance(tempPoint);
-        if (distance1 < GeometryOperations.PRECISION_EPSILON && polygon.intersection(tempLine).getCoordinates().length <= 1) {
+        boolean outside1 = !polygon.covers(tempPoint);
+        if (outside1 && polygon.intersection(tempLine).getCoordinates().length <= 1) {
             return true;
         }
         tempPoint.getCoordinate().x = tempLine.getCoordinates()[1].x;
         tempPoint.getCoordinate().y = tempLine.getCoordinates()[1].y;
-        double distance2 = polygon.distance(tempPoint);
-        if (distance2 < GeometryOperations.PRECISION_EPSILON && polygon.intersection(tempLine).getCoordinates().length <= 1) {
+        boolean outside2 = !polygon.covers(tempPoint);
+        if (outside2 && polygon.intersection(tempLine).getCoordinates().length <= 1) {
             return true;
         }
-        if (distance1 < GeometryOperations.PRECISION_EPSILON && distance2 < GeometryOperations.PRECISION_EPSILON && polygon.intersection(tempLine).getCoordinates().length <= 2) {
+        if (outside1 && outside2 && polygon.intersection(tempLine).getCoordinates().length <= 2) {
             return true;
         }
         return false;
