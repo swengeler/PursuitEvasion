@@ -3,7 +3,6 @@ package entities;
 import additionalOperations.*;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
-import com.vividsolutions.jts.operation.distance.DistanceOp;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -702,8 +701,11 @@ public class DCREntity extends CentralisedEntity {
     }
 
     private void showGuardingSquares(ArrayList<Line> separatingLines) {
-        ArrayList<LineSegment> actualSegments = new ArrayList<>();
-        ArrayList<Integer> parallelInformation = new ArrayList<>();
+        GuardedSquare guardedSquare;
+
+        ArrayList<LineSegment> squareSides;
+        ArrayList<LineSegment> actualSegments;
+        ArrayList<Integer> parallelInformation;
         LinearRing square;
 
         ArrayList<Coordinate> originalCornerGuardPositions = new ArrayList<>();
@@ -713,9 +715,9 @@ public class DCREntity extends CentralisedEntity {
         ArrayList<int[]> cornerGuardAssignmentIndeces = new ArrayList<>();
         ArrayList<Integer> lineGuardAssignmentIndeces = new ArrayList<>();
 
+
         double length1, length2, deltaX, deltaY;
         LineSegment[] lines = new LineSegment[4];
-        Coordinate intersectionPoint;
         for (Line l : separatingLines) {
             lines[0] = new LineSegment(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
             length1 = Math.sqrt(Math.pow(lines[0].getCoordinate(0).x - lines[0].getCoordinate(1).x, 2) + Math.pow(lines[0].getCoordinate(0).y - lines[0].getCoordinate(1).y, 2));
@@ -730,72 +732,89 @@ public class DCREntity extends CentralisedEntity {
             lines[2] = new LineSegment(lines[0].getCoordinate(1).x, lines[0].getCoordinate(1).y, lines[0].getCoordinate(1).x + deltaX, lines[0].getCoordinate(1).y + deltaY);
             lines[3] = new LineSegment(lines[0].getCoordinate(0).x + deltaX, lines[0].getCoordinate(0).y + deltaY, lines[0].getCoordinate(1).x + deltaX, lines[0].getCoordinate(1).y + deltaY);
 
+            squareSides = new ArrayList<>();
+            squareSides.add(lines[0]);
+            squareSides.add(lines[1]);
+            squareSides.add(lines[2]);
+            squareSides.add(lines[3]);
+            square = new LinearRing(new CoordinateArraySequence(new Coordinate[]{lines[0].getCoordinate(0), lines[1].getCoordinate(1), lines[3].getCoordinate(1), lines[0].getCoordinate(1), lines[0].getCoordinate(0)}), GeometryOperations.factory);
 
             for (int i = 1; i < lines.length; i++) {
                 ArrayList<Coordinate> currentIntersectionPoints = new ArrayList<>();
-                ArrayList<Coordinate> test = new ArrayList<>();
-                /*for (LineSegment ls : map.getAllLines()) {
-                    intersectionPoint = ls.intersection(lines[i]);
-                    if (intersectionPoint != null*//* && !intersectionPoint.equals2D(lines[i].getCoordinate(0)) && !intersectionPoint.equals2D(lines[i].getCoordinate(1))*//*) {
-                        //Main.pane.getChildren().add(new Circle(intersectionPoint.x, intersectionPoint.y, 3.5, Color.DARKBLUE));
-                        currentIntersectionPoints.add(intersectionPoint);
-                        test.add(intersectionPoint);
-                    }
-                }*/
                 Coordinate[] intersectionArray = map.getBoundary().intersection(lines[i].toGeometry(GeometryOperations.factory)).getCoordinates();
                 for (Coordinate c : intersectionArray) {
-                    //if (!c.equals2D(lines[0].getCoordinate(0)) && !c.equals2D(lines[0].getCoordinate(1))) {
-                    Main.pane.getChildren().add(new Circle(c.x, c.y, 4.5, Color.CYAN));
-                    //}
-                    Point p = new Point(new CoordinateArraySequence(new Coordinate[]{c}), GeometryOperations.factory);
-                    /*if (map.getPolygon().covers(p)) {
-                        Main.pane.getChildren().add(new Circle(c.x, c.y, 3, Color.YELLOW));
-                    } else if (map.getBoundary().covers(p)) {
-                        Main.pane.getChildren().add(new Circle(c.x, c.y, 3, Color.GREEN));
-                    } else {
-                        Coordinate[] pts = DistanceOp.nearestPoints(map.getPolygon(), p);
-                        System.out.println("Nearest point distance: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{pts[0]}), GeometryOperations.factory)));
-                    }*/
-                    Label label = new Label(map.getPolygon().distance(p) + "");
-                    label.setTranslateX(c.x + 5);
-                    label.setTranslateY(c.y);
-                    Main.pane.getChildren().add(label);
-                    currentIntersectionPoints.add(c);
-                    test.add(c);
-                    System.out.println("Distance: " + (map.getPolygon().distance(p) < GeometryOperations.PRECISION_EPSILON) + " (other: " + map.legalPositionSpecial(p.getCoordinate()) + ")");
-                    System.out.printf("(%f|%f) vs (%f|%f)\n", p.getCoordinate().x, p.getCoordinate().y, p.getX(), p.getY());
-                    if (map.legalPosition(p.getCoordinate().x, p.getCoordinate().y)) {
-                        Main.pane.getChildren().add(new Circle(p.getCoordinate().x, p.getCoordinate().y, 2.5, Color.WHITE));
+                    if (!c.equals2D(lines[0].getCoordinate(0)) && !c.equals2D(lines[0].getCoordinate(1))) {
+                        boolean changed = false;
+                        Main.pane.getChildren().add(new Circle(c.x, c.y, 4.5, Color.CYAN));
+                        Point p = new Point(new CoordinateArraySequence(new Coordinate[]{c}), GeometryOperations.factory);
+
+                        if (map.getPolygon().distance(p) != 0.0) {
+                            Main.pane.getChildren().add(new Circle(c.x, c.y, 4.5, Color.CYAN));
+
+                            deltaX = lines[i].getCoordinate(1).x - lines[i].getCoordinate(0).x;
+                            deltaY = lines[i].getCoordinate(1).y - lines[i].getCoordinate(0).y;
+                            double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                            deltaX /= length;
+                            deltaY /= length;
+                            double dist = map.getPolygon().distance(p);
+                            Point candidate1 = new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(c.x + deltaX * (100 * dist), c.y + deltaY * (100 * dist))}), GeometryOperations.factory);
+                            Point candidate2 = new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(c.x - deltaX * (100 * dist), c.y - deltaY * (100 * dist))}), GeometryOperations.factory);
+
+                            if (map.getPolygon().distance(candidate1) == 0.0) {
+                                p = candidate1;
+                                c.x = p.getX();
+                                c.y = p.getY();
+                            } else if (map.getPolygon().distance(candidate2) == 0.0) {
+                                p = candidate2;
+                                c.x = p.getX();
+                                c.y = p.getY();
+                            } else {
+                                System.exit(45745);
+                            }
+                            changed = true;
+                        } else {
+                            deltaX = lines[i].getCoordinate(1).x - lines[i].getCoordinate(0).x;
+                            deltaY = lines[i].getCoordinate(1).y - lines[i].getCoordinate(0).y;
+                            double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                            deltaX /= length;
+                            deltaY /= length;
+                            Point candidate1 = new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(c.x + deltaX * 1E-7, c.y + deltaY * 1E-7)}), GeometryOperations.factory);
+                            Point candidate2 = new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(c.x - deltaX * 1E-7, c.y - deltaY * 1E-7)}), GeometryOperations.factory);
+
+                            if (map.getPolygon().distance(candidate1) == 0.0) {
+                                p = candidate1;
+                                c.x = p.getX();
+                                c.y = p.getY();
+                            } else if (map.getPolygon().distance(candidate2) == 0.0) {
+                                p = candidate2;
+                                c.x = p.getX();
+                                c.y = p.getY();
+                            } else {
+                                System.exit(45745);
+                            }
+                        }
+
+                        Label label = new Label(map.getPolygon().distance(p) + "");
+                        label.setTranslateX(c.x + 5);
+                        label.setTranslateY(c.y);
+                        Main.pane.getChildren().add(label);
+
+                        currentIntersectionPoints.add(c);
+                        //System.out.printf("(%f|%f) vs (%f|%f)\n", p.getCoordinate().x, p.getCoordinate().y, p.getX(), p.getY());
+                        if (map.legalPosition(c.x, c.y)) {
+                            Main.pane.getChildren().add(new Circle(p.getCoordinate().x, p.getCoordinate().y, 2.5, changed ? Color.FUCHSIA : Color.WHITE));
+                        }
                     }
                 }
 
-                /*for (Coordinate c1 : currentIntersectionPoints) {
-                    if (map.legalPosition(c1)) {
-                        Main.pane.getChildren().add(new Circle(c1.x, c1.y, 2.5, Color.WHITE));
-                    }
-                }*/
+                actualSegments = new ArrayList<>();
+                parallelInformation = new ArrayList<>();
 
                 // check visibility with endpoints and everything else
                 Coordinate c1, c2;
-                Line help;
-                /*for (int j = 0; currentIntersectionPoints.size() > 0 && j < currentIntersectionPoints.size(); j++) {
+                for (int j = 0; currentIntersectionPoints.size() > 0 && j < currentIntersectionPoints.size(); j++) {
                     c1 = currentIntersectionPoints.get(j);
-                    System.out.println("Coordinate (" + separatingLines.indexOf(l) + "|" + test.indexOf(c1) + ")");
-                    help = new Line(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y);
-                    help.setStroke(Color.LIGHTGREEN);
-                    help.setStrokeWidth(3);
-                    Main.pane.getChildren().add(help);
-                    help = new Line(c1.x, c1.y, lines[i].getCoordinate(1).x, lines[i].getCoordinate(1).y);
-                    help.setStroke(Color.LIGHTGREEN);
-                    help.setStrokeWidth(3);
-                    Main.pane.getChildren().add(help);
-                    *//*if (map.legalPosition(c1)) {
-                        Main.pane.getChildren().add(new Circle(c1.x, c1.y, 2.5, Color.WHITE));
-                        Label label = new Label("(" + separatingLines.indexOf(l) + "|" + test.indexOf(c1) + ")");
-                        label.setTranslateX(c1.x + 5);
-                        label.setTranslateY(c1.y);
-                        //Main.pane.getChildren().add(label);
-                    }*//*
+                    // TODO: add corner guards assigned to the endpoint as well
                     if (map.isVisible(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y)) {
                         LineSegment lineSegment = new LineSegment(c1.x, c1.y, lines[i].getCoordinate(0).x, lines[i].getCoordinate(0).y);
                         actualSegments.add(lineSegment);
@@ -843,11 +862,21 @@ public class DCREntity extends CentralisedEntity {
                             }
                         }
                     }
-                }*/
+                }
                 currentIntersectionPoints.clear();
             }
 
+            // check visibility between two adjacent endpoints
+            // visibility between endpoints of the separating line is guaranteed
+            if (map.isVisible(lines[1].getCoordinate(0).x, lines[1].getCoordinate(0).y, lines[1].getCoordinate(1).x, lines[1].getCoordinate(1).y)) {
+                // add to guards assigned to these endpoints
+            }
+            if (map.isVisible(lines[2].getCoordinate(0).x, lines[2].getCoordinate(0).y, lines[2].getCoordinate(1).x, lines[2].getCoordinate(1).y)) {
 
+            }
+            if (map.isVisible(lines[3].getCoordinate(0).x, lines[3].getCoordinate(0).y, lines[3].getCoordinate(1).x, lines[3].getCoordinate(1).y)) {
+
+            }
 
             /*for (LineSegment ls : map.getObstacleLines()) {
                 intersectionPoint = ls.intersection(lines[1]);
