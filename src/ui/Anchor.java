@@ -8,7 +8,7 @@ import javafx.scene.shape.*;
 
 public class Anchor extends Circle {
 
-    public static final double RADIUS = 10;
+    private static final double RADIUS = 10;
 
     private final DoubleProperty x, y;
 
@@ -43,6 +43,9 @@ public class Anchor extends Circle {
         });
         setOnMouseReleased(e -> {
             getScene().setCursor(Cursor.HAND);
+            if (Main.mapPolygons == null) {
+                return;
+            }
             for (MapPolygon mp1 : Main.mapPolygons) {
                 for (MapPolygon mp2 : Main.mapPolygons) {
                     // check for intersection between lines
@@ -126,15 +129,9 @@ public class Anchor extends Circle {
         });
     }
 
-    // records relative x and y co-ordinates.
-    class Delta {
-        double x, y;
-    }
-
     public void printAnchor() {
         System.out.println(toString());
     }
-
 
     public String toString() {
         return new String("X = " + this.getX() + "\tY = " + this.getY());

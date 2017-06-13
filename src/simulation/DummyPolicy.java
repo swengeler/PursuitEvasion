@@ -5,13 +5,14 @@ import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
+import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DummyPolicy extends MovePolicy {
 
-    private SimplyConnectedTree tree;
+    private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
 
     ArrayList<Line> test;
@@ -19,25 +20,29 @@ public class DummyPolicy extends MovePolicy {
 
     public DummyPolicy(Agent agent, boolean pursuing) {
         super(agent, pursuing);
-        // construct tree from (simple) map
+        // construct traversalHandler from (simple) map
     }
 
     @Override
     public Move getNextMove(MapRepresentation map, ArrayList<Agent> agents) {
-        // if there is no "fixed plan" currently (for the round), compute a new one, i.e. a path to follow trough the map (tree)
+        // if there is no "fixed plan" currently (for the round), compute a new one, i.e. a path to follow trough the map (traversalHandler)
         // the current path to follow changes if a) it is finished or b) an evader is spotted
 
-        if (tree == null) {
-            // initialise the tree and get an initial path to move to a leaf node
+        if (traversalHandler == null) {
+            // initialise the traversalHandler and get an initial path to move to a leaf node
             initTree(map);
-            currentPath = tree.getRandomTraversal(tree.getNode(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
-            currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));
+            try {
+                currentPath = traversalHandler.getRandomTraversal(getSingleAgent().getXPos(), getSingleAgent().getYPos());
+            } catch (DelaunayError delaunayError) {
+                delaunayError.printStackTrace();
+            }
+            //currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));
             test = currentPath.getPathLines();
             testCounter = 0;
             //return new Move(currentPath.getStartX() - getSingleAgent().getXPos(), currentPath.getStartY() - getSingleAgent().getYPos(), 0);
         }
 
-        if (tree == null) {
+        if (traversalHandler == null) {
             System.exit(-1);
         }
         if (getSingleAgent() == null) {
@@ -46,11 +51,16 @@ public class DummyPolicy extends MovePolicy {
         if (currentPath == null) {
             System.exit(-3);
         }
-        if (tree.getNodeIndex(getSingleAgent().getXPos(), getSingleAgent().getYPos()) == currentPath.getEndIndex()) {
+        if (traversalHandler.getNodeIndex(getSingleAgent().getXPos(), getSingleAgent().getYPos()) == currentPath.getEndIndex()) {
             // TODO: there should probably be a better check that takes into account that an entire branch might be cleared if there is vision of it
             // end of path reached, compute new path
-            currentPath = tree.getRandomTraversal(tree.getNode(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
-            currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));
+            /*currentPath = traversalHandler.getRandomTraversal(traversalHandler.getNode(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
+            currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));*/
+            try {
+                currentPath = traversalHandler.getRandomTraversal(getSingleAgent().getXPos(), getSingleAgent().getYPos());
+            } catch (DelaunayError delaunayError) {
+                delaunayError.printStackTrace();
+            }
             test = currentPath.getPathLines();
             testCounter = 0;
         }
@@ -80,7 +90,6 @@ public class DummyPolicy extends MovePolicy {
             testCounter++;
         }
         return result;
-        //return new Move(0, 0, 0);
     }
 
     private void initTree(MapRepresentation map) {
@@ -116,7 +125,9 @@ public class DummyPolicy extends MovePolicy {
                 }
             }
 
-            tree = new SimplyConnectedTree((ArrayList<DTriangle>) includedTriangles);
+            traversalHandler = new TraversalHandler((ArrayList<DTriangle>) includedTriangles);
+            traversalHandler.shortestPathRoadMap = new ShortestPathRoadMap(map);
+            traversalHandler.map = map;
         } catch (DelaunayError e) {
             e.printStackTrace();
         }

@@ -12,10 +12,28 @@ public abstract class CentralisedEntity extends Entity {
 
     protected CentralisedEntity(MapRepresentation map) {
         super(map);
+        availableAgents = new ArrayList<>();
     }
 
     public abstract int totalRequiredAgents();
+
     public abstract int remainingRequiredAgents();
+
     public abstract void addAgent(Agent a);
+
+    @Override
+    public boolean isActive() {
+        for (Agent a : availableAgents) {
+            if (a.isActive()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public ArrayList<Agent> getControlledAgents() {
+        return availableAgents;
+    }
 
 }

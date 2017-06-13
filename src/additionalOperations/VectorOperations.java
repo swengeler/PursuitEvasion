@@ -2,6 +2,7 @@ package additionalOperations;
 
 
 import javafx.geometry.Point2D;
+import javafx.scene.shape.Line;
 
 import java.util.ArrayList;
 
@@ -10,8 +11,6 @@ import java.util.ArrayList;
  * Created by robin on 22.03.2017.
  */
 public class VectorOperations {
-
-
 
 
     public boolean pointIntersect(ArrayList<PointVector> vectors, Point2D AgentPos, Point2D dest) {
@@ -24,23 +23,23 @@ public class VectorOperations {
         return false;
     }
 
-    public static Point2D pointIntersect(PointVector vec1, PointVector vec2) {
+    public static Point2D pointIntersect(Line line1, Line line2) {
 
 
         double x1, x2, x3, x4;
         double y1, y2, y3, y4;
 
-        x1 = vec1.getOrigin().getX();
-        y1 = vec1.getOrigin().getY();
+        x1 = line1.getStartX();
+        y1 = line1.getStartY();
 
-        x2 = vec1.getDestination().getX();
-        y2 = vec1.getDestination().getY();
+        x2 = line1.getEndX();
+        y2 = line1.getEndY();
 
-        x3 = vec2.getOrigin().getX();
-        y3 = vec2.getOrigin().getY();
+        x3 = line2.getStartX();
+        y3 = line2.getStartY();
 
-        x4 = vec2.getDestination().getX();
-        y4 = vec2.getDestination().getY();
+        x4 = line2.getEndX();
+        y4 = line2.getEndY();
 
         double s1x, s1y, s2x, s2y, s, t;
 
@@ -70,12 +69,27 @@ public class VectorOperations {
         r = new Point2D(4.5, 5.5);
         s = new Point2D(-3.5, 3.5);
 
-        PointVector v1, v2;
+        Line v1, v2;
 
-        v1 = new PointVector(p, r);
-        v2 = new PointVector(q, s);
+        //v1 = new PointVector(p, r);
+        v1 = new Line(p.getX(), p.getY(), r.getX(), r.getY());
+
+        //v2 = new PointVector(q, s);
+        v2 = new Line(q.getX(), q.getY(), s.getX(), s.getY());
 
         System.out.println("intersect at = " + pointIntersect(v1, v2));
+    }
+
+    public static PointVector add(PointVector v1, PointVector v2) {
+        return new PointVector(v1.getX() + v2.getX(), v1.getY() + v2.getY());
+    }
+
+    public static PointVector subtract(PointVector v1, PointVector v2) {
+        return new PointVector(v1.getX() - v2.getX(), v1.getY() - v2.getY());
+    }
+
+    public static PointVector multiply(PointVector v, double scalar) {
+        return new PointVector(v.getX() * scalar, v.getY() * scalar);
     }
 
     public static double dotProduct(PointVector v1, PointVector v2) {

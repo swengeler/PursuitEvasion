@@ -67,4 +67,13 @@ public class PointVector {
     public double getY() {
         return y;
     }
+
+    public double length() {
+        return Math.sqrt(x * x + y * y);
+    }
+
+    public Point2D toPoint() {
+        return new Point2D(x, y);
+    }
+
 }

@@ -7,23 +7,15 @@ import entities.DCREntity;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.FileChooser;
@@ -31,20 +23,13 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DPoint;
-import org.jdelaunay.delaunay.geometries.DTriangle;
-import simulation.AgentSettings;
-import simulation.MapRepresentation;
-import simulation.RevealedMap;
-import simulation.Simulation;
+import org.jdelaunay.delaunay.geometries.*;
+import simulation.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-public class AltMain extends Application {
+public class DeprecatedMain extends Application {
 
     private enum ProgramState {
         MAP_EDITING, AGENT_PLACING, SIMULATION
@@ -86,6 +71,18 @@ public class AltMain extends Application {
 
         // zoomable drawing pane
         pane = new ZoomablePane();
+        /*pane.setOnKeyTyped(e -> {
+            System.out.println("df");
+            if (e.isControlDown()) {
+                if (e.isShiftDown() && e.getCode() == KeyCode.S) {
+                    saveMapAndAgents();
+                } else if (e.getCode() == KeyCode.S) {
+                    saveMapOnly();
+                } else if (e.getCode() == KeyCode.O) {
+                    loadMap();
+                }
+            }
+        });*/
 
         // top-level container, partitions window into drawing pane and menu
         outerLayout = new HBox();
@@ -175,7 +172,6 @@ public class AltMain extends Application {
 
             Polygon outer = new Polygon();
 
-
             for (int i = 1; i < mapPolygons.size(); i++) {
                 mapPolygons.get(i).setFill(Color.WHITE);
                 mapPolygons.get(i).toFront();
@@ -232,9 +228,10 @@ public class AltMain extends Application {
 
         Button testCentralisedButton = new Button("Test centralised policy");
         testCentralisedButton.setOnAction(e -> {
-            MapRepresentation map = new MapRepresentation(mapPolygons);
+            MapRepresentation map = new MapRepresentation(mapPolygons, null, null);
             CentralisedEntity entity = new DCREntity(map);
             int requiredAgents = entity.remainingRequiredAgents();
+            System.out.println("Required agents: " + requiredAgents);
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
@@ -277,7 +274,7 @@ public class AltMain extends Application {
                             }
                         }
                         if (inPolygon) {
-                            //System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                            //System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getEstX(), dt.getPoint(0).getEstY(), dt.getPoint(1).getEstX(), dt.getPoint(1).getEstY(), dt.getPoint(2).getEstX(), dt.getPoint(2).getEstY());
                             p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
                             p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
                             p.setFill(Color.WHITE.deriveColor(1, 1, 1, 0.1));
@@ -314,7 +311,7 @@ public class AltMain extends Application {
                                     }
                                 }
                                 if (otherTriangle != null) {
-                                    /*Line l = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), otherTriangle.getBarycenter().getX(), otherTriangle.getBarycenter().getY());
+                                    /*Line l = new Line(dt1.getBarycenter().getEstX(), dt1.getBarycenter().getEstY(), otherTriangle.getBarycenter().getEstX(), otherTriangle.getBarycenter().getEstY());
                                     l.setStroke(Color.RED);
                                     l.setStrokeWidth(2);
                                     pane.getChildren().add(l);*/
@@ -330,6 +327,14 @@ public class AltMain extends Application {
                             }
                         }
                     }
+
+                    /*// randomised walkthrough test
+                    TraversalHandler tree = new TraversalHandler((ArrayList<DTriangle>) includedTriangles);
+                    //tree.printAdjacencyMatrix();
+                    tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());
+                    tree.getRandomTraversal(tree.getLeaf());*/
                 } catch (DelaunayError error) {
                     error.printStackTrace();
                 }
@@ -356,9 +361,96 @@ public class AltMain extends Application {
         primaryStage.setTitle("Coded by Winston v5.76.002 build 42 alpha");
 
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/rrr_icon.png")));
+        //pane.getChildren().add(new ImageView(new Image(getClass().getResourceAsStream("/like-3.png"))));
 
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        /*Polygon arcTestPolygon = new Polygon();
+        arcTestPolygon.getPoints().addAll(
+                20.0, 30.0,
+                30.0, 90.0,
+                200.0, 150.0,
+                200.0, 80.0
+        );
+        arcTestPolygon.setFill(Color.LIGHTGREEN);
+        pane.getChildren().add(arcTestPolygon);
+
+        Arc arc = new Arc();
+        arc.setCenterX(100.0f);
+        arc.setCenterY(80.0f);
+        arc.setRadiusX(100.0f);
+        arc.setRadiusY(100.0f);
+        arc.setStartAngle(0.0f);
+        arc.setLength(60.0f);
+        arc.setType(ArcType.ROUND);
+        arc.setFill(Color.BLACK.deriveColor(1, 1, 1, 0.3));
+        arc.setStroke(Color.BLACK);
+        arc.setStrokeWidth(1);
+        pane.getChildren().add(arc);
+
+        Polygon testPolygon = new Polygon();
+        testPolygon.getPoints().addAll(
+                20.0, 30.0,
+                0.0, 0.0,
+                0.0, pane.getHeight(),
+                pane.getWidth(), pane.getHeight(),
+                pane.getWidth(), 0.0,
+                0.0, 0.0,
+                20.0, 30.0,
+                200.0, 80.0,
+                200.0, 150.0,
+                30.0, 90.0
+        );
+        testPolygon.setFill(Color.WHITE);
+        //pane.getChildren().add(testPolygon);
+
+        Button arcTestButton = new Button("Arc test");
+        arcTestButton.setOnAction(e -> {
+            arc.setStartAngle(arc.getStartAngle() + 30.0f);
+        });
+        menu.getChildren().add(arcTestButton);
+
+        VisualAgent visualAgent = new VisualAgent();
+        visualAgent.setTranslateX(300);
+        visualAgent.setTranslateY(300);
+        pane.getChildren().add(visualAgent);
+
+        Timeline timeLine = new Timeline();
+        timeLine.setCycleCount(Timeline.INDEFINITE);
+        timeLine.setAutoReverse(true);
+        KeyValue kv = new KeyValue(arc.startAngleProperty(), 360.0f);
+        KeyFrame kf = new KeyFrame(Duration.millis(4000), kv);
+        timeLine.getKeyFrames().add(kf);
+        timeLine.play();
+
+        Timeline timeLine2 = new Timeline();
+        timeLine2.setCycleCount(Timeline.INDEFINITE);
+        timeLine2.setAutoReverse(true);
+        KeyValue kv2 = new KeyValue(visualAgent.turnAngleProperty(), 360.0);
+        KeyFrame kf2 = new KeyFrame(Duration.millis(2000), kv2);
+        timeLine2.getKeyFrames().add(kf2);
+        timeLine2.play();
+
+        union = new Rectangle(250, 250, 100, 100);
+        //union = Shape.union(union, visualAgent.getFieldOfView());
+        union.setFill(Color.GREEN);
+        union.toFront();
+
+        System.out.println(union.getBoundsInParent().getMinX() + " " + union.getBoundsInParent().getMaxX() + " - " + union.getBoundsInParent().getMinY() + " " + union.getBoundsInParent().getMaxY());
+        pane.getChildren().add(union);
+
+        Button unionTestButton = new Button("Union test");
+        unionTestButton.setOnAction(e -> {
+            pane.getChildren().remove(union);
+            changeUnion(union, visualAgent.getFieldOfView());
+            pane.getChildren().add(union);
+            //union.toBack();
+            union.setFill(Color.BLACK);
+            System.out.println("Hello");
+        });
+        menu.getChildren().add(unionTestButton);*/
+
     }
 
     private void initPlaceAgents() {
@@ -583,6 +675,12 @@ public class AltMain extends Application {
 
                     indicatorLine.setVisible(false);
                 }
+                /*for (MapPolygon m : mapPolygons) {
+                    System.out.println("\nPolygon: ");
+                    for (int i = 0; i < m.getPoints().size(); i += 2) {
+                        System.out.println(m.getPoints().get(i) + " " + m.getPoints().get(i + 1));
+                    }
+                }*/
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -679,6 +777,17 @@ public class AltMain extends Application {
                             }
 
                             System.out.println("Polygon created (with " + ((currentMapPolygon.getPoints().size() / 2) - 1) + " points)");
+
+                            Polygon poly = currentMapPolygon.getPolygon();
+
+                            //Robin = added here to get coordinates ,of a polygon to check if points are detected correctly
+                            /*
+                            ArrayList<Point2D> points = polyToPoints(poly);
+                            for(Point2D point : points) {
+                                System.out.println(point);
+                            }
+                            */
+
                             System.out.println(mapPolygons.size());
 
                             // connected to first point to close the polygon

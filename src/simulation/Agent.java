@@ -72,6 +72,12 @@ public class Agent {
         settings.setYPos(yPos);
     }
 
+    public void moveBy(double deltaX, double deltaY) {
+        setXPos(getXPos() + deltaX);
+        setYPos(getYPos() + deltaY);
+        //System.out.printf("Agent moved by (%.4f|%.4f)\n", deltaX, deltaY);
+    }
+
     public MovePolicy getPolicy() {
         return policy;
     }
@@ -86,10 +92,12 @@ public class Agent {
             policy = new RandomMovePolicy(this, settings.isPursuing(), map);
         } else if (policyEncoding.equals("straight_line_policy")) {
             policy = new StraightLineMovePolicy(this, settings.isPursuing(), map);
-        } else if (policyEncoding.equals("evader_policy")) {
-            policy = new EvaderPolicy(this, settings.isPursuing(), map);
+        } else if (policyEncoding.equals("flocking_evader_policy")) {
+            policy = new FlockingEvaderPolicy(this, settings.isPursuing(), map);
         } else if (policyEncoding.equals("dummy_policy")) {
             policy = new DummyPolicy(this, settings.isPursuing());
+        } else if (policyEncoding.equals("hide_evader_policy")) {
+            policy = new HideEvaderPolicy(this, settings.isPursuing(), map);
         }
         //policy = new RandomMovePolicy(this, settings.isPursuing(), map);
         //policy = new FollowMovePolicy(this, settings.isPursuing(), map);
@@ -100,6 +108,10 @@ public class Agent {
             return false;
         }
         return Math.sqrt(Math.pow(getXPos() - x, 2) + Math.pow(getYPos() - y, 2)) <= captureRange;
+    }
+
+    public boolean shareLocation(Agent a) {
+        return a.getXPos() == getXPos() && a.getYPos() == getYPos();
     }
 
     public boolean isPursuer() {
@@ -124,5 +136,11 @@ public class Agent {
         setYPos(getYPos() + nextMove.getYDelta());
         setTurnAngle(getTurnAngle() + nextMove.getTurnDelta());
     }
+
+    /*@Override
+    public String toString() {
+        Formatter f = new Formatter();
+        return f.format("Agent [xPos=%.3f, yPos=%.3f, speed=%.1f]", getXPos(), getYPos(), getSpeed()).toString();
+    }*/
 
 }

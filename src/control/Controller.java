@@ -1,6 +1,6 @@
 package control;
 
-import javafx.scene.shape.Polygon;
+import entities.DCREntity;
 import simulation.*;
 import ui.*;
 
@@ -36,7 +36,7 @@ public class Controller {
             subList.add(obstaclePolygons.get(i));
         }
         MapRepresentation mapRepresentation = new GridMapRepresentation(obstaclePolygons.get(0), subList);*/
-        MapRepresentation mapRepresentation = new MapRepresentation(map);
+        MapRepresentation mapRepresentation = new MapRepresentation(map, null, null);
 
         // adding internal representations of the agents
         ArrayList<Agent> agents = new ArrayList<>();
@@ -56,6 +56,7 @@ public class Controller {
 
         Simulation sim = new Simulation(mapRepresentation, agents);
         setSimulation(sim);
+        DCREntity.testTarget = agents.get(0);
     }
 
     /*public static void betterTest(ArrayList<MapPolygon> map, ArrayList<Circle> pursuers, ArrayList<Circle> evaders) {
