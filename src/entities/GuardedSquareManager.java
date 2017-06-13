@@ -2,17 +2,20 @@ package entities;
 
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
+import simulation.Agent;
 
 import java.util.ArrayList;
 
-public class GuardedSquare {
+import static java.lang.Double.NaN;
+
+public class GuardedSquareManager {
 
     private static GeometryFactory geometryFactory = new GeometryFactory();
 
-    private ArrayList<LineSegment> squareSides; // the four sides of the square
+    private ArrayList<LineSegment> squareSides; // the four sides of the guardedSquare
     private ArrayList<LineSegment> actualSegments; // the actual line segments that guards are assigned to and have to guard
-    private ArrayList<Integer> collinearInformation; // pointers from the above to the collinear side of the square
-    private LinearRing square; // the square shape, used for covers() checks
+    private ArrayList<Integer> collinearInformation; // pointers from the above to the collinear side of the guardedSquare
+    private LinearRing guardedSquare; // the square shape, used for covers() checks
 
     private ArrayList<Coordinate> originalCornerGuardPositions; // used to return to these points and to identify which guards should be used for which line segment that is crossed
     private ArrayList<Coordinate> originalLineGuardPositions; // similar for line guards
@@ -24,19 +27,19 @@ public class GuardedSquare {
     private LineString crossingLine, entranceLine;
     private Point currentEvaderPos, lastEvaderPos;
 
-    public GuardedSquare() {
+    public GuardedSquareManager() {
         currentEvaderPos = new Point(new CoordinateArraySequence(1), geometryFactory);
         lastEvaderPos = new Point(new CoordinateArraySequence(1), geometryFactory);
         crossingLine = new LineString(new CoordinateArraySequence(new Coordinate[]{lastEvaderPos.getCoordinate(), currentEvaderPos.getCoordinate()}), geometryFactory);
         entranceLine = new LineString(new CoordinateArraySequence(2), geometryFactory);
     }
 
-    public void updateEvaderPosition(int x, int y) {
+    public void updateEvaderPosition(Agent a) {
         lastEvaderPos.getCoordinate().x = currentEvaderPos.getX();
         lastEvaderPos.getCoordinate().y = currentEvaderPos.getY();
-        currentEvaderPos.getCoordinate().x = x;
-        currentEvaderPos.getCoordinate().y = y;
-        if (square.covers(currentEvaderPos) && !square.covers(lastEvaderPos)) {
+        currentEvaderPos.getCoordinate().x = a.getXPos();
+        currentEvaderPos.getCoordinate().y = a.getYPos();
+        if (guardedSquare.covers(currentEvaderPos) && !guardedSquare.covers(lastEvaderPos)) {
             // need to start following the thing
             // find out which line was crossed
             for (int i = 0; i < 4; i++) {
@@ -103,14 +106,19 @@ public class GuardedSquare {
                     break;
                 }
             }
-        } else if (square.covers(currentEvaderPos)) {
-            // moved within the square, need to adjust target points to move to
+
+            // make first move towards the projection point or capture the evader if possible
+        } else if (guardedSquare.covers(currentEvaderPos)) {
+            // moved within the square, need to adjust target points to move to, or capture evader if possible
+        } else {
+            // not inside the square, return to previous positions, except if evader is in catchable range
         }
+
     }
 
-    public void initEvaderPosition(int x, int y) {
-        currentEvaderPos.getCoordinate().x = x;
-        currentEvaderPos.getCoordinate().y = y;
+    public void initEvaderPosition(Agent a) {
+        currentEvaderPos.getCoordinate().x = a.getXPos();
+        currentEvaderPos.getCoordinate().y = a.getYPos();
     }
 
     private int[] getCornerGuardIndeces(LineSegment ls) {

@@ -60,11 +60,11 @@ public class AdaptedSimulation {
                 }
             }
 
-            if (simulationOver) {
+            /*if (simulationOver) {
                 simulationTimer.stop();
                 // send message to UI
                 System.out.println("All evaders captured");
-            }
+            }*/
         });
         isPaused = false;
     }
