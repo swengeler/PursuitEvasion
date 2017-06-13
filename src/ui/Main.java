@@ -6,7 +6,10 @@ import entities.*;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
@@ -14,8 +17,13 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.*;
-import javafx.scene.layout.*;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Font;
@@ -25,15 +33,18 @@ import javafx.util.Duration;
 import javafx.util.Pair;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.*;
+import org.jdelaunay.delaunay.geometries.DEdge;
+import org.jdelaunay.delaunay.geometries.DPoint;
+import org.jdelaunay.delaunay.geometries.DTriangle;
 import pathfinding.ShortestPathRoadMap;
 import shadowPursuit.ShadowGraph;
-import shadowPursuit.ShadowNode;
 import simulation.*;
-import sun.plugin.javascript.navig.Array;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 
 public class Main extends Application {
 
@@ -64,8 +75,7 @@ public class Main extends Application {
     private ArrayList<Circle> evaders;
     private ArrayList<VisualAgent> visualAgents;
     private ArrayList<RadioButton> entitiesList;
-
-    //list entity colors?
+    private Polygon randomPolygon;
 
     private BooleanProperty addPoints;
 
@@ -336,6 +346,29 @@ public class Main extends Application {
 
         menu.getChildren().add(startSimulationButton);
         menu.getChildren().add(pauseSimulationButton);
+
+        Button testRandomPolyButton = new Button("Test random polygon");
+        menu.getChildren().add(testRandomPolyButton);
+
+        testRandomPolyButton.setOnAction(ae -> {
+            if (randomPolygon != null) {
+                Main.pane.getChildren().remove(randomPolygon);
+            }
+
+            ArrayList<Point2D> points = poly(175, 0.35, 0.2, 16);
+            Polygon p = new Polygon();
+            for (Point2D point: points) {
+                p.getPoints().add(point.getX());
+                p.getPoints().add(point.getY());
+            }
+
+            p.setStroke(Color.DARKORANGE);
+            p.setFill(Color.TRANSPARENT);
+
+            randomPolygon = p;
+
+            Main.pane.getChildren().add(p);
+        });
 
         startSimulationButton.setOnAction(ae -> {
             Simulation sim = Controller.getSimulation();
@@ -2580,6 +2613,60 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch(args);
+
+    }
+
+    public ArrayList<Point2D> poly(double avgRadius, double irregularity, double spikeyness, int numVerts) {
+        //https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
+        
+        double centerX = 500;
+        double centerY = 500;
+
+        irregularity = clip(irregularity, 0, 1) * 2 * Math.PI / numVerts;
+        spikeyness = clip(spikeyness, 0, 1) * avgRadius;
+
+        ArrayList<Double> angleSteps = new ArrayList<>();
+        double lower = (2 * Math.PI / numVerts) - irregularity;
+        double upper = (2 * Math.PI / numVerts) + irregularity;
+        double sum = 0;
+        double tmp;
+
+        for (int i = 0; i < numVerts; i++) {
+            tmp = Math.random() * (upper - lower) + lower;
+            angleSteps.add(tmp);
+            sum += tmp;
+        }
+
+        double k = sum / (2 * Math.PI);
+        for (double d: angleSteps) {
+            d /= k;
+        }
+
+        ArrayList<Point2D> points = new ArrayList<>();
+        double angle = Math.random() * (2 * Math.PI);
+        double rg, ri, x, y;
+        Random r = new Random();
+
+        for (int i = 0; i < numVerts; i++) {
+            rg = r.nextGaussian() * spikeyness + avgRadius;
+            System.out.println(rg);
+            ri = clip(rg, 0, 2 * avgRadius);
+            x = centerX + ri * Math.cos(angle);
+            y = centerY + ri * Math.sin(angle);
+
+            points.add(new Point2D(x, y));
+
+            angle = angle + angleSteps.get(i);
+        }
+
+        return points;
+    }
+
+    private double clip(double x, double min, double max) {
+        if (min > max) return x;
+        else if (x < min) return min;
+        else if (x > max) return max;
+        else return x;
     }
 
 }
