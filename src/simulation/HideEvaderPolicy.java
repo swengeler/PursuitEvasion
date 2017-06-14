@@ -6,23 +6,23 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.*;
+import org.jdelaunay.delaunay.geometries.DEdge;
+import org.jdelaunay.delaunay.geometries.DPoint;
+import org.jdelaunay.delaunay.geometries.DTriangle;
 import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class HideEvaderPolicy extends MovePolicy {
 
-    //somehow take evader position into account
-    //important such that it doesn't make dumb moves but also such that this policy can be ran for multiple evaders (otherwise they all go to the same point)
-    //only recompute every XX timestep
-    //not working perfectly yet (probably has to do with illegal separation stuff)
-    //perhaps only separate when 'visible'?
+    //only recompute every xx timestep
 
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
+    private ShortestPathRoadMap shortestPathMap;
 
     private final static int separationDistance = 100;
     ArrayList<Line> pathLines;
@@ -39,10 +39,10 @@ public class HideEvaderPolicy extends MovePolicy {
             initTree(map);
         }
 
+        shortestPathMap = new ShortestPathRoadMap(map);
         ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
 
         ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
-        ShortestPathRoadMap shortestPathMap = new ShortestPathRoadMap(map);
 
         Agent evader = getSingleAgent();
         Point2D target = null;
@@ -57,9 +57,10 @@ public class HideEvaderPolicy extends MovePolicy {
                 ArrayList<PointData> pursuerPointData = new ArrayList<>();
                 for (Point2D midpoint : polygonMidpoints) {
 
-                    PlannedPath shortestPath = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
-                    double midpointDistance = shortestPath.getTotalLength();
-                    int numberOfVertices = shortestPath.pathLength();
+                    PlannedPath shortestPathFromPursuer = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
+                    double midpointDistance = shortestPathFromPursuer.getTotalLength();
+                    int numberOfVertices = shortestPathFromPursuer.pathLength();
+
                     PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
                     pursuerPointData.add(pd);
                     //System.out.println("dist: " + midpointDistance);
@@ -91,7 +92,7 @@ public class HideEvaderPolicy extends MovePolicy {
             separationDeltaY /= dlength;
         }
 
-        target = getMin(allPursuerData);
+        target = getMin(allPursuerData, evader, 4);
 
         if (target != null) {
             if (ctarget == null) {
@@ -108,7 +109,7 @@ public class HideEvaderPolicy extends MovePolicy {
         pathLines = currentPath.getPathLines();
 
         if (separationDeltaX != 0 || separationDeltaY != 0) {
-            if (map.legalPosition(getSingleAgent().getXPos() + separationDeltaX * evader.getSpeed() * 1/50, getSingleAgent().getYPos() + separationDeltaY * evader.getSpeed() * 1/50)) {
+            if (map.legalPosition(getSingleAgent().getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, getSingleAgent().getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)) {
                 ctarget = null;
                 return new Move(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50, 0);
             } else {
@@ -136,15 +137,32 @@ public class HideEvaderPolicy extends MovePolicy {
         return result;
     }
 
+    /*
+        For now: 4 modes
+        If mode 2 and 3 are in a tie (unlikely for 2, euclidean distance for pursuer to midpoint will be used to decide)
 
-    private Point2D getMin(ArrayList<ArrayList<PointData>> midpointData) {
+        Mode 1: Standard, don't take evader position into account.
+        Mode 2: Take evader position into account (min euclidean dist)
+        Mode 3: Take evader position into account (min verts)
+        Mode 4: Consider points from a given threshold as equal, just grab a random one
+        (Mode 5: Attach weights (?))
+
+        Fix shortest path error?
+    */
+
+    private Point2D getMin(ArrayList<ArrayList<PointData>> midpointData, Agent evader, int mode) {
         Point2D target = null;
         double euclideanDistance = Double.MIN_VALUE;
         int numberOfVertices = Integer.MIN_VALUE;
-
+        double euclideanDistanceEvader = Double.MAX_VALUE;
+        int numberOfVerticesEvader = Integer.MAX_VALUE;
 
         int numOfPursuers = midpointData.size();
         int numOfMidpoints = midpointData.get(0).size();
+
+        final int THRESHOLD = 1 * numOfPursuers;
+        ArrayList<Point2D> possibleTargets = new ArrayList<>();
+        Random r = new Random();
 
         for (int i = 0; i < numOfMidpoints; i++) {
             int tmpNumberOfVertices = 0;
@@ -157,16 +175,62 @@ public class HideEvaderPolicy extends MovePolicy {
                 tmpEuclideanDistance += distance;
             }
 
-            if (tmpNumberOfVertices == numberOfVertices) {
-                if (tmpEuclideanDistance > euclideanDistance) {
+            if (mode != 4) {
+
+                PlannedPath shortestPathFromEvader = shortestPathMap.getShortestPath(new Point2D(evader.getXPos(), evader.getYPos()), midpointData.get(0).get(i).getMidpoint());
+
+                if (tmpNumberOfVertices == numberOfVertices) {
+                    if (mode == 1) {
+                        if (tmpEuclideanDistance > euclideanDistance) {
+                            euclideanDistance = tmpEuclideanDistance;
+                            target = midpointData.get(0).get(i).getMidpoint();
+                        }
+                    } else if (mode == 2) {
+                        if (shortestPathFromEvader.getTotalLength() < euclideanDistanceEvader) {
+                            euclideanDistanceEvader = shortestPathFromEvader.getTotalLength();
+                            target = midpointData.get(0).get(i).getMidpoint();
+                            euclideanDistance = tmpEuclideanDistance;
+                        } else if (shortestPathFromEvader.getTotalLength() == euclideanDistanceEvader) {
+                            if (tmpEuclideanDistance > euclideanDistance) {
+                                euclideanDistance = tmpEuclideanDistance;
+                                target = midpointData.get(0).get(i).getMidpoint();
+                            }
+                        }
+                    } else if (mode == 3) {
+                        if (shortestPathFromEvader.pathLength() < numberOfVerticesEvader) {
+                            numberOfVerticesEvader = shortestPathFromEvader.pathLength();
+                            target = midpointData.get(0).get(i).getMidpoint();
+                            euclideanDistance = tmpEuclideanDistance;
+                        } else if (shortestPathFromEvader.pathLength() == numberOfVerticesEvader) {
+                            if (tmpEuclideanDistance > euclideanDistance) {
+                                euclideanDistance = tmpEuclideanDistance;
+                                target = midpointData.get(0).get(i).getMidpoint();
+                            }
+                        }
+                    }
+
+                } else if (tmpNumberOfVertices > numberOfVertices) {
+                    numberOfVertices = tmpNumberOfVertices;
+                    euclideanDistanceEvader = shortestPathFromEvader.getTotalLength();
                     euclideanDistance = tmpEuclideanDistance;
                     target = midpointData.get(0).get(i).getMidpoint();
                 }
-            } else if (tmpNumberOfVertices > numberOfVertices) {
-                numberOfVertices = tmpNumberOfVertices;
-                target = midpointData.get(0).get(i).getMidpoint();
+
+            } else {
+                if (tmpNumberOfVertices >= THRESHOLD) {
+                    possibleTargets.add(midpointData.get(0).get(i).getMidpoint());
+                }
             }
 
+        }
+
+        if (mode == 4) {
+            if (possibleTargets.isEmpty()) {
+                System.out.println("Threshold not satisfied! Returning default");
+                return getMin(midpointData, evader, 1);
+            }
+            int rand = r.nextInt(possibleTargets.size());
+            target = possibleTargets.get(rand);
         }
 
         return target;
