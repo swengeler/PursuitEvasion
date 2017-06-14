@@ -17,6 +17,7 @@ public class GuardManager {
 
     private Group graphics;
 
+    private Line originalSeparatingLine;
     private Polygon guardedSquare; // the square shape, used for covers() checks
     private ArrayList<LineString> squareSides;
 
@@ -38,7 +39,7 @@ public class GuardManager {
     private ArrayList<Agent> guards;
     private ArrayList<Agent> alreadyAssigned;
 
-    public GuardManager(Polygon guardedSquare, ArrayList<LineString> squareSides, HashMap<LineString, ArrayList<LineString>> entranceToGuarded, HashMap<LineString, ArrayList<LineSegment>> guardedToSegments) {
+    public GuardManager(Line originalSeparatingLine, Polygon guardedSquare, ArrayList<LineString> squareSides, HashMap<LineString, ArrayList<LineString>> entranceToGuarded, HashMap<LineString, ArrayList<LineSegment>> guardedToSegments) {
         currentTargetPos = new Point(new CoordinateArraySequence(1), GeometryOperations.factory);
         lastTargetPos = new Point(new CoordinateArraySequence(1), GeometryOperations.factory);
         crossingLine = new LineString(new CoordinateArraySequence(new Coordinate[]{lastTargetPos.getCoordinate(), currentTargetPos.getCoordinate()}), GeometryOperations.factory);
@@ -46,6 +47,7 @@ public class GuardManager {
         currentAssignment = new HashMap<>();
         alreadyAssigned = new ArrayList<>();
 
+        this.originalSeparatingLine = originalSeparatingLine;
         this.guardedSquare = guardedSquare;
         this.squareSides = squareSides;
         this.entranceToGuarded = entranceToGuarded;
@@ -198,10 +200,10 @@ public class GuardManager {
                 }
             }
 
-            Color currentColor;
+            Color currentColor = Color.GREEN;
             for (Agent agent : currentAssignment.keySet()) {
-                currentColor = new Color(Math.random(), Math.random(), Math.random(), 1.0);
-                graphics.getChildren().add(new Circle(agent.getXPos(), agent.getYPos(), 7.5, currentColor));
+                //currentColor = new Color(Math.random(), Math.random(), Math.random(), 1.0);
+                graphics.getChildren().add(new Circle(agent.getXPos(), agent.getYPos(), 7, currentColor));
 
                 double length1 = Math.pow(currentAssignment.get(agent).getCoordinate(0).x - agent.getXPos(), 2) + Math.pow(currentAssignment.get(agent).getCoordinate(0).y - agent.getYPos(), 2);
                 double length2 = Math.pow(currentAssignment.get(agent).getCoordinate(1).x - agent.getXPos(), 2) + Math.pow(currentAssignment.get(agent).getCoordinate(1).y - agent.getYPos(), 2);
@@ -213,7 +215,7 @@ public class GuardManager {
 
                 Line l = new Line(agent.getXPos(), agent.getYPos(), agent.getXPos() + 15 * (length1 < length2 ? deltaX : -deltaX), agent.getYPos() + 15 * (length1 < length2 ? deltaY : -deltaY));
                 l.setStroke(currentColor);
-                l.setStrokeWidth(3);
+                l.setStrokeWidth(4);
                 graphics.getChildren().add(l);
             }
 
@@ -238,6 +240,40 @@ public class GuardManager {
                 }
             }
         } else if (guardedSquare.covers(currentTargetPos)) {
+            if (currentAssignment.isEmpty()) {
+                alreadyAssigned.clear();
+                currentGuardedLines = entranceToGuarded.get(squareSides.get(0));
+
+                // start with closest side
+                ArrayList<LineString> squareSidesCopy = new ArrayList<>();
+                squareSidesCopy.addAll(squareSides);
+                squareSidesCopy.sort((obj1, obj2) -> {
+                    double distance1 = obj1.distance(currentTargetPos);
+                    double distance2 = obj2.distance(currentTargetPos);
+                    if (distance1 < distance2) {
+                        return -1;
+                    } else if (distance2 < distance1) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                });
+
+                for (LineString ls1 : squareSidesCopy) {
+                    currentGuardedLineSegments = guardedToSegments.get(ls1);
+                    for (LineSegment ls2 : currentGuardedLineSegments) {
+                        currentGuards = segmentToGuards.get(ls2);
+                        if (!alreadyAssigned.contains(currentGuards.get(0))) {
+                            currentAssignment.put(currentGuards.get(0), ls2);
+                            alreadyAssigned.add(currentGuards.get(0));
+                        }
+                        if (currentGuards.size() > 1 && !alreadyAssigned.contains(currentGuards.get(1))) {
+                            currentAssignment.put(currentGuards.get(1), ls2);
+                            alreadyAssigned.add(currentGuards.get(1));
+                        }
+                    }
+                }
+            }
             //if (!lastTargetPos.getCoordinate().equals2D(currentTargetPos.getCoordinate())) {
                 // moved within the square, need to adjust target points to move to
                 Coordinate targetPoint;
@@ -294,6 +330,23 @@ public class GuardManager {
 
     public ArrayList<Coordinate> getOriginalPositions() {
         return originalPositions;
+    }
+
+    public Polygon getGuardedSquare() {
+        return guardedSquare;
+    }
+
+    public Line getOriginalSeparatingLine() {
+        return originalSeparatingLine;
+    }
+
+    public boolean crossedNonSeparatingLine() {
+        crossingLine = new LineString(new CoordinateArraySequence(new Coordinate[]{lastTargetPos.getCoordinate(), currentTargetPos.getCoordinate()}), GeometryOperations.factory);
+        return guardedSquare.covers(currentTargetPos) && !guardedSquare.covers(lastTargetPos) && !crossingLine.intersects(squareSides.get(0));
+    }
+
+    public boolean inGuardedSquare(double x, double y) {
+        return guardedSquare.covers(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x, y)}), GeometryOperations.factory));
     }
 
 }

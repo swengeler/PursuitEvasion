@@ -356,6 +356,7 @@ public class Main extends Application {
             }
 
             ArrayList<Point2D> points = poly(175, 0.35, 0.2, 16);
+            //ArrayList<Point2D> points = poly(300, 0.45, 0.2, 30);
             Polygon p = new Polygon();
             for (Point2D point: points) {
                 p.getPoints().add(point.getX());

@@ -2,6 +2,7 @@ package simulation;
 
 import javafx.scene.shape.Line;
 import pathfinding.PathVertex;
+import ui.Main;
 
 import java.util.ArrayList;
 import java.util.Formatter;
@@ -115,6 +116,12 @@ public class PlannedPath {
 
     public int pathLength() {
         return pathLines.size() - 1;
+    }
+
+    public void draw() {
+        for (Line l : pathLines) {
+            Main.pane.getChildren().add(l);
+        }
     }
 
     @Override

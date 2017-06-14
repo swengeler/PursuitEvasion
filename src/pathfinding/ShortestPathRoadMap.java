@@ -139,7 +139,7 @@ public class ShortestPathRoadMap {
                                 }
                             } else if (!excludedLines.isEmpty()) {
                                 ArrayList<Line> l = getPointAdjacentLines(currentPoints.get(j));
-                                System.out.printf("Point (%.3f|%.3f) has %d adjacent separating lines\n", currentPoints.get(j).getX(), currentPoints.get(j).getY(), l.size());
+                                //System.out.printf("Point (%.3f|%.3f) has %d adjacent separating lines\n", currentPoints.get(j).getX(), currentPoints.get(j).getY(), l.size());
                                 for (int k = 0; !removePoint && k < l.size(); k++) {
                                     if (GeometryOperations.angle(newX, newY, l.get(k).getStartX() - l.get(k).getEndX(), l.get(k).getStartY() - l.get(k).getEndY()) < 2) {
                                         removePoint = true;
@@ -215,7 +215,7 @@ public class ShortestPathRoadMap {
                                 }
                             } else if (!excludedLines.isEmpty()) {
                                 ArrayList<Line> l = getPointAdjacentLines(currentPoints.get(j));
-                                System.out.printf("Point (%.3f|%.3f) has %d adjacent separating lines\n", currentPoints.get(j).getX(), currentPoints.get(j).getY(), l.size());
+                                //System.out.printf("Point (%.3f|%.3f) has %d adjacent separating lines\n", currentPoints.get(j).getX(), currentPoints.get(j).getY(), l.size());
                                 for (int k = 0; !removePoint && k < l.size(); k++) {
                                     if (GeometryOperations.angle(newX, newY, l.get(k).getStartX() - l.get(k).getEndX(), l.get(k).getStartY() - l.get(k).getEndY()) < 2) {
                                         removePoint = true;
@@ -293,6 +293,7 @@ public class ShortestPathRoadMap {
             for (int j = i + 1; j < reflexVertices.size(); j++) {
                 //if (map.isVisible(reflexVertices.get(i).getX(), reflexVertices.get(i).getY(), reflexVertices.get(j).getX(), reflexVertices.get(j).getY())) {
                 if (map.isVisible(reflexVertices.get(i).getEstX(), reflexVertices.get(i).getEstY(), reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY())) {
+
                     singlePointer = pointers.get(j);
                     p4 = allPoints.get(singlePointer[0]).get(singlePointer[1]);
                     p5 = allPoints.get(singlePointer[0]).get(singlePointer[2]);
