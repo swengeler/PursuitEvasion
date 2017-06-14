@@ -1,23 +1,29 @@
-package simulation;
+package entities;
 
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import org.jdelaunay.delaunay.ConstrainedMesh;
-import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DPoint;
-import org.jdelaunay.delaunay.geometries.DTriangle;
 import pathfinding.ShortestPathRoadMap;
+import simulation.*;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
-public class HideEvaderPolicy extends MovePolicy {
+    /*
+        For now: 4 modes
+        If mode 2 and 3 are in a tie (unlikely for 2, euclidean distance for pursuer to midpoint will be used to decide)
 
-    //only recompute every xx timestep
+        Mode 1: Standard, don't take evader position into account.
+        Mode 2: Take evader position into account (min euclidean dist)
+        Mode 3: Take evader position into account (min verts)
+        Mode 4: Consider points from a given threshold as equal, just grab a random one
+        (Mode 5: Attach weights (?))
+
+        Fix shortest path error?
+    */
+
+public class HideEvaderEntity extends DistributedEntity {
 
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
@@ -28,13 +34,12 @@ public class HideEvaderPolicy extends MovePolicy {
     ArrayList<Line> pathLines;
     int i = 0;
 
-    public HideEvaderPolicy(Agent agent, boolean pursuing, MapRepresentation map) {
-        super(agent, pursuing);
+    public HideEvaderEntity(MapRepresentation map) {
+        super(map);
     }
 
     @Override
-    public Move getNextMove(MapRepresentation map, ArrayList<Agent> agents) {
-
+    public void move() {
         if (traversalHandler == null) {
             initTree(map);
         }
@@ -43,7 +48,6 @@ public class HideEvaderPolicy extends MovePolicy {
         ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
 
         ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
-
         Agent evader = getSingleAgent();
         Point2D target = null;
 
@@ -133,8 +137,6 @@ public class HideEvaderPolicy extends MovePolicy {
             result = new Move(pathLines.get(i).getEndX() - getSingleAgent().getXPos(), pathLines.get(i).getEndY() - getSingleAgent().getYPos(), 0);
             i++;
         }
-
-        return result;
     }
 
     private Point2D getMin(ArrayList<ArrayList<PointData>> midpointData, Agent evader, int mode) {
@@ -299,5 +301,4 @@ public class HideEvaderPolicy extends MovePolicy {
             e.printStackTrace();
         }
     }
-
 }
