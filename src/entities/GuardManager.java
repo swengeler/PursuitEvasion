@@ -17,7 +17,7 @@ public class GuardManager {
 
     private Group graphics;
 
-    private Line originalSeparatingLine;
+    private ArrayList<Line> squareSideLines;
     private Polygon guardedSquare; // the square shape, used for covers() checks
     private ArrayList<LineString> squareSides;
 
@@ -47,11 +47,16 @@ public class GuardManager {
         currentAssignment = new HashMap<>();
         alreadyAssigned = new ArrayList<>();
 
-        this.originalSeparatingLine = originalSeparatingLine;
         this.guardedSquare = guardedSquare;
         this.squareSides = squareSides;
         this.entranceToGuarded = entranceToGuarded;
         this.guardedToSegments = guardedToSegments;
+
+        squareSideLines = new ArrayList<>(4);
+        squareSideLines.add(originalSeparatingLine);
+        squareSideLines.add(new Line(squareSides.get(1).getStartPoint().getX(), squareSides.get(1).getStartPoint().getY(), squareSides.get(1).getEndPoint().getX(), squareSides.get(1).getEndPoint().getY()));
+        squareSideLines.add(new Line(squareSides.get(2).getStartPoint().getX(), squareSides.get(2).getStartPoint().getY(), squareSides.get(2).getEndPoint().getX(), squareSides.get(2).getEndPoint().getY()));
+        squareSideLines.add(new Line(squareSides.get(3).getStartPoint().getX(), squareSides.get(3).getStartPoint().getY(), squareSides.get(3).getEndPoint().getX(), squareSides.get(3).getEndPoint().getY()));
 
         /*for (int i = 0; i < guardedSquare.getCoordinates().length - 1; i++) {
             Line l = new Line(guardedSquare.getCoordinates()[i].x, guardedSquare.getCoordinates()[i].y, guardedSquare.getCoordinates()[i + 1].x, guardedSquare.getCoordinates()[i + 1].y);
@@ -193,7 +198,7 @@ public class GuardManager {
                         currentAssignment.put(currentGuards.get(0), ls2);
                         alreadyAssigned.add(currentGuards.get(0));
                     }
-                    if (!alreadyAssigned.contains(currentGuards.get(1))) {
+                    if (currentGuards.size() > 1 && !alreadyAssigned.contains(currentGuards.get(1))) {
                         currentAssignment.put(currentGuards.get(1), ls2);
                         alreadyAssigned.add(currentGuards.get(1));
                     }
@@ -337,12 +342,21 @@ public class GuardManager {
     }
 
     public Line getOriginalSeparatingLine() {
-        return originalSeparatingLine;
+        return squareSideLines.get(0);
+    }
+
+    public ArrayList<Line> getSquareSideLines() {
+        return squareSideLines;
     }
 
     public boolean crossedNonSeparatingLine() {
         crossingLine = new LineString(new CoordinateArraySequence(new Coordinate[]{lastTargetPos.getCoordinate(), currentTargetPos.getCoordinate()}), GeometryOperations.factory);
         return guardedSquare.covers(currentTargetPos) && !guardedSquare.covers(lastTargetPos) && !crossingLine.intersects(squareSides.get(0));
+    }
+
+    public boolean crossedSeparatingLine() {
+        crossingLine = new LineString(new CoordinateArraySequence(new Coordinate[]{lastTargetPos.getCoordinate(), currentTargetPos.getCoordinate()}), GeometryOperations.factory);
+        return guardedSquare.covers(currentTargetPos) && !guardedSquare.covers(lastTargetPos) && crossingLine.intersects(squareSides.get(0));
     }
 
     public boolean inGuardedSquare(double x, double y) {

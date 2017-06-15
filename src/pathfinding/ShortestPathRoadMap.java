@@ -395,6 +395,7 @@ public class ShortestPathRoadMap {
             l.setTranslateX(sink.getEstX());
             l.setTranslateY(sink.getEstY());
             //Main.pane.getChildren().addAll(line, l);
+            //System.out.println("Shortest path is straight line");
             return plannedPath;
         }
 

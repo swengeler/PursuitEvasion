@@ -1,3 +1,4 @@
+/*
 package entities;
 
 import javafx.collections.ObservableList;
@@ -10,7 +11,8 @@ import simulation.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-    /*
+    */
+/*
         For now: 4 modes
         If mode 2 and 3 are in a tie (unlikely for 2, euclidean distance for pursuer to midpoint will be used to decide)
 
@@ -21,7 +23,8 @@ import java.util.Random;
         (Mode 5: Attach weights (?))
 
         Fix shortest path error?
-    */
+    *//*
+
 
 public class HideEvaderEntity extends DistributedEntity {
 
@@ -48,7 +51,7 @@ public class HideEvaderEntity extends DistributedEntity {
         ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
 
         ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
-        Agent evader = getSingleAgent();
+        Agent evader = controlledAgent;
         Point2D target = null;
 
         int numberOfSeparationPursuers = 0;
@@ -101,11 +104,11 @@ public class HideEvaderEntity extends DistributedEntity {
         if (target != null) {
             if (ctarget == null) {
                 ctarget = target;
-                currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
+                currentPath = shortestPathMap.getShortestPath(new Point2D(controlledAgent.getXPos(), controlledAgent.getYPos()), target);
                 i = 0;
             } else if (!ctarget.equals(target)) {
                 ctarget = target;
-                currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
+                currentPath = shortestPathMap.getShortestPath(new Point2D(controlledAgent.getXPos(), controlledAgent.getYPos()), target);
                 i = 0;
             }
         }
@@ -113,7 +116,7 @@ public class HideEvaderEntity extends DistributedEntity {
         pathLines = currentPath.getPathLines();
 
         if (separationDeltaX != 0 || separationDeltaY != 0) {
-            if (map.legalPosition(getSingleAgent().getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, getSingleAgent().getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)) {
+            if (map.legalPosition(controlledAgent.getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, controlledAgent.getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)) {
                 ctarget = null;
                 return new Move(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50, 0);
             } else {
@@ -128,13 +131,13 @@ public class HideEvaderEntity extends DistributedEntity {
 
         Move result;
         double length = Math.sqrt(Math.pow(pathLines.get(i).getEndX() - pathLines.get(i).getStartX(), 2) + Math.pow(pathLines.get(i).getEndY() - pathLines.get(i).getStartY(), 2));
-        double deltaX = (pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length * getSingleAgent().getSpeed() / 50;
-        double deltaY = (pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length * getSingleAgent().getSpeed() / 50;
+        double deltaX = (pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length * controlledAgent.getSpeed() / 50;
+        double deltaY = (pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length * controlledAgent.getSpeed() / 50;
 
         if (pathLines.get(i).contains(evader.getXPos() + deltaX, evader.getYPos() + deltaY)) {
             result = new Move(deltaX, deltaY, 0);
         } else {
-            result = new Move(pathLines.get(i).getEndX() - getSingleAgent().getXPos(), pathLines.get(i).getEndY() - getSingleAgent().getYPos(), 0);
+            result = new Move(pathLines.get(i).getEndX() - controlledAgent.getXPos(), pathLines.get(i).getEndY() - controlledAgent.getYPos(), 0);
             i++;
         }
     }
@@ -302,3 +305,4 @@ public class HideEvaderEntity extends DistributedEntity {
         }
     }
 }
+*/

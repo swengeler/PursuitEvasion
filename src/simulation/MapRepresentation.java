@@ -2,8 +2,10 @@ package simulation;
 
 import additionalOperations.GeometryOperations;
 import entities.Entity;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
+import ui.Main;
 import ui.MapPolygon;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
@@ -231,6 +233,8 @@ public class MapRepresentation {
         return true;
     }*/
 
+    public static boolean showVisible = false;
+
     public boolean isVisible(double x1, double y1, double x2, double y2) {
         /*tempLine.getCoordinates()[0].x = x1;
         tempLine.getCoordinates()[0].y = y1;
@@ -239,6 +243,20 @@ public class MapRepresentation {
         tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1, y1), new Coordinate(x2, y2)}), GeometryOperations.factory);
         if (polygon.covers(tempLine)) {
             return true;
+        }
+        if (showVisible) {
+            Geometry intersection = boundary.intersection(tempLine);
+            Geometry difference = tempLine.difference(polygon);
+            System.out.println("difference is empty: " + difference.isEmpty());
+            for (Coordinate c : difference.getCoordinates()) {
+                Main.pane.getChildren().add(new Circle(c.x, c.y, 2, Color.LAWNGREEN));
+                System.out.println(c);
+            }
+            System.out.println("Intersection between vision line and boundary: (" + !intersection.isEmpty() + ")");
+            for (Coordinate c : intersection.getCoordinates()) {
+                Main.pane.getChildren().add(new Circle(c.x, c.y, 2, Color.INDIANRED));
+                System.out.println(c);
+            }
         }
         /*if (!legalPosition(tempLine.getCoordinates()[0]) || !legalPosition(tempLine.getCoordinates()[1])) {
             return false;

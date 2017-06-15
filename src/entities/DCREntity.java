@@ -25,6 +25,7 @@ import java.util.*;
 public class DCREntity extends CentralisedEntity {
 
     private static final boolean GUARD_TEST = false;
+    private static final boolean CONSTANT_TARGET_TEST = true;
 
     private enum Stage {
         CATCHER_TO_SEARCHER, FIND_TARGET, INIT_FIND_TARGET, FOLLOW_TARGET, WAIT_LINE_CROSSING
@@ -56,8 +57,7 @@ public class DCREntity extends CentralisedEntity {
 
     private ShortestPathRoadMap specialShortestPathRoadMap;
     private GuardManager currentGuardedSquare;
-    private boolean inGuardedSquare;
-
+    private boolean inGuardedSquareOverNonSeparating, inGuardedSquareOverSeparating, spottedOnce, spottedOutsideGuardingSquare;
 
     private Group catchGraphics;
     private Group guardGraphics;
@@ -101,6 +101,23 @@ public class DCREntity extends CentralisedEntity {
             assignTasks();
         }
 
+        if (target == null) {
+            outer:
+            for (Entity e : map.getEvadingEntities()) {
+                if (e.isActive()) {
+                    for (Agent a : e.getControlledAgents()) {
+                        if (a.isActive()) {
+                            target = a;
+                            for (GuardManager gm : guardManagers) {
+                                gm.initTargetPosition(target);
+                            }
+                            break outer;
+                        }
+                    }
+                }
+            }
+        }
+
         // ******************************************************************************************************************************** //
         // Guard movement
         // ******************************************************************************************************************************** //
@@ -135,18 +152,28 @@ public class DCREntity extends CentralisedEntity {
             }
             //    }
             //}
-            if (inGuardedSquare && !currentGuardedSquare.inGuardedSquare(target.getXPos(), target.getYPos())) {
-                System.out.println("Exited square");
-                specialShortestPathRoadMap = null;
-                currentGuardedSquare = null;
-                inGuardedSquare = false;
-            } else if (map.isVisible(catcher, target)) {
-                for (GuardManager gm : guardManagers) {
-                    if (gm.crossedNonSeparatingLine()) {
-                        currentGuardedSquare = gm;
-                        inGuardedSquare = true;
-                        System.out.println("Entered square over non-separating line");
-                        break;
+            if (spottedOnce) {
+                if ((inGuardedSquareOverNonSeparating || inGuardedSquareOverSeparating) && !currentGuardedSquare.inGuardedSquare(target.getXPos(), target.getYPos())) {
+                    System.out.println("Exited square");
+                    specialShortestPathRoadMap = null;
+                    currentGuardedSquare = null;
+                    inGuardedSquareOverNonSeparating = false;
+                    inGuardedSquareOverSeparating = false;
+                } else /*if (map.isVisible(catcher, target))*/ {
+                    for (GuardManager gm : guardManagers) {
+                        if (gm.crossedNonSeparatingLine()) {
+                            currentGuardedSquare = gm;
+                            inGuardedSquareOverNonSeparating = true;
+                            inGuardedSquareOverSeparating = false;
+                            System.out.println("Entered square over non-separating line");
+                            break;
+                        } else if (gm.crossedSeparatingLine()) {
+                            currentGuardedSquare = gm;
+                            inGuardedSquareOverNonSeparating = false;
+                            inGuardedSquareOverSeparating = true;
+                            System.out.println("Entered square over separating line");
+                            break;
+                        }
                     }
                 }
             }
@@ -236,26 +263,53 @@ public class DCREntity extends CentralisedEntity {
                     catcherPathLineCounter++;
                 }
 
-                // check whether an evader is visible
-                for (int i = 0; currentStage == Stage.INIT_FIND_TARGET && i < map.getEvadingEntities().size(); i++) {
-                    if (map.getEvadingEntities().get(i).isActive()) {
-                        for (int j = 0; currentStage == Stage.INIT_FIND_TARGET && j < map.getEvadingEntities().get(i).getControlledAgents().size(); j++) {
-                            if (map.getEvadingEntities().get(i).getControlledAgents().get(j).isActive() && map.isVisible(map.getEvadingEntities().get(i).getControlledAgents().get(j), searcher)) {
-                                target = map.getEvadingEntities().get(i).getControlledAgents().get(j);
-                                System.out.println("Target found");
-                                for (GuardManager gm : guardManagers) {
-                                    gm.initTargetPosition(target);
+                if (CONSTANT_TARGET_TEST) {
+                    // check whether target is visible
+                    if (target != null) {
+                        if (target.isActive() && map.isVisible(target, searcher) && !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), searcher.getXPos(), searcher.getYPos(), separatingLines)) {
+                            System.out.println("Target found");
+                            spottedOnce = true;
+                            boolean temp = false;
+                            for (GuardManager gm : guardManagers) {
+                                if (gm.inGuardedSquare(target.getXPos(), target.getYPos())) {
+                                    temp = true;
+                                    break;
                                 }
-                                origin = new Point2D(catcher.getXPos(), catcher.getYPos());
-                                Label l = new Label("Origin");
-                                l.setTranslateX(origin.getX() + 5);
-                                l.setTranslateY(origin.getY() + 5);
-                                Main.pane.getChildren().addAll(new Circle(origin.getX(), origin.getY(), 7, Color.GRAY), l);
-                                currentStage = Stage.FOLLOW_TARGET;
+                            }
+                            if (!temp) {
+                                spottedOutsideGuardingSquare = true;
+                            }
+                            origin = new Point2D(catcher.getXPos(), catcher.getYPos());
+                            Label l = new Label("Origin");
+                            l.setTranslateX(origin.getX() + 5);
+                            l.setTranslateY(origin.getY() + 5);
+                            Main.pane.getChildren().addAll(new Circle(origin.getX(), origin.getY(), 7, Color.GRAY), l);
+                            currentStage = Stage.FOLLOW_TARGET;
+                        }
+                    }
+                } else {
+                    // check whether an evader is visible
+                    for (int i = 0; currentStage == Stage.INIT_FIND_TARGET && i < map.getEvadingEntities().size(); i++) {
+                        if (map.getEvadingEntities().get(i).isActive()) {
+                            for (int j = 0; currentStage == Stage.INIT_FIND_TARGET && j < map.getEvadingEntities().get(i).getControlledAgents().size(); j++) {
+                                if (map.getEvadingEntities().get(i).getControlledAgents().get(j).isActive() && map.isVisible(map.getEvadingEntities().get(i).getControlledAgents().get(j), searcher) && !GeometryOperations.lineIntersectSeparatingLines(map.getEvadingEntities().get(i).getControlledAgents().get(j).getXPos(), map.getEvadingEntities().get(i).getControlledAgents().get(j).getYPos(), searcher.getXPos(), searcher.getYPos(), separatingLines)) {
+                                    target = map.getEvadingEntities().get(i).getControlledAgents().get(j);
+                                    System.out.println("Target found");
+                                    for (GuardManager gm : guardManagers) {
+                                        gm.initTargetPosition(target);
+                                    }
+                                    origin = new Point2D(catcher.getXPos(), catcher.getYPos());
+                                    Label l = new Label("Origin");
+                                    l.setTranslateX(origin.getX() + 5);
+                                    l.setTranslateY(origin.getY() + 5);
+                                    Main.pane.getChildren().addAll(new Circle(origin.getX(), origin.getY(), 7, Color.GRAY), l);
+                                    currentStage = Stage.FOLLOW_TARGET;
+                                }
                             }
                         }
                     }
                 }
+
             } else if (currentStage == Stage.FOLLOW_TARGET) {
                 // behaviour changes based on visibility
                 // if the target is still visible, first check whether it can simply be caught
@@ -271,8 +325,10 @@ public class DCREntity extends CentralisedEntity {
                     target.setActive(false);
                     target = null;
                     origin = null;
+                    spottedOnce = false;
+                    spottedOutsideGuardingSquare = false;
                     currentStage = Stage.CATCHER_TO_SEARCHER;
-                } else if (map.isVisible(target, catcher) && !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines)) {
+                } else if (map.isVisible(target, catcher) && (!GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines) || inGuardedSquareOverSeparating)) {
                     /*if (GeometryOperations.lineIntersectSeparatingLines(catcher.getXPos(), catcher.getYPos(), target.getXPos(), target.getYPos(), separatingEdges)) {
                         System.out.println("Evader behind separating line");
                         return;
@@ -284,17 +340,27 @@ public class DCREntity extends CentralisedEntity {
                     // perform simple lion's move
 
 
-                    if (inGuardedSquare && specialShortestPathRoadMap == null) {
+                    if (inGuardedSquareOverNonSeparating && specialShortestPathRoadMap == null) {
                         ArrayList<Line> temp = new ArrayList<>();
                         temp.add(currentGuardedSquare.getOriginalSeparatingLine());
                         specialShortestPathRoadMap = new ShortestPathRoadMap(temp, map);
+                    } else if (inGuardedSquareOverSeparating && specialShortestPathRoadMap == null) {
+                        ArrayList<Line> temp = new ArrayList<>();
+                        for (int i = 1; i < currentGuardedSquare.getSquareSideLines().size(); i++) {
+                            temp.add(currentGuardedSquare.getSquareSideLines().get(i));
+                        }
+                        specialShortestPathRoadMap = new ShortestPathRoadMap(temp, map);
                     }
                     PlannedPath temp;
-                    if (inGuardedSquare && specialShortestPathRoadMap != null) {
+                    if (inGuardedSquareOverNonSeparating && specialShortestPathRoadMap != null) {
                         temp = specialShortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), origin);
-                    } else {
+                    } else if (!spottedOutsideGuardingSquare) {
                         //temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(target.getXPos(), target.getYPos(), origin);
                         temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), origin);
+                    } else if (inGuardedSquareOverSeparating && specialShortestPathRoadMap != null) {
+                        temp = specialShortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), origin);
+                    } else {
+                        temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(target.getXPos(), target.getYPos(), origin);
                     }
 
                     //PlannedPath temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), origin);
@@ -350,6 +416,22 @@ public class DCREntity extends CentralisedEntity {
                             //System.out.println("candidate2 chosen");
                         }
                     }
+                } else if (map.isVisible(target, catcher) && GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines)) {
+                    currentStage = Stage.CATCHER_TO_SEARCHER;
+                    System.out.println("WANT TO GET CATCHER BACK TO SEARCHER");
+                    /*MapRepresentation.showVisible = true;
+                    System.out.println("map.isVisible(catcher, searcher): " + map.isVisible(catcher, searcher));
+                    System.out.println("map.isVisible(searcher, catcher): " + map.isVisible(searcher, catcher));
+                    MapRepresentation.showVisible = false;
+                    currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
+                    System.out.println("currentCatcherPath: " + currentCatcherPath);*/
+                    Line l = new Line(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
+                    currentCatcherPath = new PlannedPath();
+                    currentCatcherPath.addLine(l);
+                    currentSearcherPath = null;
+                    catcherPathLineCounter = 0;
+                    searcherPathLineCounter = 0;
+                    origin = null;
                 } else {
                     // second case: target is not visible anymore (disappeared around corner)
                     // the method used here is cheating somewhat but assuming minimum feature size it just makes the computation easier
@@ -658,7 +740,7 @@ public class DCREntity extends CentralisedEntity {
         }
         currentStage = Stage.CATCHER_TO_SEARCHER;
         ShortestPathRoadMap.SHOW_ON_CANVAS = true;
-        currentCatcherPath = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
+        currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
         ShortestPathRoadMap.SHOW_ON_CANVAS = false;
     }
 
