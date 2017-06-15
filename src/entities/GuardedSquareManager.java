@@ -6,8 +6,6 @@ import simulation.Agent;
 
 import java.util.ArrayList;
 
-import static java.lang.Double.NaN;
-
 public class GuardedSquareManager {
 
     private static GeometryFactory geometryFactory = new GeometryFactory();

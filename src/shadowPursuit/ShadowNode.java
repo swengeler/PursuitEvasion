@@ -112,7 +112,8 @@ public class ShadowNode {
 
         this.occLine = Ray;
     }
-    public ShadowNode(Point2D position, ShadowNode Type2, Line Ray,Point2D agent) {
+
+    public ShadowNode(Point2D position, ShadowNode Type2, Line Ray, Point2D agent) {
 
         //System.out.println("ENTTEREDED");
         this.position = position;
@@ -124,7 +125,7 @@ public class ShadowNode {
             this.left = Type2;
             this.right = null;
         }
-        this.neighbourLeftAgent=agent;
+        this.neighbourLeftAgent = agent;
 
         type = type3;
 
@@ -151,7 +152,6 @@ public class ShadowNode {
         this.placedOn = placedOn;
         this.occLine = new Line(position.getX(), position.getY(), left.getPosition().getX(), left.getPosition().getY());
     }
-
 
 
     //For Type4
@@ -202,33 +202,32 @@ public class ShadowNode {
 
 
     }
-    public Point2D getLeftAgent(){
+
+    public Point2D getLeftAgent() {
         return neighbourLeftAgent;
     }
-    public Point2D getRightAgent(){
+
+    public Point2D getRightAgent() {
         return neighbourRightAgent;
     }
 
     public void isInCircle() {
-        if(right != null)   {
+        if (right != null) {
             this.inCircle = true;
-            if(right.inCircle == false) {
+            if (right.inCircle == false) {
                 right.isInCircle();
             }
-        }
-        else    {
+        } else {
             System.exit(00000);
         }
     }
 
 
-
-    public void connect(ShadowNode next)    {
-        if(this.getLeft() != null && this.getLeft() != next && this.getRight() == null)   {
+    public void connect(ShadowNode next) {
+        if (this.getLeft() != null && this.getLeft() != next && this.getRight() == null) {
             right = next;
             next.left = this;
-        }
-        else if(this.getRight() != null && this.getRight() != next && this.getLeft() == null)  {
+        } else if (this.getRight() != null && this.getRight() != next && this.getLeft() == null) {
             //System.out.println("THIS = " + this + "\nNEXT = " + next);
             left = next;
             next.right = this;
@@ -236,12 +235,12 @@ public class ShadowNode {
     }
 
 
-    public int numberOfLinks()  {
+    public int numberOfLinks() {
         int count = 0;
-        if(this.getLeft() != null)  {
+        if (this.getLeft() != null) {
             count++;
         }
-        if(this.getRight() != null)  {
+        if (this.getRight() != null) {
             count++;
         }
         return count;
@@ -283,8 +282,9 @@ public class ShadowNode {
         } else if (right.getType() == 3) {
             list[i] = right;
             i++;
-        } else
+        } else {
             return null;
+        }
 
         return list;
     }
@@ -362,44 +362,40 @@ public class ShadowNode {
 
 
     //For Type3
-    public ShadowNode getConnectedType2()   {
+    public ShadowNode getConnectedType2() {
         //System.out.println("PROBLEM FOR =>\n" + this);
-        if(getLeft() != null && getLeft().getType() == 2) {
+        if (getLeft() != null && getLeft().getType() == 2) {
             return left;
-        }
-        else if(getRight() != null &&getRight().getType() == 2) {
+        } else if (getRight() != null && getRight().getType() == 2) {
             return right;
-        }
-        else {
+        } else {
 
             return null;
         }
     }
 
     //For Type3
-    public ShadowNode getConnectedType3()   {
-        if(left.getType() == 3) {
+    public ShadowNode getConnectedType3() {
+        if (left.getType() == 3) {
             return left;
-        }
-        else if(right.getType() == 3) {
+        } else if (right.getType() == 3) {
             return right;
-        }
-        else
+        } else {
             return null;
+        }
     }
 
     public void connectT2() {
 
 
-        if(this.getType() == 3) {
+        if (this.getType() == 3) {
             if (this.getLeft() != null && this.getLeft().getType() == 2) {
                 this.getLeft().right = this;
             } else if (this.getRight() != null && this.getRight().getType() == 2) {
                 System.out.println("!!!!");
                 this.getRight().left = this;
             }
-        }
-        else if(this.getType() == 4) {
+        } else if (this.getType() == 4) {
             if (this.getLeft().getType() == 2) {
                 this.getLeft().right = this;
             }

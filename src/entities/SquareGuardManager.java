@@ -280,22 +280,22 @@ public class SquareGuardManager {
                 }
             }
             //if (!lastTargetPos.getCoordinate().equals2D(currentTargetPos.getCoordinate())) {
-                // moved within the square, need to adjust target points to move to
-                Coordinate targetPoint;
-                double deltaX, deltaY, length;
-                for (Agent g : currentAssignment.keySet()) {
-                    targetPoint = currentAssignment.get(g).closestPoint(currentTargetPos.getCoordinate());
-                    deltaX = targetPoint.x - g.getXPos();
-                    deltaY = targetPoint.y - g.getYPos();
-                    length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                    deltaX /= length;
-                    deltaY /= length;
-                    if (length <= g.getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER) {
-                        g.moveTo(targetPoint.x, targetPoint.y);
-                    } else {
-                        g.moveBy(deltaX * g.getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER, deltaY * g.getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER);
-                    }
+            // moved within the square, need to adjust target points to move to
+            Coordinate targetPoint;
+            double deltaX, deltaY, length;
+            for (Agent g : currentAssignment.keySet()) {
+                targetPoint = currentAssignment.get(g).closestPoint(currentTargetPos.getCoordinate());
+                deltaX = targetPoint.x - g.getXPos();
+                deltaY = targetPoint.y - g.getYPos();
+                length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                deltaX /= length;
+                deltaY /= length;
+                if (length <= g.getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER) {
+                    g.moveTo(targetPoint.x, targetPoint.y);
+                } else {
+                    g.moveBy(deltaX * g.getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER, deltaY * g.getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER);
                 }
+            }
             //}
         } else if (!guardedSquare.covers(currentTargetPos) && guardedSquare.covers(lastTargetPos)) {
             System.out.println("Target left guarding square");
@@ -349,7 +349,7 @@ public class SquareGuardManager {
         return squareSideLines;
     }
 
-    public  ArrayList<LineString> getSquareSides() {
+    public ArrayList<LineString> getSquareSides() {
         return squareSides;
     }
 

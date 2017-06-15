@@ -523,30 +523,19 @@ public class DCREntity extends CentralisedEntity {
                         // determine pocket boundary line
                         Point2D currentPoint, pocketBoundaryEndPoint = null;
                         double minLengthSquared = Double.MAX_VALUE, currentLengthSquared;
-                        Line intersectingLine = null;
+                        Line intersectedLine = null;
                         for (Line line : componentBoundaryLines.get(componentIndex)) {
                             currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
                             if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
                                 minLengthSquared = currentLengthSquared;
                                 pocketBoundaryEndPoint = currentPoint;
-                                intersectingLine = line;
+                                intersectedLine = line;
                                 //Main.pane.getChildren().add(new Circle(currentPoint.getX(), currentPoint.getY(), 5, Color.DARKGRAY));
                                 //found = true;
                                 //break;
                             }/* else if (currentPoint != null) {
                                 Main.pane.getChildren().add(new Circle(currentPoint.getEstX(), currentPoint.getEstY(), 2, Color.BLACK));
                             }*/
-                        }
-                        System.out.println("separatingLines.contains(intersectingLine): " + separatingLines.contains(intersectingLine));
-                        // if yes, then look for the intersection point on the other side of the square
-                        if (separatingLines.contains(intersectingLine)) {
-                            // check for second intersection point:
-                            LineString ls;
-                            for (int i = 1; i < 4; i++) {
-                                ls = squareGuardManagers.get(separatingLines.indexOf(intersectingLine)).getSquareSides().get(i);
-
-
-                            }
                         }
 
                         // TODO: possibly extend the pocket to include the intersected parts of the guarding square
@@ -557,16 +546,9 @@ public class DCREntity extends CentralisedEntity {
                             catchGraphics.getChildren().add(boundaryLine);
                             catchGraphics.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 5, Color.BLACK));
 
-                            for (SquareGuardManager gm : squareGuardManagers) {
-                                if (intersectingLine.equals(gm.getOriginalSeparatingLine())) {
-                                    System.out.println("Intersecting line is separating line");
-                                    break;
-                                }
-                            }
-
                             // find the new "pocket component"
                             System.out.printf("Catcher at (%f|%f)\nReal at (%f|%f)\nFake at (%f|%f)\n", catcher.getXPos(), catcher.getYPos(), currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY(), currentCatcherPath.getLastPathVertex().getEstX(), currentCatcherPath.getLastPathVertex().getEstY());
-                            Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY());
+                            Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
                             traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond());
 
                             // if the pocket boundary crosses through a separating line, extend it to whichever other line of that
@@ -650,17 +632,19 @@ public class DCREntity extends CentralisedEntity {
                         // determine pocket boundary line
                         Point2D currentPoint, pocketBoundaryEndPoint = null;
                         double minLengthSquared = Double.MAX_VALUE, currentLengthSquared;
+                        Line intersectedLine = null;
                         for (Line line : componentBoundaryLines.get(componentIndex)) {
                             currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
                             if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
                                 minLengthSquared = currentLengthSquared;
                                 pocketBoundaryEndPoint = currentPoint;
+                                intersectedLine = line;
                             }
                         }
                         Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
                         catchGraphics.getChildren().add(boundaryLine);
                         catchGraphics.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 6, Color.BLACK));
-                        Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
+                        Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
                         traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond());
 
                         catchGraphics.getChildren().add(new Circle(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), 4, Color.BLUEVIOLET));
@@ -1152,7 +1136,7 @@ public class DCREntity extends CentralisedEntity {
         return squareGuardManager;
     }
 
-    private Tuple<ArrayList<DTriangle>, int[][]> findPocketComponent(Line boundaryLine, int componentIndex, double pseudoBlockingVertX, double pseudoBlockingVertY) {
+    private Tuple<ArrayList<DTriangle>, int[][]> findPocketComponent(Line boundaryLine, int componentIndex, double pseudoBlockingVertX, double pseudoBlockingVertY, Line crossedSeparatingLine) {
         // go through all triangles of the current component and find those intersecting the boundary line
         // start to find the rest of the triangles of the pocket component using adjacency matrices
         // if a triangle is adjacent to one of the intersected triangles, test whether the edge connecting them
@@ -1210,29 +1194,19 @@ public class DCREntity extends CentralisedEntity {
         // add all triangles that are intersected by the boundary line to the list
         LineString lineString = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(boundaryLine.getStartX(), boundaryLine.getStartY()), new Coordinate(boundaryLine.getEndX(), boundaryLine.getEndY())}), GeometryOperations.factory);
         LinearRing linearRing;
+        double distance0, distance1, distance2;
+        Coordinate firstCoord;
         for (DTriangle dt : traversalHandler.getComponents().get(componentIndex)) {
-            Coordinate first = new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY());
+            firstCoord = new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY());
             linearRing = new LinearRing(new CoordinateArraySequence(new Coordinate[]{
-                    first,
+                    firstCoord,
                     new Coordinate(dt.getPoint(1).getX(), dt.getPoint(1).getY()),
                     new Coordinate(dt.getPoint(2).getX(), dt.getPoint(2).getY()),
-                    first
+                    firstCoord
             }), GeometryOperations.factory);
-            /*if (dt != currentTriangle && !dt.getPoints().contains(currentPoint) && GeometryOperations.lineTriangleIntersectWithoutPoints(boundaryLine, dt)) {
-                plgn = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                plgn.setFill(Color.GREEN.deriveColor(1, 1, 1, 0.1));
-                catchGraphics.getChildren().add(plgn);
-                pocketBoundaryTriangles.add(dt);
-            }*/
-            /*Geometry intersection = linearRing.intersection(lineString);
-            System.out.println("boundary line: " + lineString);
-            System.out.println("intersection: " + intersection);
-            System.out.println("point 0: " + dt.getPoint(0));
-            System.out.println("point 1: " + dt.getPoint(1));
-            System.out.println("point 2: " + dt.getPoint(2));*/
-            double distance0 = Math.sqrt(Math.pow(pseudoBlockingVertX - dt.getPoint(0).getX(), 2) + Math.pow(pseudoBlockingVertY - dt.getPoint(0).getY(), 2));
-            double distance1 = Math.sqrt(Math.pow(pseudoBlockingVertX - dt.getPoint(1).getX(), 2) + Math.pow(pseudoBlockingVertY - dt.getPoint(1).getY(), 2));
-            double distance2 = Math.sqrt(Math.pow(pseudoBlockingVertX - dt.getPoint(2).getX(), 2) + Math.pow(pseudoBlockingVertY - dt.getPoint(2).getY(), 2));
+            distance0 = Math.sqrt(Math.pow(pseudoBlockingVertX - dt.getPoint(0).getX(), 2) + Math.pow(pseudoBlockingVertY - dt.getPoint(0).getY(), 2));
+            distance1 = Math.sqrt(Math.pow(pseudoBlockingVertX - dt.getPoint(1).getX(), 2) + Math.pow(pseudoBlockingVertY - dt.getPoint(1).getY(), 2));
+            distance2 = Math.sqrt(Math.pow(pseudoBlockingVertX - dt.getPoint(2).getX(), 2) + Math.pow(pseudoBlockingVertY - dt.getPoint(2).getY(), 2));
             if (dt != currentTriangle && (linearRing.intersects(lineString)) && distance0 > minDistance && distance1 > minDistance && distance2 > minDistance) {
                 plgn = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
                 plgn.setFill(Color.GREEN.deriveColor(1, 1, 1, 0.1));
@@ -1243,18 +1217,78 @@ public class DCREntity extends CentralisedEntity {
 
         // also go through guarding square triangles
         // get all triangles in the guard square which are intersected by the boundary line
+        ArrayList<DTriangle> guardingSquareTriangles = null;
+        if (crossedSeparatingLine != null) {
+            // first identify the guarding square in question
+            DEdge tempEdge = separatingEdges.get(separatingLines.indexOf(crossedSeparatingLine));
+            DTriangle squareTriangle = pocketBoundaryTriangles.contains(tempEdge.getLeft()) ? tempEdge.getRight() : tempEdge.getLeft();
+            guardingSquareTriangles = new ArrayList<>();
+            for (ArrayList<DTriangle> arr : gSqrIntersectingTriangles) {
+                if (arr.contains(squareTriangle)) {
+                    guardingSquareTriangles = arr;
+                    break;
+                }
+            }
+
+            // find the extended boundary line (either ending at the square's other side or at the map boundary)
+            double rayStartX = boundaryLine.getStartX();
+            double rayStartY = boundaryLine.getStartY();
+            double rayDeltaX = boundaryLine.getStartX() - boundaryLine.getEndX();
+            double rayDeltaY = boundaryLine.getStartY() - boundaryLine.getEndY();
+
+            double intersectionMinDistance = Double.MAX_VALUE, curIntersectionDistance;
+            Point2D closestIntersectionPoint = null, currentIntersectionPoint;
+            for (int i = 1; i < 4; i++) {
+                closestIntersectionPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, squareGuardManagers.get(gSqrIntersectingTriangles.indexOf(guardingSquareTriangles)).getSquareSideLines().get(i));
+            }
+
+            if (closestIntersectionPoint != null) {
+                intersectionMinDistance = Math.pow(closestIntersectionPoint.getX() - boundaryLine.getStartX(), 2) + Math.pow(closestIntersectionPoint.getY() - boundaryLine.getStartY(), 2);
+            }
+
+            for (ArrayList<Line> arr : componentBoundaryLines) {
+                for (Line l : arr) {
+                    currentIntersectionPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, l);
+                    if (currentIntersectionPoint != null && (curIntersectionDistance = Math.pow(currentIntersectionPoint.getX() - boundaryLine.getStartX(), 2) + Math.pow(currentIntersectionPoint.getY() - boundaryLine.getStartY(), 2)) < intersectionMinDistance) {
+                        intersectionMinDistance = curIntersectionDistance;
+                        closestIntersectionPoint = currentIntersectionPoint;
+                    }
+                }
+            }
+
+            if (closestIntersectionPoint != null) {
+                Main.pane.getChildren().add(new Circle(closestIntersectionPoint.getX(), closestIntersectionPoint.getY(), 5, Color.BLUE));
+
+                // find out which triangles of the square are intersected
+                lineString = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(boundaryLine.getStartX(), boundaryLine.getStartY()), new Coordinate(closestIntersectionPoint.getX(), closestIntersectionPoint.getY())}), GeometryOperations.factory);
+                for (DTriangle dt : guardingSquareTriangles) {
+                    firstCoord = new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY());
+                    linearRing = new LinearRing(new CoordinateArraySequence(new Coordinate[]{
+                            firstCoord,
+                            new Coordinate(dt.getPoint(1).getX(), dt.getPoint(1).getY()),
+                            new Coordinate(dt.getPoint(2).getX(), dt.getPoint(2).getY()),
+                            firstCoord
+                    }), GeometryOperations.factory);
+                    if (linearRing.intersects(lineString)) {
+                        pocketBoundaryTriangles.add(dt);
+                    }
+                }
+            }
+            // now have to make sure that triangles adjacent to these boundary triangles are actually also in the square
+        }
+
 
         ArrayList<DTriangle> connectingTriangles = new ArrayList<>();
         ArrayList<DEdge> connectingEdges = new ArrayList<>();
         for (DTriangle dt1 : pocketBoundaryTriangles) {
             for (DEdge de : dt1.getEdges()) {
-                boolean found = false;
-                for (DTriangle dt2 : pocketBoundaryTriangles) {
+                boolean found = pocketBoundaryTriangles.contains(de.getOtherTriangle(dt1));
+                /*for (DTriangle dt2 : pocketBoundaryTriangles) {
                     if (dt1 != dt2 && dt2.isEdgeOf(de)) {
                         found = true;
                         break;
                     }
-                }
+                }*/
                 if (!found && (!componentBoundaryEdges.get(componentIndex).contains(de) || separatingEdges.contains(de))) {
                     // TODO: check whether this component boundary edge is also a separating edge, if so, include the guarded square connected to it
                     Line l = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
@@ -1307,7 +1341,7 @@ public class DCREntity extends CentralisedEntity {
                     // either they are properly adjacent and connected anyway
                     // or they share a separating edge, i.e. a guarding square is connected to the triangle
                     if (pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] != 1) {
-                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i))) {
+                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i)) && (crossedSeparatingLine == null || guardingSquareTriangles.contains(traversalHandler.getTriangles().get(i)))) {
                             if (!first || (traversalHandler.getTriangles().get(i).equals(connectingEdges.get(connectingTriangles.indexOf(dt)).getOtherTriangle(dt)))) {
                                 nextLayer.add(traversalHandler.getTriangles().get(i));
                                 pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] = 1;
@@ -1317,42 +1351,44 @@ public class DCREntity extends CentralisedEntity {
                     }
                 }
                 // find out whether the current triangle shares a separating edge with a guarded square
-                separatingEdge = separatingEdges.contains(dt.getEdge(0)) ? dt.getEdge(0) : (separatingEdges.contains(dt.getEdge(1)) ? dt.getEdge(1) : (separatingEdges.contains(dt.getEdge(2)) ? dt.getEdge(2) : null));
-                for (ArrayList<DTriangle> arr : gSqrIntersectingTriangles) {
-                    if (arr.contains(dt)) {
-                        separatingEdge = null;
-                        break;
-                    }
-                }
-                // need the connecting edge, then the two triangles adjacent to the separating line should be reconnected
-                if (separatingEdge != null) {
-                    plgn = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                    plgn.setFill(Color.INDIANRED.deriveColor(1.0, 1.0, 1.0, 1.0));
-                    catchGraphics.getChildren().add(plgn);
-
-                    otherTriangle = separatingEdge.getOtherTriangle(dt);
-                    //pocketBoundaryTriangles.add(otherTriangle);
-                    pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][traversalHandler.getTriangles().indexOf(otherTriangle)] = 1;
-                    pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(otherTriangle)][traversalHandler.getTriangles().indexOf(dt)] = 1;
-
-                    // find the square intersecting triangles that the "other triangle" is part of, i.e. find the square to add to the pocket
-                    currentSquareIntersecting = new ArrayList<>();
+                if (crossedSeparatingLine == null || !guardingSquareTriangles.contains(dt)) {
+                    separatingEdge = separatingEdges.contains(dt.getEdge(0)) ? dt.getEdge(0) : (separatingEdges.contains(dt.getEdge(1)) ? dt.getEdge(1) : (separatingEdges.contains(dt.getEdge(2)) ? dt.getEdge(2) : null));
                     for (ArrayList<DTriangle> arr : gSqrIntersectingTriangles) {
-                        if (arr.contains(otherTriangle)) {
-                            currentSquareIntersecting = arr;
+                        if (arr.contains(dt)) {
+                            separatingEdge = null;
                             break;
                         }
                     }
-                    pocketBoundaryTriangles.addAll(currentSquareIntersecting);
+                    // need the connecting edge, then the two triangles adjacent to the separating line should be reconnected
+                    if (separatingEdge != null) {
+                        plgn = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                        plgn.setFill(Color.INDIANRED.deriveColor(1.0, 1.0, 1.0, 1.0));
+                        catchGraphics.getChildren().add(plgn);
 
-                    // also attach the other triangles from that set of square intersecting triangles
-                    for (DTriangle dt1 : currentSquareIntersecting) {
-                        for (DTriangle dt2 : currentSquareIntersecting) {
-                            //System.out.println("dt1: " + dt1 + "\ndt2: " + dt2 + "\ndt1.getEdge(0).getOtherTriangle(dt1): " + dt1.getEdge(0).getOtherTriangle(dt1) + "\ndt1.getEdge(1).getOtherTriangle(dt1): " + dt1.getEdge(1).getOtherTriangle(dt1) + "\ndt1.getEdge(2).getOtherTriangle(dt1): " + dt1.getEdge(2).getOtherTriangle(dt1));
-                            if (dt1 != dt2 && ((dt1.getEdge(0).getOtherTriangle(dt1) != null && dt1.getEdge(0).getOtherTriangle(dt1).equals(dt2)) ||
-                                    (dt1.getEdge(1).getOtherTriangle(dt1) != null && dt1.getEdge(1).getOtherTriangle(dt1).equals(dt2)) || (dt1.getEdge(2).getOtherTriangle(dt1) != null && dt1.getEdge(2).getOtherTriangle(dt1).equals(dt2)))) {
-                                pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt1)][traversalHandler.getTriangles().indexOf(dt2)] = 1;
-                                pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt2)][traversalHandler.getTriangles().indexOf(dt1)] = 1;
+                        otherTriangle = separatingEdge.getOtherTriangle(dt);
+                        //pocketBoundaryTriangles.add(otherTriangle);
+                        pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][traversalHandler.getTriangles().indexOf(otherTriangle)] = 1;
+                        pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(otherTriangle)][traversalHandler.getTriangles().indexOf(dt)] = 1;
+
+                        // find the square intersecting triangles that the "other triangle" is part of, i.e. find the square to add to the pocket
+                        currentSquareIntersecting = new ArrayList<>();
+                        for (ArrayList<DTriangle> arr : gSqrIntersectingTriangles) {
+                            if (arr.contains(otherTriangle)) {
+                                currentSquareIntersecting = arr;
+                                break;
+                            }
+                        }
+                        pocketBoundaryTriangles.addAll(currentSquareIntersecting);
+
+                        // also attach the other triangles from that set of square intersecting triangles
+                        for (DTriangle dt1 : currentSquareIntersecting) {
+                            for (DTriangle dt2 : currentSquareIntersecting) {
+                                //System.out.println("dt1: " + dt1 + "\ndt2: " + dt2 + "\ndt1.getEdge(0).getOtherTriangle(dt1): " + dt1.getEdge(0).getOtherTriangle(dt1) + "\ndt1.getEdge(1).getOtherTriangle(dt1): " + dt1.getEdge(1).getOtherTriangle(dt1) + "\ndt1.getEdge(2).getOtherTriangle(dt1): " + dt1.getEdge(2).getOtherTriangle(dt1));
+                                if (dt1 != dt2 && ((dt1.getEdge(0).getOtherTriangle(dt1) != null && dt1.getEdge(0).getOtherTriangle(dt1).equals(dt2)) ||
+                                        (dt1.getEdge(1).getOtherTriangle(dt1) != null && dt1.getEdge(1).getOtherTriangle(dt1).equals(dt2)) || (dt1.getEdge(2).getOtherTriangle(dt1) != null && dt1.getEdge(2).getOtherTriangle(dt1).equals(dt2)))) {
+                                    pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt1)][traversalHandler.getTriangles().indexOf(dt2)] = 1;
+                                    pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt2)][traversalHandler.getTriangles().indexOf(dt1)] = 1;
+                                }
                             }
                         }
                     }

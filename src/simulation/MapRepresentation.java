@@ -1,16 +1,17 @@
 package simulation;
 
 import additionalOperations.GeometryOperations;
+import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 import entities.Entity;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
 import ui.Main;
 import ui.MapPolygon;
-import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class MapRepresentation {
 

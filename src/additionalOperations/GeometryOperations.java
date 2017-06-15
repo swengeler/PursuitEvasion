@@ -10,7 +10,6 @@ import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DTriangle;
 import pathfinding.PathVertex;
 import shadowPursuit.ShadowNode;
-import ui.Main;
 
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
@@ -315,11 +314,11 @@ public class GeometryOperations {
                     newY = aY + value * (endX - aX) * m;
                 }
             } */
-            }else {
-               // if (endY > aY) {
-                    //System.out.print("wooh its working = " + m);
-                    newX = aX;
-                    newY = aY + value * (endX - aX);
+            } else {
+                // if (endY > aY) {
+                //System.out.print("wooh its working = " + m);
+                newX = aX;
+                newY = aY + value * (endX - aX);
              /*   } else {
                     System.out.print("why the fuck man");
 
@@ -351,13 +350,14 @@ public class GeometryOperations {
                 newY = aY - value;
             }
         }
-*/Line ray;
-        if(value>1) {
+*/
+        Line ray;
+        if (value > 1) {
 
-             ray = new Line(endX, endY, newX, newY);
-        }else{
+            ray = new Line(endX, endY, newX, newY);
+        } else {
 
-            ray = new Line(aX,aY,newX,newY);
+            ray = new Line(aX, aY, newX, newY);
         }
         //System.out.println("Created Ray = " + ray);
 

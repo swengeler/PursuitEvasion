@@ -6,24 +6,14 @@ import entities.*;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.geometry.Point2D;
+import javafx.beans.property.*;
+import javafx.geometry.*;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Font;
@@ -33,18 +23,13 @@ import javafx.util.Duration;
 import javafx.util.Pair;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DPoint;
-import org.jdelaunay.delaunay.geometries.DTriangle;
+import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 import shadowPursuit.ShadowGraph;
 import simulation.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 public class Main extends Application {
 
@@ -358,7 +343,7 @@ public class Main extends Application {
             ArrayList<Point2D> points = poly(175, 0.35, 0.2, 16);
             //ArrayList<Point2D> points = poly(300, 0.45, 0.2, 30);
             Polygon p = new Polygon();
-            for (Point2D point: points) {
+            for (Point2D point : points) {
                 p.getPoints().add(point.getX());
                 p.getPoints().add(point.getY());
             }
@@ -563,13 +548,13 @@ public class Main extends Application {
             } else {
                 ArrayList<Point2D> agentPos = new ArrayList<>();
                 map = new MapRepresentation(mapPolygons);
-                for(VisualAgent agent : visualAgents)   {
+                for (VisualAgent agent : visualAgents) {
                     agentPos.add(new Point2D(agent.getCenterX(), agent.getCenterY()));
                 }
                 ShadowGraph shadGraph = new ShadowGraph(map, agentPos);
                 ArrayList<Polygon> shadows = shadGraph.getShadows();
 
-                for(Polygon p: shadows) {
+                for (Polygon p : shadows) {
                     p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
                     p.setFill(Color.GREY.deriveColor(1, 1, 1, 0.1));
                     p.setStrokeWidth(1);
@@ -2097,6 +2082,7 @@ public class Main extends Application {
                 if (line.contains("map")) {
                     //currentState = ProgramState.AGENT_PLACING;
                     // map data
+                    double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
                     System.out.println(line);
                     String[] coords;
                     double[] coordsDouble;
@@ -2107,7 +2093,7 @@ public class Main extends Application {
                             coordsDouble[i] = Double.parseDouble(coords[i]);
                         }
 
-                        for (int i = 0; i < coords.length; i += 2) {
+                        for (int i = 0; i < coordsDouble.length; i += 2) {
                             // adding the obstaclePolygons
                             Anchor a = null;
                             boolean connectedToOld = false;
@@ -2124,6 +2110,12 @@ public class Main extends Application {
                                 DoubleProperty xProperty = new SimpleDoubleProperty(coordsDouble[i]);
                                 DoubleProperty yProperty = new SimpleDoubleProperty(coordsDouble[i + 1]);
                                 a = new Anchor(Color.GOLD, xProperty, yProperty);
+                                if (xProperty.getValue() > maxX) {
+                                    maxX = xProperty.getValue();
+                                }
+                                if (yProperty.getValue() > maxY) {
+                                    maxY = yProperty.getValue();
+                                }
                             }
 
                             currentMapPolygon.addAnchor(a);
@@ -2138,6 +2130,7 @@ public class Main extends Application {
                             }
                         }
                     }
+                    // TODO: check whether maxX or maxY are larger than the current size of the canvas, if so increase window size
                     initPlaceAgents();
                     // read controlledAgents data
                     String[] settings;
@@ -2420,7 +2413,7 @@ public class Main extends Application {
                                         selectedEntityButton.setText(selectedEntityButton.getText() + " [1/" + entity.totalRequiredAgents() + "]");
                                         entityID++;
                                     } else {
-                                        for (Pair p: centralisedEntities) {
+                                        for (Pair p : centralisedEntities) {
                                             if (String.valueOf(p.getKey()).equals(selectedEntityButton.getId())) {
                                                 DCREntity entity = (DCREntity) p.getValue();
                                                 entity.addAgent(new Agent(va.getSettings()));
@@ -2619,7 +2612,7 @@ public class Main extends Application {
 
     public ArrayList<Point2D> poly(double avgRadius, double irregularity, double spikeyness, int numVerts) {
         //https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
-        
+
         double centerX = 500;
         double centerY = 500;
 
@@ -2639,7 +2632,7 @@ public class Main extends Application {
         }
 
         double k = sum / (2 * Math.PI);
-        for (double d: angleSteps) {
+        for (double d : angleSteps) {
             d /= k;
         }
 
@@ -2664,10 +2657,15 @@ public class Main extends Application {
     }
 
     private double clip(double x, double min, double max) {
-        if (min > max) return x;
-        else if (x < min) return min;
-        else if (x > max) return max;
-        else return x;
+        if (min > max) {
+            return x;
+        } else if (x < min) {
+            return min;
+        } else if (x > max) {
+            return max;
+        } else {
+            return x;
+        }
     }
 
 }

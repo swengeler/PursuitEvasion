@@ -6,14 +6,10 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
-import org.jdelaunay.delaunay.geometries.DEdge;
-import org.jdelaunay.delaunay.geometries.DPoint;
-import org.jdelaunay.delaunay.geometries.DTriangle;
+import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class HideEvaderPolicy extends MovePolicy {
 
