@@ -13,7 +13,7 @@ import ui.Main;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class GuardManager {
+public class SquareGuardManager {
 
     private Group graphics;
 
@@ -39,7 +39,7 @@ public class GuardManager {
     private ArrayList<Agent> guards;
     private ArrayList<Agent> alreadyAssigned;
 
-    public GuardManager(Line originalSeparatingLine, Polygon guardedSquare, ArrayList<LineString> squareSides, HashMap<LineString, ArrayList<LineString>> entranceToGuarded, HashMap<LineString, ArrayList<LineSegment>> guardedToSegments) {
+    public SquareGuardManager(Line originalSeparatingLine, Polygon guardedSquare, ArrayList<LineString> squareSides, HashMap<LineString, ArrayList<LineString>> entranceToGuarded, HashMap<LineString, ArrayList<LineSegment>> guardedToSegments) {
         currentTargetPos = new Point(new CoordinateArraySequence(1), GeometryOperations.factory);
         lastTargetPos = new Point(new CoordinateArraySequence(1), GeometryOperations.factory);
         crossingLine = new LineString(new CoordinateArraySequence(new Coordinate[]{lastTargetPos.getCoordinate(), currentTargetPos.getCoordinate()}), GeometryOperations.factory);
@@ -347,6 +347,10 @@ public class GuardManager {
 
     public ArrayList<Line> getSquareSideLines() {
         return squareSideLines;
+    }
+
+    public  ArrayList<LineString> getSquareSides() {
+        return squareSides;
     }
 
     public boolean crossedNonSeparatingLine() {

@@ -48,7 +48,8 @@ public class DCREntity extends CentralisedEntity {
     private ArrayList<Line> pathLines;
     private int searcherPathLineCounter, catcherPathLineCounter;
 
-    private ArrayList<GuardManager> guardManagers;
+    private ArrayList<SquareGuardManager> squareGuardManagers;
+    private ArrayList<ArrayList<DTriangle>> gSqrIntersectingTriangles;
     private ArrayList<Agent> guards;
     private ArrayList<PlannedPath> initGuardPaths;
     private ArrayList<Integer> guardPathLineCounters;
@@ -56,7 +57,7 @@ public class DCREntity extends CentralisedEntity {
     private boolean guardsPositioned;
 
     private ShortestPathRoadMap specialShortestPathRoadMap;
-    private GuardManager currentGuardedSquare;
+    private SquareGuardManager currentGuardedSquare;
     private boolean inGuardedSquareOverNonSeparating, inGuardedSquareOverSeparating, spottedOnce, spottedOutsideGuardingSquare;
 
     private Group catchGraphics;
@@ -108,7 +109,7 @@ public class DCREntity extends CentralisedEntity {
                     for (Agent a : e.getControlledAgents()) {
                         if (a.isActive()) {
                             target = a;
-                            for (GuardManager gm : guardManagers) {
+                            for (SquareGuardManager gm : squareGuardManagers) {
                                 gm.initTargetPosition(target);
                             }
                             break outer;
@@ -146,7 +147,7 @@ public class DCREntity extends CentralisedEntity {
         } else if (target != null) {
             //for (Agent a : availableAgents) {
             //    if (map.isVisible(target, a)) {
-            for (GuardManager gm : guardManagers) {
+            for (SquareGuardManager gm : squareGuardManagers) {
                 // maybe cheat and update this regardless
                 gm.updateTargetPosition(target);
             }
@@ -160,7 +161,7 @@ public class DCREntity extends CentralisedEntity {
                     inGuardedSquareOverNonSeparating = false;
                     inGuardedSquareOverSeparating = false;
                 } else /*if (map.isVisible(catcher, target))*/ {
-                    for (GuardManager gm : guardManagers) {
+                    for (SquareGuardManager gm : squareGuardManagers) {
                         if (gm.crossedNonSeparatingLine()) {
                             currentGuardedSquare = gm;
                             inGuardedSquareOverNonSeparating = true;
@@ -270,7 +271,7 @@ public class DCREntity extends CentralisedEntity {
                             System.out.println("Target found");
                             spottedOnce = true;
                             boolean temp = false;
-                            for (GuardManager gm : guardManagers) {
+                            for (SquareGuardManager gm : squareGuardManagers) {
                                 if (gm.inGuardedSquare(target.getXPos(), target.getYPos())) {
                                     temp = true;
                                     break;
@@ -295,7 +296,7 @@ public class DCREntity extends CentralisedEntity {
                                 if (map.getEvadingEntities().get(i).getControlledAgents().get(j).isActive() && map.isVisible(map.getEvadingEntities().get(i).getControlledAgents().get(j), searcher) && !GeometryOperations.lineIntersectSeparatingLines(map.getEvadingEntities().get(i).getControlledAgents().get(j).getXPos(), map.getEvadingEntities().get(i).getControlledAgents().get(j).getYPos(), searcher.getXPos(), searcher.getYPos(), separatingLines)) {
                                     target = map.getEvadingEntities().get(i).getControlledAgents().get(j);
                                     System.out.println("Target found");
-                                    for (GuardManager gm : guardManagers) {
+                                    for (SquareGuardManager gm : squareGuardManagers) {
                                         gm.initTargetPosition(target);
                                     }
                                     origin = new Point2D(catcher.getXPos(), catcher.getYPos());
@@ -417,7 +418,6 @@ public class DCREntity extends CentralisedEntity {
                         }
                     }
                 } else if (map.isVisible(target, catcher) && GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines)) {
-                    currentStage = Stage.CATCHER_TO_SEARCHER;
                     System.out.println("WANT TO GET CATCHER BACK TO SEARCHER");
                     /*MapRepresentation.showVisible = true;
                     System.out.println("map.isVisible(catcher, searcher): " + map.isVisible(catcher, searcher));
@@ -425,6 +425,8 @@ public class DCREntity extends CentralisedEntity {
                     MapRepresentation.showVisible = false;
                     currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
                     System.out.println("currentCatcherPath: " + currentCatcherPath);*/
+                    // except for when the searcher goes out searching for the evader, the catcher should always be within line of sight
+                    // of the searcher (I think), so the following should be sufficient:
                     Line l = new Line(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
                     currentCatcherPath = new PlannedPath();
                     currentCatcherPath.addLine(l);
@@ -432,6 +434,7 @@ public class DCREntity extends CentralisedEntity {
                     catcherPathLineCounter = 0;
                     searcherPathLineCounter = 0;
                     origin = null;
+                    currentStage = Stage.CATCHER_TO_SEARCHER;
                 } else {
                     // second case: target is not visible anymore (disappeared around corner)
                     // the method used here is cheating somewhat but assuming minimum feature size it just makes the computation easier
@@ -534,6 +537,18 @@ public class DCREntity extends CentralisedEntity {
                                 Main.pane.getChildren().add(new Circle(currentPoint.getEstX(), currentPoint.getEstY(), 2, Color.BLACK));
                             }*/
                         }
+                        System.out.println("separatingLines.contains(intersectingLine): " + separatingLines.contains(intersectingLine));
+                        // if yes, then look for the intersection point on the other side of the square
+                        if (separatingLines.contains(intersectingLine)) {
+                            // check for second intersection point:
+                            LineString ls;
+                            for (int i = 1; i < 4; i++) {
+                                ls = squareGuardManagers.get(separatingLines.indexOf(intersectingLine)).getSquareSides().get(i);
+
+
+                            }
+                        }
+
                         // TODO: possibly extend the pocket to include the intersected parts of the guarding square
                         if (/*!found || */pocketBoundaryEndPoint == null) {
                             System.out.println("No pocket boundary end point found.");
@@ -542,7 +557,7 @@ public class DCREntity extends CentralisedEntity {
                             catchGraphics.getChildren().add(boundaryLine);
                             catchGraphics.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 5, Color.BLACK));
 
-                            for (GuardManager gm : guardManagers) {
+                            for (SquareGuardManager gm : squareGuardManagers) {
                                 if (intersectingLine.equals(gm.getOriginalSeparatingLine())) {
                                     System.out.println("Intersecting line is separating line");
                                     break;
@@ -682,6 +697,10 @@ public class DCREntity extends CentralisedEntity {
     }
 
     private void assignTasks() {
+        if (availableAgents.size() < requiredAgents) {
+            AdaptedSimulation.masterPause("Not enough agents for DCREntity");
+        }
+
         // assign a certain number of agents to be guards for separating triangles
         initGuardPaths = new ArrayList<>();
         guards = new ArrayList<>();
@@ -690,7 +709,7 @@ public class DCREntity extends CentralisedEntity {
         PlannedPath bestShortestPath, currentShortestPath;
         Agent tempClosestAgent;
         ArrayList<Agent> currentGuards;
-        for (GuardManager gm : guardManagers) {
+        for (SquareGuardManager gm : squareGuardManagers) {
             currentGuards = new ArrayList<>();
             for (Coordinate c : gm.getOriginalPositions()) {
                 bestDistance = Double.MAX_VALUE;
@@ -699,22 +718,22 @@ public class DCREntity extends CentralisedEntity {
                 for (Agent a : availableAgents) {
                     if (!guards.contains(a)) {
                         // compute distance to current triangle
-                        /*currentShortestPath = shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), c.x, c.y);
+                        currentShortestPath = shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), c.x, c.y);
                         currentDistance = currentShortestPath.getTotalLength();
                         if (currentDistance < bestDistance) {
                             bestDistance = currentDistance;
                             bestShortestPath = currentShortestPath;
                             tempClosestAgent = a;
-                        }*/
-                        guards.add(a);
+                        }
+                        /*guards.add(a);
                         currentGuards.add(a);
                         initGuardPaths.add(shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), c.x, c.y));
-                        break;
+                        break;*/
                     }
                 }
-                /*guards.add(tempClosestAgent);
+                guards.add(tempClosestAgent);
                 currentGuards.add(tempClosestAgent);
-                initGuardPaths.add(bestShortestPath);*/
+                initGuardPaths.add(bestShortestPath);
             }
             gm.assignGuards(currentGuards);
         }
@@ -812,7 +831,9 @@ public class DCREntity extends CentralisedEntity {
             componentBoundaryLines = componentBoundaries.getFirst();
             componentBoundaryShapes = componentBoundaries.getSecond();
 
-            guardManagers = computeGuardingSquares(separatingLines);
+            squareGuardManagers = computeGuardManagers(separatingLines);
+
+            gSqrIntersectingTriangles = computeGuardingSquareIntersection(squareGuardManagers, nodes);
 
             // given the spanning tree adjacency matrix and all the triangles, the tree structure that will be used
             // for deciding on randomised paths can be constructed
@@ -831,27 +852,61 @@ public class DCREntity extends CentralisedEntity {
 
             this.separatingLines = separatingLines;
 
-            for (GuardManager gm : guardManagers) {
+            for (SquareGuardManager gm : squareGuardManagers) {
                 requiredAgents += gm.totalRequiredGuards();
             }
             requiredAgents += 2;
             System.out.println("\nrequiredAgents: " + requiredAgents);
+
+
+            /*ArrayList<Integer> nextLayer, currentLayer = new ArrayList<>();
+            currentLayer.add(15);
+            ArrayList<Line> lineTree = new ArrayList<>();
+            Line temp;
+            boolean unexploredLeft = true;
+            boolean[] visitedNodes = new boolean[reconnectedAdjacencyMatrix.length];
+            int[] parentNodesThing = new int[reconnectedAdjacencyMatrix.length];
+            parentNodesThing[15] = -1;
+            while (unexploredLeft) {
+                nextLayer = new ArrayList<>();
+                for (int i : currentLayer) {
+                    visitedNodes[i] = true;
+                    for (int j = 0; j < reconnectedAdjacencyMatrix.length; j++) {
+                        if (reconnectedAdjacencyMatrix[i][j] == 1 && j != parentNodesThing[i] && !visitedNodes[j]) {
+                        System.out.println("thing: " + j);
+                            nextLayer.add(j);
+                            parentNodesThing[j] = i;
+                            visitedNodes[j] = true;
+
+                            temp = new Line(nodes.get(i).getBarycenter().getX(), nodes.get(i).getBarycenter().getY(), nodes.get(j).getBarycenter().getX(), nodes.get(j).getBarycenter().getY());
+                            temp.setStroke(Color.RED);
+                            temp.setStrokeWidth(4);
+                            lineTree.add(temp);
+                        }
+                    }
+                }
+                currentLayer = nextLayer;
+                if (nextLayer.size() == 0) {
+                    unexploredLeft = false;
+                }
+            }
+            Main.pane.getChildren().addAll(lineTree);*/
         } catch (DelaunayError error) {
             error.printStackTrace();
         }
         //requiredAgents = 2;
     }
 
-    private ArrayList<GuardManager> computeGuardingSquares(ArrayList<Line> separatingLines) {
-        ArrayList<GuardManager> guardManagers = new ArrayList<>(separatingLines.size());
-        GuardManager temp1, temp2;
+    private ArrayList<SquareGuardManager> computeGuardManagers(ArrayList<Line> separatingLines) {
+        ArrayList<SquareGuardManager> squareGuardManagers = new ArrayList<>(separatingLines.size());
+        SquareGuardManager temp1, temp2;
 
 
         for (Line l : separatingLines) {
             temp1 = computeSingleGuardManager(l, false);
             temp2 = computeSingleGuardManager(l, true);
             if (temp1.getOriginalPositions().size() < temp2.getOriginalPositions().size()) {
-                guardManagers.add(temp1);
+                squareGuardManagers.add(temp1);
                 for (int i = 0; i < temp1.getGuardedSquare().getCoordinates().length - 1; i++) {
                     Line line = new Line(temp1.getGuardedSquare().getCoordinates()[i].x, temp1.getGuardedSquare().getCoordinates()[i].y, temp1.getGuardedSquare().getCoordinates()[i + 1].x, temp1.getGuardedSquare().getCoordinates()[i + 1].y);
                     line.setStrokeWidth(4);
@@ -859,7 +914,7 @@ public class DCREntity extends CentralisedEntity {
                     Main.pane.getChildren().add(line);
                 }
             } else {
-                guardManagers.add(temp2);
+                squareGuardManagers.add(temp2);
                 for (int i = 0; i < temp2.getGuardedSquare().getCoordinates().length - 1; i++) {
                     Line line = new Line(temp2.getGuardedSquare().getCoordinates()[i].x, temp2.getGuardedSquare().getCoordinates()[i].y, temp2.getGuardedSquare().getCoordinates()[i + 1].x, temp2.getGuardedSquare().getCoordinates()[i + 1].y);
                     line.setStrokeWidth(4);
@@ -874,14 +929,14 @@ public class DCREntity extends CentralisedEntity {
         this is not done if there is already a guard in that square that has been assigned to the same points
          */
 
-        return guardManagers;
+        return squareGuardManagers;
     }
 
-    private GuardManager computeSingleGuardManager(Line l, boolean reverseSign) {
+    private SquareGuardManager computeSingleGuardManager(Line l, boolean reverseSign) {
         // **************************************** //
         // variables to be used for the computation //
         // **************************************** //
-        GuardManager guardManager;
+        SquareGuardManager squareGuardManager;
 
         LinearRing guardedSquare;
         com.vividsolutions.jts.geom.Polygon guardedPolygon;
@@ -1087,14 +1142,14 @@ public class DCREntity extends CentralisedEntity {
             guardedToSegments.put(squareSides.get(i), tempLineSegments);
         }
 
-        guardManager = new GuardManager(l, guardedPolygon, squareSides, entranceToGuarded, guardedToSegments);
-        //guardManagers.add(guardManager);
+        squareGuardManager = new SquareGuardManager(l, guardedPolygon, squareSides, entranceToGuarded, guardedToSegments);
+        //squareGuardManagers.add(squareGuardManager);
 
         /*Main.pane.getChildren().add(l);
         Main.pane.getChildren().add(new Line(lines[1].getCoordinate(0).x, lines[1].getCoordinate(0).y, lines[1].getCoordinate(1).x, lines[1].getCoordinate(1).y));
         Main.pane.getChildren().add(new Line(lines[2].getCoordinate(0).x, lines[2].getCoordinate(0).y, lines[2].getCoordinate(1).x, lines[2].getCoordinate(1).y));
         Main.pane.getChildren().add(new Line(lines[3].getCoordinate(0).x, lines[3].getCoordinate(0).y, lines[3].getCoordinate(1).x, lines[3].getCoordinate(1).y));*/
-        return guardManager;
+        return squareGuardManager;
     }
 
     private Tuple<ArrayList<DTriangle>, int[][]> findPocketComponent(Line boundaryLine, int componentIndex, double pseudoBlockingVertX, double pseudoBlockingVertY) {
@@ -1186,6 +1241,7 @@ public class DCREntity extends CentralisedEntity {
             }
         }
 
+        // also go through guarding square triangles
         // get all triangles in the guard square which are intersected by the boundary line
 
         ArrayList<DTriangle> connectingTriangles = new ArrayList<>();
@@ -1199,7 +1255,7 @@ public class DCREntity extends CentralisedEntity {
                         break;
                     }
                 }
-                if (!found && !componentBoundaryEdges.get(componentIndex).contains(de)) {
+                if (!found && (!componentBoundaryEdges.get(componentIndex).contains(de) || separatingEdges.contains(de))) {
                     // TODO: check whether this component boundary edge is also a separating edge, if so, include the guarded square connected to it
                     Line l = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
                     l.setStroke(Color.RED);
@@ -1240,16 +1296,64 @@ public class DCREntity extends CentralisedEntity {
             Main.pane.getChildren().add(p);*/
         }
         boolean first = true;
+        DEdge separatingEdge;
+        DTriangle otherTriangle;
+        ArrayList<DTriangle> currentSquareIntersecting;
         while (unexploredLeft) {
             nextLayer = new ArrayList<>();
             for (DTriangle dt : currentLayer) {
                 pocketBoundaryTriangles.add(dt);
                 for (int i = 0; i < traversalHandler.getAdjacencyMatrix().length; i++) {
-                    if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i))) {
-                        if (!first || (traversalHandler.getTriangles().get(i).equals(connectingEdges.get(connectingTriangles.indexOf(dt)).getOtherTriangle(dt)))) {
-                            nextLayer.add(traversalHandler.getTriangles().get(i));
-                            pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] = 1;
-                            pocketAdjacencyMatrix[i][traversalHandler.getTriangles().indexOf(dt)] = 1;
+                    // either they are properly adjacent and connected anyway
+                    // or they share a separating edge, i.e. a guarding square is connected to the triangle
+                    if (pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] != 1) {
+                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i))) {
+                            if (!first || (traversalHandler.getTriangles().get(i).equals(connectingEdges.get(connectingTriangles.indexOf(dt)).getOtherTriangle(dt)))) {
+                                nextLayer.add(traversalHandler.getTriangles().get(i));
+                                pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] = 1;
+                                pocketAdjacencyMatrix[i][traversalHandler.getTriangles().indexOf(dt)] = 1;
+                            }
+                        }
+                    }
+                }
+                // find out whether the current triangle shares a separating edge with a guarded square
+                separatingEdge = separatingEdges.contains(dt.getEdge(0)) ? dt.getEdge(0) : (separatingEdges.contains(dt.getEdge(1)) ? dt.getEdge(1) : (separatingEdges.contains(dt.getEdge(2)) ? dt.getEdge(2) : null));
+                for (ArrayList<DTriangle> arr : gSqrIntersectingTriangles) {
+                    if (arr.contains(dt)) {
+                        separatingEdge = null;
+                        break;
+                    }
+                }
+                // need the connecting edge, then the two triangles adjacent to the separating line should be reconnected
+                if (separatingEdge != null) {
+                    plgn = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                    plgn.setFill(Color.INDIANRED.deriveColor(1.0, 1.0, 1.0, 1.0));
+                    catchGraphics.getChildren().add(plgn);
+
+                    otherTriangle = separatingEdge.getOtherTriangle(dt);
+                    //pocketBoundaryTriangles.add(otherTriangle);
+                    pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][traversalHandler.getTriangles().indexOf(otherTriangle)] = 1;
+                    pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(otherTriangle)][traversalHandler.getTriangles().indexOf(dt)] = 1;
+
+                    // find the square intersecting triangles that the "other triangle" is part of, i.e. find the square to add to the pocket
+                    currentSquareIntersecting = new ArrayList<>();
+                    for (ArrayList<DTriangle> arr : gSqrIntersectingTriangles) {
+                        if (arr.contains(otherTriangle)) {
+                            currentSquareIntersecting = arr;
+                            break;
+                        }
+                    }
+                    pocketBoundaryTriangles.addAll(currentSquareIntersecting);
+
+                    // also attach the other triangles from that set of square intersecting triangles
+                    for (DTriangle dt1 : currentSquareIntersecting) {
+                        for (DTriangle dt2 : currentSquareIntersecting) {
+                            //System.out.println("dt1: " + dt1 + "\ndt2: " + dt2 + "\ndt1.getEdge(0).getOtherTriangle(dt1): " + dt1.getEdge(0).getOtherTriangle(dt1) + "\ndt1.getEdge(1).getOtherTriangle(dt1): " + dt1.getEdge(1).getOtherTriangle(dt1) + "\ndt1.getEdge(2).getOtherTriangle(dt1): " + dt1.getEdge(2).getOtherTriangle(dt1));
+                            if (dt1 != dt2 && ((dt1.getEdge(0).getOtherTriangle(dt1) != null && dt1.getEdge(0).getOtherTriangle(dt1).equals(dt2)) ||
+                                    (dt1.getEdge(1).getOtherTriangle(dt1) != null && dt1.getEdge(1).getOtherTriangle(dt1).equals(dt2)) || (dt1.getEdge(2).getOtherTriangle(dt1) != null && dt1.getEdge(2).getOtherTriangle(dt1).equals(dt2)))) {
+                                pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt1)][traversalHandler.getTriangles().indexOf(dt2)] = 1;
+                                pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt2)][traversalHandler.getTriangles().indexOf(dt1)] = 1;
+                            }
                         }
                     }
                 }
@@ -1284,6 +1388,42 @@ public class DCREntity extends CentralisedEntity {
     // ******************************************************************************************************************************** //
     // Methods for initial computations (before task assignment)
     // ******************************************************************************************************************************** //
+
+    private ArrayList<ArrayList<DTriangle>> computeGuardingSquareIntersection(ArrayList<SquareGuardManager> squareGuardManagers, ArrayList<DTriangle> triangles) {
+        LinearRing temp;
+        Geometry intersection;
+        Coordinate first;
+        ArrayList<Color> colors = new ArrayList<>();
+        ArrayList<ArrayList<DTriangle>> guardingSquareIntersectingTriangles = new ArrayList<>(squareGuardManagers.size());
+        for (int i = 0; i < squareGuardManagers.size(); i++) {
+            guardingSquareIntersectingTriangles.add(new ArrayList<>());
+            colors.add(new Color(Math.random(), Math.random(), Math.random(), 0.5));
+        }
+        for (DTriangle dt : triangles) {
+            first = new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY());
+            temp = new LinearRing(new CoordinateArraySequence(new Coordinate[]{
+                    first,
+                    new Coordinate(dt.getPoint(1).getX(), dt.getPoint(1).getY()),
+                    new Coordinate(dt.getPoint(2).getX(), dt.getPoint(2).getY()),
+                    first
+            }), GeometryOperations.factory);
+            for (int i = 0; i < squareGuardManagers.size(); i++) {
+                //intersection = squareGuardManagers.get(i).getGuardedSquare().intersection(temp);
+                //System.out.println(triangles.indexOf(dt) + " - intersection size: " + intersection.getCoordinates().length + ", array: " + Arrays.toString(intersection.getCoordinates()));
+                if (squareGuardManagers.get(i).getGuardedSquare().crosses(temp) || squareGuardManagers.get(i).getGuardedSquare().covers(temp)) {
+                    guardingSquareIntersectingTriangles.get(i).add(dt);
+                    /*Polygon p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
+                    //p.setFill(Color.YELLOW.deriveColor(Math.random(), 1.0, 1.0, 1.0));
+                    p.setFill(colors.get(i));
+                    Main.pane.getChildren().add(p);
+                    for (Coordinate c : intersection.getCoordinates()) {
+                        Main.pane.getChildren().add(new Circle(c.x, c.y, 3, Color.BLACK));
+                    }*/
+                }
+            }
+        }
+        return guardingSquareIntersectingTriangles;
+    }
 
     private Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> computeComponentBoundaries(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> separatingEdges, ArrayList<Line> separatingLines) {
         System.out.println("simplyConnectedComponents.size(): " + simplyConnectedComponents.size());
@@ -1405,17 +1545,21 @@ public class DCREntity extends CentralisedEntity {
         for (DEdge de : reconnectingEdges) {
             index1 = triangles.indexOf(de.getLeft());
             index2 = triangles.indexOf(de.getRight());
-            //index1 = -1;
-            //index2 = -1;
-            for (int i = 0; i < triangles.size(); i++) {
+            /*for (int i = 0; i < triangles.size(); i++) {
                 if (triangles.get(i).isEdgeOf(de)) {
                     if (index1 == -1) {
                         index1 = i;
+                        Polygon p = new Polygon(triangles.get(i).getPoint(0).getX(), triangles.get(i).getPoint(0).getY(), triangles.get(i).getPoint(1).getX(), triangles.get(i).getPoint(1).getY(), triangles.get(i).getPoint(2).getX(), triangles.get(i).getPoint(2).getY());
+                        p.setFill(Color.LAWNGREEN);
+                        Main.pane.getChildren().add(p);
                     } else {
                         index2 = i;
+                        Polygon p = new Polygon(triangles.get(i).getPoint(0).getX(), triangles.get(i).getPoint(0).getY(), triangles.get(i).getPoint(1).getX(), triangles.get(i).getPoint(1).getY(), triangles.get(i).getPoint(2).getX(), triangles.get(i).getPoint(2).getY());
+                        p.setFill(Color.ORANGE);
+                        Main.pane.getChildren().add(p);
                     }
                 }
-            }
+            }*/
             reconnectedAdjacencyMatrix[index1][index2] = 1;
             reconnectedAdjacencyMatrix[index2][index1] = 1;
 
