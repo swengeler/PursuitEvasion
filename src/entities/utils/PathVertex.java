@@ -1,4 +1,4 @@
-package pathfinding;
+package entities.utils;
 
 
 import javafx.geometry.Point2D;

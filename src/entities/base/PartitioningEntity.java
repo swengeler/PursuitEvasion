@@ -56,6 +56,8 @@ public abstract class PartitioningEntity extends CentralisedEntity {
             determineTarget();
         }
 
+        doPrecedingOperations();
+
         if (!guardsPositioned()) {
             // let the guards move along their respective paths
             for (int i = 0; i < guards.size(); i++) {
@@ -89,16 +91,18 @@ public abstract class PartitioningEntity extends CentralisedEntity {
             doSearchAndCatchOperations();
         }
 
-        doOtherOperations();
+        doSucceedingOperations();
     }
 
     protected abstract void determineTarget();
 
     protected abstract void computeRequirements();
 
+    protected abstract void doPrecedingOperations();
+
     protected abstract void doGuardOperations();
 
-    protected abstract void doOtherOperations();
+    protected abstract void doSucceedingOperations();
 
     protected abstract void doSearchAndCatchOperations();
 

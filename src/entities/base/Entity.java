@@ -1,6 +1,6 @@
 package entities.base;
 
-import pathfinding.ShortestPathRoadMap;
+import entities.utils.ShortestPathRoadMap;
 import simulation.Agent;
 import simulation.MapRepresentation;
 

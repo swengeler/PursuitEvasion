@@ -2,13 +2,13 @@ package additionalOperations;
 
 import Jama.Matrix;
 import com.vividsolutions.jts.geom.*;
+import entities.utils.PathVertex;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DTriangle;
-import pathfinding.PathVertex;
 import shadowPursuit.ShadowNode;
 
 import java.awt.geom.Line2D;

@@ -2,10 +2,10 @@ package entities.specific;
 
 import additionalOperations.GeometryOperations;
 import entities.base.DistributedEntity;
+import entities.utils.ShortestPathRoadMap;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 
 import java.util.ArrayList;

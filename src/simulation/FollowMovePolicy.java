@@ -1,6 +1,6 @@
 package simulation;
 
-import pathfinding.ShortestPathRoadMap;
+import entities.utils.ShortestPathRoadMap;
 
 import java.util.ArrayList;
 

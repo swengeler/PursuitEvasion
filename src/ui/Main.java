@@ -5,6 +5,7 @@ import conversion.GridConversion;
 import entities.base.CentralisedEntity;
 import entities.base.Entity;
 import entities.specific.*;
+import entities.utils.ShortestPathRoadMap;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -26,7 +27,6 @@ import javafx.util.Pair;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
-import pathfinding.ShortestPathRoadMap;
 import shadowPursuit.ShadowGraph;
 import simulation.*;
 

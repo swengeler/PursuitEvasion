@@ -360,8 +360,30 @@ public class SquareGuardManager implements GuardManager {
         return guardedSquare.covers(currentTargetPos) && !guardedSquare.covers(lastTargetPos) && crossingLine.intersects(squareSides.get(0));
     }
 
+    public boolean enteredSquare() {
+        return guardedSquare.covers(currentTargetPos) && !guardedSquare.covers(lastTargetPos);
+    }
+
+    public boolean exitedSquare() {
+        return !guardedSquare.covers(currentTargetPos) && guardedSquare.covers(lastTargetPos);
+    }
+
+    public int crossedLineOrdinal() {
+        crossingLine = new LineString(new CoordinateArraySequence(new Coordinate[]{lastTargetPos.getCoordinate(), currentTargetPos.getCoordinate()}), GeometryOperations.factory);
+        for (int i = 0; i < 4; i++) {
+            if (crossingLine.intersects(squareSides.get(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public boolean inGuardedSquare(double x, double y) {
         return guardedSquare.covers(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x, y)}), GeometryOperations.factory));
+    }
+
+    public boolean inGuardedSquare() {
+        return guardedSquare.covers(currentTargetPos);
     }
 
 }

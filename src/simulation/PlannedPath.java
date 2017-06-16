@@ -1,7 +1,7 @@
 package simulation;
 
+import entities.utils.PathVertex;
 import javafx.scene.shape.Line;
-import pathfinding.PathVertex;
 import ui.Main;
 
 import java.util.ArrayList;

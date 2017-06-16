@@ -1,5 +1,6 @@
 package simulation;
 
+import entities.utils.ShortestPathRoadMap;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.shape.Line;
@@ -7,7 +8,6 @@ import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.apache.commons.math3.exception.MathArithmeticException;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
-import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
 
@@ -24,13 +24,13 @@ public class TraversalHandler {
 
     public ShortestPathRoadMap shortestPathRoadMap;
     private ShortestPathRoadMap restrictedShortestPathRoadMap;
-    public MapRepresentation map;
 
     private ArrayList<DTriangle> nodess;
     private ArrayList<ArrayList<DTriangle>> components;
     private ArrayList<DTriangle> separatingTriangles;
     private ArrayList<Line> separatingLines;
 
+    private ShortestPathRoadMap pocketShortestPathRoadMap;
     private ArrayList<DTriangle> pocketComponent;
     private int[][] pocketAdjacencyMatrix;
     private boolean restrictToPocket;
@@ -167,6 +167,26 @@ public class TraversalHandler {
         restrictToPocket = true;
         this.pocketComponent = pocketComponent;
         this.pocketAdjacencyMatrix = pocketAdjacencyMatrix;
+        pocketShortestPathRoadMap = restrictedShortestPathRoadMap;
+        // TODO: also change this to have a separate shortest path map, otherwise it will search in the right pocket but take weird detours
+        // could do this by also having the remaining separating lines as input as well
+    }
+
+    public void restrictToPocket(ArrayList<DTriangle> pocketComponent, int[][] pocketAdjacencyMatrix, MapRepresentation map, Line crossedSeparatingLine) {
+        restrictToPocket = true;
+        this.pocketComponent = pocketComponent;
+        this.pocketAdjacencyMatrix = pocketAdjacencyMatrix;
+        if (crossedSeparatingLine != null) {
+            ArrayList<Line> temp = new ArrayList<>();
+            for (Line l : separatingLines) {
+                if (!l.equals(crossedSeparatingLine)) {
+                    temp.add(l);
+                }
+            }
+            pocketShortestPathRoadMap = new ShortestPathRoadMap(temp, map);
+        } else {
+            pocketShortestPathRoadMap = restrictedShortestPathRoadMap;
+        }
     }
 
     public void removeRestriction() {
@@ -352,11 +372,11 @@ public class TraversalHandler {
         //PlannedPath plannedPath = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getEstX(), nodess.get(currentIndex).getBarycenter().getEstY()));
         PlannedPath plannedPath;
         if (!inComponentLeaf) {
-            plannedPath = restrictedShortestPathRoadMap.getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            plannedPath = (restrictToPocket ? pocketShortestPathRoadMap : restrictedShortestPathRoadMap).getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
             moveToLeaf.addPathToEnd(plannedPath);
             plannedPath = moveToLeaf;
         } else {
-            plannedPath = restrictedShortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            plannedPath = (restrictToPocket ? pocketShortestPathRoadMap : restrictedShortestPathRoadMap).getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
         }
         plannedPath.setStartIndex(startIndex);
         plannedPath.setEndIndex(currentIndex);
@@ -440,7 +460,8 @@ public class TraversalHandler {
                 visitedNodes[i] = true;
                 int childrenCount = 0;
                 for (int j = 0; j < adjacencyMatrix.length; j++) {
-                    if (adjacencyMatrix[i][j] == 1 && j != parentNodes[i] && !visitedNodes[j]) {
+                    // TODO: also account for the case where its not a pocket but it is a line separated map
+                    if ((restrictToPocket ? pocketAdjacencyMatrix : adjacencyMatrix)[i][j] == 1 && j != parentNodes[i] && !visitedNodes[j]) {
                         nextLayer.add(j);
                         parentNodes[j] = i;
                         visitedNodes[j] = true;

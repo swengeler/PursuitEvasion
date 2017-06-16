@@ -1,11 +1,11 @@
 package simulation;
 
+import entities.utils.ShortestPathRoadMap;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
-import pathfinding.ShortestPathRoadMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -127,7 +127,7 @@ public class DummyPolicy extends MovePolicy {
 
             traversalHandler = new TraversalHandler((ArrayList<DTriangle>) includedTriangles);
             traversalHandler.shortestPathRoadMap = new ShortestPathRoadMap(map);
-            traversalHandler.map = map;
+            //traversalHandler.map = map;
         } catch (DelaunayError e) {
             e.printStackTrace();
         }

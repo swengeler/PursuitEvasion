@@ -1,4 +1,4 @@
-package pathfinding;
+package entities.utils;
 
 import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
@@ -61,8 +61,8 @@ public class ShortestPathRoadMap {
         this.map = map;
         excludedPolygons = new ArrayList<>();
         this.excludedLines = excludedLines;
-        Line temp;
-        /*for (Line l : excludedLines) {
+        /*Line temp;
+        for (Line l : excludedLines) {
             temp = new Line(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
             temp.setStroke(Color.RED);
             temp.setStrokeWidth(2);
