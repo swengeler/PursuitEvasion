@@ -13,7 +13,7 @@ import ui.Main;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class SquareGuardManager {
+public class SquareGuardManager implements GuardManager {
 
     private Group graphics;
 
@@ -326,10 +326,6 @@ public class SquareGuardManager {
     }
 
     public int totalRequiredGuards() {
-        return originalPositions.size();
-    }
-
-    public int getGuardsLeft() {
         return originalPositions.size();
     }
 

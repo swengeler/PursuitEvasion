@@ -15,11 +15,13 @@ public abstract class CentralisedEntity extends Entity {
         availableAgents = new ArrayList<>();
     }
 
-    public abstract int totalRequiredAgents();
+    public int totalRequiredAgents() {
+        return requiredAgents;
+    }
 
-    public abstract int remainingRequiredAgents();
-
-    public abstract void addAgent(Agent a);
+    public int remainingRequiredAgents() {
+        return requiredAgents - availableAgents.size();
+    }
 
     @Override
     public boolean isActive() {
@@ -34,6 +36,10 @@ public abstract class CentralisedEntity extends Entity {
     @Override
     public ArrayList<Agent> getControlledAgents() {
         return availableAgents;
+    }
+
+    public void addAgent(Agent a) {
+        availableAgents.add(a);
     }
 
 }
