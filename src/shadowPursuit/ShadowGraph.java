@@ -1,6 +1,5 @@
 package shadowPursuit;
 
-import additionalOperations.GeometryOperations;
 import javafx.geometry.Point2D;
 import javafx.scene.effect.Shadow;
 import javafx.scene.shape.Line;
@@ -9,7 +8,7 @@ import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 
-import static additionalOperations.GeometryOperations.*;
+
 import static shadowPursuit.shadowOperations.*;
 
 /**
@@ -1049,7 +1048,7 @@ public class ShadowGraph {
         for (Point2D agent : agents) {
             for (Line line : polygonEdges) {
                 if (line != getLineOn(point, polygonEdges)) {
-                    if (!GeometryOperations.lineIntersect(line, agent.getX(), agent.getY(), point.getX(), point.getY())) {
+                    if (lineIntersect(line, agent.getX(), agent.getY(), point.getX(), point.getY())) {
                         count++;
                     }
                 }
@@ -1482,6 +1481,7 @@ public class ShadowGraph {
             }
         }
 
+
         ArrayList<Polygon> allShadows = new ArrayList<>();
         double[] list;
 
@@ -1497,5 +1497,13 @@ public class ShadowGraph {
             allShadows.add(newPoly);
         }
         return allShadows;
+    }
+
+    public void correctPath()   {
+        ShadowNode tmpNode, prev, next;
+
+        for(ShadowNode shad : Nodes)    {
+            //if(shad.numberOfLinks() == 2);
+        }
     }
 }
