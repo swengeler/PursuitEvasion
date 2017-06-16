@@ -1,5 +1,6 @@
-package entities;
+package entities.specific;
 
+import entities.base.DistributedEntity;
 import simulation.MapRepresentation;
 
 public class RandomEntity extends DistributedEntity {

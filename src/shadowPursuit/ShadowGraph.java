@@ -1,13 +1,11 @@
 package shadowPursuit;
 
 import javafx.geometry.Point2D;
-import javafx.scene.effect.Shadow;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import simulation.MapRepresentation;
 
 import java.util.ArrayList;
-
 
 import static shadowPursuit.shadowOperations.*;
 
@@ -291,8 +289,9 @@ public class ShadowGraph {
                 x2 = Math.round(point.getX());
                 y2 = Math.round(point.getY());
 
-                if (x1 == x2 && y1 == y2)
+                if (x1 == x2 && y1 == y2) {
                     return node;
+                }
 
             }
         }
@@ -316,8 +315,9 @@ public class ShadowGraph {
                 x2 = Math.round(point.getX());
                 y2 = Math.round(point.getY());
 
-                if (x1 == x2 && y1 == y2)
+                if (x1 == x2 && y1 == y2) {
                     return node;
+                }
 
             }
         }
@@ -329,8 +329,9 @@ public class ShadowGraph {
         int cunt = 0;
         for (int i = 0; i < Nodes.size(); i++) {
 
-            if (Nodes.get(i).numberOfLinks() == 2)
+            if (Nodes.get(i).numberOfLinks() == 2) {
                 cunt++;
+            }
         }
         System.out.println("\n------------Nodes are printed------------");
         System.out.println("Number of Nodes = " + Nodes.size() + "\nNumber of double = " + cunt);
@@ -700,7 +701,9 @@ public class ShadowGraph {
                         System.out.println("muahahahahaha ");
                     } else if (agents.get(q).getX() == checkT3.get(i).getLeftAgent().getX() && agents.get(q).getY() == checkT3.get(i).getLeftAgent().getY()) {
                         System.out.println("muahahahahahahaha");
-                    } else seenby++;
+                    } else {
+                        seenby++;
+                    }
                 }
 
             }
@@ -893,7 +896,6 @@ public class ShadowGraph {
                                     }
 
 
-
                                     ShadowNode tempp = t4.getRight();
                                     t4.right = t4.getLeft();
                                     t4.left = tempp;
@@ -1055,7 +1057,9 @@ public class ShadowGraph {
             }
             if (count == 0) {
                 return true;
-            } else count = 0;
+            } else {
+                count = 0;
+            }
 
         }
         return false;
@@ -1387,17 +1391,17 @@ public class ShadowGraph {
                     boolean right = true;
                     while (!visited.contains(next)) {
 
-                            System.out.println(c);
-                            visited.add(next);
-                            shadow.add(next);
-                            if (next.getRight() != prev && next.getRight().numberOfLinks() == 2) {
-                                next = next.getRight();
-                                prev = next.getLeft();
-                            } else if (next.getLeft() != prev && next.getLeft().numberOfLinks() == 2) {
-                                next = next.getLeft();
-                                prev = next.getRight();
-                            }
-                            c++;
+                        System.out.println(c);
+                        visited.add(next);
+                        shadow.add(next);
+                        if (next.getRight() != prev && next.getRight().numberOfLinks() == 2) {
+                            next = next.getRight();
+                            prev = next.getLeft();
+                        } else if (next.getLeft() != prev && next.getLeft().numberOfLinks() == 2) {
+                            next = next.getLeft();
+                            prev = next.getRight();
+                        }
+                        c++;
 
                     }
                     shadows.add(shadow);
@@ -1499,10 +1503,10 @@ public class ShadowGraph {
         return allShadows;
     }
 
-    public void correctPath()   {
+    public void correctPath() {
         ShadowNode tmpNode, prev, next;
 
-        for(ShadowNode shad : Nodes)    {
+        for (ShadowNode shad : Nodes) {
             //if(shad.numberOfLinks() == 2);
         }
     }

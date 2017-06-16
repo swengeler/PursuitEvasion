@@ -1,5 +1,7 @@
-package entities;
+package entities.specific;
 
+import entities.base.DistributedEntity;
+import entities.base.Entity;
 import simulation.Agent;
 import simulation.MapRepresentation;
 

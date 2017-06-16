@@ -1,6 +1,8 @@
-package entities;
+package entities.specific;
 
 import additionalOperations.Tuple;
+import entities.base.CentralisedEntity;
+import entities.base.Entity;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;

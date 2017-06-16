@@ -1,5 +1,6 @@
-package entities;
+package entities.specific;
 
+import entities.base.DistributedEntity;
 import javafx.scene.shape.Polygon;
 import simulation.MapRepresentation;
 

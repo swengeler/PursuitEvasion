@@ -1,6 +1,7 @@
-package entities;
+package entities.specific;
 
 import additionalOperations.GeometryOperations;
+import entities.base.DistributedEntity;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;

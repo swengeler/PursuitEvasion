@@ -1,4 +1,4 @@
-package entities;
+package entities.base;
 
 import simulation.Agent;
 import simulation.MapRepresentation;

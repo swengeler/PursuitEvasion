@@ -1,9 +1,11 @@
-package entities;
+package entities.base;
 
 import additionalOperations.Tuple;
-import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.Coordinate;
+import entities.utils.GuardManager;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.*;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Shape;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
@@ -86,12 +88,20 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         if (!GUARD_TEST) {
             doSearchAndCatchOperations();
         }
+
+        doOtherOperations();
     }
 
     protected abstract void determineTarget();
+
     protected abstract void computeRequirements();
+
     protected abstract void doGuardOperations();
+
+    protected abstract void doOtherOperations();
+
     protected abstract void doSearchAndCatchOperations();
+
     protected abstract ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines);
 
     protected void assignTasks() {
@@ -757,7 +767,5 @@ public abstract class PartitioningEntity extends CentralisedEntity {
 
         return tree;
     }
-
-
 
 }

@@ -6,8 +6,6 @@ import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 
-import static shadowPursuit.shadowOperations.getX1Points;
-
 
 /**
  * Created by Robins on 26.04.2017.
@@ -48,22 +46,22 @@ public class ShadowTest {
         //Point2D agent2Pos = new Point2D(441, 465);
 
         environment = new Polygon(
-                147.0,82.0,
-                279.0,82.0,
-                280.0,369.0,
-                495.0,369.0,
-                494.0,82.0,
-                906.0,80.0,
-                912.0,691.0,
-                675.0,691.0,
-                672.0,310.0,
-                584.0,310.0,
-                589.0,684.0,
-                501.0,685.0,
-                497.0,448.0,
-                279.0,449.0,
-                280.0,683.0,
-                125.0,680.0);
+                147.0, 82.0,
+                279.0, 82.0,
+                280.0, 369.0,
+                495.0, 369.0,
+                494.0, 82.0,
+                906.0, 80.0,
+                912.0, 691.0,
+                675.0, 691.0,
+                672.0, 310.0,
+                584.0, 310.0,
+                589.0, 684.0,
+                501.0, 685.0,
+                497.0, 448.0,
+                279.0, 449.0,
+                280.0, 683.0,
+                125.0, 680.0);
 
         Point2D agent1Pos = new Point2D(516, 355);
         Point2D agent2Pos = new Point2D(534, 453);
@@ -71,8 +69,7 @@ public class ShadowTest {
         Point2D agent4Pos = new Point2D(798, 220);
 
 
-
-        Polygon obstacle1 = new Polygon(490.0 ,122.0 ,653.0 ,345.0 ,288.0 ,327.0 );//new Polygon(340.0 ,472.0 ,393.0 ,535.0 ,390.0 ,618.0);
+        Polygon obstacle1 = new Polygon(490.0, 122.0, 653.0, 345.0, 288.0, 327.0);//new Polygon(340.0 ,472.0 ,393.0 ,535.0 ,390.0 ,618.0);
         Polygon obstacle2 = null;//new Polygon(766.0 ,509.0 ,747.0 ,596.0 ,804.0 ,612.0);
 
         ArrayList<Polygon> obst = new ArrayList<>();

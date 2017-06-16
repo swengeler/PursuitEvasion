@@ -1,8 +1,12 @@
-package entities;
+package entities.specific;
 
 import additionalOperations.*;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
+import entities.base.Entity;
+import entities.base.PartitioningEntity;
+import entities.utils.GuardManager;
+import entities.utils.SquareGuardManager;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -10,17 +14,17 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
 import org.javatuples.Triplet;
-import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 import ui.Main;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
- * DCR = Divide and Conquer, Randomized
+ * DCR = Divide and Conquer, Randomised
  */
 public class DCREntity extends PartitioningEntity {
 
@@ -79,6 +83,7 @@ public class DCREntity extends PartitioningEntity {
     @Override
     protected void doGuardOperations() {
         if (spottedOnce) {
+            // TODO: additionally or alternatively keep track of guarding squares the evader is in and restrict the SPRM to exclude the uncrossable lines of those squares
             if ((inGuardedSquareOverNonSeparating || inGuardedSquareOverSeparating) && !currentGuardedSquare.inGuardedSquare(target.getXPos(), target.getYPos())) {
                 System.out.println("Exited square");
                 specialShortestPathRoadMap = null;
@@ -104,6 +109,22 @@ public class DCREntity extends PartitioningEntity {
             }
         }
     }
+
+    @Override
+    protected void doSearchAndCatchOperations() {
+        //System.out.println(currentStage);
+        if (currentStage == Stage.CATCHER_TO_SEARCHER) {
+            catcherToSearcher();
+        } else if (currentStage == Stage.INIT_FIND_TARGET) {
+            initFindTarget();
+        } else if (currentStage == Stage.FOLLOW_TARGET) {
+            followTarget();
+        } else if (currentStage == Stage.FIND_TARGET) {
+            findTarget();
+        }
+    }
+
+    protected void doOtherOperations() {}
 
     private void catcherToSearcher() {
         // only move catcher
@@ -578,20 +599,6 @@ public class DCREntity extends PartitioningEntity {
                 System.out.println("pseudoBlockingVertex null because target visible in FIND_TARGET (2)");
                 currentStage = Stage.FOLLOW_TARGET;
             }
-        }
-    }
-
-    @Override
-    protected void doSearchAndCatchOperations() {
-        //System.out.println(currentStage);
-        if (currentStage == Stage.CATCHER_TO_SEARCHER) {
-            catcherToSearcher();
-        } else if (currentStage == Stage.INIT_FIND_TARGET) {
-            initFindTarget();
-        } else if (currentStage == Stage.FOLLOW_TARGET) {
-            followTarget();
-        } else if (currentStage == Stage.FIND_TARGET) {
-            findTarget();
         }
     }
 
@@ -1204,7 +1211,7 @@ public class DCREntity extends PartitioningEntity {
                     // either they are properly adjacent and connected anyway
                     // or they share a separating edge, i.e. a guarding square is connected to the triangle
                     if (pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] != 1) {
-                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i)) && (crossedSeparatingLine == null || !guardingSquareTriangles.contains(dt) || guardingSquareTriangles.contains(traversalHandler.getTriangles().get(i)) /*|| thing.contains(dt) is the parent of this dt in the guarding square */ )) {
+                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i)) && (crossedSeparatingLine == null || !guardingSquareTriangles.contains(dt) || guardingSquareTriangles.contains(traversalHandler.getTriangles().get(i)) /*|| thing.contains(dt) is the parent of this dt in the guarding square */)) {
                             if (!first || (traversalHandler.getTriangles().get(i).equals(connectingEdges.get(connectingTriangles.indexOf(dt)).getOtherTriangle(dt)))) {
                                 nextLayer.add(traversalHandler.getTriangles().get(i));
                                 pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] = 1;

@@ -3,7 +3,7 @@ package simulation;
 import additionalOperations.GeometryOperations;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
-import entities.Entity;
+import entities.base.Entity;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;

@@ -1,6 +1,6 @@
 package ui;
 
-import entities.Entity;
+import entities.base.Entity;
 
 import java.util.ArrayList;
 

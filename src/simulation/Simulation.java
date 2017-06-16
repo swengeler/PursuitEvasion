@@ -1,6 +1,6 @@
 package simulation;
 
-import entities.CentralisedEntity;
+import entities.base.CentralisedEntity;
 import javafx.collections.ObservableList;
 import javafx.scene.shape.Circle;
 import org.reactfx.util.FxTimer;

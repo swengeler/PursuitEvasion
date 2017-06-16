@@ -1,4 +1,4 @@
-package entities;
+package entities.base;
 
 import pathfinding.ShortestPathRoadMap;
 import simulation.Agent;

@@ -1,8 +1,9 @@
-package entities;
+package entities.utils;
 
 import additionalOperations.GeometryOperations;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
+import entities.base.Entity;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;

@@ -1,7 +1,7 @@
 package simulation;
 
-import entities.CentralisedEntity;
-import entities.Entity;
+import entities.base.CentralisedEntity;
+import entities.base.Entity;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
 

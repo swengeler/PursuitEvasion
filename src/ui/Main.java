@@ -2,7 +2,9 @@ package ui;
 
 import control.Controller;
 import conversion.GridConversion;
-import entities.*;
+import entities.base.CentralisedEntity;
+import entities.base.Entity;
+import entities.specific.*;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
