@@ -116,40 +116,42 @@ public class ShadowNode {
 
         //System.out.println("ENTTEREDED");
         this.position = position;
-
-        if (Type2.getLeft() == null) {
-            this.right = Type2;
-            this.left = null;
-        } else if (Type2.getRight() == null) {
-            this.left = Type2;
-            this.right = null;
-        }
         this.neighbourLeftAgent=agent;
 
         type = type3;
 
-        System.out.println(this);
-
-
         this.occLine = Ray;
+//todo continue here
+        if (Type2.getLeft() == null ) {
+            this.right = Type2;
+            this.left = null;
+           // Type2.left=this;
+        } else if (Type2.getRight() == null) {
+            this.left = Type2;
+            this.right = null;
+           // Type2.left=this;
+        }
+
+
+        //System.out.println(this);
+
+
     }
 
     //For Type3
-    public ShadowNode(Point2D position, ShadowNode left, ShadowNode right, boolean T3) {
+    public ShadowNode(Point2D position, ShadowNode left, ShadowNode right, Line Ray,Point2D agent) {
 
         //System.out.println("ENTTEREDED");
         this.position = position;
         this.left = left;
         this.right = right;
 
-        left.right = this;
-        right.left = this;
+        this.neighbourLeftAgent=agent;
         type = type3;
 
         //System.out.println(this);
 
-        this.placedOn = placedOn;
-        this.occLine = new Line(position.getX(), position.getY(), left.getPosition().getX(), left.getPosition().getY());
+        this.occLine = Ray;
     }
 
 
@@ -173,10 +175,12 @@ public class ShadowNode {
         this.occRight = new Line(position.getX(), position.getY(), type2Neighbor2.getPosition().getX(), type2Neighbor2.getPosition().getY());
     }
 
+
+
     //For Type4
     public ShadowNode(Point2D position, ShadowNode type2Neighbor1, ShadowNode type2Neighbor2, Point2D agent1, Point2D agent2) {
         //note that type2neighbour 1 is the type 2 corresponding to agent one that created an occlusion ray and vice versa for type2neighbour2 and agent2
-
+//todo continue here
         this.position = position;
         this.neighbourRightAgent = agent1;
         this.neighbourLeftAgent = agent2;
@@ -194,7 +198,15 @@ public class ShadowNode {
             this.right = type2Neighbor2;
             this.neighbourRightAgent = agent2;
             this.neighbourLeftAgent = agent1;
-        } else {
+        } else if(type2Neighbor1.getRight().getType() == 3 && type2Neighbor2.getLeft().getType() == 3) {
+            this.left = type2Neighbor1;
+            this.right = type2Neighbor2;
+            this.neighbourRightAgent = agent2;
+            this.neighbourLeftAgent = agent1;
+        }else {
+
+            System.out.println("First Neighbor => " + type2Neighbor1);
+            System.out.println("Second Neighbor => " + type2Neighbor2);
             System.exit(67666);
         }
 
@@ -224,6 +236,12 @@ public class ShadowNode {
 
 
     public void connect(ShadowNode next)    {
+        System.out.println("Connnecting " + this + "\nAND " + next);
+
+
+
+
+
         if(this.getLeft() != null && this.getLeft() != next && this.getRight() == null)   {
             right = next;
             next.left = this;
@@ -232,7 +250,14 @@ public class ShadowNode {
             //System.out.println("THIS = " + this + "\nNEXT = " + next);
             left = next;
             next.right = this;
+        }else if(next.getRight() != null && next.getRight() != this && next.getLeft() == null){
+            next.left= this;
+            right=next;
+        }else if(next.getLeft() != null && next.getLeft() != this && next.getRight() == null) {
+            next.right = this;
+            left = next;
         }
+        System.out.println();
     }
 
 
@@ -374,6 +399,48 @@ public class ShadowNode {
 
             return null;
         }
+    }
+
+    //For Type3
+    public void overwriteConnectedType2(ShadowNode toCopy)   {
+        //System.out.println("PROBLEM FOR =>\n" + this);
+        System.out.println("\n----BEFORE----");
+        System.out.println("THIS T3 => " + this);
+        System.out.println("To copy => " + toCopy);
+        System.out.println("----------------\n");
+
+
+
+        if(getLeft() != null && getLeft().getType() == 2) {
+            this.left.right = null;
+            if(toCopy.getLeft() == this.getLeft())    {
+                toCopy.left = this;
+            }
+            else if(toCopy.getRight() == this.getLeft())    {
+                toCopy.right = this;
+            }
+            this.left = toCopy;
+        }
+        else if(getRight() != null &&getRight().getType() == 2) {
+            this.right.left = null;
+            if(toCopy.getRight() == this.getRight())    {
+                toCopy.right = this;
+            }
+            else if(toCopy.getLeft() == this.getRight())    {
+                toCopy.left= this;
+            }
+            this.right = toCopy;
+
+        }
+        else    {
+            System.out.println("\n----PROBLEM ANALYSIS----");
+            System.out.println("THIS T3 => " + this);
+            System.out.println("To copy => " + toCopy);
+            System.out.println("------------------------\n");
+
+            System.exit(343);
+        }
+
     }
 
     //For Type3

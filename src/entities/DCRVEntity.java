@@ -1,7 +1,6 @@
 package entities;
 
 import additionalOperations.*;
-import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
@@ -9,7 +8,6 @@ import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
-import pathfinding.ShortestPathRoadMap;
 import simulation.*;
 import ui.Main;
 

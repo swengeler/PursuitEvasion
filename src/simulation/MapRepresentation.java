@@ -9,7 +9,6 @@ import javafx.scene.shape.Polygon;
 import ui.MapPolygon;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MapRepresentation {
 
