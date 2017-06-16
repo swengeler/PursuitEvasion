@@ -2,15 +2,12 @@ package simulation;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.apache.commons.math3.exception.MathArithmeticException;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
-import ui.Main;
 
 import java.util.ArrayList;
 

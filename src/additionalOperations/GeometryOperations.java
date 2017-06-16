@@ -106,8 +106,6 @@ public class GeometryOperations {
 
     }
 
-
-
     public static boolean lineIntersectInPoly(Polygon poly, Line current) {
         return lineIntersectInPoly(polyToPoints(poly), current);
     }
@@ -163,7 +161,10 @@ public class GeometryOperations {
 
     public static boolean lineIntersect(Line l1, Line l2) {
         //System.out.println("Comparing = " + l1 + "\nAND = " + l2 + "\n");
-        return lineIntersect(l1, l2.getStartX(), l2.getStartY(), l2.getEndX(), l2.getEndY());
+        //return lineIntersect(l1, l2.getStartX(), l2.getStartY(), l2.getEndX(), l2.getEndY());
+        LineSegment ls1 = new LineSegment(l1.getStartX(), l1.getStartY(), l1.getEndX(), l1.getEndY());
+        LineSegment ls2 = new LineSegment(l2.getStartX(), l2.getStartY(), l2.getEndX(), l2.getEndY());
+        return ls1.intersection(ls2) != null;
     }
 
     public static boolean lineIntersect(Line line, double startX, double startY, double endX, double endY) {
@@ -193,11 +194,12 @@ public class GeometryOperations {
         }
     }
 
-    public static boolean lineIntersectSeparatingLines(double x1, double y1, double x2, double y2, ArrayList<DEdge> separatingEdges) {
-        Line2D.Double temp = new Line2D.Double();
-        for (DEdge de : separatingEdges) {
-            temp.setLine(de.getPointLeft().getX(), de.getPointLeft().getY(),de.getPointRight().getX(), de.getPointRight().getY());
-            if (temp.intersectsLine(x1, y1, x2, y2)) {
+    public static boolean lineIntersectSeparatingLines(double x1, double y1, double x2, double y2, ArrayList<Line> separatingLines) {
+        LineSegment ls = new LineSegment(x1, y1, x2, y2);
+        LineSegment temp;
+        for (Line l : separatingLines) {
+            temp = new LineSegment(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
+            if (temp.intersection(ls) != null) {
                 return true;
             }
         }
@@ -312,7 +314,7 @@ public class GeometryOperations {
                     newY = aY + value * (endX - aX) * m;
                 }
             } */
-            }else {
+            } else {
                 // if (endY > aY) {
                 //System.out.print("wooh its working = " + m);
                 newX = aX;
@@ -348,13 +350,14 @@ public class GeometryOperations {
                 newY = aY - value;
             }
         }
-*/Line ray;
-        if(value>1) {
+*/
+        Line ray;
+        if (value > 1) {
 
             ray = new Line(endX, endY, newX, newY);
-        }else{
+        } else {
 
-            ray = new Line(aX,aY,newX,newY);
+            ray = new Line(aX, aY, newX, newY);
         }
         //System.out.println("Created Ray = " + ray);
 

@@ -7,9 +7,7 @@ import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.geometry.Point2D;
+import javafx.geometry.*;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -28,9 +26,7 @@ import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import pathfinding.ShortestPathRoadMap;
 import shadowPursuit.ShadowGraph;
-import shadowPursuit.ShadowNode;
 import simulation.*;
-import sun.plugin.javascript.navig.Array;
 
 import java.io.*;
 import java.util.*;
@@ -64,8 +60,7 @@ public class Main extends Application {
     private ArrayList<Circle> evaders;
     private ArrayList<VisualAgent> visualAgents;
     private ArrayList<RadioButton> entitiesList;
-
-    //list entity colors?
+    private Polygon randomPolygon;
 
     private BooleanProperty addPoints;
 
@@ -337,6 +332,30 @@ public class Main extends Application {
         menu.getChildren().add(startSimulationButton);
         menu.getChildren().add(pauseSimulationButton);
 
+        Button testRandomPolyButton = new Button("Test random polygon");
+        menu.getChildren().add(testRandomPolyButton);
+
+        testRandomPolyButton.setOnAction(ae -> {
+            if (randomPolygon != null) {
+                Main.pane.getChildren().remove(randomPolygon);
+            }
+
+            ArrayList<Point2D> points = poly(175, 0.35, 0.2, 16);
+            //ArrayList<Point2D> points = poly(300, 0.45, 0.2, 30);
+            Polygon p = new Polygon();
+            for (Point2D point : points) {
+                p.getPoints().add(point.getX());
+                p.getPoints().add(point.getY());
+            }
+
+            p.setStroke(Color.DARKORANGE);
+            p.setFill(Color.TRANSPARENT);
+
+            randomPolygon = p;
+
+            Main.pane.getChildren().add(p);
+        });
+
         startSimulationButton.setOnAction(ae -> {
             Simulation sim = Controller.getSimulation();
             if (sim == null) {
@@ -529,13 +548,13 @@ public class Main extends Application {
             } else {
                 ArrayList<Point2D> agentPos = new ArrayList<>();
                 map = new MapRepresentation(mapPolygons);
-                for(VisualAgent agent : visualAgents)   {
+                for (VisualAgent agent : visualAgents) {
                     agentPos.add(new Point2D(agent.getCenterX(), agent.getCenterY()));
                 }
                 ShadowGraph shadGraph = new ShadowGraph(map, agentPos);
                 ArrayList<Polygon> shadows = shadGraph.getShadows();
 
-                for(Polygon p: shadows) {
+                for (Polygon p : shadows) {
                     p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
                     p.setFill(Color.GREY.deriveColor(1, 1, 1, 0.1));
                     p.setStrokeWidth(1);
@@ -2063,6 +2082,7 @@ public class Main extends Application {
                 if (line.contains("map")) {
                     //currentState = ProgramState.AGENT_PLACING;
                     // map data
+                    double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
                     System.out.println(line);
                     String[] coords;
                     double[] coordsDouble;
@@ -2073,7 +2093,7 @@ public class Main extends Application {
                             coordsDouble[i] = Double.parseDouble(coords[i]);
                         }
 
-                        for (int i = 0; i < coords.length; i += 2) {
+                        for (int i = 0; i < coordsDouble.length; i += 2) {
                             // adding the obstaclePolygons
                             Anchor a = null;
                             boolean connectedToOld = false;
@@ -2090,6 +2110,12 @@ public class Main extends Application {
                                 DoubleProperty xProperty = new SimpleDoubleProperty(coordsDouble[i]);
                                 DoubleProperty yProperty = new SimpleDoubleProperty(coordsDouble[i + 1]);
                                 a = new Anchor(Color.GOLD, xProperty, yProperty);
+                                if (xProperty.getValue() > maxX) {
+                                    maxX = xProperty.getValue();
+                                }
+                                if (yProperty.getValue() > maxY) {
+                                    maxY = yProperty.getValue();
+                                }
                             }
 
                             currentMapPolygon.addAnchor(a);
@@ -2104,6 +2130,7 @@ public class Main extends Application {
                             }
                         }
                     }
+                    // TODO: check whether maxX or maxY are larger than the current size of the canvas, if so increase window size
                     initPlaceAgents();
                     // read controlledAgents data
                     String[] settings;
@@ -2386,7 +2413,7 @@ public class Main extends Application {
                                         selectedEntityButton.setText(selectedEntityButton.getText() + " [1/" + entity.totalRequiredAgents() + "]");
                                         entityID++;
                                     } else {
-                                        for (Pair p: centralisedEntities) {
+                                        for (Pair p : centralisedEntities) {
                                             if (String.valueOf(p.getKey()).equals(selectedEntityButton.getId())) {
                                                 DCREntity entity = (DCREntity) p.getValue();
                                                 entity.addAgent(new Agent(va.getSettings()));
@@ -2580,6 +2607,65 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch(args);
+
+    }
+
+    public ArrayList<Point2D> poly(double avgRadius, double irregularity, double spikeyness, int numVerts) {
+        //https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
+
+        double centerX = 500;
+        double centerY = 500;
+
+        irregularity = clip(irregularity, 0, 1) * 2 * Math.PI / numVerts;
+        spikeyness = clip(spikeyness, 0, 1) * avgRadius;
+
+        ArrayList<Double> angleSteps = new ArrayList<>();
+        double lower = (2 * Math.PI / numVerts) - irregularity;
+        double upper = (2 * Math.PI / numVerts) + irregularity;
+        double sum = 0;
+        double tmp;
+
+        for (int i = 0; i < numVerts; i++) {
+            tmp = Math.random() * (upper - lower) + lower;
+            angleSteps.add(tmp);
+            sum += tmp;
+        }
+
+        double k = sum / (2 * Math.PI);
+        for (double d : angleSteps) {
+            d /= k;
+        }
+
+        ArrayList<Point2D> points = new ArrayList<>();
+        double angle = Math.random() * (2 * Math.PI);
+        double rg, ri, x, y;
+        Random r = new Random();
+
+        for (int i = 0; i < numVerts; i++) {
+            rg = r.nextGaussian() * spikeyness + avgRadius;
+            System.out.println(rg);
+            ri = clip(rg, 0, 2 * avgRadius);
+            x = centerX + ri * Math.cos(angle);
+            y = centerY + ri * Math.sin(angle);
+
+            points.add(new Point2D(x, y));
+
+            angle = angle + angleSteps.get(i);
+        }
+
+        return points;
+    }
+
+    private double clip(double x, double min, double max) {
+        if (min > max) {
+            return x;
+        } else if (x < min) {
+            return min;
+        } else if (x > max) {
+            return max;
+        } else {
+            return x;
+        }
     }
 
 }

@@ -78,6 +78,11 @@ public class Agent {
         //System.out.printf("Agent moved by (%.4f|%.4f)\n", deltaX, deltaY);
     }
 
+    public void moveTo(double newX, double newY) {
+        setXPos(newX);
+        setYPos(newY);
+    }
+
     public MovePolicy getPolicy() {
         return policy;
     }
