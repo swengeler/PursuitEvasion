@@ -1219,6 +1219,7 @@ public class DCREntity extends CentralisedEntity {
         // get all triangles in the guard square which are intersected by the boundary line
         ArrayList<DTriangle> guardingSquareTriangles = null;
         if (crossedSeparatingLine != null) {
+            System.out.println("Crossed separating line");
             // first identify the guarding square in question
             DEdge tempEdge = separatingEdges.get(separatingLines.indexOf(crossedSeparatingLine));
             DTriangle squareTriangle = pocketBoundaryTriangles.contains(tempEdge.getLeft()) ? tempEdge.getRight() : tempEdge.getLeft();
@@ -1235,6 +1236,8 @@ public class DCREntity extends CentralisedEntity {
             double rayStartY = boundaryLine.getStartY();
             double rayDeltaX = boundaryLine.getStartX() - boundaryLine.getEndX();
             double rayDeltaY = boundaryLine.getStartY() - boundaryLine.getEndY();
+            rayStartX += rayDeltaX * 1E-8;
+            rayStartY += rayDeltaY * 1E-8;
 
             double intersectionMinDistance = Double.MAX_VALUE, curIntersectionDistance;
             Point2D closestIntersectionPoint = null, currentIntersectionPoint;
@@ -1283,7 +1286,8 @@ public class DCREntity extends CentralisedEntity {
         for (DTriangle dt1 : pocketBoundaryTriangles) {
             for (DEdge de : dt1.getEdges()) {
                 boolean found = pocketBoundaryTriangles.contains(de.getOtherTriangle(dt1));
-                /*for (DTriangle dt2 : pocketBoundaryTriangles) {
+                /*boolean found = false;
+                for (DTriangle dt2 : pocketBoundaryTriangles) {
                     if (dt1 != dt2 && dt2.isEdgeOf(de)) {
                         found = true;
                         break;
@@ -1311,7 +1315,7 @@ public class DCREntity extends CentralisedEntity {
                         l = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
                         l.setStroke(Color.BLUE);
                         l.setStrokeWidth(2);
-                        //Main.pane.getChildren().add(l);
+                        Main.pane.getChildren().add(l);
                     }
                 }
             }
@@ -1329,6 +1333,7 @@ public class DCREntity extends CentralisedEntity {
             p.setFill(Color.GREEN.deriveColor(1, 1, 1, 0.4));
             Main.pane.getChildren().add(p);*/
         }
+        ArrayList<DTriangle> currentParents;
         boolean first = true;
         DEdge separatingEdge;
         DTriangle otherTriangle;
@@ -1341,7 +1346,7 @@ public class DCREntity extends CentralisedEntity {
                     // either they are properly adjacent and connected anyway
                     // or they share a separating edge, i.e. a guarding square is connected to the triangle
                     if (pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] != 1) {
-                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i)) && (crossedSeparatingLine == null || guardingSquareTriangles.contains(traversalHandler.getTriangles().get(i)))) {
+                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 && !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i)) && (crossedSeparatingLine == null || !guardingSquareTriangles.contains(dt) || guardingSquareTriangles.contains(traversalHandler.getTriangles().get(i)) /*|| thing.contains(dt) is the parent of this dt in the guarding square */ )) {
                             if (!first || (traversalHandler.getTriangles().get(i).equals(connectingEdges.get(connectingTriangles.indexOf(dt)).getOtherTriangle(dt)))) {
                                 nextLayer.add(traversalHandler.getTriangles().get(i));
                                 pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] = 1;

@@ -2130,7 +2130,7 @@ public class Main extends Application {
                             }
                         }
                     }
-                    // TODO: check whether maxX or maxY are larger than the current size of the canvas, if so increase window size
+
                     initPlaceAgents();
                     // read controlledAgents data
                     String[] settings;
@@ -2163,9 +2163,21 @@ public class Main extends Application {
                         c.toFront();
                     }
                     mapPolygons.get(0).setMouseTransparent(true);
+
+                    if (maxX > pane.getWidth()) {
+                        double difference = maxX - pane.getWidth();
+                        stage.setWidth(stage.getWidth() + difference);
+                        stage.centerOnScreen();
+                    }
+                    if (maxY > pane.getHeight()) {
+                        double difference = maxY - pane.getHeight();
+                        stage.setHeight(stage.getHeight() + difference);
+                        stage.centerOnScreen();
+                    }
                 } else {
                     currentState = ProgramState.MAP_EDITING;
                     // map data only
+                    double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
                     String[] coords;
                     double[] coordsDouble;
                     boolean firstLoop = true;
@@ -2194,6 +2206,12 @@ public class Main extends Application {
                                 DoubleProperty xProperty = new SimpleDoubleProperty(coordsDouble[i]);
                                 DoubleProperty yProperty = new SimpleDoubleProperty(coordsDouble[i + 1]);
                                 a = new Anchor(Color.GOLD, xProperty, yProperty);
+                                if (xProperty.getValue() > maxX) {
+                                    maxX = xProperty.getValue();
+                                }
+                                if (yProperty.getValue() > maxY) {
+                                    maxY = yProperty.getValue();
+                                }
                             }
 
                             currentMapPolygon.addAnchor(a);
@@ -2206,6 +2224,17 @@ public class Main extends Application {
                                 mapPolygons.add(currentMapPolygon);
                                 pane.getChildren().add(currentMapPolygon);
                             }
+                        }
+
+                        if (maxX > pane.getWidth()) {
+                            double difference = maxX - pane.getWidth();
+                            stage.setWidth(stage.getWidth() + difference);
+                            stage.centerOnScreen();
+                        }
+                        if (maxY > pane.getHeight()) {
+                            double difference = maxY - pane.getHeight();
+                            stage.setHeight(stage.getHeight() + difference);
+                            stage.centerOnScreen();
                         }
                     }
 
