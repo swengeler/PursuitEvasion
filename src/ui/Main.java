@@ -30,6 +30,7 @@ import org.jdelaunay.delaunay.geometries.*;
 import shadowPursuit.ShadowGraph;
 import simulation.*;
 
+import java.awt.geom.Line2D;
 import java.io.*;
 import java.util.*;
 
@@ -344,6 +345,7 @@ public class Main extends Application {
 
             ArrayList<Point2D> points;
             boolean dupes;
+            boolean intersect;
             //Points rarely seem to be in weird order, not sure what's causing it.
 
             //Other issue (which increases as spikeyness increases is due to duplicate points, this is fixed below)
@@ -351,14 +353,59 @@ public class Main extends Application {
             do {
                 dupes = false;
 
-                points = poly(175, 0.2, 0.35, 16);
+                points = poly(175, 1, 1, 16);
                 Set<Point2D> set = new HashSet<>(points);
 
                 if(set.size() < points.size()){
                     System.out.println("Duplicate(s) detected");
                     dupes = true;
                 }
-            } while (dupes);
+
+                ArrayList<Line2D> lines = new ArrayList<>();
+
+                intersect = false;
+
+                for (int i = 0; i < points.size() - 1; i++) {
+                    Point2D one = points.get(i);
+                    Point2D two = points.get(i + 1);
+
+                    lines.add(new Line2D.Double(one.getX(), one.getY(), two.getX(), two.getY()));
+                }
+
+                Point2D f = points.get(0);
+                Point2D l = points.get(points.size() - 1);
+                lines.add(new Line2D.Double(f.getX(), f.getY(), l.getX(), l.getY()));
+
+                int c = 0;
+                for (Line2D line: lines) {
+                    int dupelines = 0;
+
+                    ArrayList<Line2D> otherlines = new ArrayList<>(lines);
+                    otherlines.remove(line);
+
+                    for (Line2D secondLine: otherlines) {
+                        if (line.equals(secondLine)) {
+                            dupelines++;
+                            if (dupelines > 0) {
+                                System.out.println("***** MULTIPLE DUPE LINES *****");
+                                intersect = true;
+                            }
+                        } else if (line.intersectsLine(secondLine)) {
+                            c++;
+                        }
+
+                    }
+                }
+
+                if (c == 32) {
+                    System.out.println("seems okay");
+                }  else {
+                    System.out.println("should be denied, diff:" + Math.abs(c - 32));
+                    intersect = true;
+                }
+
+            } while (dupes || intersect);
+
 
             Polygon p = new Polygon();
             for (Point2D point : points) {
@@ -2699,10 +2746,10 @@ public class Main extends Application {
             angle = angle + angleSteps.get(i);
         }
 
-        System.out.println("***** DUMPING POINTS ******");
-        for (Point2D p: points) {
-            System.out.println("x=" + p.getX() + " , y=" + p.getY());
-        }
+//        System.out.println("***** DUMPING POINTS ******");
+//        for (Point2D p: points) {
+//            System.out.println("x=" + p.getX() + " , y=" + p.getY());
+//        }
 
         return points;
     }
