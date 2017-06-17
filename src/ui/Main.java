@@ -1931,6 +1931,7 @@ public class Main extends Application {
                     System.out.println("one or more entities do not have required number of agents");
                 }
 
+                currentState = ProgramState.SIMULATION;
             } else {
                 adaptedSimulation.unPause();
             }
@@ -2273,11 +2274,10 @@ public class Main extends Application {
             }
         });
         pane.setOnMousePressed(e -> {
-            if (currentState == ProgramState.SIMULATION) {
-                return;
-            }
-            if (e.getButton() == MouseButton.MIDDLE) {
+            if (currentState == ProgramState.SIMULATION && e.getButton() == MouseButton.SECONDARY) {
                 TestEntity.setTargetLocation(e.getX(), e.getY());
+            } else if (currentState == ProgramState.SIMULATION) {
+                return;
             }
             if (e.getButton() == MouseButton.PRIMARY) {
                 if (currentState == ProgramState.MAP_EDITING && !e.isControlDown() && addPoints.get()) {

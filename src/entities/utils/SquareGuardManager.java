@@ -209,7 +209,7 @@ public class SquareGuardManager implements GuardManager {
             Color currentColor = Color.GREEN;
             for (Agent agent : currentAssignment.keySet()) {
                 //currentColor = new Color(Math.random(), Math.random(), Math.random(), 1.0);
-                graphics.getChildren().add(new Circle(agent.getXPos(), agent.getYPos(), 7, currentColor));
+                graphics.getChildren().add(new Circle(agent.getXPos(), agent.getYPos(), 4.5, currentColor));
 
                 double length1 = Math.pow(currentAssignment.get(agent).getCoordinate(0).x - agent.getXPos(), 2) + Math.pow(currentAssignment.get(agent).getCoordinate(0).y - agent.getYPos(), 2);
                 double length2 = Math.pow(currentAssignment.get(agent).getCoordinate(1).x - agent.getXPos(), 2) + Math.pow(currentAssignment.get(agent).getCoordinate(1).y - agent.getYPos(), 2);

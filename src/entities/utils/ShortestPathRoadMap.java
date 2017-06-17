@@ -1,6 +1,7 @@
 package entities.utils;
 
 import additionalOperations.GeometryOperations;
+import com.vividsolutions.jts.geom.Coordinate;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
@@ -344,6 +345,36 @@ public class ShortestPathRoadMap {
 
     public MapRepresentation getMap() {
         return map;
+    }
+
+    public void addExtraVertex(PathVertex vertex) {
+        for (PathVertex v : shortestPathGraph.vertexSet()) {
+            if (v.getEstX() == vertex.getEstX() && v.getEstY() == vertex.getEstY()) {
+                // don't add the vertex if it is already in the graph
+                return;
+            }
+        }
+
+        // add the vertex to the graph and connect it to all visible vertices around it
+        shortestPathGraph.addVertex(vertex);
+        for (PathVertex pv : shortestPathGraph.vertexSet()) {
+            if (!pv.equals(vertex)) {
+                // check whether pv is visible from source (and whether there are separating polygons in between)
+                if (map.isVisible(pv.getEstX(), pv.getEstY(), vertex.getEstX(), vertex.getEstY()) &&
+                        !isEdgeIntersectingPolygon(pv.getEstX(), pv.getEstY(), vertex.getEstX(), vertex.getEstY()) &&
+                        !isEdgeAdjacentToPolygon(pv.getEstX(), pv.getEstY(), vertex.getEstX(), vertex.getEstY()) &&
+                        !isEdgeIntersectingLine(pv.getEstX(), pv.getEstY(), vertex.getEstX(), vertex.getEstY())) {
+                    double differenceSquared = Math.pow(pv.getEstX() - vertex.getEstX(), 2) + Math.pow(pv.getEstY() - vertex.getEstY(), 2);
+                    shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(vertex, pv), Math.sqrt(differenceSquared));
+                }
+            }
+        }
+    }
+
+    public void addExtraVertices(ArrayList<Coordinate> coordinates) {
+        for (Coordinate c : coordinates) {
+            addExtraVertex(new PathVertex(c.x, c.y));
+        }
     }
 
     public PlannedPath getShortestPath(Point2D source, double sinkX, double sinkY) {
