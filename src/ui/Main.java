@@ -342,8 +342,24 @@ public class Main extends Application {
                 Main.pane.getChildren().remove(randomPolygon);
             }
 
-            ArrayList<Point2D> points = poly(175, 0.35, 0.2, 16);
-            //ArrayList<Point2D> points = poly(300, 0.45, 0.2, 30);
+            ArrayList<Point2D> points;
+            boolean dupes;
+            //Points rarely seem to be in weird order, not sure what's causing it.
+
+            //Other issue (which increases as spikeyness increases is due to duplicate points, this is fixed below)
+
+            do {
+                dupes = false;
+
+                points = poly(175, 0.2, 0.35, 16);
+                Set<Point2D> set = new HashSet<>(points);
+
+                if(set.size() < points.size()){
+                    System.out.println("Duplicate(s) detected");
+                    dupes = true;
+                }
+            } while (dupes);
+
             Polygon p = new Polygon();
             for (Point2D point : points) {
                 p.getPoints().add(point.getX());
@@ -2674,14 +2690,18 @@ public class Main extends Application {
 
         for (int i = 0; i < numVerts; i++) {
             rg = r.nextGaussian() * spikeyness + avgRadius;
-            System.out.println(rg);
             ri = clip(rg, 0, 2 * avgRadius);
             x = centerX + ri * Math.cos(angle);
             y = centerY + ri * Math.sin(angle);
 
-            points.add(new Point2D(x, y));
+            points.add(new Point2D((int)x, (int)y));
 
             angle = angle + angleSteps.get(i);
+        }
+
+        System.out.println("***** DUMPING POINTS ******");
+        for (Point2D p: points) {
+            System.out.println("x=" + p.getX() + " , y=" + p.getY());
         }
 
         return points;
