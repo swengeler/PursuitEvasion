@@ -15,7 +15,9 @@ public abstract class Entity {
 
     protected Entity(MapRepresentation map) {
         this.map = map;
+        ShortestPathRoadMap.SHOW_ON_CANVAS = false;
         shortestPathRoadMap = new ShortestPathRoadMap(map);
+        ShortestPathRoadMap.SHOW_ON_CANVAS = false;
     }
 
     public abstract void move();

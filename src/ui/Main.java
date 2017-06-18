@@ -356,7 +356,7 @@ public class Main extends Application {
                 points = poly(175, 1, 1, 16);
                 Set<Point2D> set = new HashSet<>(points);
 
-                if(set.size() < points.size()){
+                if (set.size() < points.size()) {
                     System.out.println("Duplicate(s) detected");
                     dupes = true;
                 }
@@ -377,13 +377,13 @@ public class Main extends Application {
                 lines.add(new Line2D.Double(f.getX(), f.getY(), l.getX(), l.getY()));
 
                 int c = 0;
-                for (Line2D line: lines) {
+                for (Line2D line : lines) {
                     int dupelines = 0;
 
                     ArrayList<Line2D> otherlines = new ArrayList<>(lines);
                     otherlines.remove(line);
 
-                    for (Line2D secondLine: otherlines) {
+                    for (Line2D secondLine : otherlines) {
                         if (line.equals(secondLine)) {
                             dupelines++;
                             if (dupelines > 0) {
@@ -399,7 +399,7 @@ public class Main extends Application {
 
                 if (c == 32) {
                     System.out.println("seems okay");
-                }  else {
+                } else {
                     System.out.println("should be denied, diff:" + Math.abs(c - 32));
                     intersect = true;
                 }
@@ -2741,15 +2741,15 @@ public class Main extends Application {
             x = centerX + ri * Math.cos(angle);
             y = centerY + ri * Math.sin(angle);
 
-            points.add(new Point2D((int)x, (int)y));
+            points.add(new Point2D((int) x, (int) y));
 
             angle = angle + angleSteps.get(i);
         }
 
-//        System.out.println("***** DUMPING POINTS ******");
-//        for (Point2D p: points) {
-//            System.out.println("x=" + p.getX() + " , y=" + p.getY());
-//        }
+        //        System.out.println("***** DUMPING POINTS ******");
+        //        for (Point2D p: points) {
+        //            System.out.println("x=" + p.getX() + " , y=" + p.getY());
+        //        }
 
         return points;
     }

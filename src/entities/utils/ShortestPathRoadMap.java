@@ -19,6 +19,7 @@ import java.util.ArrayList;
 public class ShortestPathRoadMap {
 
     public static boolean SHOW_ON_CANVAS = false;
+    public static boolean DRAW_VISION_LINES = false;
     public static boolean drawLines = false;
 
     private MapRepresentation map;
@@ -393,6 +394,12 @@ public class ShortestPathRoadMap {
         return getShortestPath(new PathVertex(source), new PathVertex(sink));
     }
 
+    public void drawVerts() {
+        for (PathVertex pv : shortestPathGraph.vertexSet()) {
+            Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 4, Color.GREEN));
+        }
+    }
+
     public PlannedPath getShortestPath(PathVertex source, PathVertex sink) {
         PlannedPath plannedPath = new PlannedPath();
 
@@ -403,16 +410,16 @@ public class ShortestPathRoadMap {
                 !isEdgeIntersectingLine(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY())) {
 
             for (PathVertex v : shortestPathGraph.vertexSet()) {
-                if (v.getEstX() == source.getEstX() && v.getEstY() == source.getEstY()) {
+                if ((v.getEstX() == source.getEstX() && v.getEstY() == source.getEstY()) || (v.getRealX() == source.getRealX() && v.getRealY() == source.getRealY())) {
                     source = v;
-                    System.out.println("Contains source");
+                    //System.out.println("Contains source");
                     break;
                 }
             }
             for (PathVertex v : shortestPathGraph.vertexSet()) {
-                if (v.getEstX() == sink.getEstX() && v.getEstY() == sink.getEstY()) {
+                if ((v.getEstX() == sink.getEstX() && v.getEstY() == sink.getEstY()) || (v.getRealX() == sink.getRealX() && v.getRealY() == sink.getRealY())) {
                     sink = v;
-                    System.out.println("Contains sink");
+                    //System.out.println("Contains sink");
                     break;
                 }
             }
@@ -433,10 +440,10 @@ public class ShortestPathRoadMap {
         // add new vertices to the graph
         boolean containsSource = false;
         for (PathVertex v : shortestPathGraph.vertexSet()) {
-            if (v.getEstX() == source.getEstX() && v.getEstY() == source.getEstY()) {
+            if ((v.getEstX() == source.getEstX() && v.getEstY() == source.getEstY()) || (v.getRealX() == source.getRealX() && v.getRealY() == source.getRealY())) {
                 containsSource = true;
                 source = v;
-                System.out.println("Contains source");
+                //System.out.println("Contains source");
                 break;
             }
         }
@@ -445,10 +452,10 @@ public class ShortestPathRoadMap {
         }
         boolean containsSink = false;
         for (PathVertex v : shortestPathGraph.vertexSet()) {
-            if (v.getEstX() == sink.getEstX() && v.getEstY() == sink.getEstY()) {
+            if ((v.getEstX() == sink.getEstX() && v.getEstY() == sink.getEstY()) || (v.getRealX() == sink.getRealX() && v.getRealY() == sink.getRealY())) {
                 containsSink = true;
                 sink = v;
-                System.out.println("Contains sink");
+                //System.out.println("Contains sink");
                 break;
             }
         }
@@ -458,6 +465,7 @@ public class ShortestPathRoadMap {
 
         double minDistance = Double.MAX_VALUE;
         double minX = 0, minY = 0;
+
 
         // add new edges between source and sink and the visible nodes of the graph
         // first for the source
@@ -478,14 +486,14 @@ public class ShortestPathRoadMap {
                         }
                         shortestPathGraph.setEdgeWeight(temp, Math.sqrt(differenceSquared));
                     }
-                    /*if (drawLines) {
+                    if (DRAW_VISION_LINES) {
                         Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
-                        //l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
+                        l.setStroke(Color.LAWNGREEN);
                         Main.pane.getChildren().add(l);
-                        Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
-                    }*/
+                        Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 2, Color.LAWNGREEN));
+                    }
                     //System.out.printf("(%.4f|%.4f) visible from source (which is (%.4f|%.4f))\n", pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
-                    Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 0.5, Color.DARKGRAY));
+                    //Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 0.5, Color.DARKGRAY));
 
                     if (Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2) < minDistance) {
                         minDistance = Math.pow(pv.getEstX() - source.getEstX(), 2) + Math.pow(pv.getEstY() - source.getEstY(), 2);
@@ -514,12 +522,12 @@ public class ShortestPathRoadMap {
                         }
                         shortestPathGraph.setEdgeWeight(temp, Math.sqrt(differenceSquared));
                     }
-                    /*if (drawLines) {
-                        Line l = new Line(pv.getEstX(), pv.getEstY(), source.getEstX(), source.getEstY());
-                        l.setStroke(new Color(Math.random(), Math.random(), Math.random(), 1));
+                    if (DRAW_VISION_LINES) {
+                        Line l = new Line(pv.getEstX(), pv.getEstY(), sink.getEstX(), sink.getEstY());
+                        l.setStroke(Color.LIGHTBLUE);
                         Main.pane.getChildren().add(l);
-                        Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 1, Color.LIGHTBLUE));
-                    }*/
+                        Main.pane.getChildren().add(new Circle(pv.getEstX(), pv.getEstY(), 2, Color.LIGHTBLUE));
+                    }
                 }
             }
         }
