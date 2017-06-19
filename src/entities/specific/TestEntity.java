@@ -2,7 +2,7 @@ package entities.specific;
 
 import additionalOperations.GeometryOperations;
 import entities.base.DistributedEntity;
-import entities.utils.ShortestPathRoadMap;
+import entities.utils.*;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
@@ -38,7 +38,7 @@ public class TestEntity extends DistributedEntity {
     }
 
     public static void setTargetLocation(double x, double y) {
-        if (mapThing.legalPosition(x, y)) {
+        if (mapThing != null && mapThing.legalPosition(x, y)) {
             currentPath = sprm.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), x, y);
             pathCounter = 0;
         }
@@ -79,7 +79,7 @@ public class TestEntity extends DistributedEntity {
         }*/
 
         if (currentPath != null) {
-            ArrayList<Line> pathLines = currentPath.getPathLines();
+            ArrayList<PathLine> pathLines = currentPath.getPathLines();
             double length = Math.sqrt(Math.pow(pathLines.get(pathCounter).getEndX() - pathLines.get(pathCounter).getStartX(), 2) + Math.pow(pathLines.get(pathCounter).getEndY() - pathLines.get(pathCounter).getStartY(), 2));
             double deltaX = (pathLines.get(pathCounter).getEndX() - pathLines.get(pathCounter).getStartX()) / length * controlledAgent.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
             double deltaY = (pathLines.get(pathCounter).getEndY() - pathLines.get(pathCounter).getStartY()) / length * controlledAgent.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;

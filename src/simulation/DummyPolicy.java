@@ -1,6 +1,6 @@
 package simulation;
 
-import entities.utils.ShortestPathRoadMap;
+import entities.utils.*;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
@@ -15,7 +15,7 @@ public class DummyPolicy extends MovePolicy {
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
 
-    ArrayList<Line> test;
+    ArrayList<PathLine> test;
     int testCounter;
 
     public DummyPolicy(Agent agent, boolean pursuing) {

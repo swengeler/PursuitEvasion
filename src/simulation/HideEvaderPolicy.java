@@ -1,13 +1,18 @@
 package simulation;
 
-import entities.utils.ShortestPathRoadMap;
+import additionalOperations.GeometryOperations;
+import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
+import entities.utils.*;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
-import javafx.scene.shape.Line;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
+import ui.Main;
 
 import java.util.*;
 
@@ -21,7 +26,7 @@ public class HideEvaderPolicy extends MovePolicy {
     private ShortestPathRoadMap shortestPathMap;
 
     private final static int separationDistance = 100;
-    ArrayList<Line> pathLines;
+    ArrayList<PathLine> pathLines;
     int i = 0;
 
     public HideEvaderPolicy(Agent agent, boolean pursuing, MapRepresentation map) {
@@ -35,7 +40,9 @@ public class HideEvaderPolicy extends MovePolicy {
             initTree(map);
         }
 
-        shortestPathMap = new ShortestPathRoadMap(map);
+        if (shortestPathMap == null) {
+            shortestPathMap = new ShortestPathRoadMap(map);
+        }
         ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
 
         ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
@@ -97,7 +104,22 @@ public class HideEvaderPolicy extends MovePolicy {
                 i = 0;
             } else if (!ctarget.equals(target)) {
                 ctarget = target;
-                currentPath = shortestPathMap.getShortestPath(new Point2D(getSingleAgent().getXPos(), getSingleAgent().getYPos()), target);
+                currentPath = shortestPathMap.getShortestPath(getSingleAgent().getXPos(), getSingleAgent().getYPos(), target);
+                if (currentPath == null) {
+                    ShortestPathRoadMap.DRAW_VISION_LINES = true;
+                    currentPath = shortestPathMap.getShortestPath(getSingleAgent().getXPos(), getSingleAgent().getYPos(), target);
+                    ShortestPathRoadMap.DRAW_VISION_LINES = false;
+                    System.out.printf("Agent: (%.3f|%.3f)\n", getSingleAgent().getXPos(), getSingleAgent().getYPos());
+                    System.out.println("Legal position: " + shortestPathMap.getMap().legalPosition(getSingleAgent().getXPos(), getSingleAgent().getYPos()));
+                    System.out.printf("Target: (%.3f|%.3f)\n", target.getX(), target.getY());
+                    System.out.println("Target legal position: " + shortestPathMap.getMap().legalPosition(target.getX(), target.getY()));
+                    AdaptedSimulation.masterPause("What");
+                    Simulation.masterPause();
+                    //System.exit(-43);
+                    Main.pane.getChildren().add(new Circle(getSingleAgent().getXPos(), getSingleAgent().getYPos(), 7, Color.INDIANRED));
+                    Main.pane.getChildren().add(new Circle(target.getX(), target.getY(), 7, Color.BLUE));
+                    return new Move(0, 0, 0);
+                }
                 i = 0;
             }
         }
@@ -107,6 +129,9 @@ public class HideEvaderPolicy extends MovePolicy {
         if (separationDeltaX != 0 || separationDeltaY != 0) {
             if (map.legalPosition(getSingleAgent().getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, getSingleAgent().getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)) {
                 ctarget = null;
+                if (!map.legalPosition(evader.getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, evader.getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)) {
+                    System.out.println("ILLEGAL 1: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(evader.getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, evader.getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)}), GeometryOperations.factory)));
+                }
                 return new Move(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50, 0);
             } else {
                 //perhaps stand still here?
@@ -120,13 +145,22 @@ public class HideEvaderPolicy extends MovePolicy {
 
         Move result;
         double length = Math.sqrt(Math.pow(pathLines.get(i).getEndX() - pathLines.get(i).getStartX(), 2) + Math.pow(pathLines.get(i).getEndY() - pathLines.get(i).getStartY(), 2));
-        double deltaX = (pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length * getSingleAgent().getSpeed() / 50;
-        double deltaY = (pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length * getSingleAgent().getSpeed() / 50;
+        double deltaX = ((pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length) * (getSingleAgent().getSpeed() / 50);
+        double deltaY = ((pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length) * (getSingleAgent().getSpeed() / 50);
 
         if (pathLines.get(i).contains(evader.getXPos() + deltaX, evader.getYPos() + deltaY)) {
             result = new Move(deltaX, deltaY, 0);
+            if (!map.legalPosition(evader.getXPos() + result.getXDelta(), evader.getYPos() + result.getYDelta())) {
+                System.out.println("ILLEGAL 2: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(evader.getXPos() + result.getXDelta(), evader.getYPos() + result.getYDelta())}), GeometryOperations.factory)));
+                System.out.println("WHAT: " + map.legalPosition(pathLines.get(i).getEndX(), pathLines.get(i).getEndY()));
+                System.out.println("WHAT: " + pathLines.get(i).contains(evader.getXPos() + deltaX + 0.49, evader.getYPos() + deltaY + 0.49));
+                Main.pane.getChildren().add(pathLines.get(i));
+            }
         } else {
             result = new Move(pathLines.get(i).getEndX() - getSingleAgent().getXPos(), pathLines.get(i).getEndY() - getSingleAgent().getYPos(), 0);
+            if (!map.legalPosition(evader.getXPos() + result.getXDelta(), evader.getYPos() + result.getYDelta())) {
+                System.out.println("ILLEGAL 3: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(evader.getXPos() + result.getXDelta(), evader.getYPos() + result.getYDelta())}), GeometryOperations.factory)));
+            }
             i++;
         }
 
@@ -160,7 +194,19 @@ public class HideEvaderPolicy extends MovePolicy {
 
             if (mode != 4) {
 
-                PlannedPath shortestPathFromEvader = shortestPathMap.getShortestPath(new Point2D(evader.getXPos(), evader.getYPos()), midpointData.get(0).get(i).getMidpoint());
+                PlannedPath shortestPathFromEvader = null;
+                shortestPathFromEvader = shortestPathMap.getShortestPath(evader.getXPos(), evader.getYPos(), midpointData.get(0).get(i).getMidpoint());
+                if (shortestPathFromEvader == null) {
+                    System.out.printf("Midpoint: (%.3f|%.3f)\n", midpointData.get(0).get(i).getMidpoint().getX(), midpointData.get(0).get(i).getMidpoint().getY());
+                    System.out.println("Legal position: " + shortestPathMap.getMap().legalPosition(midpointData.get(0).get(i).getMidpoint().getX(), midpointData.get(0).get(i).getMidpoint().getY()));
+                    System.out.printf("Evader: (%.3f|%.3f)\n", evader.getXPos(), evader.getYPos());
+                    System.out.println("Evader legal position: " + shortestPathMap.getMap().legalPosition(evader.getXPos(), evader.getYPos()));
+                    AdaptedSimulation.masterPause("What");
+                    Simulation.masterPause();
+                    Main.pane.getChildren().add(new Circle(midpointData.get(0).get(i).getMidpoint().getX(), midpointData.get(0).get(i).getMidpoint().getY(), 7, Color.INDIANRED));
+                    //System.exit(-43);
+                    return new Point2D(0, 0);
+                }
 
                 if (tmpNumberOfVertices == numberOfVertices) {
                     if (mode == 1) {

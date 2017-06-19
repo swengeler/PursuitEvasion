@@ -7,7 +7,7 @@ import entities.base.Entity;
 import entities.base.PartitioningEntity;
 import entities.guarding.GuardManager;
 import entities.guarding.SquareGuardManager;
-import entities.utils.ShortestPathRoadMap;
+import entities.utils.*;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -41,7 +41,7 @@ public class DCRSEntity extends PartitioningEntity {
 
     private Agent searcher, catcher;
     private PlannedPath currentSearcherPath, currentCatcherPath;
-    private ArrayList<Line> pathLines;
+    private ArrayList<PathLine> pathLines;
     private int searcherPathLineCounter, catcherPathLineCounter;
 
     private ArrayList<ArrayList<DTriangle>> gSqrIntersectingTriangles;
@@ -72,7 +72,7 @@ public class DCRSEntity extends PartitioningEntity {
         catchGraphics = new Group();
         guardGraphics = new Group();
         Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
-        testExcludedLines.addAll(separatingLines);
+        //testExcludedLines.addAll(separatingLines);
     }
 
     @Override
@@ -142,6 +142,8 @@ public class DCRSEntity extends PartitioningEntity {
             }
         }*/
         if (spottedOnce) {
+            // add separating lines to excluded lines if the evader or pursuer (catcher) have crossed it... or not, maybe
+
             int crossedLineOrdinal;
             boolean changed = false;
             SquareGuardManager gm;
@@ -420,11 +422,12 @@ public class DCRSEntity extends PartitioningEntity {
         }*/
         LineSegment ls = new LineSegment(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
         LineSegment tempLs;
+
         boolean legal = true;
         //if (testInGuardedSquare) {
         for (Line l : separatingLines) {
             tempLs = new LineSegment(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
-            if (tempLs.intersection(ls) != null && !testCrossedLines.contains(l)) {
+            if (tempLs.intersection(ls) != null && testExcludedLines.contains(l)) {
                 legal = false;
                 break;
             }
@@ -497,7 +500,7 @@ public class DCRSEntity extends PartitioningEntity {
                 specialShortestPathRoadMap = new ShortestPathRoadMap(temp, map);
             }*/
 
-            if (testInGuardedSquare /*&& testSPRM == null*/ && (updated || testSPRM == null)) {
+            if (/*testInGuardedSquare *//*&& testSPRM == null*//* && */(updated || testSPRM == null)) {
                 testSPRM = new ShortestPathRoadMap(testExcludedLines, map);
                 for (Line l : testExcludedLines) {
                     if (!Main.pane.getChildren().contains(l)) {
@@ -656,7 +659,6 @@ public class DCRSEntity extends PartitioningEntity {
             // the method used here is cheating somewhat but assuming minimum feature size it just makes the computation easier
             if (pseudoBlockingVertex == null) {
                 System.out.println("target around corner, calculate path to first vertex");
-                ShortestPathRoadMap.drawLines = true;
 
                 if (/*testInGuardedSquare && testSPRM == null*/(updated || testSPRM == null)) {
                     testSPRM = new ShortestPathRoadMap(testExcludedLines, map);
@@ -678,7 +680,12 @@ public class DCRSEntity extends PartitioningEntity {
                 }*/
 
                 //shortestPathRoadMap.drawVerts();
-                PlannedPath temp = testSPRM.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
+                PlannedPath temp;
+                if (true) {
+                    temp = testSPRM.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
+                } else {
+                    temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
+                }
                 //catchGraphics.getChildren().addAll(temp.getPathLines());
 
                 //PlannedPath temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());

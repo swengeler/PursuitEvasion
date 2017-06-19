@@ -140,6 +140,10 @@ public class Agent {
         setXPos(getXPos() + nextMove.getXDelta());
         setYPos(getYPos() + nextMove.getYDelta());
         setTurnAngle(getTurnAngle() + nextMove.getTurnDelta());
+        if (!map.legalPosition(getXPos(), getYPos())) {
+            System.out.println("EVADER OUTSIDE OF MAP");
+            Simulation.masterPause();
+        }
     }
 
     /*@Override

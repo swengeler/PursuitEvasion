@@ -245,7 +245,10 @@ public class MapRepresentation {
         tempLine.getCoordinates()[0].y = y1;
         tempLine.getCoordinates()[1].x = x2;
         tempLine.getCoordinates()[1].y = y2;*/
-        tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1, y1), new Coordinate(x2, y2)}), GeometryOperations.factory);
+        double length = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+        double deltaX = (x2 - x1) / length;
+        double deltaY = (y2 - y1) / length;
+        tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1 + deltaX * GeometryOperations.PRECISION_EPSILON, y1 + deltaY * GeometryOperations.PRECISION_EPSILON), new Coordinate(x2 - deltaX * GeometryOperations.PRECISION_EPSILON, y2 - deltaY * GeometryOperations.PRECISION_EPSILON)}), GeometryOperations.factory);
         if (polygon.covers(tempLine)) {
             return true;
         }

@@ -84,7 +84,7 @@ public class Main extends Application {
     private DCRSEntity testDCRSEntity;
     private DCRLEntity testDCRLEntity;
     private DCRVEntity testDCRVEntity;
-    private int ENTITY_TO_TEST = 2;
+    private int ENTITY_TO_TEST = 0;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //
@@ -448,7 +448,7 @@ public class Main extends Application {
             }
         });
 
-        Slider slider = new Slider(0, 150, 100);
+        Slider slider = new Slider(1, 150, 100);
         slider.setShowTickMarks(true);
         slider.setShowTickLabels(true);
         slider.setMajorTickUnit(40);
@@ -1194,10 +1194,10 @@ public class Main extends Application {
                         i--;
                     }
 
-                    System.out.println("Nr. holes: " + holes.size());
-                    for (ArrayList<DTriangle> hole : holes) {
+                    //System.out.println("Nr. holes: " + holes.size());
+                    /*for (ArrayList<DTriangle> hole : holes) {
                         System.out.println("Hole with " + hole.size() + (hole.size() > 1 ? " triangles" : " triangle"));
-                    }
+                    }*/
 
                     Polygon tempTriangle;
                     Color currentColor;
@@ -2414,8 +2414,7 @@ public class Main extends Application {
                                 }
                             }
 
-                            System.out.println("Polygon created (with " + ((currentMapPolygon.getPoints().size() / 2) - 1) + " points)");
-                            System.out.println(mapPolygons.size());
+                            //System.out.println("Polygon created (with " + ((currentMapPolygon.getPoints().size() / 2) - 1) + " points)");
 
                             // connected to first point to close the polygon
                             Polygon robinsPolygon = currentMapPolygon.getPolygon();

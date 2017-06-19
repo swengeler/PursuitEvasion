@@ -21,6 +21,7 @@ public class ShortestPathRoadMap {
 
     public static boolean SHOW_ON_CANVAS = false;
     public static boolean DRAW_VISION_LINES = false;
+    public static boolean EVADER_DEBUGGING = false;
     public static boolean drawLines = false;
 
     private MapRepresentation map;
@@ -431,7 +432,7 @@ public class ShortestPathRoadMap {
 
             plannedPath.addPathVertex(source);
             plannedPath.addPathVertex(sink);
-            plannedPath.addLine(new Line(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()));
+            plannedPath.addLine(new PathLine(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()));
             Line line = new Line(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY());
             line.setStrokeWidth(2);
             Label l = new Label("sz: " + excludedPolygons.size());
@@ -541,29 +542,32 @@ public class ShortestPathRoadMap {
         DijkstraShortestPath<PathVertex, DefaultWeightedEdge> shortestPathCalculator = new DijkstraShortestPath<>(shortestPathGraph);
         GraphPath<PathVertex, DefaultWeightedEdge> graphPath = shortestPathCalculator.getPath(source, sink);
         PathVertex pv1, pv2;
-        try {
-            plannedPath.addPathVertex(graphPath.getVertexList().get(0));
-            for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
-                pv1 = graphPath.getVertexList().get(i);
-                pv2 = graphPath.getVertexList().get(i + 1);
-                plannedPath.addLine(new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY()));
-                plannedPath.addPathVertex(pv2);
-                Line line = new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY());
-                line.setStrokeWidth(2);
-                Label l = new Label("sz: " + excludedPolygons.size());
-                l.setTranslateX(sink.getEstX());
-                l.setTranslateY(sink.getEstY());
-                //Main.pane.getChildren().addAll(line, l);
-            }
-        } catch (NullPointerException e) {
-            e.printStackTrace();
+        if (graphPath == null) {
+            return null;
+        }
+        plannedPath.addPathVertex(graphPath.getVertexList().get(0));
+        for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
+            pv1 = graphPath.getVertexList().get(i);
+            pv2 = graphPath.getVertexList().get(i + 1);
+            plannedPath.addLine(new PathLine(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY()));
+            plannedPath.addPathVertex(pv2);
+            Line line = new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY());
+            line.setStrokeWidth(2);
+            Label l = new Label("sz: " + excludedPolygons.size());
+            l.setTranslateX(sink.getEstX());
+            l.setTranslateY(sink.getEstY());
+            //Main.pane.getChildren().addAll(line, l);
+        }
+        //try {
+        //} catch (NullPointerException e) {
+           /* e.printStackTrace();
             System.out.println("containsSource: " + containsSource);
-            System.out.println("containsSink: " + containsSink);
+            System.out.println("containsSink: " + containsSink);*/
 
             //Main.pane.getChildren().add(new Circle(source.getEstX(), source.getEstY(), 50, Color.DARKGRAY));
             //Main.pane.getChildren().add(new Circle(sink.getEstX(), sink.getEstY(), 50, Color.DARKGRAY));
 
-            AdaptedSimulation.masterPause("in ShortestPathRoadMap");
+            //AdaptedSimulation.masterPause("in ShortestPathRoadMap");
             /*System.out.println("graphPath: " + graphPath);
             System.out.printf("Source: (%.3f|%.3f)\n", source.getEstX(), source.getEstY());
             System.out.printf("Sink: (%.3f|%.3f)\n", sink.getEstX(), sink.getEstY());
@@ -577,7 +581,7 @@ public class ShortestPathRoadMap {
             for (DefaultWeightedEdge edge : shortestPathGraph.edgeSet()) {
                 Main.pane.getChildren().add(new Line(shortestPathGraph.getEdgeSource(edge).getEstX(), shortestPathGraph.getEdgeSource(edge).getEstY(), shortestPathGraph.getEdgeTarget(edge).getEstX(), shortestPathGraph.getEdgeTarget(edge).getEstY()));
             }*/
-        }
+        //}
 
         // remove the source and sink vertices
         if (!containsSource) {

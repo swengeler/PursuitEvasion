@@ -17,8 +17,10 @@ public class AdaptedSimulation {
     private static boolean isPaused;
 
     public static void masterPause(String message) {
-        simulationTimer.stop();
-        System.out.println(message);
+        if (simulationTimer != null) {
+            simulationTimer.stop();
+            System.out.println(message);
+        }
     }
 
     public AdaptedSimulation(MapRepresentation map) {

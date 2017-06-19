@@ -12,7 +12,13 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Simulation {
 
-    private Timer simulationTimer;
+    private static Timer simulationTimer;
+
+    public static void masterPause() {
+        if (simulationTimer != null) {
+            simulationTimer.stop();
+        }
+    }
 
     private MapRepresentation map;
     private ArrayList<Agent> agents;

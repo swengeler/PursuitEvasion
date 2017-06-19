@@ -5,6 +5,8 @@ import entities.base.Entity;
 import entities.base.PartitioningEntity;
 import entities.guarding.GuardManager;
 import entities.guarding.TriangleVisionGuardManager;
+import entities.utils.PathLine;
+import entities.utils.PlannedPath;
 import javafx.scene.Group;
 import javafx.scene.shape.Line;
 import org.javatuples.Triplet;
@@ -25,7 +27,7 @@ public class DCRVEntity extends PartitioningEntity {
 
     private Agent searcher;
     private PlannedPath currentSearcherPath;
-    private ArrayList<Line> pathLines;
+    private ArrayList<PathLine> pathLines;
     private int searcherPathLineCounter;
 
     private Group catchGraphics;
@@ -100,12 +102,26 @@ public class DCRVEntity extends PartitioningEntity {
         }
 
         // check whether target is visible
-        if (target != null) {
+        /*if (target != null) {
             if (target.isActive() && map.isVisible(target, searcher)) {
                 target.setActive(false);
                 target = null;
                 currentSearcherPath = null;
                 searcherPathLineCounter = 0;
+            }
+        }*/
+        for (Entity e : map.getEvadingEntities()) {
+            if (e.isActive()) {
+                for (Agent a1 : e.getControlledAgents()) {
+                    if (a1.isActive()) {
+                        for (Agent a2 : getControlledAgents()) {
+                            if (map.isVisible(a1, a2)) {
+                                a1.setActive(false);
+                                return;
+                            }
+                        }
+                    }
+                }
             }
         }
     }

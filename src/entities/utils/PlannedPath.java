@@ -1,6 +1,5 @@
-package simulation;
+package entities.utils;
 
-import entities.utils.PathVertex;
 import javafx.scene.shape.Line;
 import ui.Main;
 
@@ -12,7 +11,7 @@ public class PlannedPath {
     private int startIndex = -1;
     private int endIndex = -1;
 
-    private ArrayList<Line> pathLines;
+    private ArrayList<PathLine> pathLines;
     private ArrayList<PathVertex> pathVertices;
 
     public PlannedPath() {
@@ -46,11 +45,11 @@ public class PlannedPath {
         return endIndex;
     }
 
-    public void addInitLine(Line line) {
+    public void addInitLine(PathLine line) {
         pathLines.add(0, line);
     }
 
-    public void addLine(Line line) {
+    public void addLine(PathLine line) {
         pathLines.add(line);
     }
 
@@ -58,7 +57,7 @@ public class PlannedPath {
         pathVertices.add(pv);
     }
 
-    public ArrayList<Line> getPathLines() {
+    public ArrayList<PathLine> getPathLines() {
         return pathLines;
     }
 
@@ -66,7 +65,7 @@ public class PlannedPath {
         return pathVertices;
     }
 
-    public Line getPathLine(int index) {
+    public PathLine getPathLine(int index) {
         return pathLines.get(index);
     }
 

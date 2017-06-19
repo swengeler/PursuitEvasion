@@ -3,6 +3,8 @@ package entities.base;
 import additionalOperations.Tuple;
 import com.vividsolutions.jts.geom.Coordinate;
 import entities.guarding.GuardManager;
+import entities.utils.PathLine;
+import entities.utils.PlannedPath;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Shape;
@@ -35,7 +37,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     protected ArrayList<Agent> guards;
     private ArrayList<PlannedPath> initGuardPaths;
     private ArrayList<Integer> guardPathLineCounters;
-    private ArrayList<Line> guardPathLines;
+    private ArrayList<PathLine> guardPathLines;
     private boolean guardsPositioned;
 
     protected double length, deltaX, deltaY;
@@ -171,7 +173,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     // ******************************************************************* //
 
     protected Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> computeComponentBoundaries(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> separatingEdges, ArrayList<Line> separatingLines) {
-        System.out.println("simplyConnectedComponents.size(): " + simplyConnectedComponents.size());
+        //System.out.println("simplyConnectedComponents.size(): " + simplyConnectedComponents.size());
         ArrayList<ArrayList<Line>> boundaryLines = new ArrayList<>();
         componentBoundaryEdges = new ArrayList<>();
         ArrayList<Shape> componentShapes = new ArrayList<>();
@@ -410,10 +412,10 @@ public abstract class PartitioningEntity extends CentralisedEntity {
             i--;
         }
 
-        System.out.println("Nr. holes: " + holes.size());
+        /*System.out.println("Nr. holes: " + holes.size());
         for (ArrayList<DTriangle> hole : holes) {
             System.out.println("Hole with " + hole.size() + (hole.size() > 1 ? " triangles" : " triangle"));
-        }
+        }*/
 
         javafx.scene.shape.Polygon tempTriangle;
         Color currentColor;
@@ -462,7 +464,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
                                 }
                             }
                         }
-                        System.out.println("vertexCount = " + vertexCount);
+                        //System.out.println("vertexCount = " + vertexCount);
                         if (vertexCount <= 4 && what < 2) {
                             separatingTriangles.add(dt2);
                             if (dt2.isEdgeOf(dt1.getEdge(0))) {
@@ -764,7 +766,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
                     c++;
                 }
             }
-            System.out.println("Node " + i + " has " + c + " neighbours");
+            //System.out.println("Node " + i + " has " + c + " neighbours");
         }
 
         return tree;

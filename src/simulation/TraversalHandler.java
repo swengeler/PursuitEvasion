@@ -1,6 +1,6 @@
 package simulation;
 
-import entities.utils.ShortestPathRoadMap;
+import entities.utils.*;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.shape.Line;
@@ -53,12 +53,12 @@ public class TraversalHandler {
         this.components = components;
         this.adjacencyMatrix = adjacencyMatrix;
 
-        for (int i = 0; i < adjacencyMatrix.length; i++) {
+        /*for (int i = 0; i < adjacencyMatrix.length; i++) {
             for (int j = 0; j < adjacencyMatrix.length; j++) {
                 System.out.print(adjacencyMatrix[i][j] + " ");
             }
             System.out.println();
-        }
+        }*/
     }
 
     public void separatingTriangleBased(ArrayList<DTriangle> separatingTriangles) {
@@ -416,10 +416,10 @@ public class TraversalHandler {
             lastIndex = currentIndex;
             currentIndex = childIndeces.get((int) (Math.random() * childIndeces.size())); // needs proper probability distribution
             //plannedPath.addLine(adjacencyLineMatrix[lastIndex][currentIndex]);
-            Line l1 = null, l2 = null;
+            PathLine l1 = null, l2 = null;
             try {
-                l1 = new Line(nodes.get(lastIndex).getTriangle().getBarycenter().getX(), nodes.get(lastIndex).getTriangle().getBarycenter().getY(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getX(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getY());
-                l2 = new Line(adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getX(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getY(), nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY());
+                l1 = new PathLine(nodes.get(lastIndex).getTriangle().getBarycenter().getX(), nodes.get(lastIndex).getTriangle().getBarycenter().getY(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getX(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getY());
+                l2 = new PathLine(adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getX(), adjacencyEdgeMatrix[lastIndex][currentIndex].getBarycenter().getY(), nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY());
             } catch (DelaunayError delaunayError) {
                 delaunayError.printStackTrace();
             }
