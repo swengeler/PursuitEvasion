@@ -8,7 +8,6 @@ import entities.guarding.TriangleVisionGuardManager;
 import entities.utils.PathLine;
 import entities.utils.PlannedPath;
 import javafx.scene.Group;
-import javafx.scene.shape.Line;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.DEdge;

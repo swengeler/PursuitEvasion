@@ -84,7 +84,7 @@ public class Main extends Application {
     private DCRSEntity testDCRSEntity;
     private DCRLEntity testDCRLEntity;
     private DCRVEntity testDCRVEntity;
-    private int ENTITY_TO_TEST = 0;
+    private int ENTITY_TO_TEST = 1;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //

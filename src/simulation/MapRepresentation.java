@@ -21,7 +21,7 @@ public class MapRepresentation {
     private ArrayList<Line> polygonEdges;
 
     private com.vividsolutions.jts.geom.Polygon polygon;
-    private Geometry boundary;
+    private Geometry boundary, visionPolygon;
     private Point tempPoint = new Point(new CoordinateArraySequence(1), GeometryOperations.factory);
     private LineString tempLine = new LineString(new CoordinateArraySequence(2), GeometryOperations.factory);
     private ArrayList<LineSegment> allLines;
@@ -98,6 +98,7 @@ public class MapRepresentation {
         }
 
         polygon = new com.vividsolutions.jts.geom.Polygon(shell, holes, GeometryOperations.factory);
+        visionPolygon = polygon.buffer(GeometryOperations.PRECISION_EPSILON);
         boundary = polygon.getBoundary();
 
         // TODO: construct LinearRing objects from polygons, construct a Polygon object from that
@@ -241,6 +242,9 @@ public class MapRepresentation {
     }
 
     public boolean isVisible(double x1, double y1, double x2, double y2) {
+        if (x1 == x2 && y1 == y2) {
+            return true;
+        }
         /*tempLine.getCoordinates()[0].x = x1;
         tempLine.getCoordinates()[0].y = y1;
         tempLine.getCoordinates()[1].x = x2;
@@ -248,8 +252,13 @@ public class MapRepresentation {
         double length = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
         double deltaX = (x2 - x1) / length;
         double deltaY = (y2 - y1) / length;
-        tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1 + deltaX * GeometryOperations.PRECISION_EPSILON, y1 + deltaY * GeometryOperations.PRECISION_EPSILON), new Coordinate(x2 - deltaX * GeometryOperations.PRECISION_EPSILON, y2 - deltaY * GeometryOperations.PRECISION_EPSILON)}), GeometryOperations.factory);
-        if (polygon.covers(tempLine)) {
+        tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1, y1), new Coordinate(x2, y2)}), GeometryOperations.factory);
+        //tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1 + deltaX * 1E-5, y1 + deltaY * 1E-5), new Coordinate(x2 - deltaX * 1E-5, y2 - deltaY * 1E-5)}), GeometryOperations.factory);
+        //tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1 + deltaX * GeometryOperations.PRECISION_EPSILON, y1 + deltaY * GeometryOperations.PRECISION_EPSILON), new Coordinate(x2 - deltaX * GeometryOperations.PRECISION_EPSILON, y2 - deltaY * GeometryOperations.PRECISION_EPSILON)}), GeometryOperations.factory);
+        /*if (polygon.covers(tempLine) == polygon.buffer(GeometryOperations.PRECISION_EPSILON).covers(tempLine)) {
+            return true;
+        }*/
+        if (visionPolygon.covers(tempLine)) {
             return true;
         }
         if (showVisible) {

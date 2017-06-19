@@ -4,9 +4,9 @@ import additionalOperations.GeometryOperations;
 import entities.base.DistributedEntity;
 import entities.utils.*;
 import javafx.geometry.Point2D;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import simulation.*;
+import simulation.Agent;
+import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 

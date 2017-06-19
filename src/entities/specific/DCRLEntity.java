@@ -3,7 +3,6 @@ package entities.specific;
 import additionalOperations.*;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
-import com.vividsolutions.jts.operation.distance.DistanceOp;
 import entities.base.Entity;
 import entities.base.PartitioningEntity;
 import entities.guarding.*;
@@ -14,6 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
+import org.javatuples.Quintet;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
@@ -1052,7 +1052,7 @@ public class DCRLEntity extends PartitioningEntity {
         }
     }
 
-    private static final int TEST_THING = 3;
+    private static final int TEST_THING = -1;
 
     private ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines) {
         ArrayList<GuardManager> lineGuardManagers = new ArrayList<>(separatingLines.size());
@@ -1064,18 +1064,42 @@ public class DCRLEntity extends PartitioningEntity {
         List<Coordinate> vertices = Arrays.asList(map.getPolygon().getCoordinates());
 
         long before = System.currentTimeMillis();
-        ArrayList<Tuple<Geometry, Group>> visibilityPolygons = new ArrayList<>(vertices.size());
+        ArrayList<Tuple<Geometry, Group>> visibilityInfo = new ArrayList<>(vertices.size());
+        ArrayList<Geometry> visibilityPolygons = new ArrayList<>();
         for (Coordinate c1 : vertices) {
-            visibilityPolygons.add(computeVisibilityPolygon(c1, vertices));
+            visibilityInfo.add(computeVisibilityPolygon(c1, vertices));
+            visibilityPolygons.add(visibilityInfo.get(visibilityInfo.size() - 1).getFirst());
         }
-        Main.pane.getChildren().add(visibilityPolygons.get(TEST_THING).getSecond());
+        Tuple<Geometry, Group> thing = computeVisibilityPolygon(vertices.get(10), vertices);
+        Main.pane.getChildren().add(thing.getSecond());
+        //Main.pane.getChildren().add(visibilityPolygons.get(TEST_THING).getSecond());
         // not working properly: 3 and 10 and 15
         System.out.println("Time taken to check for " + vertices.size() + "-vertex polygon: " + (System.currentTimeMillis() - before));
 
+        LineString ls;
+        Geometry intersection;
         for (Line l : separatingLines) {
+            int i = 0;
+            ls = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(l.getStartX(), l.getStartY()), new Coordinate(l.getEndX(), l.getEndY())}), GeometryOperations.factory);
+            intersection = ls.intersection(visibilityPolygons.get(10));
+            System.out.println("Intersection size: " + intersection.getCoordinates().length);
+            if (intersection.getCoordinates().length >= 2) {
+                Line line = new Line(intersection.getCoordinates()[0].x, intersection.getCoordinates()[0].y, intersection.getCoordinates()[intersection.getCoordinates().length - 1].x, intersection.getCoordinates()[intersection.getCoordinates().length - 1].y);
+                line.setStroke(Color.DARKMAGENTA);
+                line.setStrokeWidth(2);
+                Main.pane.getChildren().add(line);
+            }
+            /*for (Coordinate c : intersection.getCoordinates()) {
+                Main.pane.getChildren().add(new Circle(c.x, c.y, 5, Color.DARKMAGENTA));
+                Label label = new Label("" + (i++));
+                label.setTranslateX(c.x + 5);
+                label.setTranslateY(c.y);
+                Main.pane.getChildren().add(label);
+            }*/
             temp1 = computeSingleGuardManager(l);
             lineGuardManagers.add(temp1);
         }
+
 
         /*
         for each line segment, two guards should be assigned
@@ -1108,22 +1132,26 @@ public class DCRLEntity extends PartitioningEntity {
 
         // algorithm (run once for each vertex)
         Geometry visibilityPolygon;
-        Group visibilityShape = new Group();;
+        Group visibilityShape = new Group();
+        ;
         visibilityShape.getChildren().add(new Circle(c1.x, c1.y, 4, Color.GREEN));
 
         LinearRing currentTriangle;
         Line line;
         Label label;
         LineString ls;
+        LineSegment[] segs1, segs2;
         Geometry intersection;
-        ArrayList<Tuple<Coordinate, LineString>> rays = new ArrayList<>();
-        HashMap<Tuple<Coordinate, LineString>, Double> angles = new HashMap<>();
+        ArrayList<Quintet<Coordinate, Coordinate, LineString, LineSegment[], LineSegment[]>> rays = new ArrayList<>(); // coordinate on the boundary, vertex of the polygon, ray from source to vertex of polygon and coordinate on boundary, intersecting boundary lines of the polygon
+        HashMap<Quintet, Double> angles = new HashMap<>();
 
         ArrayList<PointPair> checkedPairs;
         PointPair currentPair;
         Coordinate[] temp;
+        boolean same;
         for (Coordinate c2 : vertices) {
-            if (map.isVisible(c1, c2)) {
+            if (!c1.equals2D(c2) && map.isVisible(c1, c2)) {
+                same = false;
                 double deltaX = c2.x - c1.x;
                 double deltaY = c2.y - c1.y;
                 double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -1147,15 +1175,19 @@ public class DCRLEntity extends PartitioningEntity {
                     }
                 }
                 if (closest == null) {
-                    closest = c2;
+                    same = true;
+                    closest = new Coordinate(c2.x, c2.y);
                 }
 
+                //if (closest.equals2D(c2) || map.isVisible(c2, new Coordinate(closest.x - deltaX * 1E-10, closest.y - deltaY * 1E-10))) {
                 if (closest.equals2D(c2) || map.isVisible(c2, new Coordinate(closest.x - deltaX * 1E-10, closest.y - deltaY * 1E-10))) {
                     /*label.setTranslateX(closest.x + 5);
                     label.setTranslateY(closest.y - 20);*/
                     //Main.pane.getChildren().addAll(new Circle(closest.x, closest.y, 4, Color.BLUE));
-                } else if (!map.isVisible(c2, new Coordinate(closest.x - deltaX * 1E-10, closest.y - deltaY * 1E-10))) {
-                    closest = c2;
+                    //} else if (!map.isVisible(c2, new Coordinate(closest.x - deltaX * 1E-10, closest.y - deltaY * 1E-10))) {
+                } else if (!map.isVisible(c2, closest)) {
+                    same = true;
+                    closest = new Coordinate(c2.x, c2.y);
                     //Main.pane.getChildren().addAll(new Circle(closest.x, closest.y, 4, Color.BLUE));
                 }
 
@@ -1166,11 +1198,43 @@ public class DCRLEntity extends PartitioningEntity {
 
                 if (vertices.indexOf(c1) == TEST_THING) {
                     line = new Line(c1.x, c1.y, closest.x, closest.y);
-                    Main.pane.getChildren().addAll(line, new Circle(closest.x, closest.y, 2.5, Color.BLUE));
+                    Main.pane.getChildren().addAll(line, new Circle(closest.x, closest.y, 3, closest.equals2D(c2) ? Color.BLUE : Color.CYAN));
+                }
+
+                if (closest.equals2D(c2)) {
+                    same = true;
+                }
+                segs1 = new LineSegment[2];
+                segs2 = null;
+                if (!same) {
+                    segs2 = new LineSegment[2];
+                }
+                for (LineSegment seg : map.getAllLines()) {
+                    double distance1 = seg.distance(closest);
+                    if (distance1 < GeometryOperations.PRECISION_EPSILON) {
+                        if (segs1[0] == null) {
+                            segs1[0] = seg;
+                        } else if (segs1[1] == null) {
+                            segs1[1] = seg;
+                        }
+                    }
+                    if (!same) {
+                        double distance2 = seg.distance(c2);
+                        if (distance2 < GeometryOperations.PRECISION_EPSILON) {
+                            if (segs2[0] == null) {
+                                segs2[0] = seg;
+                            } else if (segs2[1] == null) {
+                                segs2[1] = seg;
+                            }
+                        }
+                    }
+                }
+                if (same) {
+                    segs2 = segs1;
                 }
 
                 ls = new LineString(new CoordinateArraySequence(new Coordinate[]{c1, closest}), GeometryOperations.factory);
-                rays.add(new Tuple<>(closest, ls));
+                rays.add(new Quintet<>(closest, c2, ls, segs1, segs2));
                 angles.put(rays.get(rays.size() - 1), angle);
             }
         }
@@ -1186,48 +1250,138 @@ public class DCRLEntity extends PartitioningEntity {
         });
 
         Coordinate c3, c4;
+        Quintet<Coordinate, Coordinate, LineString, LineSegment[], LineSegment[]> d1, d2;
         LineSegment[] segments = new LineSegment[2];
         Polygon p;
 
         visibilityPolygon = new com.vividsolutions.jts.geom.Polygon(null, null, GeometryOperations.factory);
-
         checkedPairs = new ArrayList<>();
+
+        boolean boundaryPointsShareSegment, originalPointsShareSegment, boundaryAndOriginalShareSegment, originalAndBoundaryShareSegment;
         for (int i = 0; i < rays.size(); i++) {
+            d1 = rays.get(i);
+            d2 = rays.get((i + 1) % rays.size());
+            currentPair = new PointPair(i, (i + 1) % rays.size());
+
+            //try {
+            boundaryPointsShareSegment = d1.getValue3()[0].equals(d2.getValue3()[0]) || (d2.getValue3()[1] != null && d1.getValue3()[0].equals(d2.getValue3()[1])) || (d1.getValue3()[1] != null && d1.getValue3()[1].equals(d2.getValue3()[0])) || (d1.getValue3()[1] != null && d2.getValue3()[1] != null && d1.getValue3()[1].equals(d2.getValue3()[1]));
+            originalPointsShareSegment = d1.getValue4()[0].equals(d2.getValue4()[0]) || (d2.getValue4()[1] != null && d1.getValue4()[0].equals(d2.getValue4()[1])) || (d1.getValue4()[1] != null && d1.getValue4()[1].equals(d2.getValue4()[0])) || (d1.getValue4()[1] != null && d2.getValue4()[1] != null && d1.getValue4()[1].equals(d2.getValue4()[1]));
+            boundaryAndOriginalShareSegment = d1.getValue3()[0].equals(d2.getValue4()[0]) || (d2.getValue4()[1] != null && d1.getValue3()[0].equals(d2.getValue4()[1])) || (d1.getValue3()[1] != null && d1.getValue3()[1].equals(d2.getValue4()[0])) || (d1.getValue3()[1] != null && d2.getValue4()[1] != null && d1.getValue3()[1].equals(d2.getValue4()[1]));
+            originalAndBoundaryShareSegment = d1.getValue4()[0].equals(d2.getValue3()[0]) || (d2.getValue3()[1] != null && d1.getValue4()[0].equals(d2.getValue3()[1])) || (d1.getValue4()[1] != null && d1.getValue4()[1].equals(d2.getValue3()[0])) || (d1.getValue4()[1] != null && d2.getValue3()[1] != null && d1.getValue4()[1].equals(d2.getValue3()[1]));
+                /*} catch (Exception e) {
+                    System.out.println(d1.getValue3()[0]);
+                    System.out.println(d1.getValue3()[1]);
+                    System.out.println(d1.getValue4()[0]);
+                    System.out.println(d1.getValue4()[1]);
+                    System.out.println(d2.getValue3()[0]);
+                    System.out.println(d2.getValue3()[1]);
+                    System.out.println(d2.getValue4()[0]);
+                    System.out.println(d2.getValue4()[1]);
+                    //System.exit(0);
+                    //return null;
+                }*/
+
+                /*originalPointsShareSegment = d1.getValue4()[0].equals(d2.getValue4()[0]) || d1.getValue4()[0].equals(d2.getValue4()[1]) || d1.getValue4()[1].equals(d2.getValue4()[0]) || d1.getValue4()[1].equals(d2.getValue4()[1]);
+                boundaryAndOriginalShareSegment = d1.getValue3()[0].equals(d2.getValue4()[0]) || d1.getValue3()[0].equals(d2.getValue4()[1]) || d1.getValue3()[1].equals(d2.getValue4()[0]) || d1.getValue3()[1].equals(d2.getValue4()[1]);
+                originalAndBoundaryShareSegment = d1.getValue4()[0].equals(d2.getValue3()[0]) || d1.getValue4()[0].equals(d2.getValue3()[1]) || d1.getValue4()[1].equals(d2.getValue3()[0]) || d1.getValue4()[1].equals(d2.getValue3()[1]);*/
+
+            if (originalPointsShareSegment) {
+                currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue1(), c1}), GeometryOperations.factory);
+                visibilityPolygon = visibilityPolygon.union(currentTriangle);
+
+                p = new Polygon(c1.x, c1.y, d1.getValue1().x, d1.getValue1().y, d2.getValue1().x, d2.getValue1().y);
+                p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
+                Line l = new Line(d1.getValue1().x, d1.getValue1().y, d2.getValue1().x, d2.getValue1().y);
+                l.setStrokeWidth(2);
+                l.setStroke(Color.INDIANRED);
+                visibilityShape.getChildren().addAll(p, l);
+            } else if (boundaryPointsShareSegment) {
+                currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue0(), d2.getValue0(), c1}), GeometryOperations.factory);
+                visibilityPolygon = visibilityPolygon.union(currentTriangle);
+
+                p = new Polygon(c1.x, c1.y, d1.getValue0().x, d1.getValue0().y, d2.getValue0().x, d2.getValue0().y);
+                p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
+                Line l = new Line(d1.getValue0().x, d1.getValue0().y, d2.getValue0().x, d2.getValue0().y);
+                l.setStrokeWidth(2);
+                l.setStroke(Color.INDIANRED);
+                visibilityShape.getChildren().addAll(p, l);
+            } else if (boundaryAndOriginalShareSegment) {
+                currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue0(), d2.getValue1(), c1}), GeometryOperations.factory);
+                visibilityPolygon = visibilityPolygon.union(currentTriangle);
+
+                p = new Polygon(c1.x, c1.y, d1.getValue0().x, d1.getValue0().y, d2.getValue1().x, d2.getValue1().y);
+                p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
+                Line l = new Line(d1.getValue0().x, d1.getValue0().y, d2.getValue1().x, d2.getValue1().y);
+                l.setStrokeWidth(2);
+                l.setStroke(Color.INDIANRED);
+                visibilityShape.getChildren().addAll(p, l);
+            } else if (originalAndBoundaryShareSegment) {
+                currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue0(), c1}), GeometryOperations.factory);
+                visibilityPolygon = visibilityPolygon.union(currentTriangle);
+
+                p = new Polygon(c1.x, c1.y, d1.getValue1().x, d1.getValue1().y, d2.getValue0().x, d2.getValue0().y);
+                p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
+                Line l = new Line(d1.getValue1().x, d1.getValue1().y, d2.getValue0().x, d2.getValue0().y);
+                l.setStrokeWidth(2);
+                l.setStroke(Color.INDIANRED);
+                visibilityShape.getChildren().addAll(p, l);
+            }
+
+                /*if (map.isVisible(d1.getValue0(), d2.getValue0())) {
+                    line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y);
+                    *//*Main.pane.getChildren().addAll(new Circle(rays.get(i).getFirst().x, rays.get(i).getFirst().y, 4, Color.RED));
+                    Main.pane.getChildren().addAll(line);*//*
+                    checkedPairs.add(currentPair);
+                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y), c1}), GeometryOperations.factory);
+                    //visibilityPolygon = visibilityPolygon.union(currentTriangle);
+
+                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y, c1.x, c1.y);
+                    p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
+                    visibilityShape.getChildren().add(p);
+
+
+                    // check between the original points
+
+                }*/
+
+        }
+
+        /*for (int i = 0; i < rays.size(); i++) {
             segments[0] = null;
             segments[1] = null;
 
             currentPair = new PointPair(i, (i + 1) % rays.size());
             if (!checkedPairs.contains(currentPair)) {
-                double deltaX = rays.get(i).getSecond().getCoordinateN(1).x - rays.get(i).getSecond().getCoordinateN(0).x;
-                double deltaY = rays.get(i).getSecond().getCoordinateN(1).y - rays.get(i).getSecond().getCoordinateN(0).y;
+                double deltaX = rays.get(i).getValue2().getCoordinateN(1).x - rays.get(i).getValue2().getCoordinateN(0).x;
+                double deltaY = rays.get(i).getValue2().getCoordinateN(1).y - rays.get(i).getValue2().getCoordinateN(0).y;
                 double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                 deltaX /= length;
                 deltaY /= length;
-                c3 = new Coordinate(rays.get(i).getFirst().x - deltaX * 1E-8, rays.get(i).getFirst().y - deltaY * 1E-8);
+                c3 = new Coordinate(rays.get(i).getValue0().x - deltaX * 1E-8, rays.get(i).getValue0().y - deltaY * 1E-8);
 
-                deltaX = rays.get((i + 1) % rays.size()).getSecond().getCoordinateN(1).x - rays.get(i).getSecond().getCoordinateN(0).x;
-                deltaY = rays.get((i + 1) % rays.size()).getSecond().getCoordinateN(1).y - rays.get(i).getSecond().getCoordinateN(0).y;
+                deltaX = rays.get((i + 1) % rays.size()).getValue2().getCoordinateN(1).x - rays.get(i).getValue2().getCoordinateN(0).x;
+                deltaY = rays.get((i + 1) % rays.size()).getValue2().getCoordinateN(1).y - rays.get(i).getValue2().getCoordinateN(0).y;
                 length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                 deltaX /= length;
                 deltaY /= length;
-                c4 = new Coordinate(rays.get((i + 1) % rays.size()).getFirst().x - deltaX * 1E-8, rays.get((i + 1) % rays.size()).getFirst().y - deltaY * 1E-8);
+                c4 = new Coordinate(rays.get((i + 1) % rays.size()).getValue0().x - deltaX * 1E-8, rays.get((i + 1) % rays.size()).getValue0().y - deltaY * 1E-8);
 
-                if (map.isVisible(c3, c4)) {
-                    line = new Line(rays.get(i).getFirst().x, rays.get(i).getFirst().y, rays.get((i + 1) % rays.size()).getFirst().x, rays.get((i + 1) % rays.size()).getFirst().y);
-                    /*Main.pane.getChildren().addAll(new Circle(rays.get(i).getFirst().x, rays.get(i).getFirst().y, 4, Color.RED));
-                    Main.pane.getChildren().addAll(line);*/
+                if (map.isVisible(rays.get(i).getValue0(), rays.get((i + 1) % rays.size()).getValue0())) {
+                    line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y);
+                    *//*Main.pane.getChildren().addAll(new Circle(rays.get(i).getFirst().x, rays.get(i).getFirst().y, 4, Color.RED));
+                    Main.pane.getChildren().addAll(line);*//*
                     checkedPairs.add(currentPair);
-                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getFirst().x, rays.get(i).getFirst().y), new Coordinate(rays.get((i + 1) % rays.size()).getFirst().x, rays.get((i + 1) % rays.size()).getFirst().y), c1}), GeometryOperations.factory);
-                    visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y), c1}), GeometryOperations.factory);
+                    //visibilityPolygon = visibilityPolygon.union(currentTriangle);
 
-                    p = new Polygon(rays.get(i).getFirst().x, rays.get(i).getFirst().y, rays.get((i + 1) % rays.size()).getFirst().x, rays.get((i + 1) % rays.size()).getFirst().y, c1.x, c1.y);
+                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y, c1.x, c1.y);
                     p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
                     visibilityShape.getChildren().add(p);
                 } else {
                     for (LineSegment seg : map.getBorderLines()) {
-                        double distance = seg.distance(rays.get(i).getFirst());
+                        double distance = seg.distance(rays.get(i).getValue0());
                         if (distance < GeometryOperations.PRECISION_EPSILON) {
-                        /*deltaX = seg.getCoordinate(1).x - seg.getCoordinate(0).x;
+                        *//*deltaX = seg.getCoordinate(1).x - seg.getCoordinate(0).x;
                         deltaY = seg.getCoordinate(1).y - seg.getCoordinate(0).y;
                         length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                         deltaX /= length;
@@ -1236,7 +1390,7 @@ public class DCRLEntity extends PartitioningEntity {
                         Main.pane.getChildren().add(line);
                         line = new Line(rays.get(i).getFirst().x, rays.get(i).getFirst().y, rays.get(i).getFirst().x - deltaX * 10, rays.get(i).getFirst().y - deltaY * 10);
                         Main.pane.getChildren().add(line);
-                        Main.pane.getChildren().addAll(new Circle(rays.get(i).getFirst().x, rays.get(i).getFirst().y, 4, Color.GREEN));*/
+                        Main.pane.getChildren().addAll(new Circle(rays.get(i).getFirst().x, rays.get(i).getFirst().y, 4, Color.GREEN));*//*
                             if (segments[0] == null) {
                                 segments[0] = seg;
                             } else {
@@ -1247,47 +1401,47 @@ public class DCRLEntity extends PartitioningEntity {
                     }
                     double distance1 = Double.MAX_VALUE;
                     if (segments[0] != null) {
-                        distance1 = rays.get((i + 1) % rays.size()).getSecond().distance(segments[0].toGeometry(GeometryOperations.factory));
+                        distance1 = rays.get((i + 1) % rays.size()).getValue2().distance(segments[0].toGeometry(GeometryOperations.factory));
                     }
                     double distance2 = Double.MAX_VALUE;
                     if (segments[1] != null) {
-                        distance2 = rays.get((i + 1) % rays.size()).getSecond().distance(segments[1].toGeometry(GeometryOperations.factory));
+                        distance2 = rays.get((i + 1) % rays.size()).getValue2().distance(segments[1].toGeometry(GeometryOperations.factory));
                     }
                     if (distance1 < distance2 && distance1 < GeometryOperations.PRECISION_EPSILON) {
-                        temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getSecond(), segments[0].toGeometry(GeometryOperations.factory));
-                        line = new Line(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y);
+                        temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getValue2(), segments[0].toGeometry(GeometryOperations.factory));
+                        line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y);
                         //Main.pane.getChildren().add(line);
                         checkedPairs.add(currentPair);
-                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getFirst().x, rays.get(i).getFirst().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                        visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
+                        //visibilityPolygon = visibilityPolygon.union(currentTriangle);
 
-                        p = new Polygon(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y, c1.x, c1.y);
+                        p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
                         p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
                         visibilityShape.getChildren().add(p);
                     } else if (distance2 < distance1 && distance2 < GeometryOperations.PRECISION_EPSILON) {
-                        temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getSecond(), segments[1].toGeometry(GeometryOperations.factory));
-                        line = new Line(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y);
+                        temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getValue2(), segments[1].toGeometry(GeometryOperations.factory));
+                        line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y);
                         //Main.pane.getChildren().add(line);
                         checkedPairs.add(currentPair);
-                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getFirst().x, rays.get(i).getFirst().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                        visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
+                        //visibilityPolygon = visibilityPolygon.union(currentTriangle);
 
-                        p = new Polygon(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y, c1.x, c1.y);
+                        p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
                         p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
                         visibilityShape.getChildren().add(p);
                     } else if (distance1 < GeometryOperations.PRECISION_EPSILON && distance2 < GeometryOperations.PRECISION_EPSILON) {
                         distance1 = segments[0].distance(c1);
                         distance2 = segments[1].distance(c1);
                         if (distance1 > distance2) {
-                            temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getSecond(), segments[0].toGeometry(GeometryOperations.factory));
+                            temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getValue2(), segments[0].toGeometry(GeometryOperations.factory));
                         } else {
-                            temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getSecond(), segments[1].toGeometry(GeometryOperations.factory));
+                            temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getValue2(), segments[1].toGeometry(GeometryOperations.factory));
                         }
                         checkedPairs.add(currentPair);
-                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getFirst().x, rays.get(i).getFirst().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                        visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
+                        //visibilityPolygon = visibilityPolygon.union(currentTriangle);
 
-                        p = new Polygon(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y, c1.x, c1.y);
+                        p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
                         p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
                         visibilityShape.getChildren().add(p);
                     }
@@ -1300,7 +1454,7 @@ public class DCRLEntity extends PartitioningEntity {
             currentPair = new PointPair(i, i == 0 ? rays.size() - 1 : i - 1);
             if (!checkedPairs.contains(currentPair)) {
                 for (LineSegment seg : map.getBorderLines()) {
-                    double distance = seg.distance(rays.get(i).getFirst());
+                    double distance = seg.distance(rays.get(i).getValue0());
                     if (distance < GeometryOperations.PRECISION_EPSILON) {
                         if (segments[0] == null) {
                             segments[0] = seg;
@@ -1312,52 +1466,52 @@ public class DCRLEntity extends PartitioningEntity {
                 }
                 double distance1 = Double.MAX_VALUE;
                 if (segments[0] != null) {
-                    distance1 = rays.get(i == 0 ? rays.size() - 1 : i - 1).getSecond().distance(segments[0].toGeometry(GeometryOperations.factory));
+                    distance1 = rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2().distance(segments[0].toGeometry(GeometryOperations.factory));
                 }
                 double distance2 = Double.MAX_VALUE;
                 if (segments[1] != null) {
-                    distance2 = rays.get(i == 0 ? rays.size() - 1 : i - 1).getSecond().distance(segments[1].toGeometry(GeometryOperations.factory));
+                    distance2 = rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2().distance(segments[1].toGeometry(GeometryOperations.factory));
                 }
                 if (distance1 < distance2 && distance1 < GeometryOperations.PRECISION_EPSILON) {
-                    temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getSecond(), segments[0].toGeometry(GeometryOperations.factory));
-                    line = new Line(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y);
+                    temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2(), segments[0].toGeometry(GeometryOperations.factory));
+                    line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y);
                     //Main.pane.getChildren().add(line);
                     checkedPairs.add(currentPair);
-                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getFirst().x, rays.get(i).getFirst().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                    visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
+                    //visibilityPolygon = visibilityPolygon.union(currentTriangle);
 
-                    p = new Polygon(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y, c1.x, c1.y);
+                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
                     p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
                     visibilityShape.getChildren().add(p);
                 } else if (distance2 < distance1 && distance2 < GeometryOperations.PRECISION_EPSILON) {
-                    temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getSecond(), segments[1].toGeometry(GeometryOperations.factory));
-                    line = new Line(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y);
+                    temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2(), segments[1].toGeometry(GeometryOperations.factory));
+                    line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y);
                     //Main.pane.getChildren().add(line);
                     checkedPairs.add(currentPair);
-                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getFirst().x, rays.get(i).getFirst().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                    visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
+                    //visibilityPolygon = visibilityPolygon.union(currentTriangle);
 
-                    p = new Polygon(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y, c1.x, c1.y);
+                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
                     p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
                     visibilityShape.getChildren().add(p);
                 } else if (distance1 < GeometryOperations.PRECISION_EPSILON && distance2 < GeometryOperations.PRECISION_EPSILON) {
                     distance1 = segments[0].distance(c1);
                     distance2 = segments[1].distance(c1);
                     if (distance1 > distance2) {
-                        temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getSecond(), segments[0].toGeometry(GeometryOperations.factory));
+                        temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2(), segments[0].toGeometry(GeometryOperations.factory));
                     } else {
-                        temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getSecond(), segments[1].toGeometry(GeometryOperations.factory));
+                        temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2(), segments[1].toGeometry(GeometryOperations.factory));
                     }
                     checkedPairs.add(currentPair);
-                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getFirst().x, rays.get(i).getFirst().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
+                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
                     visibilityPolygon = visibilityPolygon.union(currentTriangle);
 
-                    p = new Polygon(rays.get(i).getFirst().x, rays.get(i).getFirst().y, temp[0].x, temp[0].y, c1.x, c1.y);
+                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
                     p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
                     visibilityShape.getChildren().add(p);
                 }
             }
-        }
+        }*/
         return new Tuple<>(visibilityPolygon, visibilityShape);
     }
 
