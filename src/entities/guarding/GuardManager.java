@@ -1,4 +1,4 @@
-package entities.utils;
+package entities.guarding;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import simulation.Agent;

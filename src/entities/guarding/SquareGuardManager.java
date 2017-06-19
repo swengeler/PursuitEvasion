@@ -1,4 +1,4 @@
-package entities.utils;
+package entities.guarding;
 
 import additionalOperations.GeometryOperations;
 import com.vividsolutions.jts.geom.*;

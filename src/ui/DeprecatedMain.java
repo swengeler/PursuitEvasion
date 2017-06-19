@@ -3,7 +3,7 @@ package ui;
 import control.Controller;
 import conversion.GridConversion;
 import entities.base.CentralisedEntity;
-import entities.specific.DCREntity;
+import entities.specific.DCRSEntity;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -229,7 +229,7 @@ public class DeprecatedMain extends Application {
         Button testCentralisedButton = new Button("Test centralised policy");
         testCentralisedButton.setOnAction(e -> {
             MapRepresentation map = new MapRepresentation(mapPolygons, null, null);
-            CentralisedEntity entity = new DCREntity(map);
+            CentralisedEntity entity = new DCRSEntity(map);
             int requiredAgents = entity.remainingRequiredAgents();
             System.out.println("Required agents: " + requiredAgents);
             // show required number of agents and settings for the algorithm

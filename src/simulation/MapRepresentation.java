@@ -236,6 +236,10 @@ public class MapRepresentation {
 
     public static boolean showVisible = false;
 
+    public boolean isVisible(Coordinate c1, Coordinate c2) {
+        return isVisible(c1.x, c1.y, c2.x, c2.y);
+    }
+
     public boolean isVisible(double x1, double y1, double x2, double y2) {
         /*tempLine.getCoordinates()[0].x = x1;
         tempLine.getCoordinates()[0].y = y1;

@@ -2,7 +2,7 @@ package entities.base;
 
 import additionalOperations.Tuple;
 import com.vividsolutions.jts.geom.Coordinate;
-import entities.utils.GuardManager;
+import entities.guarding.GuardManager;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Shape;
@@ -105,8 +105,6 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     protected abstract void doSucceedingOperations();
 
     protected abstract void doSearchAndCatchOperations();
-
-    protected abstract ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines);
 
     protected void assignTasks() {
         if (availableAgents.size() < requiredAgents) {
@@ -214,7 +212,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     protected Triplet<ArrayList<Line>, ArrayList<DEdge>, ArrayList<DEdge>> computeGuardingLines(ArrayList<DTriangle> separatingTriangles, ArrayList<DEdge> nonSeparatingEdges) {
         // for now its enough to just cover one side of each separating triangle because they are computed to have one edge adjacent to a polygon (i.e. they have degree 2 in the dual triangulation graph)
         ArrayList<Line> separatingLines = new ArrayList<>();
-        separatingEdges = new ArrayList<>();
+        ArrayList<DEdge> separatingEdges = new ArrayList<>();
         ArrayList<DEdge> reconnectingEdges = new ArrayList<>();
         double minLength, maxLength, currentLengthSquared;
         DEdge minLengthEdge, maxLengthEdge;

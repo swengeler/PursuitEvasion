@@ -81,7 +81,10 @@ public class Main extends Application {
     private MapRepresentation map;
     private AdaptedSimulation adaptedSimulation;
     private Entity activeEntity;
-    private DCREntity testDCREntity;
+    private DCRSEntity testDCRSEntity;
+    private DCRLEntity testDCRLEntity;
+    private DCRVEntity testDCRVEntity;
+    private int ENTITY_TO_TEST = 2;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //
@@ -1958,8 +1961,16 @@ public class Main extends Application {
             map.getEvadingEntities().add(testEntity);*/
 
             useEntities.set(true);
-            testDCREntity = new DCREntity(map);
-            map.getPursuingEntities().add(testDCREntity);
+            if (ENTITY_TO_TEST == 0) {
+                testDCRSEntity = new DCRSEntity(map);
+                map.getPursuingEntities().add(testDCRSEntity);
+            } else if (ENTITY_TO_TEST == 1) {
+                testDCRLEntity = new DCRLEntity(map);
+                map.getPursuingEntities().add(testDCRLEntity);
+            } else if (ENTITY_TO_TEST == 2) {
+                testDCRVEntity = new DCRVEntity(map);
+                map.getPursuingEntities().add(testDCRVEntity);
+            }
             // show required number of agents and settings for the algorithm
             // add the next <required number> agents to this entity
             // could make it an option to place a desire number of agents under the premise that capture is not guaranteed
@@ -2319,7 +2330,7 @@ public class Main extends Application {
         outerLayout.addEventFilter(ScrollEvent.ANY, paneEvents.getOnScrollEventHandler());
 
         pane.widthProperty().addListener((ov, oldValue, newValue) -> {
-            if ((double) oldValue != (double) newValue) {
+            if ((double) oldValue != (double) newValue && currentState == ProgramState.MAP_EDITING) {
                 for (Anchor anchor : MapPolygon.getAllAnchors()) {
                     if (anchor.getCenterX() > (double) newValue) {
                         anchor.setCenterX((double) newValue);
@@ -2328,7 +2339,7 @@ public class Main extends Application {
             }
         });
         pane.heightProperty().addListener((ov, oldValue, newValue) -> {
-            if ((double) oldValue != (double) newValue) {
+            if ((double) oldValue != (double) newValue && currentState == ProgramState.MAP_EDITING) {
                 for (Anchor anchor : MapPolygon.getAllAnchors()) {
                     if (anchor.getCenterY() > (double) newValue) {
                         anchor.setCenterY((double) newValue);
@@ -2499,7 +2510,7 @@ public class Main extends Application {
                                     //Must be evader
                                 } else if (selectedEntityButton.getText().startsWith("DCR entity")) {
                                     if (selectedEntityButton.getId() == null) {
-                                        DCREntity entity = new DCREntity(map);
+                                        DCRSEntity entity = new DCRSEntity(map);
                                         entity.addAgent(new Agent(va.getSettings()));
                                         map.getPursuingEntities().add(entity);
                                         centralisedEntities.add(new Pair<Integer, CentralisedEntity>(entityID, entity));
@@ -2509,7 +2520,7 @@ public class Main extends Application {
                                     } else {
                                         for (Pair p : centralisedEntities) {
                                             if (String.valueOf(p.getKey()).equals(selectedEntityButton.getId())) {
-                                                DCREntity entity = (DCREntity) p.getValue();
+                                                DCRSEntity entity = (DCRSEntity) p.getValue();
                                                 entity.addAgent(new Agent(va.getSettings()));
                                                 int noOfAgents = entity.totalRequiredAgents() - entity.remainingRequiredAgents();
                                                 selectedEntityButton.setText("DCR entity [" + noOfAgents + "/" + entity.totalRequiredAgents() + "]");
@@ -2536,7 +2547,13 @@ public class Main extends Application {
                                 va.getAgentBody().setFill(Color.INDIANRED);
                                 pane.getChildren().add(va);
 
-                                testDCREntity.addAgent(new Agent(va.getSettings()));
+                                if (ENTITY_TO_TEST == 0) {
+                                    testDCRSEntity.addAgent(new Agent(va.getSettings()));
+                                } else if (ENTITY_TO_TEST == 1) {
+                                    testDCRLEntity.addAgent(new Agent(va.getSettings()));
+                                } else if (ENTITY_TO_TEST == 2) {
+                                    testDCRVEntity.addAgent(new Agent(va.getSettings()));
+                                }
 
                                 for (Shape s : covers) {
                                     s.toFront();
@@ -2701,7 +2718,6 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch(args);
-
     }
 
     public ArrayList<Point2D> poly(double avgRadius, double irregularity, double spikeyness, int numVerts) {

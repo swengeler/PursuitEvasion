@@ -15,6 +15,7 @@ import simulation.*;
 import ui.Main;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 public class ShortestPathRoadMap {
 
@@ -376,6 +377,10 @@ public class ShortestPathRoadMap {
         for (Coordinate c : coordinates) {
             addExtraVertex(new PathVertex(c.x, c.y));
         }
+    }
+
+    public Set<PathVertex> getVertices() {
+        return shortestPathGraph.vertexSet();
     }
 
     public PlannedPath getShortestPath(Point2D source, double sinkX, double sinkY) {
