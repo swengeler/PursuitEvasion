@@ -1,6 +1,7 @@
 package entities.guarding;
 
-import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineSegment;
 import entities.base.Entity;
 import javafx.scene.shape.Line;
 import simulation.Agent;
@@ -26,10 +27,6 @@ public class LineGuardManager implements GuardManager {
         this.originalGuardingLine = originalGuardingLine;
         this.originalPositions = new ArrayList<>();
         this.originalPositions.addAll(originalPositions);
-        System.out.println("originalPositions.size(): "  + originalPositions.size());
-        for (Coordinate c : originalPositions) {
-            System.out.println(c);
-        }
         this.map = map;
         guardingLineSegment = new LineSegment(originalGuardingLine.getStartX(), originalGuardingLine.getStartY(), originalGuardingLine.getEndX(), originalGuardingLine.getEndY());
     }
@@ -112,7 +109,6 @@ public class LineGuardManager implements GuardManager {
         guardsToOgPositions = new HashMap<>();
         for (int i = 0; i < originalPositions.size(); i++) {
             guardsToOgPositions.put(guards.get(i), originalPositions.get(i));
-            System.out.println("guardsToOgPositions.get(" + i + "): " + guardsToOgPositions.get(guards.get(i)));
         }
 
     }
@@ -131,5 +127,40 @@ public class LineGuardManager implements GuardManager {
         return originalGuardingLine;
     }
 
+    public boolean crossedLine() {
+        LineSegment temp = new LineSegment(lastTargetPos, currentTargetPos);
+        return temp.intersection(guardingLineSegment) != null;
+    }
+
+    public boolean crossable() {
+        boolean visible = false;
+        for (Agent g : guards) {
+            if (map.isVisible(g.getXPos(), g.getYPos(), currentTargetPos.x, currentTargetPos.y)) {
+                visible = true;
+                break;
+            }
+        }
+        if (visible) {
+            double projectionFactor = guardingLineSegment.projectionFactor(currentTargetPos);
+            if (projectionFactor < 0.0) {
+                projectionFactor = 0.0;
+            } else if (projectionFactor > 1.0) {
+                projectionFactor = 1.0;
+            }
+            projectedPos = guardingLineSegment.pointAlong(projectionFactor);
+
+            double minDistance = Double.MAX_VALUE, curDistance;
+            for (Agent g : guards) {
+                if ((curDistance = Math.sqrt(Math.pow(g.getXPos() - projectedPos.x, 2) + Math.pow(g.getYPos() - projectedPos.y, 2))) < minDistance) {
+                    minDistance = curDistance;
+                }
+            }
+
+            if (projectedPos.distance(currentTargetPos) < minDistance) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

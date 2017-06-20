@@ -317,91 +317,105 @@ public class DCRSEntity extends PartitioningEntity {
 
     private void initFindTarget() {
         // move searcher and catcher together (for its assumed they have the same speed
-        if (currentSearcherPath == null) {
-            try {
-                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
-                currentCatcherPath = currentSearcherPath;
-                searcherPathLineCounter = 0;
-                catcherPathLineCounter = 0;
-            } catch (DelaunayError e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
-            // end of path reached, compute new path
-            try {
-                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
-                currentCatcherPath = currentSearcherPath;
-            } catch (DelaunayError e) {
-                e.printStackTrace();
-            }
-            searcherPathLineCounter = 0;
-            catcherPathLineCounter = 0;
-        }
-
-        // move searcher and catcher using same paths
-        pathLines = currentSearcherPath.getPathLines();
-        length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
-        deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-        deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-        if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
-            // move along line
-            searcher.moveBy(deltaX, deltaY);
-        } else {
-            // move to end of line
-            searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
-            searcherPathLineCounter++;
-        }
-
-        // move catcher using same path
-        pathLines = currentCatcherPath.getPathLines();
-        length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
-        deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-        deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
-        if (pathLines.get(catcherPathLineCounter).contains(catcher.getXPos() + deltaX, catcher.getYPos() + deltaY)) {
-            // move along line
-            catcher.moveBy(deltaX, deltaY);
-        } else {
-            // move to end of line
-            catcher.moveBy(pathLines.get(catcherPathLineCounter).getEndX() - catcher.getXPos(), pathLines.get(catcherPathLineCounter).getEndY() - catcher.getYPos());
-            catcherPathLineCounter++;
-        }
-
-        if (CONSTANT_TARGET_TEST) {
-            // check whether target is visible
-            if (target != null) {
-                if (target.isActive() && map.isVisible(target, searcher) /*&& !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), searcher.getXPos(), searcher.getYPos(), separatingLines) && !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), searcher.getXPos(), searcher.getYPos(), nastyBullshitLines)*/) {
-                    System.out.println("Target found");
-                    spottedOnce = true;
-                    origin = new Point2D(catcher.getXPos(), catcher.getYPos());
-                    Label l = new Label("Origin");
-                    l.setTranslateX(origin.getX() + 5);
-                    l.setTranslateY(origin.getY() + 5);
-                    Main.pane.getChildren().addAll(new Circle(origin.getX(), origin.getY(), 7, Color.GRAY), l);
-                    currentStage = Stage.FOLLOW_TARGET;
+        if (guardsPositioned()) {
+            if (currentSearcherPath == null) {
+                try {
+                    currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                    currentCatcherPath = currentSearcherPath;
+                    searcherPathLineCounter = 0;
+                    catcherPathLineCounter = 0;
+                } catch (DelaunayError e) {
+                    e.printStackTrace();
                 }
             }
-        } else {
-            // check whether an evader is visible
-            for (int i = 0; currentStage == Stage.INIT_FIND_TARGET && i < map.getEvadingEntities().size(); i++) {
-                if (map.getEvadingEntities().get(i).isActive()) {
-                    for (int j = 0; currentStage == Stage.INIT_FIND_TARGET && j < map.getEvadingEntities().get(i).getControlledAgents().size(); j++) {
-                        if (map.getEvadingEntities().get(i).getControlledAgents().get(j).isActive() && map.isVisible(map.getEvadingEntities().get(i).getControlledAgents().get(j), searcher) && !GeometryOperations.lineIntersectSeparatingLines(map.getEvadingEntities().get(i).getControlledAgents().get(j).getXPos(), map.getEvadingEntities().get(i).getControlledAgents().get(j).getYPos(), searcher.getXPos(), searcher.getYPos(), separatingLines)) {
-                            target = map.getEvadingEntities().get(i).getControlledAgents().get(j);
-                            System.out.println("Target found");
-                            for (GuardManager gm : guardManagers) {
-                                gm.initTargetPosition(target);
+
+            if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
+                // end of path reached, compute new path
+                try {
+                    currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                    currentCatcherPath = currentSearcherPath;
+                } catch (DelaunayError e) {
+                    e.printStackTrace();
+                }
+                searcherPathLineCounter = 0;
+                catcherPathLineCounter = 0;
+            }
+
+            // move searcher and catcher using same paths
+            pathLines = currentSearcherPath.getPathLines();
+            length = Math.sqrt(Math.pow(pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY(), 2));
+            deltaX = (pathLines.get(searcherPathLineCounter).getEndX() - pathLines.get(searcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            deltaY = (pathLines.get(searcherPathLineCounter).getEndY() - pathLines.get(searcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            if (pathLines.get(searcherPathLineCounter).contains(searcher.getXPos() + deltaX, searcher.getYPos() + deltaY)) {
+                // move along line
+                searcher.moveBy(deltaX, deltaY);
+            } else {
+                // move to end of line
+                searcher.moveBy(pathLines.get(searcherPathLineCounter).getEndX() - searcher.getXPos(), pathLines.get(searcherPathLineCounter).getEndY() - searcher.getYPos());
+                searcherPathLineCounter++;
+            }
+
+            // move catcher using same path
+            pathLines = currentCatcherPath.getPathLines();
+            length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+            deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            if (pathLines.get(catcherPathLineCounter).contains(catcher.getXPos() + deltaX, catcher.getYPos() + deltaY)) {
+                // move along line
+                catcher.moveBy(deltaX, deltaY);
+            } else {
+                // move to end of line
+                catcher.moveBy(pathLines.get(catcherPathLineCounter).getEndX() - catcher.getXPos(), pathLines.get(catcherPathLineCounter).getEndY() - catcher.getYPos());
+                catcherPathLineCounter++;
+            }
+
+            if (CONSTANT_TARGET_TEST) {
+                // check whether target is visible
+                if (target != null) {
+                    if (target.isActive() && map.isVisible(target, searcher) /*&& !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), searcher.getXPos(), searcher.getYPos(), separatingLines) && !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), searcher.getXPos(), searcher.getYPos(), nastyBullshitLines)*/) {
+                        System.out.println("Target found");
+                        spottedOnce = true;
+                        origin = new Point2D(catcher.getXPos(), catcher.getYPos());
+                        Label l = new Label("Origin");
+                        l.setTranslateX(origin.getX() + 5);
+                        l.setTranslateY(origin.getY() + 5);
+                        Main.pane.getChildren().addAll(new Circle(origin.getX(), origin.getY(), 7, Color.GRAY), l);
+                        currentStage = Stage.FOLLOW_TARGET;
+                    }
+                }
+            } else {
+                // check whether an evader is visible
+                for (int i = 0; currentStage == Stage.INIT_FIND_TARGET && i < map.getEvadingEntities().size(); i++) {
+                    if (map.getEvadingEntities().get(i).isActive()) {
+                        for (int j = 0; currentStage == Stage.INIT_FIND_TARGET && j < map.getEvadingEntities().get(i).getControlledAgents().size(); j++) {
+                            if (map.getEvadingEntities().get(i).getControlledAgents().get(j).isActive() && map.isVisible(map.getEvadingEntities().get(i).getControlledAgents().get(j), searcher) && !GeometryOperations.lineIntersectSeparatingLines(map.getEvadingEntities().get(i).getControlledAgents().get(j).getXPos(), map.getEvadingEntities().get(i).getControlledAgents().get(j).getYPos(), searcher.getXPos(), searcher.getYPos(), separatingLines)) {
+                                target = map.getEvadingEntities().get(i).getControlledAgents().get(j);
+                                System.out.println("Target found");
+                                for (GuardManager gm : guardManagers) {
+                                    gm.initTargetPosition(target);
+                                }
+                                origin = new Point2D(catcher.getXPos(), catcher.getYPos());
+                                Label l = new Label("Origin");
+                                l.setTranslateX(origin.getX() + 5);
+                                l.setTranslateY(origin.getY() + 5);
+                                Main.pane.getChildren().addAll(new Circle(origin.getX(), origin.getY(), 7, Color.GRAY), l);
+                                currentStage = Stage.FOLLOW_TARGET;
                             }
-                            origin = new Point2D(catcher.getXPos(), catcher.getYPos());
-                            Label l = new Label("Origin");
-                            l.setTranslateX(origin.getX() + 5);
-                            l.setTranslateY(origin.getY() + 5);
-                            Main.pane.getChildren().addAll(new Circle(origin.getX(), origin.getY(), 7, Color.GRAY), l);
-                            currentStage = Stage.FOLLOW_TARGET;
                         }
                     }
                 }
+            }
+        } else if (map.isVisible(target, catcher)) {
+            length = Math.sqrt(Math.pow(target.getXPos() - catcher.getXPos(), 2) + Math.pow(target.getYPos() - catcher.getYPos(), 2));
+            deltaX = (target.getXPos() - catcher.getXPos()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            deltaY = (target.getYPos() - catcher.getYPos()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+            if (length < catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
+                catcher.moveTo(target.getXPos(), target.getYPos());
+                target.setActive(false);
+                target = null;
+            } else {
+                catcher.moveBy(deltaX, deltaY);
+                searcher.moveBy(deltaX, deltaY);
             }
         }
     }
@@ -794,7 +808,7 @@ public class DCRSEntity extends PartitioningEntity {
                 for (Line line : componentBoundaryLines.get(componentIndex)) {
                     if (!separatingLines.contains(line) || testExcludedLines.contains(line) || !(((SquareGuardManager) guardManagers.get(separatingLines.indexOf(line))).inGuardedSquare(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY()))) {
                         currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
-                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
+                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared) {
                             minLengthSquared = currentLengthSquared;
                             pocketBoundaryEndPoint = currentPoint;
                             intersectedLine = line;
