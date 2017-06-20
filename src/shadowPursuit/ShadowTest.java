@@ -6,6 +6,8 @@ import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 
+import static shadowPursuit.shadowOperations.getX1Points;
+
 
 /**
  * Created by Robins on 26.04.2017.
@@ -18,6 +20,7 @@ public class ShadowTest {
 
     private Point2D type1, type2, type3, type4;
     private ShadowGraph shadows;
+    private PursuitTree pursuitTree;
 
 
     public ShadowTest() {
@@ -45,31 +48,16 @@ public class ShadowTest {
         //Point2D agent1Pos = new Point2D(442, 343);
         //Point2D agent2Pos = new Point2D(441, 465);
 
-        environment = new Polygon(
-                147.0, 82.0,
-                279.0, 82.0,
-                280.0, 369.0,
-                495.0, 369.0,
-                494.0, 82.0,
-                906.0, 80.0,
-                912.0, 691.0,
-                675.0, 691.0,
-                672.0, 310.0,
-                584.0, 310.0,
-                589.0, 684.0,
-                501.0, 685.0,
-                497.0, 448.0,
-                279.0, 449.0,
-                280.0, 683.0,
-                125.0, 680.0);
+        environment = new Polygon(110.0,69.0,913.0,85.0,894.0,704.0,719.0,716.0,728.0,301.0,332.0,298.0,285.0,722.0,55.0,716.0);
 
-        Point2D agent1Pos = new Point2D(516, 355);
-        Point2D agent2Pos = new Point2D(534, 453);
-        Point2D agent3Pos = new Point2D(724, 326);
+        Point2D agent1Pos = new Point2D(520, 131);
+        Point2D agent2Pos = new Point2D(575, 396);
+        Point2D agent3Pos = new Point2D(894, 280);
         Point2D agent4Pos = new Point2D(798, 220);
 
 
-        Polygon obstacle1 = new Polygon(490.0, 122.0, 653.0, 345.0, 288.0, 327.0);//new Polygon(340.0 ,472.0 ,393.0 ,535.0 ,390.0 ,618.0);
+
+        Polygon obstacle1 = new Polygon(132.0,73.0,317.0,70.0,321.0,345.0,543.0,338.0,544.0,61.0,937.0,53.0,944.0,680.0,852.0,681.0,845.0,262.0,703.0,266.0,721.0,681.0,542.0,685.0,543.0,395.0,319.0,402.0,318.0,696.0,111.0,697.0);//new Polygon(340.0 ,472.0 ,393.0 ,535.0 ,390.0 ,618.0);
         Polygon obstacle2 = null;//new Polygon(766.0 ,509.0 ,747.0 ,596.0 ,804.0 ,612.0);
 
         ArrayList<Polygon> obst = new ArrayList<>();

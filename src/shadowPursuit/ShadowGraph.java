@@ -49,8 +49,13 @@ public class ShadowGraph {
         calculateType3();
         addT3AndT4ToGraph();
 
-        printNodes();
+        correctPath();
+        //cleanUp();
         printShadows();
+        //printShadows();
+
+
+        //getShadows();
 
         //generateT1Connections();
     }
@@ -96,7 +101,8 @@ public class ShadowGraph {
         System.out.println("------------------BEFORE--------------");
         printNodes();
 
-
+        correctPath();
+        //cleanUp();
         printShadows();
         //getShadows();
 
@@ -289,9 +295,8 @@ public class ShadowGraph {
                 x2 = Math.round(point.getX());
                 y2 = Math.round(point.getY());
 
-                if (x1 == x2 && y1 == y2) {
+                if (x1 == x2 && y1 == y2)
                     return node;
-                }
 
             }
         }
@@ -315,9 +320,8 @@ public class ShadowGraph {
                 x2 = Math.round(point.getX());
                 y2 = Math.round(point.getY());
 
-                if (x1 == x2 && y1 == y2) {
+                if (x1 == x2 && y1 == y2)
                     return node;
-                }
 
             }
         }
@@ -329,9 +333,8 @@ public class ShadowGraph {
         int cunt = 0;
         for (int i = 0; i < Nodes.size(); i++) {
 
-            if (Nodes.get(i).numberOfLinks() == 2) {
+            if (Nodes.get(i).numberOfLinks() == 2)
                 cunt++;
-            }
         }
         System.out.println("\n------------Nodes are printed------------");
         System.out.println("Number of Nodes = " + Nodes.size() + "\nNumber of double = " + cunt);
@@ -516,7 +519,11 @@ public class ShadowGraph {
                             //Nodes.remove(i--);
                         } else {
                             tmp2 = new ShadowNode(intersect, tmp, tmpLine, agent);
-                            checkT3.add(tmp2);
+                            Line b = new Line(intersect.getX(), intersect.getY(), tempPoint.getX(), tempPoint.getY());
+                            Point2D a = getLineMiddle(b);
+                            if (legalPosition(environment, obstacles, a.getX(), a.getY())) {
+                                checkT3.add(tmp2);
+                            }
                         }
 
                     }
@@ -701,9 +708,7 @@ public class ShadowGraph {
                         System.out.println("muahahahahaha ");
                     } else if (agents.get(q).getX() == checkT3.get(i).getLeftAgent().getX() && agents.get(q).getY() == checkT3.get(i).getLeftAgent().getY()) {
                         System.out.println("muahahahahahahaha");
-                    } else {
-                        seenby++;
-                    }
+                    } else seenby++;
                 }
 
             }
@@ -1001,13 +1006,13 @@ public class ShadowGraph {
                 } else if (sameLine.size() == 2) {
                     ArrayList<ShadowNode> areOnLine = orderByClosestToPoint(sameLine, tmpStart);
                     System.out.println("Are on Line => " + areOnLine.size());
+                    System.out.println("Entry 0 => " + areOnLine.get(0));
+                    System.out.println("Entry 1 => " + areOnLine.get(1));
 
                     if ((areOnLine.get(0).getType() == 3 && (areOnLine.get(0).getRight() == null || areOnLine.get(0).getLeft() == null)) && (areOnLine.get(1).getType() == 3 && (areOnLine.get(1).getRight() == null || areOnLine.get(1).getLeft() == null))) {
                         areOnLine.get(0).connect(areOnLine.get(1));
                     } else if ((areOnLine.get(0).getType() == 3 && areOnLine.get(1).getType() == 1) || (areOnLine.get(0).getType() == 1 && areOnLine.get(1).getType() == 3)) {
                         areOnLine.get(0).connect(areOnLine.get(1));
-                    } else {
-                        System.exit(6542);
                     }
                 } else {
                     System.exit(6543);
@@ -1057,9 +1062,7 @@ public class ShadowGraph {
             }
             if (count == 0) {
                 return true;
-            } else {
-                count = 0;
-            }
+            } else count = 0;
 
         }
         return false;
@@ -1177,10 +1180,11 @@ public class ShadowGraph {
                         System.out.println();
                         System.out.println();
                         */
-
+                        System.out.println("fuck you11");
                         if (nodePresent(allPosT4.get(i).getPosition(), toRemove) == null) {
                             toRemove.add(allPosT4.get(i));
                         }
+
                     } else if (polygon.contains(allPosT4.get(j).getPosition())) {
                         System.out.println("this is two type 4s creating a shadow inside them");
                         pointsInShadow.add(allPosT4.get(i));
@@ -1222,6 +1226,9 @@ public class ShadowGraph {
 
 
                     } else {
+                        Line a = new Line(allPosT4.get(j).getConnectedType2().getPosition().getX(), allPosT4.get(j).getConnectedType2().getPosition().getY(), allPosT4.get(j).getPosition().getX(), allPosT4.get(j).getPosition().getY());
+                        System.out.println("a= " + a);
+                        //System.exit(11111);
                         //System.out.println("fuck you jonty");
                     }
                 }
@@ -1294,45 +1301,7 @@ public class ShadowGraph {
     }
 
 
-    public void calculateNodes(MapRepresentation map) {
-        ArrayList<Point2D> pointy = findReflex(map.getBorderPolygon(), map.getAllPolygons(), map.getObstaclePolygons());
-        ArrayList<Line> rays = new ArrayList<>();
 
-        for (int i = 0; i < pointy.size(); i++) {
-            //find its neighbours left and right.
-            //create ray from neigbour to it and extend
-            // Line ray= new Line(pointy.get(i).getX(),pointy.get(i).getY(),)
-            // rays.add(ray)
-            //check any intersections and set them as points
-            //then find any midpoints between the pointy and first intersection
-            //set that as a point
-
-        }
-
-    }
-
-    public void connectNodes(MapRepresentation map, ArrayList<Point2D> nodes, ArrayList<Line> rays) {
-
-        for (int i = 0; i < nodes.size(); i++) {
-            for (int j = 0; j < nodes.size(); j++) {
-                if (isVisible(nodes.get(i).getX(), nodes.get(i).getY(), nodes.get(j).getX(), nodes.get(j).getY(), rays)) {
-                    boolean crossed = false;
-                    Line crossocc = new Line(nodes.get(i).getX(), nodes.get(i).getY(), nodes.get(j).getX(), nodes.get(j).getY());
-                    for (int q = 0; q < rays.size(); q++) {
-                        if (lineIntersect(crossocc, rays.get(q))) {
-                            crossed = true;
-                        }
-
-                    }
-                    if (crossed == false) {
-                        // nodes.get(i).addChild(nodes.get(j));
-                        //  nodes.get(j).addChild(nodes.get(i));
-                    }
-                }
-            }
-        }
-
-    }
 
 
     public void clearingUpConnections(ArrayList<ShadowNode> nodes) {
@@ -1504,10 +1473,46 @@ public class ShadowGraph {
     }
 
     public void correctPath() {
-        ShadowNode tmpNode, prev, next;
+        ShadowNode shad, start, tmpNode, prev, next;
+        ArrayList<ShadowNode> visited = new ArrayList<>();
 
-        for (ShadowNode shad : Nodes) {
-            //if(shad.numberOfLinks() == 2);
+        for (int i = 0; i < Nodes.size(); i++) {
+            shad = Nodes.get(i);
+            if (shad.numberOfLinks() == 2 && !visited.contains(shad)) {
+                visited.add(shad);
+                start = shad;
+                next = shad.getRight();
+
+                while (next.getRight() != start && !visited.contains(next) && next.numberOfLinks() == 2) {
+                    visited.add(next);
+                    prev = next;
+                    next = next.getRight();
+                    if (next.getRight() == prev) {
+                        tmpNode = next.getLeft();
+                        next.left = prev;
+                        next.right = tmpNode;
+                    }
+                }
+                if (next.numberOfLinks() != 2) {
+                    break;
+                }
+
+            }
+        }
+    }
+
+    public void cleanUp() {
+        ShadowNode tmpNode;
+        for (int i = 0; i < Nodes.size(); i++) {
+            tmpNode = Nodes.get(i);
+
+            if (tmpNode.getRight() == null || tmpNode.getLeft() == null) {
+                Nodes.remove(i--);
+            } else {
+                if (tmpNode.getRight().getLeft() != tmpNode && tmpNode.getLeft().getRight() != tmpNode) {
+                    Nodes.remove(i--);
+                }
+            }
         }
     }
 }
