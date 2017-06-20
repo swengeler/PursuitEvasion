@@ -574,6 +574,14 @@ public class GeometryOperations {
         return sum > 0;
     }
 
+    public static boolean leftTurnPredicateInverted(Coordinate c1, Coordinate c2, Coordinate c3) {
+        return leftTurnPredicateInverted(c1.x, -c1.y, c2.x, -c2.y, c3.x, -c3.y);
+    }
+
+    public static boolean leftTurnPredicateInverted(double p1X, double p1Y, double p2X, double p2Y, double p3X, double p3Y) {
+        return leftTurnPredicate(p1X, -p1Y, p2X, -p2Y, p3X, -p3Y);
+    }
+
     public static boolean leftTurnPredicate(Point2D p1, Point2D p2, Point2D p3) {
         return leftTurnPredicate(p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
     }

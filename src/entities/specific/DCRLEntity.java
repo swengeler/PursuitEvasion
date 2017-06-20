@@ -3,6 +3,7 @@ package entities.specific;
 import additionalOperations.*;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
+import com.vividsolutions.jts.operation.distance.DistanceOp;
 import entities.base.Entity;
 import entities.base.PartitioningEntity;
 import entities.guarding.*;
@@ -44,33 +45,18 @@ public class DCRLEntity extends PartitioningEntity {
     private ArrayList<PathLine> pathLines;
     private int searcherPathLineCounter, catcherPathLineCounter;
 
-    private ArrayList<ArrayList<DTriangle>> gSqrIntersectingTriangles;
-
     private ShortestPathRoadMap testSPRM;
-    private ArrayList<GuardManager> testGuardManagers;
-    private ArrayList<Line> testExcludedLines;
-    private ArrayList<Line> testCrossedLines;
-    private ArrayList<Coordinate> testAddedCoordinates;
-    private boolean testInGuardedSquare, updated, spottedOnce;
 
     private Coordinate previousTargetPosition, currentTargetPosition;
-    private ArrayList<Line> initCrossableLines;
-    private boolean initInGuardingSquare;
 
     private Group catchGraphics;
     private Group guardGraphics;
 
     public DCRLEntity(MapRepresentation map) {
         super(map);
-        testGuardManagers = new ArrayList<>();
-        testExcludedLines = new ArrayList<>();
-        testCrossedLines = new ArrayList<>();
-        testAddedCoordinates = new ArrayList<>();
-        initCrossableLines = new ArrayList<>();
         catchGraphics = new Group();
         guardGraphics = new Group();
         Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
-        testExcludedLines.addAll(separatingLines);
     }
 
     @Override
@@ -83,14 +69,6 @@ public class DCRLEntity extends PartitioningEntity {
                         target = a;
                         for (GuardManager gm : guardManagers) {
                             gm.initTargetPosition(target);
-                            if (((SquareGuardManager) gm).inGuardedSquare()) {
-                                initCrossableLines.add(((SquareGuardManager) gm).getOriginalSeparatingLine());
-                                testCrossedLines.add(initCrossableLines.get(initCrossableLines.size() - 1));
-                                testExcludedLines.remove(initCrossableLines.get(initCrossableLines.size() - 1));
-                                initInGuardingSquare = true;
-                                //testInGuardedSquare = true;
-                                System.out.println("target is in square: " + ((SquareGuardManager) gm).getGuardedSquare());
-                            }
                         }
                         break outer;
                     }
@@ -113,126 +91,12 @@ public class DCRLEntity extends PartitioningEntity {
 
     @Override
     protected void doGuardOperations() {
-        if (spottedOnce) {
-            int crossedLineOrdinal;
-            boolean changed = false;
-            SquareGuardManager gm;
-            if (testInGuardedSquare) {
-                // check whether the evader exited any of the guarded squares that it was in
-                testInGuardedSquare = false;
-                for (int i = 0; i < testGuardManagers.size(); i++) {
-                    gm = (SquareGuardManager) testGuardManagers.get(i);
-                    if (!gm.inGuardedSquare()) {
-                        testGuardManagers.remove(gm);
-                        testExcludedLines.removeAll(gm.getSquareSideLines());
-                        testCrossedLines.removeAll(gm.getSquareSideLines());
-                        if (!testExcludedLines.contains(gm.getOriginalSeparatingLine())) {
-                            testExcludedLines.add(gm.getOriginalSeparatingLine());
-                        }
-                        testAddedCoordinates.remove(gm.getSquareSides().get(i).getCoordinates()[0]);
-                        testAddedCoordinates.remove(gm.getSquareSides().get(i).getCoordinates()[1]);
-                        changed = true;
-                        i--;
-                    } else {
-                        //testInGuardedSquare = true;
-                    }
-                }
-                for (GuardManager gmr : guardManagers) {
-                    gm = (SquareGuardManager) gmr;
-                    if (!testGuardManagers.contains(gm)) {
-                        crossedLineOrdinal = gm.crossedLineOrdinal();
-                        /*if (crossedLineOrdinal == 0 && ((SquareGuardManager) gmr).enteredSquare()) {
-                            testExcludedLines.remove(((SquareGuardManager) gmr).getOriginalSeparatingLine());
-                            testCrossedLines.add(((SquareGuardManager) gmr).getOriginalSeparatingLine());
-                            testInGuardedSquare = true;
-                            changed = true;
-                        }*/
-                        if (crossedLineOrdinal != -1 && gm.enteredSquare()) {
-                            System.out.println("crossedLineOrdinal: " + crossedLineOrdinal);
-                            testGuardManagers.add(gm);
-                            for (int i = 0; i < 4; i++) {
-                                if (i != crossedLineOrdinal) {
-                                    if (!testExcludedLines.contains(gm.getSquareSideLines().get(i))) {
-                                        testExcludedLines.add(gm.getSquareSideLines().get(i));
-                                    }
-                                } else {
-                                    //if (!testCrossedLines.contains(gm.getSquareSideLines().get(i))) {
-                                    testCrossedLines.add(gm.getSquareSideLines().get(i));
-                                    //}
-                                    testExcludedLines.remove(gm.getSquareSideLines().get(i));
-                                    // TODO: also need to add new vertices to the graph, but only if they are in free space, i.e. not a coordinate of a separating line?
-                                    if (!(gm.getSquareSides().get(0).getCoordinates()[0].equals2D(gm.getSquareSides().get(i).getCoordinates()[0]) || gm.getSquareSides().get(0).getCoordinates()[1].equals2D(gm.getSquareSides().get(i).getCoordinates()[0]))) {
-                                        testAddedCoordinates.add(gm.getSquareSides().get(i).getCoordinates()[0]);
-                                    }
-                                    if (!(gm.getSquareSides().get(0).getCoordinates()[0].equals2D(gm.getSquareSides().get(i).getCoordinates()[1]) || gm.getSquareSides().get(0).getCoordinates()[1].equals2D(gm.getSquareSides().get(i).getCoordinates()[1]))) {
-                                        testAddedCoordinates.add(gm.getSquareSides().get(i).getCoordinates()[1]);
-                                    }
-                                }
-                            }
-                            //testInGuardedSquare = true;
-                            changed = true;
-                        }
-                    }
-                }
-                if (changed) {
-                    updated = true;
-                } else {
-                    updated = false;
-                }
-                if (!testInGuardedSquare) {
-                    testSPRM = null;
-                }
-            } else {
-                // check whether evader has entered a guarding square
-                for (GuardManager gmr : guardManagers) {
-                    gm = (SquareGuardManager) gmr;
-                    if (!testGuardManagers.contains(gm)) {
-                        crossedLineOrdinal = gm.crossedLineOrdinal();
-                        /*if (crossedLineOrdinal == 0 && ((SquareGuardManager) gm).enteredSquare()) {
-                            testExcludedLines.remove(((SquareGuardManager) gm).getOriginalSeparatingLine());
-                            testCrossedLines.add(((SquareGuardManager) gm).getOriginalSeparatingLine());
-                            testInGuardedSquare = true;
-                            changed = true;
-                        }*/
-                        if (crossedLineOrdinal != -1 && gm.enteredSquare()) {
-                            System.out.println("crossedLineOrdinal: " + crossedLineOrdinal);
-                            testGuardManagers.add(gm);
-                            for (int i = 0; i < 4; i++) {
-                                if (i != crossedLineOrdinal) {
-                                    if (!testExcludedLines.contains(gm.getSquareSideLines().get(i))) {
-                                        testExcludedLines.add(gm.getSquareSideLines().get(i));
-                                    }
-                                } else {
-                                    //if (!testCrossedLines.contains(gm.getSquareSideLines().get(i))) {
-                                    testCrossedLines.add(gm.getSquareSideLines().get(i));
-                                    //}
-                                    testExcludedLines.remove(gm.getSquareSideLines().get(i));
-                                    if (!(gm.getSquareSides().get(0).getCoordinates()[0].equals2D(gm.getSquareSides().get(i).getCoordinates()[0]) || gm.getSquareSides().get(0).getCoordinates()[1].equals2D(gm.getSquareSides().get(i).getCoordinates()[0]))) {
-                                        testAddedCoordinates.add(gm.getSquareSides().get(i).getCoordinates()[0]);
-                                    }
-                                    if (!(gm.getSquareSides().get(0).getCoordinates()[0].equals2D(gm.getSquareSides().get(i).getCoordinates()[1]) || gm.getSquareSides().get(0).getCoordinates()[1].equals2D(gm.getSquareSides().get(i).getCoordinates()[1]))) {
-                                        testAddedCoordinates.add(gm.getSquareSides().get(i).getCoordinates()[1]);
-                                    }
-                                }
-                            }
-                            //testInGuardedSquare = true;
-                            changed = true;
-                        }
-                    }
-                }
-                if (changed) {
-                    updated = true;
-                } else {
-                    updated = false;
-                }
-            }
-        }
     }
 
     @Override
     protected void doSearchAndCatchOperations() {
         //System.out.println(currentStage);
-        if (currentStage == Stage.CATCHER_TO_SEARCHER) {
+        /*if (currentStage == Stage.CATCHER_TO_SEARCHER) {
             catcherToSearcher();
         } else if (currentStage == Stage.INIT_FIND_TARGET) {
             initFindTarget();
@@ -240,26 +104,11 @@ public class DCRLEntity extends PartitioningEntity {
             followTarget();
         } else if (currentStage == Stage.FIND_TARGET) {
             findTarget();
-        }
+        }*/
     }
 
     @Override
     protected void doSucceedingOperations() {
-        //previousTargetPosition = new Coordinate(catcher.getXPos(), catcher.getYPos());
-        if (initInGuardingSquare) {
-            for (int i = 0; i < initCrossableLines.size(); i++) {
-                if (!((SquareGuardManager) guardManagers.get(separatingLines.indexOf(initCrossableLines.get(i)))).inGuardedSquare()) {
-                    initCrossableLines.remove(initCrossableLines.get(i));
-                    i--;
-                    System.out.println("outside initial guarded square");
-                } else {
-                    System.out.println("not outside initial guarded square");
-                }
-            }
-            if (initCrossableLines.size() == 0) {
-                initInGuardingSquare = false;
-            }
-        }
     }
 
     private void catcherToSearcher() {
@@ -343,7 +192,7 @@ public class DCRLEntity extends PartitioningEntity {
             if (target != null) {
                 if (target.isActive() && map.isVisible(target, searcher) /*&& !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), searcher.getXPos(), searcher.getYPos(), separatingLines) && !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), searcher.getXPos(), searcher.getYPos(), nastyBullshitLines)*/) {
                     System.out.println("Target found");
-                    spottedOnce = true;
+                    //spottedOnce = true;
                     origin = new Point2D(catcher.getXPos(), catcher.getYPos());
                     Label l = new Label("Origin");
                     l.setTranslateX(origin.getX() + 5);
@@ -396,10 +245,10 @@ public class DCRLEntity extends PartitioningEntity {
         //if (testInGuardedSquare) {
         for (Line l : separatingLines) {
             tempLs = new LineSegment(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
-            if (tempLs.intersection(ls) != null && !testCrossedLines.contains(l)) {
+            /*if (tempLs.intersection(ls) != null && !testCrossedLines.contains(l)) {
                 legal = false;
                 break;
-            }
+            }*/
         }
         //}
 
@@ -441,8 +290,8 @@ public class DCRLEntity extends PartitioningEntity {
             target.setActive(false);
             target = null;
             origin = null;
-            spottedOnce = false;
-            initInGuardingSquare = false;
+            /*spottedOnce = false;
+            initInGuardingSquare = false;*/
             currentStage = Stage.CATCHER_TO_SEARCHER;
         } else if (map.isVisible(target, catcher) /*&& legal/* || !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines))*/) {
             //System.out.println("Respotted (legal: " + legal + ", other metric: " + !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines) + ")");
@@ -469,7 +318,7 @@ public class DCRLEntity extends PartitioningEntity {
                 specialShortestPathRoadMap = new ShortestPathRoadMap(temp, map);
             }*/
 
-            if (testInGuardedSquare /*&& testSPRM == null*/ && (updated || testSPRM == null)) {
+            /*if (testInGuardedSquare *//*&& testSPRM == null*//* && (updated || testSPRM == null)) {
                 testSPRM = new ShortestPathRoadMap(testExcludedLines, map);
                 for (Line l : testExcludedLines) {
                     if (!Main.pane.getChildren().contains(l)) {
@@ -478,7 +327,7 @@ public class DCRLEntity extends PartitioningEntity {
                     }
                 }
                 testSPRM.addExtraVertices(testAddedCoordinates);
-            }
+            }*/
 
             PlannedPath temp;
             /*if (inGuardedSquareOverNonSeparating && specialShortestPathRoadMap != null) {
@@ -493,7 +342,7 @@ public class DCRLEntity extends PartitioningEntity {
             }*/
 
             Line lionsMoveLine = null;
-            if (testInGuardedSquare) {
+            /*if (testInGuardedSquare) {
                 //temp = testSPRM.getShortestPath(target.getXPos(), target.getYPos(), origin);
                 temp = testSPRM.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
                 temp.addPathToEnd(testSPRM.getShortestPath(catcher.getXPos(), catcher.getYPos(), origin));
@@ -514,14 +363,14 @@ public class DCRLEntity extends PartitioningEntity {
                 } else {
                     lionsMoveLine = temp.getPathLine(temp.getPathLines().size() - 1);
                 }
-            } else {
+            } else {*/
                 //temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(target.getXPos(), target.getYPos(), origin);
                 /*temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
                 temp.addPathToEnd(traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(catcher.getXPos(), catcher.getYPos(), origin));*/
                 temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
                 temp.addPathToEnd(shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), origin));
                 lionsMoveLine = temp.getPathLine(0);
-            }
+            //}
 
             temp = shortestPathRoadMap.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
             temp.addPathToEnd(shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), origin));
@@ -630,7 +479,7 @@ public class DCRLEntity extends PartitioningEntity {
                 System.out.println("target around corner, calculate path to first vertex");
                 ShortestPathRoadMap.drawLines = true;
 
-                if (/*testInGuardedSquare && testSPRM == null*/(updated || testSPRM == null)) {
+                /*if (*//*testInGuardedSquare && testSPRM == null*//*(updated || testSPRM == null)) {
                     testSPRM = new ShortestPathRoadMap(testExcludedLines, map);
                     System.out.println("testExcludedLines.size(): " + testExcludedLines.size());
                     for (Line l : testExcludedLines) {
@@ -639,7 +488,7 @@ public class DCRLEntity extends PartitioningEntity {
                             Main.pane.getChildren().add(l);
                         }
                     }
-                }/*
+                }*//*
                 PlannedPath temp;
                 if (testInGuardedSquare) {
                     temp = testSPRM.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
@@ -669,7 +518,7 @@ public class DCRLEntity extends PartitioningEntity {
                 currentCatcherPath = catcher.shareLocation(searcher) ? currentSearcherPath : (testInGuardedSquare ? testSPRM : shortestPathRoadMap).getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);*/
                 currentSearcherPath = shortestPathRoadMap.getShortestPath(searcher.getXPos(), searcher.getYPos(), pseudoBlockingVertex);
                 currentCatcherPath = catcher.shareLocation(searcher) ? currentSearcherPath : shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
-                System.out.println("currentSearcherPath: " + currentSearcherPath + ", testInGuardedSquare: " + testInGuardedSquare);
+                //System.out.println("currentSearcherPath: " + currentSearcherPath + ", testInGuardedSquare: " + testInGuardedSquare);
                 searcherPathLineCounter = 0;
                 catcherPathLineCounter = 0;
             }
@@ -735,7 +584,7 @@ public class DCRLEntity extends PartitioningEntity {
                         }
                     }
                 }
-                if (updated || testSPRM == null) {
+                /*if (updated || testSPRM == null) {
                     testSPRM = new ShortestPathRoadMap(testExcludedLines, map);
                     System.out.println("testExcludedLines.size(): " + testExcludedLines.size());
                     for (Line l : testExcludedLines) {
@@ -744,7 +593,7 @@ public class DCRLEntity extends PartitioningEntity {
                             Main.pane.getChildren().add(l);
                         }
                     }
-                }
+                }*/
                 /*PlannedPath temp = testSPRM.getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
                 catchGraphics.getChildren().addAll(temp.getPathLines());
                 pocketCounterClockwise = GeometryOperations.leftTurnPredicate(lastPointVisible.getX(), -lastPointVisible.getY(), pseudoBlockingVertex.getX(), -pseudoBlockingVertex.getY(), temp.getPathVertex(2).getEstX(), -temp.getPathVertex(2).getEstY());*/
@@ -756,21 +605,21 @@ public class DCRLEntity extends PartitioningEntity {
                 Point2D currentPoint, pocketBoundaryEndPoint = null;
                 double minLengthSquared = Double.MAX_VALUE, currentLengthSquared;
                 Line intersectedLine = null;
-                for (Line line : componentBoundaryLines.get(componentIndex)) {
+                /*for (Line line : componentBoundaryLines.get(componentIndex)) {
                     if (!separatingLines.contains(line) || testExcludedLines.contains(line) || !(((SquareGuardManager) guardManagers.get(separatingLines.indexOf(line))).inGuardedSquare(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY()))) {
                         currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
-                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
+                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared*//*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*//*) {
                             minLengthSquared = currentLengthSquared;
                             pocketBoundaryEndPoint = currentPoint;
                             intersectedLine = line;
                             //Main.pane.getChildren().add(new Circle(currentPoint.getX(), currentPoint.getY(), 5, Color.DARKGRAY));
                             //found = true;
                             //break;
-                        }/* else if (currentPoint != null) {
+                        }*//* else if (currentPoint != null) {
                                     Main.pane.getChildren().add(new Circle(currentPoint.getEstX(), currentPoint.getEstY(), 2, Color.BLACK));
-                                }*/
+                                }*//*
                     }
-                }
+                }*/
 
                 // TODO: possibly extend the pocket to include the intersected parts of the guarding square
                 if (/*!found || */pocketBoundaryEndPoint == null) {
@@ -818,16 +667,16 @@ public class DCRLEntity extends PartitioningEntity {
         LineSegment ls = new LineSegment(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
         LineSegment tempLs;
         boolean legal = true;
-        for (Line l : separatingLines) {
+        /*for (Line l : separatingLines) {
             tempLs = new LineSegment(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
             if (tempLs.intersection(ls) != null && !testCrossedLines.contains(l)) {
-                /*if (!Main.pane.getChildren().contains(l)) {
+                *//*if (!Main.pane.getChildren().contains(l)) {
                     Main.pane.getChildren().add(l);
-                }*/
+                }*//*
                 legal = false;
                 break;
             }
-        }
+        }*/
         if (map.isVisible(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos()) && (legal || !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines))) {
             pseudoBlockingVertex = null;
             System.out.println("pseudoBlockingVertex null because target visible in FIND_TARGET");
@@ -865,7 +714,7 @@ public class DCRLEntity extends PartitioningEntity {
                 System.out.println("target found again by searcher");
                 catchGraphics.getChildren().clear();
 
-                if (/*testInGuardedSquare && */(updated || testSPRM == null)) {
+                /*if (*//*testInGuardedSquare && *//*(updated || testSPRM == null)) {
                     testSPRM = new ShortestPathRoadMap(testExcludedLines, map);
                     for (Line l : testExcludedLines) {
                         if (!Main.pane.getChildren().contains(l)) {
@@ -874,7 +723,7 @@ public class DCRLEntity extends PartitioningEntity {
                         }
                     }
                     //testSPRM.addExtraVertices(testAddedCoordinates);
-                }/*
+                }*//*
 
                 PlannedPath temp;
 
@@ -918,12 +767,12 @@ public class DCRLEntity extends PartitioningEntity {
                 boolean ignored;
                 for (Line line : componentBoundaryLines.get(componentIndex)) {
                     ignored = false;
-                    for (GuardManager gm : testGuardManagers) {
+                    /*for (GuardManager gm : testGuardManagers) {
                         if (((SquareGuardManager) gm).getSquareSideLines().contains(line)) {
                             ignored = true;
                             break;
                         }
-                    }
+                    }*/
                     if (!ignored) {
                         currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
                         if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
@@ -981,10 +830,7 @@ public class DCRLEntity extends PartitioningEntity {
                 break;
             }
         }
-        currentStage = Stage.CATCHER_TO_SEARCHER;
-        ShortestPathRoadMap.SHOW_ON_CANVAS = true;
         currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
-        ShortestPathRoadMap.SHOW_ON_CANVAS = false;
     }
 
     @Override
@@ -1056,62 +902,239 @@ public class DCRLEntity extends PartitioningEntity {
 
     private ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines) {
         ArrayList<GuardManager> lineGuardManagers = new ArrayList<>(separatingLines.size());
-        LineGuardManager temp1;
+        LineGuardManager tempLGM;
 
         // for every reflex vertex of the polygon, calculate its visibility polygon
         // identify reflex vertices:
         // from shortest path map, get all vertices and convert them into coordinates
         List<Coordinate> vertices = Arrays.asList(map.getPolygon().getCoordinates());
 
+        ArrayList<Coordinate> reflexVertices = new ArrayList<>();
+        Set<PathVertex> temp = shortestPathRoadMap.getVertices();
+        for (PathVertex pv : temp) {
+            reflexVertices.add(new Coordinate(pv.getRealX(), pv.getRealY()));
+        }
+
         long before = System.currentTimeMillis();
         ArrayList<Tuple<Geometry, Group>> visibilityInfo = new ArrayList<>(vertices.size());
         ArrayList<Geometry> visibilityPolygons = new ArrayList<>();
-        for (Coordinate c1 : vertices) {
+        for (Coordinate c1 : reflexVertices) {
             visibilityInfo.add(computeVisibilityPolygon(c1, vertices));
             visibilityPolygons.add(visibilityInfo.get(visibilityInfo.size() - 1).getFirst());
         }
-        Tuple<Geometry, Group> thing = computeVisibilityPolygon(vertices.get(10), vertices);
-        Main.pane.getChildren().add(thing.getSecond());
-        //Main.pane.getChildren().add(visibilityPolygons.get(TEST_THING).getSecond());
-        // not working properly: 3 and 10 and 15
-        System.out.println("Time taken to check for " + vertices.size() + "-vertex polygon: " + (System.currentTimeMillis() - before));
 
-        LineString ls;
-        Geometry intersection;
+        //Line l = separatingLines.get(3);
+        before = System.currentTimeMillis();
+        int c = 0;
         for (Line l : separatingLines) {
-            int i = 0;
-            ls = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(l.getStartX(), l.getStartY()), new Coordinate(l.getEndX(), l.getEndY())}), GeometryOperations.factory);
-            intersection = ls.intersection(visibilityPolygons.get(10));
-            System.out.println("Intersection size: " + intersection.getCoordinates().length);
-            if (intersection.getCoordinates().length >= 2) {
-                Line line = new Line(intersection.getCoordinates()[0].x, intersection.getCoordinates()[0].y, intersection.getCoordinates()[intersection.getCoordinates().length - 1].x, intersection.getCoordinates()[intersection.getCoordinates().length - 1].y);
-                line.setStroke(Color.DARKMAGENTA);
-                line.setStrokeWidth(2);
-                Main.pane.getChildren().add(line);
-            }
-            /*for (Coordinate c : intersection.getCoordinates()) {
-                Main.pane.getChildren().add(new Circle(c.x, c.y, 5, Color.DARKMAGENTA));
-                Label label = new Label("" + (i++));
-                label.setTranslateX(c.x + 5);
-                label.setTranslateY(c.y);
-                Main.pane.getChildren().add(label);
-            }*/
-            temp1 = computeSingleGuardManager(l);
-            lineGuardManagers.add(temp1);
+            l.setStroke(Color.LIGHTBLUE);
+            Main.pane.getChildren().add(l);
+            tempLGM = computeSingleGuardManager(l, reflexVertices, visibilityPolygons);
+            lineGuardManagers.add(tempLGM);
+            System.out.println("Time to compute " + (++c) + " guards: " + (System.currentTimeMillis() - before));
         }
-
-
-        /*
-        for each line segment, two guards should be assigned
-        this is not done if there is already a guard in that square that has been assigned to the same points
-         */
+        System.out.println("Time to compute guards: " + (System.currentTimeMillis() - before));
 
         return lineGuardManagers;
     }
 
-    private LineGuardManager computeSingleGuardManager(Line l) {
+    private LineGuardManager computeSingleGuardManager(Line separatingLine, ArrayList<Coordinate> reflexVertices, ArrayList<Geometry> visibilityPolygons) {
+        LineString lineString = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(separatingLine.getStartX(), separatingLine.getStartY()), new Coordinate(separatingLine.getEndX(), separatingLine.getEndY())}), GeometryOperations.factory);
+        LineSegment lineSegment = new LineSegment(separatingLine.getStartX(), separatingLine.getStartY(), separatingLine.getEndX(), separatingLine.getEndY());
+        // determine the reflex vertices visible from the line
+        Geometry curIntersection;
+        LineSegment curVisibleSegment;
+        Coordinate temp1, temp2;
+        ArrayList<Coordinate> visibleVertices = new ArrayList<>();
+        ArrayList<LineSegment> visibleSegments = new ArrayList<>();
+        ArrayList<Coordinate> closestPoints = new ArrayList<>();
+        ArrayList<Double> distances = new ArrayList<>();
+        HashMap<Coordinate, double[]> fractionInfo = new HashMap<>();
+
+        Line l;
+        double length = lineSegment.getLength();
+        double deltaX = (lineSegment.getCoordinate(1).x - lineSegment.getCoordinate(0).x) / length;
+        double deltaY = (lineSegment.getCoordinate(1).y - lineSegment.getCoordinate(0).y) / length;
+        for (int i = 0; i < reflexVertices.size(); i++) {
+            if (!((reflexVertices.get(i).x == separatingLine.getStartX() && reflexVertices.get(i).y == separatingLine.getStartY()) || (reflexVertices.get(i).x == separatingLine.getEndX() && reflexVertices.get(i).y == separatingLine.getEndY()))) {
+                try {
+                    curIntersection = lineString.intersection(visibilityPolygons.get(i).buffer(GeometryOperations.PRECISION_EPSILON * 100));
+                    if (curIntersection.getCoordinates().length >= 2) {
+                        curVisibleSegment = new LineSegment(curIntersection.getCoordinates()[0].x, curIntersection.getCoordinates()[0].y, curIntersection.getCoordinates()[curIntersection.getCoordinates().length - 1].x, curIntersection.getCoordinates()[curIntersection.getCoordinates().length - 1].y);
+                        visibleVertices.add(reflexVertices.get(i));
+                        visibleSegments.add(curVisibleSegment);
+                        closestPoints.add(curVisibleSegment.closestPoint(reflexVertices.get(i)));
+                        distances.add(curVisibleSegment.distance(reflexVertices.get(i)));
+                        //System.out.println("Thing: " + lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) + ", distance: " + (distances.get(distances.size() - 1) / length));
+                        System.out.println("one: " + (lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) + (distances.get(distances.size() - 1) / length)) + ", two: " + (lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) - (distances.get(distances.size() - 1) / length)));
+
+                        fractionInfo.put(visibleVertices.get(visibleVertices.size() - 1), new double[]{lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) + (distances.get(distances.size() - 1) / length), lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) - (distances.get(distances.size() - 1) / length)});
+                    }
+                } catch (TopologyException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // check whether both sides are properly visible
+                LineSegment[] segs = new LineSegment[2];
+                for (LineSegment lseg : map.getAllLines()) {
+                    if (lseg.distance(reflexVertices.get(i)) == 0) {
+                        System.out.println("(1) distance to line segment: " + lseg.distance(reflexVertices.get(i)));
+                        Line line = new Line(lseg.getCoordinate(0).x, lseg.getCoordinate(0).y, lseg.getCoordinate(1).x, lseg.getCoordinate(1).y);
+                        line.setStroke(Color.GREEN);
+                        line.setStrokeWidth(2);
+                        //Main.pane.getChildren().add(line);
+
+                        boolean first = (reflexVertices.get(i).x == lseg.getCoordinate(0).x && reflexVertices.get(i).y == lseg.getCoordinate(0).y);
+                        double tempDeltaX = first ? (lseg.getCoordinate(1).x - lseg.getCoordinate(0).x) : (lseg.getCoordinate(0).x - lseg.getCoordinate(1).x);
+                        double tempDeltaY = first ? (lseg.getCoordinate(1).y - lseg.getCoordinate(0).y) : (lseg.getCoordinate(0).y - lseg.getCoordinate(1).y);
+                        double angle = Math.toDegrees(Math.atan2(deltaY, deltaX) - Math.atan2(tempDeltaY, tempDeltaX));
+                        System.out.println("angle: " + angle + ", first: " + first);
+                        if (segs[0] == null) {
+                            segs[0] = lseg;
+                        } else {
+                            segs[1] = lseg;
+                            boolean first0 = (reflexVertices.get(i).x == segs[0].getCoordinate(0).x && reflexVertices.get(i).y == segs[0].getCoordinate(0).y);
+                            boolean first1 = (reflexVertices.get(i).x == segs[1].getCoordinate(0).x && reflexVertices.get(i).y == segs[1].getCoordinate(0).y);
+                            boolean firstSepLine = (reflexVertices.get(i).x == lineSegment.getCoordinate(0).x && reflexVertices.get(i).y == lineSegment.getCoordinate(0).y);
+
+                            boolean leftTurn0To1 = GeometryOperations.leftTurnPredicateInverted(first0 ? segs[0].getCoordinate(1) : segs[0].getCoordinate(0), reflexVertices.get(i), first1 ? segs[1].getCoordinate(1) : segs[1].getCoordinate(0));
+                            if (leftTurn0To1) {
+                                // segs[0] is the more counter-clockwise segment adjacent to the vertex
+                                boolean leftTurn1ToLineEnd = GeometryOperations.leftTurnPredicateInverted(first1 ? segs[1].getCoordinate(1) : segs[1].getCoordinate(0), reflexVertices.get(i), firstSepLine ? lineSegment.getCoordinate(1) : lineSegment.getCoordinate(0));
+                                boolean rightTurn0ToLineEnd = !GeometryOperations.leftTurnPredicateInverted(first0 ? segs[0].getCoordinate(0) : segs[0].getCoordinate(0), reflexVertices.get(i), firstSepLine ? lineSegment.getCoordinate(1) : lineSegment.getCoordinate(0));
+
+                                if (!leftTurn1ToLineEnd || !rightTurn0ToLineEnd) {
+                                    curVisibleSegment = new LineSegment(reflexVertices.get(i).x, reflexVertices.get(i).y, reflexVertices.get(i).x, reflexVertices.get(i).y);
+                                    visibleVertices.add(reflexVertices.get(i));
+                                    visibleSegments.add(curVisibleSegment);
+                                    closestPoints.add(curVisibleSegment.closestPoint(reflexVertices.get(i)));
+                                    distances.add(curVisibleSegment.distance(reflexVertices.get(i)));
+                                    fractionInfo.put(visibleVertices.get(visibleVertices.size() - 1), new double[]{lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) + (distances.get(distances.size() - 1) / length), lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) - (distances.get(distances.size() - 1) / length)});
+                                }
+                            } else {
+                                // segs[0] is the more clockwise segment adjacent to the vertex
+                                boolean rightTurn1ToLineEnd = !GeometryOperations.leftTurnPredicateInverted(first1 ? segs[1].getCoordinate(1) : segs[1].getCoordinate(0), reflexVertices.get(i), firstSepLine ? lineSegment.getCoordinate(1) : lineSegment.getCoordinate(0));
+                                boolean leftTurn0ToLineEnd = GeometryOperations.leftTurnPredicateInverted(first0 ? segs[0].getCoordinate(0) : segs[0].getCoordinate(0), reflexVertices.get(i), firstSepLine ? lineSegment.getCoordinate(1) : lineSegment.getCoordinate(0));
+
+                                if (!rightTurn1ToLineEnd || !leftTurn0ToLineEnd) {
+                                    curVisibleSegment = new LineSegment(reflexVertices.get(i).x, reflexVertices.get(i).y, reflexVertices.get(i).x, reflexVertices.get(i).y);
+                                    visibleVertices.add(reflexVertices.get(i));
+                                    visibleSegments.add(curVisibleSegment);
+                                    closestPoints.add(curVisibleSegment.closestPoint(reflexVertices.get(i)));
+                                    distances.add(curVisibleSegment.distance(reflexVertices.get(i)));
+                                    fractionInfo.put(visibleVertices.get(visibleVertices.size() - 1), new double[]{lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) + (distances.get(distances.size() - 1) / length), lineSegment.segmentFraction(closestPoints.get(closestPoints.size() - 1)) - (distances.get(distances.size() - 1) / length)});
+                                }
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+
+            }
+        }
+
+        visibleVertices.removeIf(c -> {
+            double[] temp = fractionInfo.get(c);
+            return (temp[0] <= 0 && temp[1] >= 1) || (temp[0] >= 1 && temp[1] <= 0);
+        });
+
+        if (visibleVertices.size() == 0) {
+            Coordinate midPoint = lineSegment.midPoint();
+            Main.pane.getChildren().add(new Circle(midPoint.x, midPoint.y, 4, Color.DARKMAGENTA));
+        }
+
+        System.out.println();
+        double[] tempFrac1, tempFrac2;
+        HashMap<Coordinate, Double> lengthsSquared = new HashMap<>(visibleVertices.size());
+        for (Coordinate v : visibleVertices) {
+            tempFrac1 = fractionInfo.get(v);
+            if (tempFrac1[0] < 0.0) {
+                tempFrac1[0] = 0.0;
+            } else if (tempFrac1[0] > 1.0) {
+                tempFrac1[0] = 1.0;
+            }
+            if (tempFrac1[1] < 0.0) {
+                tempFrac1[1] = 0.0;
+            } else if (tempFrac1[1] > 1.0) {
+                tempFrac1[1] = 1.0;
+            }
+            if (tempFrac1[0] > tempFrac1[1]) {
+                double temp = tempFrac1[0];
+                tempFrac1[0] = tempFrac1[1];
+                tempFrac1[1] = temp;
+            }
+
+            lengthsSquared.put(v, Math.pow(tempFrac1[1] - tempFrac1[0], 2));
+            System.out.println("one: " + tempFrac1[0] + ", two: " + tempFrac1[1]);
+            double rand1 = (Math.random() - 0.5) * 200;
+            l = new Line(lineSegment.pointAlong(tempFrac1[0]).x + deltaX * rand1, lineSegment.pointAlong(tempFrac1[0]).y - (deltaX / deltaY) * rand1, lineSegment.pointAlong(tempFrac1[1]).x + deltaX * rand1, lineSegment.pointAlong(tempFrac1[1]).y - (deltaX / deltaY) * rand1);
+            //Main.pane.getChildren().add(l);
+        }
+
+        visibleVertices.sort((v1, v2) -> {
+            if (lengthsSquared.get(v1) < lengthsSquared.get(v2)) {
+                return -1;
+            } else if (lengthsSquared.get(v1) > lengthsSquared.get(v2)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+
+        System.out.println("\nSORTED:\n");
+        for (Coordinate v : visibleVertices) {
+            System.out.println("one: " + fractionInfo.get(v)[0] + ", two: " + fractionInfo.get(v)[1]);
+        }
+
+        System.out.println("\nSTART MERGING:\n");
+
+        ArrayList<Coordinate> guardPoints = new ArrayList<>();
+        LineSegment ls1, ls2, lsTemp;
+        // start with the shortest ("most restricting") segment that needs to be covered
+        for (int i = 0; i < visibleVertices.size(); i++) {
+            tempFrac1 = fractionInfo.get(visibleVertices.get(i));
+            System.out.println("one: " + tempFrac1[0] + ", two: " + tempFrac1[1] + "\n------------------------------");
+            ls1 = new LineSegment(lineSegment.pointAlong(tempFrac1[0]), lineSegment.pointAlong(tempFrac1[1]));
+            for (int j = i + 1; j < visibleVertices.size(); j++) {
+                System.out.println("1: j = " + j + ", length: " + visibleVertices.size());
+                tempFrac2 = fractionInfo.get(visibleVertices.get(j));
+                ls2 = new LineSegment(lineSegment.pointAlong(tempFrac2[0]), lineSegment.pointAlong(tempFrac2[1]));
+                if (ls1.getLength() == 0 && ls2.projectionFactor(ls1.getCoordinate(0)) >= 0.0 && ls2.projectionFactor(ls1.getCoordinate(0)) <= 1.0) {
+                    System.out.println("(1) one: " + tempFrac2[0] + ", two: " + tempFrac2[1]);
+                    visibleVertices.remove(j);
+                    j--;
+                } else if (ls2.getLength() > 0 && (lsTemp = ls2.project(ls1)) != null) {
+                    System.out.println("(2) one: " + tempFrac2[0] + ", two: " + tempFrac2[1]);
+                    ls1 = lsTemp;
+                    visibleVertices.remove(j);
+                    j--;
+                }
+                System.out.println("2: j = " + j + ", length: " + visibleVertices.size());
+            }
+            visibleVertices.remove(i);
+            i--;
+            if (ls1.getLength() > 0.0) {
+                l = new Line(ls1.getCoordinate(0).x, ls1.getCoordinate(0).y, ls1.getCoordinate(1).x, ls1.getCoordinate(1).y);
+                l.setStrokeWidth(1.5);
+                l.setStroke(Color.DARKMAGENTA);
+                Main.pane.getChildren().add(l);
+
+                guardPoints.add(new Coordinate(ls1.midPoint().x, ls1.midPoint().y));
+            } else {
+                Main.pane.getChildren().add(new Circle(ls1.getCoordinate(0).x, ls1.getCoordinate(0).y, 4, Color.DARKMAGENTA));
+
+                guardPoints.add(new Coordinate(ls1.getCoordinate(0).x, ls1.getCoordinate(0).y));
+            }
+            System.out.println("\n");
+        }
+
+        // have to find disjoint segments
+
+
         LineGuardManager lineGuardManager;
-        lineGuardManager = new LineGuardManager();
+        lineGuardManager = new LineGuardManager(separatingLine, guardPoints, map);
         return lineGuardManager;
     }
 
@@ -1258,9 +1281,15 @@ public class DCRLEntity extends PartitioningEntity {
         checkedPairs = new ArrayList<>();
 
         boolean boundaryPointsShareSegment, originalPointsShareSegment, boundaryAndOriginalShareSegment, originalAndBoundaryShareSegment;
+        boolean previousBoundaryPointsShareSegment, previousOriginalPointsShareSegment, previousBoundaryAndOriginalShareSegment, previousOriginalAndBoundaryShareSegment;
+        ArrayList<Coordinate> coordinates = new ArrayList<>();
         for (int i = 0; i < rays.size(); i++) {
             d1 = rays.get(i);
             d2 = rays.get((i + 1) % rays.size());
+
+            if (i == 0) {
+                coordinates.add(c1);
+            }
             currentPair = new PointPair(i, (i + 1) % rays.size());
 
             //try {
@@ -1288,6 +1317,8 @@ public class DCRLEntity extends PartitioningEntity {
             if (originalPointsShareSegment) {
                 currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue1(), c1}), GeometryOperations.factory);
                 visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                coordinates.add(d1.getValue1());
+                coordinates.add(d2.getValue1());
 
                 p = new Polygon(c1.x, c1.y, d1.getValue1().x, d1.getValue1().y, d2.getValue1().x, d2.getValue1().y);
                 p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
@@ -1298,6 +1329,8 @@ public class DCRLEntity extends PartitioningEntity {
             } else if (boundaryPointsShareSegment) {
                 currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue0(), d2.getValue0(), c1}), GeometryOperations.factory);
                 visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                coordinates.add(d1.getValue0());
+                coordinates.add(d2.getValue0());
 
                 p = new Polygon(c1.x, c1.y, d1.getValue0().x, d1.getValue0().y, d2.getValue0().x, d2.getValue0().y);
                 p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
@@ -1308,6 +1341,8 @@ public class DCRLEntity extends PartitioningEntity {
             } else if (boundaryAndOriginalShareSegment) {
                 currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue0(), d2.getValue1(), c1}), GeometryOperations.factory);
                 visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                coordinates.add(d1.getValue0());
+                coordinates.add(d2.getValue1());
 
                 p = new Polygon(c1.x, c1.y, d1.getValue0().x, d1.getValue0().y, d2.getValue1().x, d2.getValue1().y);
                 p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
@@ -1318,6 +1353,8 @@ public class DCRLEntity extends PartitioningEntity {
             } else if (originalAndBoundaryShareSegment) {
                 currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue0(), c1}), GeometryOperations.factory);
                 visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                coordinates.add(d1.getValue1());
+                coordinates.add(d2.getValue0());
 
                 p = new Polygon(c1.x, c1.y, d1.getValue1().x, d1.getValue1().y, d2.getValue0().x, d2.getValue0().y);
                 p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
@@ -1326,6 +1363,15 @@ public class DCRLEntity extends PartitioningEntity {
                 l.setStroke(Color.INDIANRED);
                 visibilityShape.getChildren().addAll(p, l);
             }
+
+            if (i == rays.size() - 1) {
+                coordinates.add(c1);
+            }
+
+            previousBoundaryPointsShareSegment = boundaryPointsShareSegment;
+            previousOriginalPointsShareSegment = originalPointsShareSegment;
+            previousBoundaryAndOriginalShareSegment = boundaryAndOriginalShareSegment;
+            previousOriginalAndBoundaryShareSegment = originalAndBoundaryShareSegment;
 
                 /*if (map.isVisible(d1.getValue0(), d2.getValue0())) {
                     line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y);
@@ -1515,40 +1561,6 @@ public class DCRLEntity extends PartitioningEntity {
         return new Tuple<>(visibilityPolygon, visibilityShape);
     }
 
-    private ArrayList<ArrayList<DTriangle>> computeGuardingSquareIntersection(ArrayList<GuardManager> guardManagers, ArrayList<DTriangle> triangles) {
-        LinearRing temp;
-        Geometry intersection;
-        Coordinate first;
-        ArrayList<Color> colors = new ArrayList<>();
-        ArrayList<ArrayList<DTriangle>> guardingSquareIntersectingTriangles = new ArrayList<>(guardManagers.size());
-        for (int i = 0; i < guardManagers.size(); i++) {
-            guardingSquareIntersectingTriangles.add(new ArrayList<>());
-            colors.add(new Color(Math.random(), Math.random(), Math.random(), 0.5));
-        }
-        for (DTriangle dt : triangles) {
-            first = new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY());
-            temp = new LinearRing(new CoordinateArraySequence(new Coordinate[]{
-                    first,
-                    new Coordinate(dt.getPoint(1).getX(), dt.getPoint(1).getY()),
-                    new Coordinate(dt.getPoint(2).getX(), dt.getPoint(2).getY()),
-                    first
-            }), GeometryOperations.factory);
-            for (int i = 0; i < guardManagers.size(); i++) {
-                //intersection = guardManagers.get(i).getGuardedSquare().intersection(temp);
-                //System.out.println(triangles.indexOf(dt) + " - intersection size: " + intersection.getCoordinates().length + ", array: " + Arrays.toString(intersection.getCoordinates()));
-                if (((SquareGuardManager) guardManagers.get(i)).getGuardedSquare().crosses(temp) || ((SquareGuardManager) guardManagers.get(i)).getGuardedSquare().covers(temp)) {
-                    guardingSquareIntersectingTriangles.get(i).add(dt);
-                    /*if (((SquareGuardManager) guardManagers.get(i)).getGuardedSquare().covers(temp)*//*((SquareGuardManager) guardManagers.get(i)).getGuardedSquare().covers(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY())}), GeometryOperations.factory))*//*) {
-                        Polygon p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                        p.setFill(Color.GREEN.deriveColor(1, 1, 1, 0.3));
-                        Main.pane.getChildren().add(p);
-                    }*/
-                }
-            }
-        }
-        return guardingSquareIntersectingTriangles;
-    }
-
     private Tuple<ArrayList<DTriangle>, int[][]> findPocketComponent(Line boundaryLine, int componentIndex, double pseudoBlockingVertX, double pseudoBlockingVertY, Line crossedSeparatingLine) {
         // go through all triangles of the current component and find those intersecting the boundary line
         // start to find the rest of the triangles of the pocket component using adjacency matrices
@@ -1632,7 +1644,7 @@ public class DCRLEntity extends PartitioningEntity {
 
         // also go through guarding square triangles
         // get all triangles in the guard square which are intersected by the boundary line
-        ArrayList<DTriangle> guardingSquareTriangles = null;
+        /*ArrayList<DTriangle> guardingSquareTriangles = null;
         if (crossedSeparatingLine != null) {
             System.out.println("Crossed separating line");
             // first identify the guarding square in question
@@ -1693,7 +1705,7 @@ public class DCRLEntity extends PartitioningEntity {
                 }
             }
             // now have to make sure that triangles adjacent to these boundary triangles are actually also in the square
-        }
+        }*/
 
 
         ArrayList<DTriangle> connectingTriangles = new ArrayList<>();
@@ -1762,7 +1774,7 @@ public class DCRLEntity extends PartitioningEntity {
                     // or they share a separating edge, i.e. a guarding square is connected to the triangle
                     if (pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] != 1) {
                         // TODO: (maybe) also account for separating edges instead of adjacency from the matrix
-                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 /*&& !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i))*/ && (crossedSeparatingLine == null || !guardingSquareTriangles.contains(dt) || guardingSquareTriangles.contains(traversalHandler.getTriangles().get(i)) /*|| thing.contains(dt) is the parent of this dt in the guarding square */)) {
+                        if (traversalHandler.getAdjacencyMatrix()[traversalHandler.getTriangles().indexOf(dt)][i] == 1 /*&& !pocketBoundaryTriangles.contains(traversalHandler.getTriangles().get(i))*/ && (crossedSeparatingLine == null/* || !guardingSquareTriangles.contains(dt) || guardingSquareTriangles.contains(traversalHandler.getTriangles().get(i)*/ /*|| thing.contains(dt) is the parent of this dt in the guarding square */)) {
                             if (!first || (traversalHandler.getTriangles().get(i).equals(connectingEdges.get(connectingTriangles.indexOf(dt)).getOtherTriangle(dt)))) {
                                 nextLayer.add(traversalHandler.getTriangles().get(i));
                                 pocketAdjacencyMatrix[traversalHandler.getTriangles().indexOf(dt)][i] = 1;
@@ -1772,7 +1784,7 @@ public class DCRLEntity extends PartitioningEntity {
                     }
                 }
                 // find out whether the current triangle shares a separating edge with a guarded square
-                if (crossedSeparatingLine == null || !guardingSquareTriangles.contains(dt)) {
+                /*if (crossedSeparatingLine == null || !guardingSquareTriangles.contains(dt)) {
                     separatingEdge = separatingEdges.contains(dt.getEdge(0)) ? dt.getEdge(0) : (separatingEdges.contains(dt.getEdge(1)) ? dt.getEdge(1) : (separatingEdges.contains(dt.getEdge(2)) ? dt.getEdge(2) : null));
                     for (ArrayList<DTriangle> arr : gSqrIntersectingTriangles) {
                         if (arr.contains(dt)) {
@@ -1812,7 +1824,7 @@ public class DCRLEntity extends PartitioningEntity {
                             }
                         }
                     }
-                }
+                }*/
             }
             currentLayer = nextLayer;
             if (nextLayer.size() == 0) {
