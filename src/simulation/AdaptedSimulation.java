@@ -2,6 +2,7 @@ package simulation;
 
 import entities.base.CentralisedEntity;
 import entities.base.Entity;
+import maps.MapRepresentation;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
 

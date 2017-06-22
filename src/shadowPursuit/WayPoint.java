@@ -11,60 +11,62 @@ import java.util.ArrayList;
 public class WayPoint {
 
     Point2D coordinate;
-    ArrayList<Line> rays,jontyRays;
+    ArrayList<Line> rays, jontyRays;
 
     ArrayList<WayPoint> connected;
 
     public WayPoint(Point2D coordinate) {
-            this.coordinate = coordinate;
-            if(coordinate == null)  {
-                System.exit(898);
-            }
-
-            connected = new ArrayList<>();
-            rays = new ArrayList<>();
-
-
+        this.coordinate = coordinate;
+        if (coordinate == null) {
+            System.exit(898);
         }
-    public  WayPoint(Point2D coordinate, ArrayList<Line> lines){
-            this.coordinate = coordinate;
-            if(coordinate == null)  {
-                System.exit(898);
-            }
 
-            connected = new ArrayList<>();
-            rays = new ArrayList<>();
-            jontyRays=new ArrayList<>();
-            connected.add(this);
+        connected = new ArrayList<>();
+        rays = new ArrayList<>();
 
-        for(int i=0; i<lines.size(); i++){
+
+    }
+
+    public WayPoint(Point2D coordinate, ArrayList<Line> lines) {
+        this.coordinate = coordinate;
+        if (coordinate == null) {
+            System.exit(898);
+        }
+
+        connected = new ArrayList<>();
+        rays = new ArrayList<>();
+        jontyRays = new ArrayList<>();
+        connected.add(this);
+
+        for (int i = 0; i < lines.size(); i++) {
             jontyRays.add(lines.get(i));
         }
 
     }
 
-    public void addConnection(WayPoint toConnect)   {
-        if(!connected.contains(toConnect)) {
+    public void addConnection(WayPoint toConnect) {
+        if (!connected.contains(toConnect)) {
             connected.add(toConnect);
             toConnect.connected.add(this);
         }
     }
 
 
-
-    public double getX()    {
-        return  coordinate.getX();
+    public double getX() {
+        return coordinate.getX();
     }
 
-    public double getY()    {
-        return  coordinate.getY();
+    public double getY() {
+        return coordinate.getY();
     }
 
-    public Point2D getCoord()   {return coordinate;}
+    public Point2D getCoord() {
+        return coordinate;
+    }
 
-    public void printWayPoint()    {
+    public void printWayPoint() {
         System.out.println("Waypoint => " + this.coordinate + "\t Connected to: " + (connected.size() - 1));
-        for(WayPoint wayP : connected)  {
+        for (WayPoint wayP : connected) {
             System.out.println(wayP.getCoord());
         }
         System.out.println("\n");

@@ -1,5 +1,7 @@
 package simulation;
 
+import maps.MapRepresentation;
+
 import java.util.ArrayList;
 
 public class Agent {

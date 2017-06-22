@@ -8,11 +8,13 @@ import entities.utils.PlannedPath;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Shape;
+import maps.MapRepresentation;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
-import simulation.*;
+import simulation.AdaptedSimulation;
+import simulation.Agent;
 import ui.Main;
 
 import java.util.*;

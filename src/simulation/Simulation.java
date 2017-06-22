@@ -3,6 +3,7 @@ package simulation;
 import entities.base.CentralisedEntity;
 import javafx.collections.ObservableList;
 import javafx.scene.shape.Circle;
+import maps.MapRepresentation;
 import org.reactfx.util.FxTimer;
 import org.reactfx.util.Timer;
 

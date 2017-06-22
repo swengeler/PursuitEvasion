@@ -3,7 +3,7 @@ package shadowPursuit;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import simulation.MapRepresentation;
+import maps.MapRepresentation;
 
 import java.util.ArrayList;
 
@@ -44,7 +44,7 @@ public class PursuitTree {
         calculateNodes();
         shadowGraph = new ShadowGraph(map, agents);
         depthLevel = graph.size();
-       // buildTree();
+        // buildTree();
     }
 
 
@@ -145,7 +145,7 @@ public class PursuitTree {
                     } else if (best.score < tmpNode.children.get(i).score) {
 
                         best = tmpNode.children.get(i);
-                    }else if (best.score== tmpNode.children.get(i).score){
+                    } else if (best.score == tmpNode.children.get(i).score) {
 
                     }
                 }
@@ -193,7 +193,6 @@ public class PursuitTree {
     public void test() {
 
 
-
         ArrayList<WayPoint> startPoints = new ArrayList<>();
         WayPoint tmpPoint;
 
@@ -217,7 +216,7 @@ public class PursuitTree {
 
                         tmpPoint.addConnection(graph.get(j));
                         System.out.println("tmpoint= " + tmpPoint.getCoord() + " graph= " + graph.get(j).coordinate);
-                       // System.exit(1234);
+                        // System.exit(1234);
                     }
 
 
@@ -250,25 +249,25 @@ public class PursuitTree {
             childrenSize *= wayP.connected.size();
         }
 
-        ArrayList<int[]>  permuations = new ArrayList<>();
+        ArrayList<int[]> permuations = new ArrayList<>();
         int curPos = 0;
         WayPoint tmp;
 
         int entrySize = root.getWayPoints().size();
 
-        while(permuations.size() < childrenSize)    {
+        while (permuations.size() < childrenSize) {
             int[] perm = new int[entrySize];
 
-            for(int i = 0; i < root.getWayPoints().size(); i++) {
+            for (int i = 0; i < root.getWayPoints().size(); i++) {
                 curPos = 0;
                 tmp = root.getWayPoints().get(i);
 
-                for(int j = 0;j < tmp.connected.size() && curPos < entrySize; j++)    {
-                    perm[curPos] = j+1;
+                for (int j = 0; j < tmp.connected.size() && curPos < entrySize; j++) {
+                    perm[curPos] = j + 1;
                     curPos++;
                 }
 
-                if(!permuations.contains(perm)) {
+                if (!permuations.contains(perm)) {
                     permuations.add(perm);
                 }
 
@@ -277,10 +276,9 @@ public class PursuitTree {
         }
 
 
-
     }
 
-    public ArrayList<ArrayList<WayPoint>> getPermut(TreeNode node)   {
+    public ArrayList<ArrayList<WayPoint>> getPermut(TreeNode node) {
         int childrenSize = 1;
         for (WayPoint wayP : node.getWayPoints()) {
             childrenSize *= wayP.connected.size();
@@ -292,8 +290,8 @@ public class PursuitTree {
         int count = 0;
         int i = 0;
         TreeNode tmpNode;
-        while(count < childrenSize)  {
-            while(i <=3)    {
+        while (count < childrenSize) {
+            while (i <= 3) {
 
             }
         }
@@ -440,7 +438,9 @@ public class PursuitTree {
                             }
                             graph.get(i).addConnection(graph.get(j));
 
-                        } else count++;
+                        } else {
+                            count++;
+                        }
                     }
                 }
             }

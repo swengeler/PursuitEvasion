@@ -1,8 +1,8 @@
 package entities.guarding;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import maps.MapRepresentation;
 import simulation.Agent;
-import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 

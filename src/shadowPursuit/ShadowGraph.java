@@ -3,7 +3,7 @@ package shadowPursuit;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import simulation.MapRepresentation;
+import maps.MapRepresentation;
 
 import java.util.ArrayList;
 
@@ -295,8 +295,9 @@ public class ShadowGraph {
                 x2 = Math.round(point.getX());
                 y2 = Math.round(point.getY());
 
-                if (x1 == x2 && y1 == y2)
+                if (x1 == x2 && y1 == y2) {
                     return node;
+                }
 
             }
         }
@@ -320,8 +321,9 @@ public class ShadowGraph {
                 x2 = Math.round(point.getX());
                 y2 = Math.round(point.getY());
 
-                if (x1 == x2 && y1 == y2)
+                if (x1 == x2 && y1 == y2) {
                     return node;
+                }
 
             }
         }
@@ -333,8 +335,9 @@ public class ShadowGraph {
         int cunt = 0;
         for (int i = 0; i < Nodes.size(); i++) {
 
-            if (Nodes.get(i).numberOfLinks() == 2)
+            if (Nodes.get(i).numberOfLinks() == 2) {
                 cunt++;
+            }
         }
         System.out.println("\n------------Nodes are printed------------");
         System.out.println("Number of Nodes = " + Nodes.size() + "\nNumber of double = " + cunt);
@@ -708,7 +711,9 @@ public class ShadowGraph {
                         System.out.println("muahahahahaha ");
                     } else if (agents.get(q).getX() == checkT3.get(i).getLeftAgent().getX() && agents.get(q).getY() == checkT3.get(i).getLeftAgent().getY()) {
                         System.out.println("muahahahahahahaha");
-                    } else seenby++;
+                    } else {
+                        seenby++;
+                    }
                 }
 
             }
@@ -1062,7 +1067,9 @@ public class ShadowGraph {
             }
             if (count == 0) {
                 return true;
-            } else count = 0;
+            } else {
+                count = 0;
+            }
 
         }
         return false;
@@ -1299,9 +1306,6 @@ public class ShadowGraph {
             return null;
         }
     }
-
-
-
 
 
     public void clearingUpConnections(ArrayList<ShadowNode> nodes) {

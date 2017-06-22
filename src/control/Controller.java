@@ -1,6 +1,8 @@
 package control;
 
-import simulation.*;
+import maps.MapRepresentation;
+import simulation.Agent;
+import simulation.Simulation;
 import ui.*;
 
 import java.util.ArrayList;

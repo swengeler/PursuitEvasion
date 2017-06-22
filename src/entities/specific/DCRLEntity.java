@@ -14,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
+import maps.MapRepresentation;
 import org.javatuples.Quintet;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.error.DelaunayError;

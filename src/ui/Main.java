@@ -24,6 +24,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.Pair;
+import maps.MapRepresentation;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
@@ -84,7 +85,7 @@ public class Main extends Application {
     private DCRSEntity testDCRSEntity;
     private DCRLEntity testDCRLEntity;
     private DCRVEntity testDCRVEntity;
-    private int ENTITY_TO_TEST = 1;
+    private int ENTITY_TO_TEST = 0;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //
@@ -417,6 +418,7 @@ public class Main extends Application {
             }
 
             p.setStroke(Color.DARKORANGE);
+            p.setStrokeWidth(3);
             p.setFill(Color.TRANSPARENT);
 
             randomPolygon = p;
@@ -2722,8 +2724,8 @@ public class Main extends Application {
     public ArrayList<Point2D> poly(double avgRadius, double irregularity, double spikeyness, int numVerts) {
         //https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
 
-        double centerX = 500;
-        double centerY = 500;
+        double centerX = 400;
+        double centerY = 350;
 
         irregularity = clip(irregularity, 0, 1) * 2 * Math.PI / numVerts;
         spikeyness = clip(spikeyness, 0, 1) * avgRadius;

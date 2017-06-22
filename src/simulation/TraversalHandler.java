@@ -4,6 +4,7 @@ import entities.utils.*;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.shape.Line;
+import maps.MapRepresentation;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.apache.commons.math3.exception.MathArithmeticException;
 import org.jdelaunay.delaunay.error.DelaunayError;

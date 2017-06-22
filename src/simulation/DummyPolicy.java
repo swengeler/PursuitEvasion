@@ -3,6 +3,7 @@ package simulation;
 import entities.utils.*;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import maps.MapRepresentation;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;

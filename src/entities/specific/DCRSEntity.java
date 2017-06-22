@@ -14,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
+import maps.MapRepresentation;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
@@ -1593,7 +1594,7 @@ public class DCRSEntity extends PartitioningEntity {
                         l = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
                         l.setStroke(Color.BLUE);
                         l.setStrokeWidth(2);
-                        catchGraphics.getChildren().add(l);
+                        //catchGraphics.getChildren().add(l);
                     }
                 }
             }

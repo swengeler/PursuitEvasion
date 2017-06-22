@@ -1,7 +1,7 @@
 package entities.specific;
 
 import entities.base.DistributedEntity;
-import simulation.MapRepresentation;
+import maps.MapRepresentation;
 
 public class RandomEntity extends DistributedEntity {
 

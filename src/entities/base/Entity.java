@@ -1,8 +1,8 @@
 package entities.base;
 
 import entities.utils.ShortestPathRoadMap;
+import maps.MapRepresentation;
 import simulation.Agent;
-import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 

@@ -5,8 +5,8 @@ import entities.base.DistributedEntity;
 import entities.utils.*;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Polygon;
+import maps.MapRepresentation;
 import simulation.Agent;
-import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 

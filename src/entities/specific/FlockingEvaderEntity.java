@@ -2,8 +2,8 @@ package entities.specific;
 
 import entities.base.DistributedEntity;
 import entities.base.Entity;
+import maps.MapRepresentation;
 import simulation.Agent;
-import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 

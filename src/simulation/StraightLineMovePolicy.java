@@ -1,6 +1,7 @@
 package simulation;
 
 import javafx.scene.shape.Polygon;
+import maps.MapRepresentation;
 
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;

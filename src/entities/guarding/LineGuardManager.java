@@ -4,8 +4,8 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineSegment;
 import entities.base.Entity;
 import javafx.scene.shape.Line;
+import maps.MapRepresentation;
 import simulation.Agent;
-import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 import java.util.HashMap;

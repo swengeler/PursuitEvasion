@@ -1,6 +1,7 @@
 package simulation;
 
 import entities.utils.ShortestPathRoadMap;
+import maps.MapRepresentation;
 
 import java.util.ArrayList;
 

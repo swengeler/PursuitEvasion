@@ -1,7 +1,7 @@
 package entities.base;
 
+import maps.MapRepresentation;
 import simulation.Agent;
-import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 

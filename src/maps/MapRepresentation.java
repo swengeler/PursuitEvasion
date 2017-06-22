@@ -1,4 +1,4 @@
-package simulation;
+package maps;
 
 import additionalOperations.GeometryOperations;
 import com.vividsolutions.jts.geom.*;
@@ -7,6 +7,7 @@ import entities.base.Entity;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
+import simulation.Agent;
 import ui.Main;
 import ui.MapPolygon;
 

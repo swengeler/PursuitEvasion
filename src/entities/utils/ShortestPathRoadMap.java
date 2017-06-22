@@ -6,12 +6,12 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
+import maps.MapRepresentation;
 import org.jdelaunay.delaunay.geometries.DTriangle;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import simulation.MapRepresentation;
 import ui.Main;
 
 import java.util.ArrayList;

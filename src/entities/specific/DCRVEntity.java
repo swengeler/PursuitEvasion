@@ -8,11 +8,13 @@ import entities.guarding.TriangleVisionGuardManager;
 import entities.utils.PathLine;
 import entities.utils.PlannedPath;
 import javafx.scene.Group;
+import maps.MapRepresentation;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DTriangle;
-import simulation.*;
+import simulation.Agent;
+import simulation.TraversalHandler;
 import ui.Main;
 
 import java.util.ArrayList;
