@@ -25,8 +25,9 @@ public class HideEvaderPolicy extends MovePolicy {
     private ShortestPathRoadMap shortestPathMap;
     double cnt = 0;
 
-    private final static int STEP = 20;
+    private final static int STEP = 50;
     private final static int separationDistance = 100;
+    private final static int pursuerDistance = 500;
 
     ArrayList<PathLine> pathLines;
     int i = 0;
@@ -40,6 +41,7 @@ public class HideEvaderPolicy extends MovePolicy {
         ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
         Agent evader = getSingleAgent();
         Point2D target = null;
+        boolean halt = false;
 
         int numberOfSeparationPursuers = 0;
         double separationDeltaX = 0;
@@ -57,7 +59,9 @@ public class HideEvaderPolicy extends MovePolicy {
             ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
 
             for (Agent pursuer : agents) {
-                if (pursuer.isPursuer()) {
+                double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
+
+                if (pursuer.isPursuer() && dist <= pursuerDistance) {
 
                     ArrayList<PointData> pursuerPointData = new ArrayList<>();
                     for (Point2D midpoint : polygonMidpoints) {
@@ -78,7 +82,13 @@ public class HideEvaderPolicy extends MovePolicy {
 
             }
 
-            target = getMin(allPursuerData, evader, 1);
+            target = getMin(allPursuerData, evader, 4);
+        }
+
+        if (allPursuerData.isEmpty() && cnt % STEP == 0) {
+            System.out.println("NO PURSUERS NEAR");
+            return new Move(0, 0, 0);
+            //Alternatively, do a random move?
         }
 
         cnt++;
@@ -179,6 +189,10 @@ public class HideEvaderPolicy extends MovePolicy {
     }
 
     private Point2D getMin(ArrayList<ArrayList<PointData>> midpointData, Agent evader, int mode) {
+        if (midpointData.isEmpty()) {
+            return null;
+        }
+
         Point2D target = null;
         double euclideanDistance = Double.MIN_VALUE;
         int numberOfVertices = Integer.MIN_VALUE;
