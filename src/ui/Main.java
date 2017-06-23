@@ -13,6 +13,7 @@ import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
+import javafx.concurrent.Task;
 import javafx.geometry.*;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -35,6 +36,7 @@ import shadowPursuit.PursuitTree;
 import shadowPursuit.ShadowGraph;
 import shadowPursuit.WayPoint;
 import simulation.*;
+import sun.plugin.javascript.navig.Array;
 
 import java.awt.geom.Line2D;
 import java.io.*;
@@ -3001,8 +3003,9 @@ public class Main extends Application {
     }
 
     public static void heregoesnothing() {
-        //Polygon and lines containers
+        //Containers
         Polygon polygon = new Polygon();
+        ArrayList<RPoint2D> points = new ArrayList<>();
         Set<RLineSegment2D> lines = new HashSet<>();
 
         //Helpful for random point generation
@@ -3026,6 +3029,8 @@ public class Main extends Application {
             x = random.nextInt(width);
             y = random.nextInt(height);
 
+            points.add(new RPoint2D((long) x, (long) y));
+
             polygon.getPoints().add(x);
             polygon.getPoints().add(y);
         }
@@ -3037,27 +3042,88 @@ public class Main extends Application {
 
         //Create lines
         for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
-            RPoint2D f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i+1).longValue());
-            RPoint2D s = new RPoint2D(polygon.getPoints().get(i+2).longValue(), polygon.getPoints().get(i+3).longValue());
+            RPoint2D f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
+            RPoint2D s = new RPoint2D(polygon.getPoints().get(i + 2).longValue(), polygon.getPoints().get(i + 3).longValue());
             RLineSegment2D line = new RLineSegment2D(f, s);
             lines.add(line);
         }
-        RPoint2D l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size()-2).longValue(), polygon.getPoints().get(polygon.getPoints().size()-1).longValue());
+        RPoint2D l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size() - 2).longValue(), polygon.getPoints().get(polygon.getPoints().size() - 1).longValue());
         RPoint2D f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
         RLineSegment2D line = new RLineSegment2D(l, f);
         lines.add(line);
 
         Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
 
-        for (RPoint2D p: intersections.keySet()) {
+        for (RPoint2D p : intersections.keySet()) {
             System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
             Circle c = new Circle(p.x.intValue(), p.y.intValue(), 5, Color.DARKOLIVEGREEN);
             Main.pane.getChildren().add(c);
             Set<RLineSegment2D> segments = intersections.get(p);
             System.out.println(">> Lines in question: ");
-            for (RLineSegment2D segment: segments) {
+            for (RLineSegment2D segment : segments) {
                 System.out.println(segment);
             }
+        }
+
+        //Honestly discard everything below
+
+        Set<RPoint2D> intersectionPoints = intersections.keySet();
+        ArrayList<RPoint2D> intersectionPointsList = new ArrayList<>();
+        intersectionPointsList.addAll(intersectionPoints);
+
+        while (!intersectionPointsList.isEmpty()) {
+            RPoint2D randomPoint = null;
+
+            int index = random.nextInt(intersectionPointsList.size());
+            randomPoint = intersectionPointsList.get(index);
+
+            intersectionPointsList.remove(randomPoint);
+            Set<RLineSegment2D> segments = intersections.get(randomPoint);
+
+            RLineSegment2D[] tmp = segments.toArray(new RLineSegment2D[2]);
+            RPoint2D oldfirst = new RPoint2D(tmp[0].p1.x.longValue(), tmp[0].p1.y.longValue());
+            RPoint2D oldsecond = new RPoint2D(tmp[0].p2.x.longValue(), tmp[0].p1.y.longValue());
+
+            RPoint2D first = new RPoint2D(tmp[0].p2.y.longValue(), tmp[0].p2.x.longValue());
+            RPoint2D second = new RPoint2D(tmp[0].p1.y.longValue(), tmp[0].p1.x.longValue());
+
+            RPoint2D oldthird = new RPoint2D(tmp[1].p1.x.longValue(), tmp[1].p1.y.longValue());
+            RPoint2D oldfourth = new RPoint2D(tmp[1].p2.x.longValue(), tmp[1].p2.y.longValue());
+
+            RPoint2D third = new RPoint2D(tmp[1].p2.y.longValue(), tmp[1].p2.x.longValue());
+            RPoint2D fourth = new RPoint2D(tmp[1].p1.y.longValue(), tmp[1].p1.x.longValue());
+
+            RPoint2D[] oldp = new RPoint2D[]{oldfirst, oldsecond, oldthird, oldfourth};
+            RPoint2D[] newp = new RPoint2D[]{first, second, third, fourth};
+
+            for (int i = 0; i < points.size(); i++) {
+                RPoint2D p = points.get(i);
+                for (int j = 0; j < oldp.length; j++) {
+                    if (p.equals(oldp[j])) {
+                        points.add(i, newp[j]);
+                        points.remove(p);
+                    }
+                }
+            }
+
+            Polygon newPoly = new Polygon();
+            for (RPoint2D p : points) {
+                newPoly.getPoints().add(p.x.doubleValue());
+                newPoly.getPoints().add(p.y.doubleValue());
+            }
+
+            if (Main.pane.getChildren().contains(polygon)) {
+                Main.pane.getChildren().remove(polygon);
+            }
+
+            if (Main.pane.getChildren().contains(newPoly)) {
+                Main.pane.getChildren().remove(newPoly);
+            }
+
+            //Just for debugging purposes
+            newPoly.setStroke(Color.FIREBRICK);
+            newPoly.setFill(Color.TRANSPARENT);
+            Main.pane.getChildren().add(newPoly);
         }
     }
 
