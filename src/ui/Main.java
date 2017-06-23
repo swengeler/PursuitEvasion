@@ -355,7 +355,7 @@ public class Main extends Application {
 
             for (Polygon p: polys) {
                 p.setStroke(Color.DARKORANGE);
-                //p.setStrokeWidth(1);
+                p.setStrokeWidth(0.5);
                 p.setFill(Color.TRANSPARENT);
                 Main.pane.getChildren().add(p);
             }
@@ -2852,6 +2852,35 @@ public class Main extends Application {
             if (set.size() < points.size()) {
                 System.out.println("Duplicate(s) detected");
                 dupes = true;
+            }
+
+            if (!dupes) {
+                for (Point2D tpoint: points) {
+                    Polygon p = new Polygon();
+
+                    p.getPoints().add(tpoint.getX() - 1);
+                    p.getPoints().add(tpoint.getY());
+
+                    p.getPoints().add(tpoint.getX());
+                    p.getPoints().add(tpoint.getY() - 1);
+
+                    p.getPoints().add(tpoint.getX() + 1);
+                    p.getPoints().add(tpoint.getY());
+
+                    p.getPoints().add(tpoint.getX());
+                    p.getPoints().add(tpoint.getY() + 1);
+
+                    for (Point2D spoint: points) {
+                        if (tpoint.equals(spoint)) {
+                            continue;
+                        } else {
+                            if (p.contains(spoint)) {
+                                System.out.println("Duplicate #2 (too close)");
+                                dupes = true;
+                            }
+                        }
+                    }
+                }
             }
 
             ArrayList<Line2D> lines = new ArrayList<>();
