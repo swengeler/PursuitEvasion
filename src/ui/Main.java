@@ -28,7 +28,9 @@ import maps.MapRepresentation;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
+import shadowPursuit.PursuitTree;
 import shadowPursuit.ShadowGraph;
+import shadowPursuit.WayPoint;
 import simulation.*;
 
 import java.awt.geom.Line2D;
@@ -556,14 +558,76 @@ public class Main extends Application {
                 for (VisualAgent agent : visualAgents) {
                     agentPos.add(new Point2D(agent.getCenterX(), agent.getCenterY()));
                 }
-                ShadowGraph shadGraph = new ShadowGraph(map, agentPos);
-                ArrayList<Polygon> shadows = shadGraph.getShadows();
+                PursuitTree pursuitPath = new PursuitTree(map, agentPos);
+                pursuitPath.test2();
+                ArrayList<Polygon> shadows = pursuitPath.getShadows();
+                ArrayList<Point2D> wayP = pursuitPath.getPoints();
+
+
+
 
                 for (Polygon p : shadows) {
                     p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
                     p.setFill(Color.GREY.deriveColor(1, 1, 1, 0.1));
                     p.setStrokeWidth(1);
                     pane.getChildren().add(p);
+                }
+                boolean pusuit = true;
+                if(pusuit) {
+
+
+                    for (Line line : pursuitPath.getRays()) {
+                        line.setFill(Color.LIGHTGRAY);
+                        line.setStroke(Color.LIGHTGRAY);
+                        line.setStrokeWidth(0.5);
+                        line.setStrokeLineCap(StrokeLineCap.ROUND);
+                        pane.getChildren().add(line);
+                    }
+
+                    /*
+                    for (Line line : pursuitPath.getConnections()) {
+                        line.setFill(Color.GREEN);
+                        line.setStroke(Color.GREEN);
+                        line.setStrokeWidth(0.5);
+                        line.setStrokeLineCap(StrokeLineCap.ROUND);
+                        pane.getChildren().add(line);
+                    }
+                    */
+
+
+
+
+                    for(WayPoint wayPP : pursuitPath.getWayPoints()) {
+                        for(WayPoint wayPPP : wayPP.getConnected()) {
+                            Line line = new Line(wayPP.getX(), wayPP.getY(), wayPPP.getX(), wayPPP.getY());
+                            line.setFill(Color.GREEN);
+                            line.setStroke(Color.GREEN);
+                            line.setStrokeWidth(0.5);
+                            line.setStrokeLineCap(StrokeLineCap.ROUND);
+                            pane.getChildren().add(line);
+                        }
+                    }
+
+
+
+                    for (int i = 0; i < wayP.size(); i++) {
+                        Point2D point = wayP.get(i);
+                        Circle c = new Circle(point.getX(), point.getY(), 4);
+                        c.setFill(Color.RED);
+                        pane.getChildren().add(c);
+                    }
+
+
+                    for (int i = 0; i < pursuitPath.getStart().size(); i++) {
+                        Point2D point = pursuitPath.getStart().get(i);
+                        Circle c = new Circle(point.getX(), point.getY(), 5);
+                        c.setFill(Color.GREEN);
+                        pane.getChildren().add(c);
+                    }
+
+
+
+
                 }
 
             }

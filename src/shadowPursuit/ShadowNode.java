@@ -12,7 +12,7 @@ public class ShadowNode {
     private final int type2 = 2;
     private final int type3 = 3;
     private final int type4 = 4;
-    ShadowNode left, right;
+    ShadowNode left, right,type2Creating;
     //FOr Type3 Nodes
     private Line placedOn, occLine;
     //For Type4 Nodes
@@ -20,6 +20,8 @@ public class ShadowNode {
     private int type;
     private Point2D position;
     boolean inCircle = false;
+
+
 
 
     private Point2D neighbourRightAgent, neighbourLeftAgent;
@@ -104,7 +106,7 @@ public class ShadowNode {
             this.left = Type2;
             this.right = null;
         }
-
+        type2Creating=Type2;
         type = type3;
 
         System.out.println(this);
@@ -118,7 +120,7 @@ public class ShadowNode {
         //System.out.println("ENTTEREDED");
         this.position = position;
         this.neighbourLeftAgent = agent;
-
+        type2Creating=Type2;
         type = type3;
 
         this.occLine = Ray;
@@ -252,6 +254,7 @@ public class ShadowNode {
             next.right = this;
             left = next;
         }
+        System.out.println("AFTER CONNECT\n " + this + "\nAND " + next);
         System.out.println();
     }
 
@@ -394,6 +397,9 @@ public class ShadowNode {
             return null;
         }
     }
+    public ShadowNode getType2Creating(){
+        return type2Creating;
+    }
 
     //For Type3
     public void overwriteConnectedType2(ShadowNode toCopy) {
@@ -421,7 +427,8 @@ public class ShadowNode {
             }
             this.right = toCopy;
 
-        } else {
+        }
+        else {
             System.out.println("\n----PROBLEM ANALYSIS----");
             System.out.println("THIS T3 => " + this);
             System.out.println("To copy => " + toCopy);
@@ -430,6 +437,18 @@ public class ShadowNode {
             System.exit(343);
         }
 
+    }
+
+    public void correctT3(ShadowNode T2) {
+        if(getRight() == null && getLeft() != null && (getLeft().getType() == 1 || getLeft().getType() == 3))   {
+            this.right = T2;
+            T2.left = this;
+
+        }
+        else if(getLeft() == null && getRight() != null &&(getRight().getType() == 1 || getRight().getType() == 3))   {
+            this.left = T2;
+            T2.right = this;
+        }
     }
 
     //For Type3

@@ -3,7 +3,7 @@ package shadowPursuit;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import maps.MapRepresentation;
+import simulation.MapRepresentation;
 
 import java.util.ArrayList;
 
@@ -22,6 +22,8 @@ public class PursuitTree {
     ArrayList<TreeNode> children;
     TreeNode Parent;
 
+    ArrayList<Line> envEdges;
+
     private int depthLevel;
 
 
@@ -33,6 +35,14 @@ public class PursuitTree {
     public PursuitTree(MapRepresentation map, ArrayList<Point2D> agents) {
         this.map = map;
         this.agents = agents;
+
+        envEdges = new ArrayList<>();
+
+        for(int i = 0; i < map.getPolygonEdges().size(); i++)   {
+            envEdges.add(map.getPolygonEdges().get(i));
+        }
+
+
        /* for(int i=0;i<agents.size();i++) {
 
             this.graph.add(new WayPoint(agents.get(i)));
@@ -44,7 +54,9 @@ public class PursuitTree {
         calculateNodes();
         shadowGraph = new ShadowGraph(map, agents);
         depthLevel = graph.size();
-        // buildTree();
+
+        //System.arraycopy(map.getPolygonEdges(), 0, envEdges, 0, map.getPolygonEdges().size());
+       // buildTree();
     }
 
 
@@ -57,8 +69,10 @@ public class PursuitTree {
             mindDist = Double.MAX_VALUE;
             tempPoint = null;
 
+
+
             for (WayPoint wayP : graph) {
-                if (distance(agent, wayP.getCoord()) < mindDist) {
+                if (distance(agent, wayP.getCoord()) < mindDist && isVisible(agent.getX(), agent.getY(), wayP.getCoord().getX(), wayP.getCoord().getY(), envEdges)) {
                     mindDist = distance(agent, wayP.getCoord());
                     tempPoint = wayP;
                 }
@@ -67,9 +81,10 @@ public class PursuitTree {
             startPoints.add(tempPoint);
         }
 
-
+        root = new TreeNode(startPoints, new ShadowGraph(map, startPoints, true).getShadows());
     }
 
+    /*
     public void buildTree() {
         ArrayList<WayPoint> startPoints = new ArrayList<>();
         WayPoint tmpPoint;
@@ -145,7 +160,7 @@ public class PursuitTree {
                     } else if (best.score < tmpNode.children.get(i).score) {
 
                         best = tmpNode.children.get(i);
-                    } else if (best.score == tmpNode.children.get(i).score) {
+                    }else if (best.score== tmpNode.children.get(i).score){
 
                     }
                 }
@@ -161,7 +176,7 @@ public class PursuitTree {
                     System.err.println("Caught IOException: " + e.getMessage());
                 }
             }
-            */
+
             if (best != null && best.contShadows == null) {
 
                 System.out.println("\nbest = " + best);
@@ -189,8 +204,41 @@ public class PursuitTree {
 
     }
 
+    */
+    public void test2() {
+        buildTree2();
 
+        System.out.println("START!!!!");
+
+        if(root.getWayPoints().size() > 1) {
+            for (WayPoint wayP : root.getWayPoints()) {
+                if (wayP != null) {
+                    System.out.print(wayP);
+
+                    System.out.println("\nOTHER PRINT\n");
+
+                    wayP.printWayPoint();
+                }
+
+            }
+        }
+        System.out.println("END!!!!");
+
+    }
+
+    public ArrayList<Point2D> getStart()  {
+        ArrayList<Point2D> temp = new ArrayList<>();
+        for(WayPoint wayP : root.getWayPoints())    {
+            temp.add(wayP.getCoord());
+        }
+        return temp;
+    }
+
+
+
+    /*
     public void test() {
+
 
 
         ArrayList<WayPoint> startPoints = new ArrayList<>();
@@ -216,7 +264,7 @@ public class PursuitTree {
 
                         tmpPoint.addConnection(graph.get(j));
                         System.out.println("tmpoint= " + tmpPoint.getCoord() + " graph= " + graph.get(j).coordinate);
-                        // System.exit(1234);
+                       // System.exit(1234);
                     }
 
 
@@ -242,32 +290,32 @@ public class PursuitTree {
 
 
        System.out.println("number of contaminated shadows= " +  root.contShadows.size());
-        */
+
 
         int childrenSize = 1;
         for (WayPoint wayP : root.getWayPoints()) {
             childrenSize *= wayP.connected.size();
         }
 
-        ArrayList<int[]> permuations = new ArrayList<>();
+        ArrayList<int[]>  permuations = new ArrayList<>();
         int curPos = 0;
         WayPoint tmp;
 
         int entrySize = root.getWayPoints().size();
 
-        while (permuations.size() < childrenSize) {
+        while(permuations.size() < childrenSize)    {
             int[] perm = new int[entrySize];
 
-            for (int i = 0; i < root.getWayPoints().size(); i++) {
+            for(int i = 0; i < root.getWayPoints().size(); i++) {
                 curPos = 0;
                 tmp = root.getWayPoints().get(i);
 
-                for (int j = 0; j < tmp.connected.size() && curPos < entrySize; j++) {
-                    perm[curPos] = j + 1;
+                for(int j = 0;j < tmp.connected.size() && curPos < entrySize; j++)    {
+                    perm[curPos] = j+1;
                     curPos++;
                 }
 
-                if (!permuations.contains(perm)) {
+                if(!permuations.contains(perm)) {
                     permuations.add(perm);
                 }
 
@@ -276,27 +324,11 @@ public class PursuitTree {
         }
 
 
+
     }
 
-    public ArrayList<ArrayList<WayPoint>> getPermut(TreeNode node) {
-        int childrenSize = 1;
-        for (WayPoint wayP : node.getWayPoints()) {
-            childrenSize *= wayP.connected.size();
-        }
+*/
 
-        System.out.println("possible number of children");
-
-        //Get first permutation
-        int count = 0;
-        int i = 0;
-        TreeNode tmpNode;
-        while (count < childrenSize) {
-            while (i <= 3) {
-
-            }
-        }
-        return null;
-    }
 
     public void contaminationFor(WayPoint wayP) {
         boolean directlyCon = false;
@@ -320,6 +352,9 @@ public class PursuitTree {
             System.out.println("NEW TREENODE => " + root.children.get(0));
         }
     }
+
+
+
 
     public void calculateNodes() {
         ArrayList<Point2D> pointy = findReflex(map.getBorderPolygon(), map.getAllPolygons(), map.getObstaclePolygons());
@@ -373,8 +408,10 @@ public class PursuitTree {
                         b.add(rays.get(i));
                         b.add(rays.get(j));
                         // graph.add(new WayPoint(a));
-                        graph.add(new WayPoint(a, b));
-                        locationsOfPursuers.add(a);
+                        if(j>i) {
+                            graph.add(new WayPoint(a, b));
+                            locationsOfPursuers.add(a);
+                        }
                     }
                 }
             }
@@ -433,14 +470,13 @@ public class PursuitTree {
                             Line newLine = new Line(graph.get(j).getX(), graph.get(j).getY(), graph.get(i).getX(), graph.get(i).getY());
                             if (!connections.contains(newLine)) {
                                 connections.add(newLine);
+
                                 // System.out.println(newLine);
                                 count2++;
                             }
-                            graph.get(i).addConnection(graph.get(j));
 
-                        } else {
-                            count++;
-                        }
+
+                        } else count++;
                     }
                 }
             }
@@ -458,12 +494,56 @@ public class PursuitTree {
                 Line newLine = new Line(graph.get(i).connected.get(j).getX(), graph.get(i).connected.get(j).getY(), graph.get(i).getX(), graph.get(i).getY());
                 if (!connections.contains(newLine)) {
                     connections.add(newLine);
+
                     count5++;
                 }
             }
         }
         //  System.out.println("count4= " + count4);
         //  System.out.println("count5= " + count5);
+
+        createConnections();
+
+    }
+
+    public void createConnections() {
+        for(int i = 0; i < graph.size(); i++)   {
+            System.out.println(graph.get(i));
+        }
+        for(Line line : connections) {
+            System.out.println("line start x= " + line.getStartX() );
+            System.out.println("line start y= " + line.getStartY() );
+            System.out.println("line end x= " + line.getEndX() );
+            System.out.println("line end y= " + line.getEndY() );
+
+
+            if (getWayPointFromGraph(new Point2D(line.getStartX(), line.getStartY())) != null && getWayPointFromGraph(new Point2D(line.getEndX(), line.getEndY())) != null) {
+                System.out.println("Works for => " + new Point2D(line.getStartX(), line.getStartY())  + "\nAND => " + new Point2D(line.getEndX(), line.getEndY()));
+                WayPoint wayP1 = getWayPointFromGraph(new Point2D(line.getStartX(), line.getStartY()));
+                WayPoint wayP2 = getWayPointFromGraph(new Point2D(line.getEndX(), line.getEndY()));
+
+                wayP1.addConnection(wayP2);
+                wayP2.addConnection(wayP1);
+            }
+            else    {
+                for(int i = 0; i < graph.size(); i++)   {
+                    System.out.println(graph.get(i));
+                }
+                System.out.println("Doesn't work for  => " + new Point2D(line.getStartX(), line.getStartY())  + "\nOR => " + new Point2D(line.getEndX(), line.getEndY()));
+                System.exit(888888);
+            }
+        }
+
+
+    }
+
+    public WayPoint getWayPointFromGraph(Point2D point)  {
+        for(WayPoint wayP : graph)  {
+            if(wayP.getX() == point.getX() && wayP.getY() == point.getY())    {
+                return wayP;
+            }
+        }
+        return null;
 
     }
 
