@@ -19,14 +19,15 @@ import java.util.*;
 
 public class HideEvaderPolicy extends MovePolicy {
 
-    //only recompute every xx timestep
-
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
     private ShortestPathRoadMap shortestPathMap;
+    double cnt = 0;
 
+    private final static int STEP = 20;
     private final static int separationDistance = 100;
+
     ArrayList<PathLine> pathLines;
     int i = 0;
 
@@ -36,18 +37,7 @@ public class HideEvaderPolicy extends MovePolicy {
 
     @Override
     public Move getNextMove(MapRepresentation map, ArrayList<Agent> agents) {
-
-        if (traversalHandler == null) {
-            initTree(map);
-        }
-
-        if (shortestPathMap == null) {
-            shortestPathMap = new ShortestPathRoadMap(map);
-        }
         ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
-
-        ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
-
         Agent evader = getSingleAgent();
         Point2D target = null;
 
@@ -55,33 +45,53 @@ public class HideEvaderPolicy extends MovePolicy {
         double separationDeltaX = 0;
         double separationDeltaY = 0;
 
-        for (Agent pursuer : agents) {
-            if (pursuer.isPursuer()) {
+        if (cnt % STEP == 0) {
+            if (traversalHandler == null) {
+                initTree(map);
+            }
 
-                ArrayList<PointData> pursuerPointData = new ArrayList<>();
-                for (Point2D midpoint : polygonMidpoints) {
+            if (shortestPathMap == null) {
+                shortestPathMap = new ShortestPathRoadMap(map);
+            }
 
-                    PlannedPath shortestPathFromPursuer = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
-                    double midpointDistance = shortestPathFromPursuer.getTotalLength();
-                    int numberOfVertices = shortestPathFromPursuer.pathLength();
+            ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
 
-                    PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
-                    pursuerPointData.add(pd);
-                    //System.out.println("dist: " + midpointDistance);
+            for (Agent pursuer : agents) {
+                if (pursuer.isPursuer()) {
+
+                    ArrayList<PointData> pursuerPointData = new ArrayList<>();
+                    for (Point2D midpoint : polygonMidpoints) {
+
+                        PlannedPath shortestPathFromPursuer = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
+                        double midpointDistance = shortestPathFromPursuer.getTotalLength();
+                        int numberOfVertices = shortestPathFromPursuer.pathLength();
+
+                        PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
+                        pursuerPointData.add(pd);
+                        //System.out.println("dist: " + midpointDistance);
+
+                    }
+
+                    allPursuerData.add(pursuerPointData);
 
                 }
 
-                allPursuerData.add(pursuerPointData);
+            }
 
+            target = getMin(allPursuerData, evader, 1);
+        }
+
+        cnt++;
+
+        for (Agent pursuer: agents) {
+            if (pursuer.isPursuer()) {
                 double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
                 if (dist <= separationDistance) {
                     separationDeltaX += (pursuer.getXPos() - evader.getXPos());
                     separationDeltaY += (pursuer.getYPos() - evader.getYPos());
                     numberOfSeparationPursuers++;
                 }
-
             }
-
         }
 
         if (numberOfSeparationPursuers != 0) {
@@ -96,7 +106,6 @@ public class HideEvaderPolicy extends MovePolicy {
             separationDeltaY /= dlength;
         }
 
-        target = getMin(allPursuerData, evader, 4);
 
         if (target != null) {
             if (ctarget == null) {
@@ -133,6 +142,7 @@ public class HideEvaderPolicy extends MovePolicy {
                 if (!map.legalPosition(evader.getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, evader.getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)) {
                     System.out.println("ILLEGAL 1: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(evader.getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, evader.getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)}), GeometryOperations.factory)));
                 }
+                cnt = 0;
                 return new Move(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50, 0);
             } else {
                 //perhaps stand still here?
