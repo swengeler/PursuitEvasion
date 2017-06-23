@@ -550,7 +550,7 @@ public class ShortestPathRoadMap {
             }
         }
 
-        System.out.println("Time to check visibility: " + (System.currentTimeMillis() - before));
+        //System.out.println("Time to check visibility: " + (System.currentTimeMillis() - before));
         before = System.currentTimeMillis();
 
         // calculate the shortest path and construct the PlannedPath object which will be returned
@@ -573,7 +573,7 @@ public class ShortestPathRoadMap {
             l.setTranslateY(sink.getEstY());
             //Main.pane.getChildren().addAll(line, l);
         }
-        System.out.println("Time to find shortest path: " + (System.currentTimeMillis() - before));
+        //System.out.println("Time to find shortest path: " + (System.currentTimeMillis() - before));
         //try {
         //} catch (NullPointerException e) {
            /* e.printStackTrace();

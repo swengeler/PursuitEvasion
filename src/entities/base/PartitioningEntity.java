@@ -51,6 +51,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
 
     @Override
     public void move() {
+        System.out.print("move() in PartitioningEntity");
         if (!tasksAssigned) {
             assignTasks();
             tasksAssigned = true;
