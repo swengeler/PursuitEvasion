@@ -428,7 +428,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
                 tempTriangle = new javafx.scene.shape.Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
                 tempTriangle.setFill(currentColor);
                 tempTriangle.setStroke(Color.GREY);
-                Main.pane.getChildren().add(tempTriangle);
+                //Main.pane.getChildren().add(tempTriangle);
             }
         }
 

@@ -2226,6 +2226,7 @@ public class Main extends Application {
                                 if (yProperty.getValue() > maxY) {
                                     maxY = yProperty.getValue();
                                 }
+                                System.out.print("(" + coordsDouble[i] + "|" + coordsDouble[i + 1] + ")  ");
                             }
 
                             currentMapPolygon.addAnchor(a);
@@ -2239,6 +2240,7 @@ public class Main extends Application {
                                 pane.getChildren().add(currentMapPolygon);
                             }
                         }
+                        System.out.println();
 
                         if (maxX > pane.getWidth()) {
                             double difference = maxX - pane.getWidth();
