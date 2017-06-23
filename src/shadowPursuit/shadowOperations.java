@@ -453,7 +453,6 @@ public class shadowOperations {
         for (Line l : polygonEdges) {
             if (l != getLineOn(new Point2D(x1, y1), polygonEdges) && l != getLineOn(new Point2D(x2, y2), polygonEdges)) {
                 if (lineIntersect(l, x1, y1, x2, y2)) {
-
                     //System.out.println("\n\nIntersect between " + l + "\nand " + new Line(x1,y1,x2,y2)+ "\n");
                     return false;
                 }
@@ -1014,10 +1013,10 @@ public class shadowOperations {
         double p1X, p2X, p1Y, p2Y;
 
         p1X = p1.getX();
-        p1Y = p1.getX();
+        p1Y = p1.getY();
 
         p2X = p2.getX();
-        p2Y = p2.getX();
+        p2Y = p2.getY();
 
 
         return distance(p1X, p1Y, p2X, p2Y);
