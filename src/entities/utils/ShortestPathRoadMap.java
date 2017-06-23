@@ -338,7 +338,14 @@ public class ShortestPathRoadMap {
                             PathVertex v1 = reflexVertices.get(i);
                             PathVertex v2 = reflexVertices.get(j);
                             double differenceSquared = Math.pow(v1.getEstX() - v2.getEstX(), 2) + Math.pow(v1.getEstY() - v2.getEstY(), 2);
-                            shortestPathGraph.setEdgeWeight(shortestPathGraph.addEdge(v1, v2), Math.sqrt(differenceSquared));
+                            DefaultWeightedEdge edge = shortestPathGraph.addEdge(v1, v2);
+                            if (edge != null) {
+                                shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
+                            } else {
+                                System.out.println("1: " + shortestPathGraph.containsEdge(v1, v2));
+                                System.out.println("2: " + shortestPathGraph.containsEdge(shortestPathGraph.getEdgeFactory().createEdge(v1, v2)));
+                                shortestPathGraph.getEdgeFactory().createEdge(v1, v2);
+                            }
                         }
                     }
                 }

@@ -1,9 +1,13 @@
 package maps;
 
 import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.Polygon;
 import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -78,13 +82,26 @@ public class GridMapGenerator extends Application {
         );*/
 
         double[] innerPoints = new double[]{
-                0.0, 0.0, 0.0, 250.0, 100.0, 250.0, 100.0, 750.0, 0.0, 750.0,
-                0.0, 1000.0, 350.0, 1000.0, 350.0, 1100.0, 650.0, 1100.0, 650.0, 1000.0,
-                1000.0, 1000.0, 1000.0, 650.0, 1100.0, 650.0, 1100.0, 350.0, 1000.0, 350.0,
-                1000.0, 0.0, 750.0, 0.0, 750.0, 100.0, 250.0, 100.0, 250.0, 0.0
+                0.0, 0.0, 0.0, 250.0, 125.0, 250.0, 125.0, 750.0, 0.0, 750.0,
+                0.0, 1000.0, 350.0, 1000.0, 350.0, 1125.0, 650.0, 1125.0, 650.0, 1000.0,
+                1000.0, 1000.0, 1000.0, 650.0, 1125.0, 650.0, 1125.0, 350.0, 1000.0, 350.0,
+                1000.0, 0.0, 750.0, 0.0, 750.0, 125.0, 250.0, 125.0, 250.0, 0.0
         };
 
         double[] outerLeft = new double[]{
+                0.0, 0.0, 0.0, 450.0, 125.0, 450.0, 125.0, 750.0, 0.0, 750.0, 0.0, 1100.0
+        };
+        double[] outerBottom = new double[]{
+                0.0, 0.0, 350.0, 0.0, 350.0, 125.0, 850.0, 125.0, 850.0, 0.0, 1100.0, 0.0
+        };
+        double[] outerRight = new double[]{
+                0.0, 0.0, 0.0, 350.0, 125.0, 350.0, 125.0, 850.0, 0.0, 850.0, 0.0, 1100.0
+        };
+        double[] outerTop = new double[]{
+                0.0, 0.0, 450.0, 0.0, 450.0, 125.0, 750.0, 125.0, 750.0, 0.0, 1100.0, 0.0
+        };
+
+        /*double[] outerLeft = new double[]{
                 0.0, 0.0, 0.0, 450.0, 100.0, 450.0, 100.0, 750.0, 0.0, 750.0, 0.0, 1100.0
         };
         double[] outerBottom = new double[]{
@@ -95,7 +112,7 @@ public class GridMapGenerator extends Application {
         };
         double[] outerTop = new double[]{
                 0.0, 0.0, 450.0, 0.0, 450.0, 100.0, 750.0, 100.0, 750.0, 0.0, 1100.0, 0.0
-        };
+        };*/
 
         for (int i = 0; i < yDimension; i++) {
             outer.getPoints().addAll(
@@ -103,9 +120,11 @@ public class GridMapGenerator extends Application {
                     outerLeft[2], outerLeft[3] + i * 1100.0,
                     outerLeft[4], outerLeft[5] + i * 1100.0,
                     outerLeft[6], outerLeft[7] + i * 1100.0,
-                    outerLeft[8], outerLeft[9] + i * 1100.0,
-                    outerLeft[10], outerLeft[11] + i * 1100.0
+                    outerLeft[8], outerLeft[9] + i * 1100.0
             );
+            if (i == yDimension - 1) {
+                outer.getPoints().addAll(outerLeft[10], outerLeft[11] + i * 1100.0);
+            }
         }
         for (int i = 0; i < xDimension; i++) {
             outer.getPoints().addAll(
@@ -113,9 +132,11 @@ public class GridMapGenerator extends Application {
                     outerBottom[2] + i * 1100.0, outerBottom[3] + yDimension * 1100.0 + 100.0,
                     outerBottom[4] + i * 1100.0, outerBottom[5] + yDimension * 1100.0 + 100.0,
                     outerBottom[6] + i * 1100.0, outerBottom[7] + yDimension * 1100.0 + 100.0,
-                    outerBottom[8] + i * 1100.0, outerBottom[9] + yDimension * 1100.0 + 100.0,
-                    outerBottom[10] + i * 1100.0, outerBottom[11] + yDimension * 1100.0 + 100.0
+                    outerBottom[8] + i * 1100.0, outerBottom[9] + yDimension * 1100.0 + 100.0
             );
+            if (i == xDimension - 1) {
+                outer.getPoints().addAll(outerBottom[10] + i * 1100.0, outerBottom[11] + yDimension * 1100.0 + 100.0);
+            }
         }
         outer.getPoints().addAll(xDimension * 1100.0 + 100.0, yDimension * 1100.0 + 100.0);
         for (int i = yDimension - 1; i >= 0; i--) {
@@ -124,9 +145,11 @@ public class GridMapGenerator extends Application {
                     outerRight[8] + xDimension * 1100.0 + 100.0, outerRight[9] + i * 1100.0,
                     outerRight[6] + xDimension * 1100.0 + 100.0, outerRight[7] + i * 1100.0,
                     outerRight[4] + xDimension * 1100.0 + 100.0, outerRight[5] + i * 1100.0,
-                    outerRight[2] + xDimension * 1100.0 + 100.0, outerRight[3] + i * 1100.0,
-                    outerRight[0] + xDimension * 1100.0 + 100.0, outerRight[1] + i * 1100.0
+                    outerRight[2] + xDimension * 1100.0 + 100.0, outerRight[3] + i * 1100.0
             );
+            if (i == 0) {
+                outer.getPoints().addAll(outerRight[0] + xDimension * 1100.0 + 100.0, outerRight[1] + i * 1100.0);
+            }
         }
         for (int i = xDimension - 1; i >= 0; i--) {
             outer.getPoints().addAll(
@@ -134,9 +157,11 @@ public class GridMapGenerator extends Application {
                     outerTop[8] + 1100.0 * i, outerTop[9],
                     outerTop[6] + 1100.0 * i, outerTop[7],
                     outerTop[4] + 1100.0 * i, outerTop[5],
-                    outerTop[2] + 1100.0 * i, outerTop[3],
-                    outerTop[0] + 1100.0 * i, outerTop[1]
+                    outerTop[2] + 1100.0 * i, outerTop[3]
             );
+            if (i == 0) {
+                outer.getPoints().addAll(outerTop[0] + 1100.0 * i, outerTop[1]);
+            }
         }
         /*for (int i = 0; i < outer.getPoints().size(); i++) {
             outer.getPoints().set(i, outer.getPoints().get(i) * 0.5);
@@ -144,9 +169,13 @@ public class GridMapGenerator extends Application {
         for (int l = 0; l < outer.getPoints().size(); l += 2) {
             outer.getPoints().set(l, outer.getPoints().get(l) * 0.5);
             outer.getPoints().set(l + 1, outer.getPoints().get(l + 1) * 0.5);
+            Label label = new Label("" + l);
+            label.setTranslateX(outer.getPoints().get(l) + 5);
+            label.setTranslateY(outer.getPoints().get(l + 1) + 5);
+            pane.getChildren().addAll(label, new Circle(outer.getPoints().get(l), outer.getPoints().get(l + 1), 4, Color.BLUE));
         }
         mapPolygons.add(outer);
-        pane.getChildren().add(outer);
+        //pane.getChildren().add(outer);
 
         javafx.scene.shape.Polygon inner;
         for (int i = 0; i < xDimension; i++) {
@@ -158,14 +187,34 @@ public class GridMapGenerator extends Application {
                 /*for (int l = 0; l < inner.getPoints().size(); l++) {
                     inner.getPoints().set(l, inner.getPoints().get(l) * 0.5);
                 }*/
+                inner.getPoints().addAll(inner.getPoints().get(0), inner.getPoints().get(1));
                 for (int l = 0; l < inner.getPoints().size(); l += 2) {
                     inner.getPoints().set(l, inner.getPoints().get(l) * 0.5);
                     inner.getPoints().set(l + 1, inner.getPoints().get(l + 1) * 0.5);
                 }
                 mapPolygons.add(inner);
                 inner.setFill(Color.WHITE);
-                pane.getChildren().add(inner);
+                //pane.getChildren().add(inner);
             }
+        }
+
+        int c = 0;
+        for (javafx.scene.shape.Polygon p : mapPolygons) {
+            for (int i = 0; i < p.getPoints().size(); i += 2) {
+                for (int j = 0; j < p.getPoints().size(); j += 2) {
+                    if (i != j && (double) p.getPoints().get(i) == (double) p.getPoints().get(j) && (double) p.getPoints().get(i + 1) == (double) p.getPoints().get(j + 1)) {
+                        System.out.println("Duplicate point in polygon " + c + " (i = " + i + ", j = " + j + "): (" + p.getPoints().get(i) + "|" + p.getPoints().get(i + 1) + ")");
+                    }
+                }
+            }
+            c++;
+        }
+
+        for (int l = 0; l < mapPolygons.get(1).getPoints().size(); l += 2) {
+            Label label = new Label("" + l);
+            label.setTranslateX(mapPolygons.get(1).getPoints().get(l) + 5);
+            label.setTranslateY(mapPolygons.get(1).getPoints().get(l + 1) + 5);
+            pane.getChildren().addAll(label, new Circle(mapPolygons.get(1).getPoints().get(l), mapPolygons.get(1).getPoints().get(l + 1), 4, Color.GREEN));
         }
 
 
@@ -284,10 +333,10 @@ public class GridMapGenerator extends Application {
             pane.getChildren().addAll(new Circle(c.x, c.y, 4, Color.GREEN), l);
             System.out.println(counter + " - x: " + c.x + ", y: " + c.y);
             counter++;
-        }*//*
+        }*/
         Scene scene = new Scene(pane, 1700, 900);
         stage.setScene(scene);
-        stage.show();*/
+        stage.show();
     }
 
     private void saveMap() {
