@@ -1,5 +1,8 @@
 package ui;
 
+import compgeom.RLineSegment2D;
+import compgeom.RPoint2D;
+import compgeom.algorithms.BentleyOttmann;
 import control.Controller;
 import conversion.GridConversion;
 import entities.base.CentralisedEntity;
@@ -341,12 +344,19 @@ public class Main extends Application {
         menu.getChildren().add(startSimulationButton);
         menu.getChildren().add(pauseSimulationButton);
 
+        Button testIDKButton = new Button("Send help");
+        menu.getChildren().add(testIDKButton);
+
+        testIDKButton.setOnAction(ae -> {
+            heregoesnothing();
+        });
+
         Button testRandomPolyButton = new Button("Test random polygon");
         menu.getChildren().add(testRandomPolyButton);
 
         testRandomPolyButton.setOnAction(ae -> {
             if (randomPolygons != null) {
-                for (Polygon p: randomPolygons) {
+                for (Polygon p : randomPolygons) {
                     Main.pane.getChildren().remove(p);
                 }
             }
@@ -355,7 +365,7 @@ public class Main extends Application {
 
             randomPolygons = polys;
 
-            for (Polygon p: polys) {
+            for (Polygon p : polys) {
                 p.setStroke(Color.DARKORANGE);
                 p.setStrokeWidth(0.5);
                 p.setFill(Color.TRANSPARENT);
@@ -564,8 +574,6 @@ public class Main extends Application {
                 ArrayList<Point2D> wayP = pursuitPath.getPoints();
 
 
-
-
                 for (Polygon p : shadows) {
                     p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
                     p.setFill(Color.GREY.deriveColor(1, 1, 1, 0.1));
@@ -573,7 +581,7 @@ public class Main extends Application {
                     pane.getChildren().add(p);
                 }
                 boolean pusuit = true;
-                if(pusuit) {
+                if (pusuit) {
 
 
                     for (Line line : pursuitPath.getRays()) {
@@ -595,10 +603,8 @@ public class Main extends Application {
                     */
 
 
-
-
-                    for(WayPoint wayPP : pursuitPath.getWayPoints()) {
-                        for(WayPoint wayPPP : wayPP.getConnected()) {
+                    for (WayPoint wayPP : pursuitPath.getWayPoints()) {
+                        for (WayPoint wayPPP : wayPP.getConnected()) {
                             Line line = new Line(wayPP.getX(), wayPP.getY(), wayPPP.getX(), wayPPP.getY());
                             line.setFill(Color.GREEN);
                             line.setStroke(Color.GREEN);
@@ -607,7 +613,6 @@ public class Main extends Application {
                             pane.getChildren().add(line);
                         }
                     }
-
 
 
                     for (int i = 0; i < wayP.size(); i++) {
@@ -624,8 +629,6 @@ public class Main extends Application {
                         c.setFill(Color.GREEN);
                         pane.getChildren().add(c);
                     }
-
-
 
 
                 }
@@ -2718,13 +2721,10 @@ public class Main extends Application {
         });
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
-
     public static ArrayList<Polygon> poly2() {
         Random r = new Random();
         double x, y, rad;
+
         boolean intersect = false;
         boolean contains = false;
 
@@ -2739,6 +2739,7 @@ public class Main extends Application {
         double outerSpikeyness = r.nextDouble();
         int outerVertices = r.nextInt(50 - 4) + 4;
         Polygon outer = checkPoints(outerX, outerY, outerRadius, outerIrregularity, outerSpikeyness, outerVertices);
+
         polygons.add(outer);
 
         //Create obstacles
@@ -2846,14 +2847,14 @@ public class Main extends Application {
 
     public static boolean checkContainment(Polygon one, Polygon two) {
         for (int i = 0; i < one.getPoints().size() - 2; i += 2) {
-            if (two.contains(one.getPoints().get(i).doubleValue(), one.getPoints().get(i+1).doubleValue())) {
+            if (two.contains(one.getPoints().get(i).doubleValue(), one.getPoints().get(i + 1).doubleValue())) {
                 System.out.println("Obstacle containment");
                 return true;
             }
         }
 
         for (int i = 0; i < two.getPoints().size() - 2; i += 2) {
-            if (one.contains(two.getPoints().get(i).doubleValue(), two.getPoints().get(i+1).doubleValue())) {
+            if (one.contains(two.getPoints().get(i).doubleValue(), two.getPoints().get(i + 1).doubleValue())) {
                 System.out.println("Obstacle containment");
                 return true;
             }
@@ -2875,23 +2876,23 @@ public class Main extends Application {
             }
         }
 
-        for (int i = 0; i < one.getPoints().size() - 2; i+= 2) {
-            Line2D l = new Line2D.Double(one.getPoints().get(i).doubleValue(), one.getPoints().get(i+1).doubleValue(), one.getPoints().get(i+2).doubleValue(), one.getPoints().get(i+3).doubleValue());
+        for (int i = 0; i < one.getPoints().size() - 2; i += 2) {
+            Line2D l = new Line2D.Double(one.getPoints().get(i).doubleValue(), one.getPoints().get(i + 1).doubleValue(), one.getPoints().get(i + 2).doubleValue(), one.getPoints().get(i + 3).doubleValue());
             oneLines.add(l);
         }
         Line2D lfone = new Line2D.Double(one.getPoints().get(one.getPoints().size() - 2).doubleValue(), one.getPoints().get(one.getPoints().size() - 1).doubleValue(), one.getPoints().get(0).doubleValue(), one.getPoints().get(1).doubleValue());
         oneLines.add(lfone);
 
 
-        for (int i = 0; i < two.getPoints().size() - 2; i+= 2) {
-            Line2D l = new Line2D.Double(two.getPoints().get(i).doubleValue(), two.getPoints().get(i+1).doubleValue(), two.getPoints().get(i+2).doubleValue(), two.getPoints().get(i+3).doubleValue());
+        for (int i = 0; i < two.getPoints().size() - 2; i += 2) {
+            Line2D l = new Line2D.Double(two.getPoints().get(i).doubleValue(), two.getPoints().get(i + 1).doubleValue(), two.getPoints().get(i + 2).doubleValue(), two.getPoints().get(i + 3).doubleValue());
             twoLines.add(l);
         }
         Line2D lftwo = new Line2D.Double(two.getPoints().get(two.getPoints().size() - 2).doubleValue(), two.getPoints().get(two.getPoints().size() - 1).doubleValue(), two.getPoints().get(0).doubleValue(), two.getPoints().get(1).doubleValue());
         twoLines.add(lftwo);
 
-        for (Line2D oneLine: oneLines) {
-            for (Line2D twoLine: twoLines) {
+        for (Line2D oneLine : oneLines) {
+            for (Line2D twoLine : twoLines) {
                 if (oneLine.intersectsLine(twoLine)) {
                     System.out.println("INTERSECTS");
                     return true;
@@ -2919,7 +2920,7 @@ public class Main extends Application {
             }
 
             if (!dupes) {
-                for (Point2D tpoint: points) {
+                for (Point2D tpoint : points) {
                     Polygon p = new Polygon();
 
                     p.getPoints().add(tpoint.getX() - 1);
@@ -2934,7 +2935,7 @@ public class Main extends Application {
                     p.getPoints().add(tpoint.getX());
                     p.getPoints().add(tpoint.getY() + 1);
 
-                    for (Point2D spoint: points) {
+                    for (Point2D spoint : points) {
                         if (tpoint.equals(spoint)) {
                             continue;
                         } else {
@@ -2971,7 +2972,7 @@ public class Main extends Application {
 
                 for (int j = 0; j < otherlines.size(); j++) {
                     Line2D secondLine = otherlines.get(j);
-                    if (j != i && j != (i-1) && j != (i+1) && !(i == 0 && j == otherlines.size() - 1) && !(j == 0 && i == lines.size() - 1)) {
+                    if (j != i && j != (i - 1) && j != (i + 1) && !(i == 0 && j == otherlines.size() - 1) && !(j == 0 && i == lines.size() - 1)) {
                         if (line.equals(secondLine)) {
                             dupelines++;
                             if (dupelines > 0) {
@@ -2995,6 +2996,72 @@ public class Main extends Application {
         }
 
         return p;
+    }
+
+    public static void heregoesnothing() {
+        //Polygon and lines containers
+        Polygon polygon = new Polygon();
+        Set<RLineSegment2D> lines = new HashSet<>();
+
+        //Helpful for random point generation
+        Random random = new Random();
+
+        //Bounding rectangle box is simply equal to size dimensions
+        int width = (int) pane.getWidth();
+        int height = (int) pane.getHeight();
+        Rectangle boundingBox = new Rectangle(width, height);
+
+        //Just for debugging purposes
+        boundingBox.setFill(Color.ALICEBLUE);
+        Main.pane.getChildren().add(boundingBox);
+
+        //Generate n random vertices within bounding box (aka a walk) (n will be input later)
+        //"The step size is random but weighted towards steps that are smaller if n is large. This reduces the number of crossings in the initial polygon." care about this?
+        int n = 16;
+        double x, y;
+
+        for (int i = 0; i < n; i++) {
+            x = random.nextInt(width);
+            y = random.nextInt(height);
+
+            polygon.getPoints().add(x);
+            polygon.getPoints().add(y);
+        }
+
+        //Just for debugging purposes
+        polygon.setStroke(Color.FIREBRICK);
+        polygon.setFill(Color.TRANSPARENT);
+        Main.pane.getChildren().add(polygon);
+
+        //Create lines
+        for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
+            RPoint2D f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i+1).longValue());
+            RPoint2D s = new RPoint2D(polygon.getPoints().get(i+2).longValue(), polygon.getPoints().get(i+3).longValue());
+            RLineSegment2D line = new RLineSegment2D(f, s);
+            lines.add(line);
+        }
+        RPoint2D l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size()-2).longValue(), polygon.getPoints().get(polygon.getPoints().size()-1).longValue());
+        RPoint2D f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
+        RLineSegment2D line = new RLineSegment2D(l, f);
+        lines.add(line);
+
+        Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
+
+        for (RPoint2D p: intersections.keySet()) {
+            System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
+            Circle c = new Circle(p.x.intValue(), p.y.intValue(), 5, Color.DARKOLIVEGREEN);
+            Main.pane.getChildren().add(c);
+            Set<RLineSegment2D> segments = intersections.get(p);
+            System.out.println(">> Lines in question: ");
+            for (RLineSegment2D segment: segments) {
+                System.out.println(segment);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+        heregoesnothing();
     }
 
 }

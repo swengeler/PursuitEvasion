@@ -2,7 +2,7 @@ package shadowPursuit;
 
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Polygon;
-import simulation.MapRepresentation;
+import maps.MapRepresentation;
 
 import java.util.ArrayList;
 
