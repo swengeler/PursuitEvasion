@@ -1128,7 +1128,6 @@ public class DCRSEntity extends PartitioningEntity {
         ArrayList<GuardManager> squareGuardManagers = new ArrayList<>(separatingLines.size());
         SquareGuardManager temp1, temp2;
 
-
         for (Line l : separatingLines) {
             temp1 = computeSingleGuardManager(l, false);
             temp2 = computeSingleGuardManager(l, true);

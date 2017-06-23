@@ -267,16 +267,20 @@ public class ShortestPathRoadMap {
                     // check if edge is "covered" by excluded polygon
                     //if (!isEdgeAdjacentToPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingPolygon(v1.getX(), v1.getY(), v2.getX(), v2.getY()) && !isEdgeIntersectingLine(v1.getX(), v1.getY(), v2.getX(), v2.getY())) {
                     if (!isEdgeAdjacentToPolygon(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY()) && !isEdgeIntersectingPolygon(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY()) && !isEdgeIntersectingLine(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY())) {
-                        DefaultWeightedEdge edge = shortestPathGraph.addEdge(v1, v2);
-                        if (edge != null) {
-                            shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
-                            if (SHOW_ON_CANVAS) {
-                                Line line = new Line(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY());
-                                line.setStroke(Color.GREEN);
-                                line.setStrokeWidth(2);
-                                Main.pane.getChildren().add(line);
-                                line.toFront();
-                            }
+                        if (!shortestPathGraph.containsEdge(v1, v2)) {
+                            try {
+                                DefaultWeightedEdge edge = shortestPathGraph.addEdge(v1, v2);
+                                if (edge != null) {
+                                    shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
+                                    if (SHOW_ON_CANVAS) {
+                                        Line line = new Line(v1.getEstX(), v1.getEstY(), v2.getEstX(), v2.getEstY());
+                                        line.setStroke(Color.GREEN);
+                                        line.setStrokeWidth(2);
+                                        Main.pane.getChildren().add(line);
+                                        line.toFront();
+                                    }
+                                }
+                            } catch (IllegalArgumentException e) {}
                         }
                     }
                 }
@@ -479,6 +483,7 @@ public class ShortestPathRoadMap {
         double minDistance = Double.MAX_VALUE;
         double minX = 0, minY = 0;
 
+        long before = System.currentTimeMillis();
 
         // add new edges between source and sink and the visible nodes of the graph
         // first for the source
@@ -545,6 +550,9 @@ public class ShortestPathRoadMap {
             }
         }
 
+        System.out.println("Time to check visibility: " + (System.currentTimeMillis() - before));
+        before = System.currentTimeMillis();
+
         // calculate the shortest path and construct the PlannedPath object which will be returned
         DijkstraShortestPath<PathVertex, DefaultWeightedEdge> shortestPathCalculator = new DijkstraShortestPath<>(shortestPathGraph);
         GraphPath<PathVertex, DefaultWeightedEdge> graphPath = shortestPathCalculator.getPath(source, sink);
@@ -565,6 +573,7 @@ public class ShortestPathRoadMap {
             l.setTranslateY(sink.getEstY());
             //Main.pane.getChildren().addAll(line, l);
         }
+        System.out.println("Time to find shortest path: " + (System.currentTimeMillis() - before));
         //try {
         //} catch (NullPointerException e) {
            /* e.printStackTrace();

@@ -33,7 +33,7 @@ public class TestEntity extends DistributedEntity {
         super(map);
         TestEntity.targetX = targetX;
         TestEntity.targetY = targetY;
-        sprm = new ShortestPathRoadMap(map);
+        sprm = shortestPathRoadMap;
         mapThing = map;
     }
 
