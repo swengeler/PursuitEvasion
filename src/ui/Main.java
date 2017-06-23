@@ -64,7 +64,7 @@ public class Main extends Application {
     private ArrayList<Circle> evaders;
     private ArrayList<VisualAgent> visualAgents;
     private ArrayList<RadioButton> entitiesList;
-    private Polygon randomPolygon;
+    private ArrayList<Polygon> randomPolygons;
 
     private BooleanProperty addPoints;
 
@@ -343,87 +343,22 @@ public class Main extends Application {
         menu.getChildren().add(testRandomPolyButton);
 
         testRandomPolyButton.setOnAction(ae -> {
-            if (randomPolygon != null) {
-                Main.pane.getChildren().remove(randomPolygon);
+            if (randomPolygons != null) {
+                for (Polygon p: randomPolygons) {
+                    Main.pane.getChildren().remove(p);
+                }
             }
 
-            ArrayList<Point2D> points;
-            boolean dupes;
-            boolean intersect;
-            //Points rarely seem to be in weird order, not sure what's causing it.
+            ArrayList<Polygon> polys = poly2();
 
-            //Other issue (which increases as spikeyness increases is due to duplicate points, this is fixed below)
+            randomPolygons = polys;
 
-            do {
-                dupes = false;
-
-                points = poly(175, 1, 1, 16);
-                Set<Point2D> set = new HashSet<>(points);
-
-                if (set.size() < points.size()) {
-                    System.out.println("Duplicate(s) detected");
-                    dupes = true;
-                }
-
-                ArrayList<Line2D> lines = new ArrayList<>();
-
-                intersect = false;
-
-                for (int i = 0; i < points.size() - 1; i++) {
-                    Point2D one = points.get(i);
-                    Point2D two = points.get(i + 1);
-
-                    lines.add(new Line2D.Double(one.getX(), one.getY(), two.getX(), two.getY()));
-                }
-
-                Point2D f = points.get(0);
-                Point2D l = points.get(points.size() - 1);
-                lines.add(new Line2D.Double(f.getX(), f.getY(), l.getX(), l.getY()));
-
-                int c = 0;
-                for (Line2D line : lines) {
-                    int dupelines = 0;
-
-                    ArrayList<Line2D> otherlines = new ArrayList<>(lines);
-                    otherlines.remove(line);
-
-                    for (Line2D secondLine : otherlines) {
-                        if (line.equals(secondLine)) {
-                            dupelines++;
-                            if (dupelines > 0) {
-                                System.out.println("***** MULTIPLE DUPE LINES *****");
-                                intersect = true;
-                            }
-                        } else if (line.intersectsLine(secondLine)) {
-                            c++;
-                        }
-
-                    }
-                }
-
-                if (c == 32) {
-                    System.out.println("seems okay");
-                } else {
-                    System.out.println("should be denied, diff:" + Math.abs(c - 32));
-                    intersect = true;
-                }
-
-            } while (dupes || intersect);
-
-
-            Polygon p = new Polygon();
-            for (Point2D point : points) {
-                p.getPoints().add(point.getX());
-                p.getPoints().add(point.getY());
+            for (Polygon p: polys) {
+                p.setStroke(Color.DARKORANGE);
+                //p.setStrokeWidth(1);
+                p.setFill(Color.TRANSPARENT);
+                Main.pane.getChildren().add(p);
             }
-
-            p.setStroke(Color.DARKORANGE);
-            p.setStrokeWidth(3);
-            p.setFill(Color.TRANSPARENT);
-
-            randomPolygon = p;
-
-            Main.pane.getChildren().add(p);
         });
 
         startSimulationButton.setOnAction(ae -> {
@@ -2721,12 +2656,72 @@ public class Main extends Application {
         launch(args);
     }
 
-    public ArrayList<Point2D> poly(double avgRadius, double irregularity, double spikeyness, int numVerts) {
+    public static ArrayList<Polygon> poly2() {
+        Random r = new Random();
+        double x, y, rad;
+        boolean intersect = false;
+        boolean contains = false;
+
+        //Container
+        ArrayList<Polygon> polygons = new ArrayList<>();
+
+        //Create outer polygon
+        int outerX = r.nextInt(750 - 250) + 250;
+        int outerY = r.nextInt(500 - 200) + 200;
+        int outerRadius = r.nextInt(250 - 100) + 100;
+        double outerIrregularity = r.nextDouble();
+        double outerSpikeyness = r.nextDouble();
+        int outerVertices = r.nextInt(50 - 4) + 4;
+        Polygon outer = checkPoints(outerX, outerY, outerRadius, outerIrregularity, outerSpikeyness, outerVertices);
+        polygons.add(outer);
+
+        //Create obstacles
+
+        int numObstacles = r.nextInt(4);
+
+        for (int i = 0; i < numObstacles; i++) {
+            Polygon posObstacle;
+
+            do {
+                x = r.nextInt((outerX + 150) - (outerX - 150)) + (outerX - 150);
+                y = r.nextInt((outerY + 150) - (outerY - 150)) + (outerY - 150);
+                rad = r.nextInt(outerRadius - 10) + 10;
+                double irregularity = r.nextDouble();
+                double spikeyness = r.nextDouble();
+                int vertices = r.nextInt(16 - 4) + 4;
+
+                posObstacle = checkPoints(x, y, rad, irregularity, spikeyness, vertices);
+                intersect = checkIntersection(posObstacle, outer, true);
+
+                if (polygons.size() != 1 && !intersect) {
+                    for (int j = 1; j < polygons.size(); j++) {
+                        intersect = checkIntersection(posObstacle, polygons.get(j), false);
+                        if (intersect) {
+                            break;
+                        }
+                    }
+
+                    if (!intersect) {
+                        for (int k = 1; k < polygons.size(); k++) {
+                            contains = checkContainment(posObstacle, polygons.get(k));
+                            if (contains) {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                //Do we need a check to see whether it should be visual? (points outside of map)
+            } while (intersect || contains);
+
+            polygons.add(posObstacle);
+        }
+
+        return polygons;
+    }
+
+    public static ArrayList<Point2D> poly(double centerX, double centerY, double avgRadius, double irregularity, double spikeyness, int numVerts) {
         //https://stackoverflow.com/questions/8997099/algorithm-to-generate-random-2d-polygon
-
-        double centerX = 400;
-        double centerY = 350;
-
         irregularity = clip(irregularity, 0, 1) * 2 * Math.PI / numVerts;
         spikeyness = clip(spikeyness, 0, 1) * avgRadius;
 
@@ -2771,7 +2766,7 @@ public class Main extends Application {
         return points;
     }
 
-    private double clip(double x, double min, double max) {
+    private static double clip(double x, double min, double max) {
         if (min > max) {
             return x;
         } else if (x < min) {
@@ -2781,6 +2776,130 @@ public class Main extends Application {
         } else {
             return x;
         }
+    }
+
+    public static boolean checkContainment(Polygon one, Polygon two) {
+        for (int i = 0; i < one.getPoints().size() - 2; i += 2) {
+            if (two.contains(one.getPoints().get(i).doubleValue(), one.getPoints().get(i+1).doubleValue())) {
+                System.out.println("Obstacle containment");
+                return true;
+            }
+        }
+
+        for (int i = 0; i < two.getPoints().size() - 2; i += 2) {
+            if (one.contains(two.getPoints().get(i).doubleValue(), two.getPoints().get(i+1).doubleValue())) {
+                System.out.println("Obstacle containment");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean checkIntersection(Polygon one, Polygon two, boolean containCheck) {
+        ArrayList<Line2D> oneLines = new ArrayList<>();
+        ArrayList<Line2D> twoLines = new ArrayList<>();
+
+        if (containCheck) {
+            for (int i = 0; i < one.getPoints().size(); i += 2) {
+                if (!two.contains(one.getPoints().get(i).doubleValue(), one.getPoints().get(i + 1).doubleValue())) {
+                    System.out.println("NOT CONTAINED");
+                    return true;
+                }
+            }
+        }
+
+        for (int i = 0; i < one.getPoints().size() - 2; i+= 2) {
+            Line2D l = new Line2D.Double(one.getPoints().get(i).doubleValue(), one.getPoints().get(i+1).doubleValue(), one.getPoints().get(i+2).doubleValue(), one.getPoints().get(i+3).doubleValue());
+            oneLines.add(l);
+        }
+        Line2D lfone = new Line2D.Double(one.getPoints().get(one.getPoints().size() - 2).doubleValue(), one.getPoints().get(one.getPoints().size() - 1).doubleValue(), one.getPoints().get(0).doubleValue(), one.getPoints().get(1).doubleValue());
+        oneLines.add(lfone);
+
+
+        for (int i = 0; i < two.getPoints().size() - 2; i+= 2) {
+            Line2D l = new Line2D.Double(two.getPoints().get(i).doubleValue(), two.getPoints().get(i+1).doubleValue(), two.getPoints().get(i+2).doubleValue(), two.getPoints().get(i+3).doubleValue());
+            twoLines.add(l);
+        }
+        Line2D lftwo = new Line2D.Double(two.getPoints().get(two.getPoints().size() - 2).doubleValue(), two.getPoints().get(two.getPoints().size() - 1).doubleValue(), two.getPoints().get(0).doubleValue(), two.getPoints().get(1).doubleValue());
+        twoLines.add(lftwo);
+
+        for (Line2D oneLine: oneLines) {
+            for (Line2D twoLine: twoLines) {
+                if (oneLine.intersectsLine(twoLine)) {
+                    System.out.println("INTERSECTS");
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static Polygon checkPoints(double centerX, double centerY, double avgRadius, double irregularity, double spikeyness, int vertices) {
+        ArrayList<Point2D> points;
+        boolean dupes;
+        boolean intersect;
+
+        do {
+            dupes = false;
+
+            points = poly(centerX, centerY, avgRadius, irregularity, spikeyness, vertices);
+            Set<Point2D> set = new HashSet<>(points);
+
+            if (set.size() < points.size()) {
+                System.out.println("Duplicate(s) detected");
+                dupes = true;
+            }
+
+            ArrayList<Line2D> lines = new ArrayList<>();
+
+            intersect = false;
+
+            for (int i = 0; i < points.size() - 1; i++) {
+                Point2D one = points.get(i);
+                Point2D two = points.get(i + 1);
+
+                lines.add(new Line2D.Double(one.getX(), one.getY(), two.getX(), two.getY()));
+            }
+
+            Point2D f = points.get(0);
+            Point2D l = points.get(points.size() - 1);
+            lines.add(new Line2D.Double(f.getX(), f.getY(), l.getX(), l.getY()));
+
+            int c = 0;
+            for (int i = 0; i < lines.size(); i++) {
+                Line2D line = lines.get(i);
+                int dupelines = 0;
+
+                ArrayList<Line2D> otherlines = new ArrayList<>(lines);
+
+                for (int j = 0; j < otherlines.size(); j++) {
+                    Line2D secondLine = otherlines.get(j);
+                    if (j != i && j != (i-1) && j != (i+1) && !(i == 0 && j == otherlines.size() - 1) && !(j == 0 && i == lines.size() - 1)) {
+                        if (line.equals(secondLine)) {
+                            dupelines++;
+                            if (dupelines > 0) {
+                                System.out.println("***** MULTIPLE DUPE LINES *****");
+                                intersect = true;
+                            }
+                        } else if (line.intersectsLine(secondLine)) {
+                            intersect = true;
+                        }
+                    }
+
+                }
+            }
+
+        } while (dupes || intersect);
+
+        Polygon p = new Polygon();
+        for (Point2D point : points) {
+            p.getPoints().add(point.getX());
+            p.getPoints().add(point.getY());
+        }
+
+        return p;
     }
 
 }
