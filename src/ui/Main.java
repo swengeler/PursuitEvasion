@@ -2244,12 +2244,12 @@ public class Main extends Application {
                     }
                     mapPolygons.get(0).setMouseTransparent(true);
 
-                    if (maxX > pane.getWidth()) {
+                    if (maxX > pane.getWidth() && maxX < 1920) {
                         double difference = maxX - pane.getWidth();
                         stage.setWidth(stage.getWidth() + difference);
                         stage.centerOnScreen();
                     }
-                    if (maxY > pane.getHeight()) {
+                    if (maxY > pane.getHeight() && maxY < 1080) {
                         double difference = maxY - pane.getHeight();
                         stage.setHeight(stage.getHeight() + difference);
                         stage.centerOnScreen();
@@ -2308,12 +2308,12 @@ public class Main extends Application {
                         }
                         System.out.println();
 
-                        if (maxX > pane.getWidth()) {
+                        if (maxX > pane.getWidth() && maxX < 1920) {
                             double difference = maxX - pane.getWidth();
                             stage.setWidth(stage.getWidth() + difference);
                             stage.centerOnScreen();
                         }
-                        if (maxY > pane.getHeight()) {
+                        if (maxY > pane.getHeight() && maxY < 1080) {
                             double difference = maxY - pane.getHeight();
                             stage.setHeight(stage.getHeight() + difference);
                             stage.centerOnScreen();

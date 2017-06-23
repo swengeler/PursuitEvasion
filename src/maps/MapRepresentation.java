@@ -11,8 +11,7 @@ import simulation.Agent;
 import ui.Main;
 import ui.MapPolygon;
 
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 
 public class MapRepresentation {
 
@@ -29,22 +28,25 @@ public class MapRepresentation {
     private ArrayList<LineSegment> borderLines;
     private ArrayList<LineSegment> obstacleLines;
 
+    private double minX, maxX, minY, maxY;
+
     private ArrayList<Entity> pursuingEntities;
     private ArrayList<Entity> evadingEntities;
 
-    public MapRepresentation(ArrayList<MapPolygon> map) {
-        init(map);
+    public MapRepresentation(List<Polygon> map) {
+        allPolygons = new ArrayList<>();
+        allPolygons.addAll(map);
+        obstaclePolygons = new ArrayList<>();
+        obstaclePolygons.addAll(map);
+        borderPolygon = allPolygons.get(0);
+        obstaclePolygons.remove(0);
+
+        init();
         pursuingEntities = new ArrayList<>();
         evadingEntities = new ArrayList<>();
     }
 
-    public MapRepresentation(ArrayList<MapPolygon> map, ArrayList<Entity> pursuingEntities, ArrayList<Entity> evadingEntities) {
-        init(map);
-        this.pursuingEntities = pursuingEntities == null ? new ArrayList<>() : pursuingEntities;
-        this.evadingEntities = evadingEntities == null ? new ArrayList<>() : evadingEntities;
-    }
-
-    private void init(ArrayList<MapPolygon> map) {
+    public MapRepresentation(ArrayList<MapPolygon> map) {
         allPolygons = new ArrayList<>();
         obstaclePolygons = new ArrayList<>();
         for (MapPolygon p : map) {
@@ -56,10 +58,46 @@ public class MapRepresentation {
         borderPolygon = allPolygons.get(0);
         obstaclePolygons.remove(0);
 
+        init();
+        pursuingEntities = new ArrayList<>();
+        evadingEntities = new ArrayList<>();
+    }
+
+    public MapRepresentation(ArrayList<MapPolygon> map, ArrayList<Entity> pursuingEntities, ArrayList<Entity> evadingEntities) {
+        allPolygons = new ArrayList<>();
+        obstaclePolygons = new ArrayList<>();
+        for (MapPolygon p : map) {
+            if (p.getPoints().size() > 0) {
+                allPolygons.add(p.getPolygon());
+                obstaclePolygons.add(allPolygons.get(allPolygons.size() - 1));
+            }
+        }
+        borderPolygon = allPolygons.get(0);
+        obstaclePolygons.remove(0);
+
+        init();
+        this.pursuingEntities = pursuingEntities == null ? new ArrayList<>() : pursuingEntities;
+        this.evadingEntities = evadingEntities == null ? new ArrayList<>() : evadingEntities;
+    }
+
+    private void init() {
+        minX = minY = Double.MAX_VALUE;
+        maxX = maxY = -Double.MAX_VALUE;
+
         polygonEdges = new ArrayList<>();
         for (Polygon p : allPolygons) {
             for (int i = 0; i < p.getPoints().size(); i += 2) {
                 polygonEdges.add(new Line(p.getPoints().get(i), p.getPoints().get(i + 1), (p.getPoints().get((i + 2) % p.getPoints().size())), (p.getPoints().get((i + 3) % p.getPoints().size()))));
+                if (p.getPoints().get(i) < minX) {
+                    minX = p.getPoints().get(i);
+                } else if (p.getPoints().get(i) > maxX) {
+                    maxX = p.getPoints().get(i);
+                }
+                if (p.getPoints().get(i + 1) < minY) {
+                    minY = p.getPoints().get(i + 1);
+                } else if (p.getPoints().get(i + 1) > maxY) {
+                    maxY = p.getPoints().get(i + 1);
+                }
             }
         }
 
@@ -104,8 +142,6 @@ public class MapRepresentation {
 
         // TODO: construct LinearRing objects from polygons, construct a Polygon object from that
     }
-
-    Random rand = new Random(23548);
 
     public boolean legalPosition(double xPos, double yPos) {
         /*tempPoint.getCoordinate().x = xPos;
@@ -171,6 +207,16 @@ public class MapRepresentation {
 
     public boolean legalPosition(Point p) {
         return polygon.distance(p) < GeometryOperations.PRECISION_EPSILON;
+    }
+
+    public Coordinate getRandomPosition() {
+        double randX = Math.random() * (maxX - minX) + minX;
+        double randY = Math.random() * (maxY - minY) + minY;
+        while (!legalPosition(randX, randY)) {
+            randX = Math.random() * (maxX - minX) + minX;
+            randY = Math.random() * (maxY - minY) + minY;
+        }
+        return new Coordinate(randX, randY);
     }
 
     public ArrayList<LineSegment> getBorderLines() {

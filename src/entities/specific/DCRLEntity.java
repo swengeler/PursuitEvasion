@@ -1072,6 +1072,7 @@ public class DCRLEntity extends PartitioningEntity {
                 originalAndBoundaryShareSegment = d1.getValue4()[0].equals(d2.getValue3()[0]) || d1.getValue4()[0].equals(d2.getValue3()[1]) || d1.getValue4()[1].equals(d2.getValue3()[0]) || d1.getValue4()[1].equals(d2.getValue3()[1]);*/
 
             if (originalPointsShareSegment) {
+                // TODO: change this so that the union doesn't have to be used
                 currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue1(), c1}), GeometryOperations.factory);
                 visibilityPolygon = visibilityPolygon.union(currentTriangle);
                 coordinates.add(d1.getValue1());

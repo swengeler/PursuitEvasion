@@ -54,8 +54,8 @@ public class GridMapGenerator extends Application {
         final boolean xStretch = true;
         final boolean yStretch = true;
 
-        final int xDimension = 2;
-        final int yDimension = 1;
+        final int xDimension = 3;
+        final int yDimension = 2;
 
         double horizontalWidth = DEFAULT_COORDS[11] * xScale;
         double horizontalHeight = DEFAULT_COORDS[16] * (yStretch ? yScale : 1.0);
@@ -167,8 +167,8 @@ public class GridMapGenerator extends Application {
             outer.getPoints().set(i, outer.getPoints().get(i) * 0.5);
         }*/
         for (int l = 0; l < outer.getPoints().size(); l += 2) {
-            outer.getPoints().set(l, outer.getPoints().get(l) * 0.5);
-            outer.getPoints().set(l + 1, outer.getPoints().get(l + 1) * 0.5);
+            outer.getPoints().set(l, outer.getPoints().get(l) * 0.25);
+            outer.getPoints().set(l + 1, outer.getPoints().get(l + 1) * 0.25);
             Label label = new Label("" + l);
             label.setTranslateX(outer.getPoints().get(l) + 5);
             label.setTranslateY(outer.getPoints().get(l + 1) + 5);
@@ -189,8 +189,8 @@ public class GridMapGenerator extends Application {
                 }*/
                 inner.getPoints().addAll(inner.getPoints().get(0), inner.getPoints().get(1));
                 for (int l = 0; l < inner.getPoints().size(); l += 2) {
-                    inner.getPoints().set(l, inner.getPoints().get(l) * 0.5);
-                    inner.getPoints().set(l + 1, inner.getPoints().get(l + 1) * 0.5);
+                    inner.getPoints().set(l, inner.getPoints().get(l) * 0.25);
+                    inner.getPoints().set(l + 1, inner.getPoints().get(l + 1) * 0.25);
                 }
                 mapPolygons.add(inner);
                 inner.setFill(Color.WHITE);

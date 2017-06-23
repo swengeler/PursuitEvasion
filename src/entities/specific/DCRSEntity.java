@@ -406,7 +406,7 @@ public class DCRSEntity extends PartitioningEntity {
                     }
                 }
             }
-        } else if (map.isVisible(target, catcher)) {
+        } else if (target != null && map.isVisible(target, catcher)) {
             length = Math.sqrt(Math.pow(target.getXPos() - catcher.getXPos(), 2) + Math.pow(target.getYPos() - catcher.getYPos(), 2));
             deltaX = (target.getXPos() - catcher.getXPos()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
             deltaY = (target.getYPos() - catcher.getYPos()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
@@ -1012,6 +1012,14 @@ public class DCRSEntity extends PartitioningEntity {
                 currentStage = Stage.FOLLOW_TARGET;
             }
         }
+    }
+
+    public Agent getSearcher() {
+        return searcher;
+    }
+
+    public Agent getCatcher() {
+        return catcher;
     }
 
     @Override
