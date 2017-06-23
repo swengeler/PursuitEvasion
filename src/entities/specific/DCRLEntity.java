@@ -598,24 +598,34 @@ public class DCRLEntity extends PartitioningEntity {
     protected void computeRequirements() {
         // build needed data structures and analyse map to see how many agents are required
         try {
+            System.out.println("Check 0");
+
             // computing the triangulation of the given map
             Tuple<ArrayList<DTriangle>, ArrayList<DTriangle>> triangles = triangulate(map);
             ArrayList<DTriangle> nodes = triangles.getFirst();
             ArrayList<DTriangle> holeTriangles = triangles.getSecond();
+
+            System.out.println("Check 1");
 
             // computing adjacency between the triangles in the map -> modelling it as a graph
             Tuple<int[][], int[]> matrices = computeAdjacency(nodes);
             int[][] originalAdjacencyMatrix = matrices.getFirst();
             int[] degreeMatrix = matrices.getSecond();
 
+            System.out.println("Check 2");
+
             // grouping hole triangles by holes (through adjacency)
             ArrayList<ArrayList<DTriangle>> holes = computeHoles(holeTriangles);
+
+            System.out.println("Check 3");
 
             // compute separating triangles and the updated adjacency matrix
             Triplet<ArrayList<DTriangle>, ArrayList<DEdge>, int[][]> separation = computeSeparatingTriangles(nodes, holes, originalAdjacencyMatrix, degreeMatrix);
             ArrayList<DTriangle> separatingTriangles = separation.getValue0();
             ArrayList<DEdge> nonSeparatingLines = separation.getValue1();
             int[][] spanningTreeAdjacencyMatrix = separation.getValue2();
+
+            System.out.println("Check 4");
 
             // compute the simply connected components in the graph
             ArrayList<DTriangle> componentNodes = new ArrayList<>();
@@ -627,12 +637,16 @@ public class DCRLEntity extends PartitioningEntity {
             Tuple<ArrayList<ArrayList<DTriangle>>, int[]> componentInfo = computeConnectedComponents(nodes, componentNodes, spanningTreeAdjacencyMatrix);
             ArrayList<ArrayList<DTriangle>> simplyConnectedComponents = componentInfo.getFirst();
 
+            System.out.println("Check 5");
+
             Triplet<ArrayList<Line>, ArrayList<DEdge>, ArrayList<DEdge>> lineSeparation = computeGuardingLines(separatingTriangles, nonSeparatingLines);
             ArrayList<Line> separatingLines = lineSeparation.getValue0();
             ArrayList<DEdge> reconnectingEdges = lineSeparation.getValue1();
             ArrayList<DEdge> separatingEdges = lineSeparation.getValue2();
             this.separatingLines = separatingLines;
             this.separatingEdges = separatingEdges;
+
+            System.out.println("Check 6");
 
             Tuple<int[][], ArrayList<ArrayList<DTriangle>>> reconnectedAdjacency = computeReconnectedAdjacency(nodes, simplyConnectedComponents, reconnectingEdges, spanningTreeAdjacencyMatrix, separatingTriangles);
             int[][] reconnectedAdjacencyMatrix = reconnectedAdjacency.getFirst();
@@ -661,36 +675,39 @@ public class DCRLEntity extends PartitioningEntity {
         ArrayList<GuardManager> lineGuardManagers = new ArrayList<>(separatingLines.size());
         LineGuardManager tempLGM;
 
-        // for every reflex vertex of the polygon, calculate its visibility polygon
-        // identify reflex vertices:
-        // from shortest path map, get all vertices and convert them into coordinates
-        List<Coordinate> vertices = Arrays.asList(map.getPolygon().getCoordinates());
+        System.out.println("separatingLines.size(): " + separatingLines.size());
+        if (!separatingLines.isEmpty()) {
+            // for every reflex vertex of the polygon, calculate its visibility polygon
+            // identify reflex vertices:
+            // from shortest path map, get all vertices and convert them into coordinates
+            List<Coordinate> vertices = Arrays.asList(map.getPolygon().getCoordinates());
 
-        ArrayList<Coordinate> reflexVertices = new ArrayList<>();
-        Set<PathVertex> temp = shortestPathRoadMap.getVertices();
-        for (PathVertex pv : temp) {
-            reflexVertices.add(new Coordinate(pv.getRealX(), pv.getRealY()));
-        }
+            ArrayList<Coordinate> reflexVertices = new ArrayList<>();
+            Set<PathVertex> temp = shortestPathRoadMap.getVertices();
+            for (PathVertex pv : temp) {
+                reflexVertices.add(new Coordinate(pv.getRealX(), pv.getRealY()));
+            }
 
-        long before = System.currentTimeMillis();
-        ArrayList<Tuple<Geometry, Group>> visibilityInfo = new ArrayList<>(vertices.size());
-        ArrayList<Geometry> visibilityPolygons = new ArrayList<>();
-        for (Coordinate c1 : reflexVertices) {
-            visibilityInfo.add(computeVisibilityPolygon(c1, vertices));
-            visibilityPolygons.add(visibilityInfo.get(visibilityInfo.size() - 1).getFirst());
-        }
-        System.out.println("Time to compute visibility polygons (vertices: " + vertices.size() + ", reflex vertices: " + reflexVertices.size() + "): " + (System.currentTimeMillis() - before) + " ms");
+            long before = System.currentTimeMillis();
+            ArrayList<Tuple<Geometry, Group>> visibilityInfo = new ArrayList<>(vertices.size());
+            ArrayList<Geometry> visibilityPolygons = new ArrayList<>();
+            for (Coordinate c1 : reflexVertices) {
+                visibilityInfo.add(computeVisibilityPolygon(c1, vertices));
+                visibilityPolygons.add(visibilityInfo.get(visibilityInfo.size() - 1).getFirst());
+            }
+            System.out.println("Time to compute visibility polygons (vertices: " + vertices.size() + ", reflex vertices: " + reflexVertices.size() + "): " + (System.currentTimeMillis() - before) + " ms");
 
-        before = System.currentTimeMillis();
-        int c = 0;
-        for (Line l : separatingLines) {
-            l.setStroke(Color.LIGHTBLUE);
-            Main.pane.getChildren().add(l);
-            tempLGM = computeSingleGuardManager(l, reflexVertices, visibilityPolygons);
-            lineGuardManagers.add(tempLGM);
-            System.out.println("Time to compute " + (++c) + " guard(s): " + (System.currentTimeMillis() - before) + " ms");
+            before = System.currentTimeMillis();
+            int c = 0;
+            for (Line l : separatingLines) {
+                l.setStroke(Color.LIGHTBLUE);
+                Main.pane.getChildren().add(l);
+                tempLGM = computeSingleGuardManager(l, reflexVertices, visibilityPolygons);
+                lineGuardManagers.add(tempLGM);
+                System.out.println("Time to compute " + (++c) + " guard(s): " + (System.currentTimeMillis() - before) + " ms");
+            }
+            System.out.println("Time to compute guard(s): " + (System.currentTimeMillis() - before) + " ms");
         }
-        System.out.println("Time to compute guard(s): " + (System.currentTimeMillis() - before) + " ms");
 
         return lineGuardManagers;
     }

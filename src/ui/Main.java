@@ -90,7 +90,7 @@ public class Main extends Application {
     private DCRSEntity testDCRSEntity;
     private DCRLEntity testDCRLEntity;
     private DCRVEntity testDCRVEntity;
-    private int ENTITY_TO_TEST = 0;
+    private int ENTITY_TO_TEST = 1;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //
@@ -1965,6 +1965,7 @@ public class Main extends Application {
             map.getEvadingEntities().add(testEntity);*/
 
             useEntities.set(true);
+
             if (ENTITY_TO_TEST == 0) {
                 testDCRSEntity = new DCRSEntity(map);
                 map.getPursuingEntities().add(testDCRSEntity);
@@ -1992,7 +1993,6 @@ public class Main extends Application {
 
         Button startAdaptedSimulation = new Button("Start adapted simulation");
         startAdaptedSimulation.setOnAction(e -> {
-
             if (adaptedSimulation == null) {
                 boolean valid = true;
 
@@ -2004,7 +2004,9 @@ public class Main extends Application {
                 }
 
                 if (valid) {
+                    System.out.println("Check 23293");
                     adaptedSimulation = new AdaptedSimulation(map);
+                    System.out.println("Check 233535353293");
                 } else {
                     System.out.println("one or more entities do not have required number of agents");
                 }

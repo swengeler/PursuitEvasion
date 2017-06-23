@@ -10,14 +10,16 @@ public abstract class Entity {
 
     public static double UNIVERSAL_SPEED_MULTIPLIER = 1.0 / 50.0;
 
-    protected MapRepresentation map;
-    protected ShortestPathRoadMap shortestPathRoadMap;
+    protected static MapRepresentation map;
+    protected static ShortestPathRoadMap shortestPathRoadMap;
 
     protected Entity(MapRepresentation map) {
-        this.map = map;
-        ShortestPathRoadMap.SHOW_ON_CANVAS = false;
-        shortestPathRoadMap = new ShortestPathRoadMap(map);
-        ShortestPathRoadMap.SHOW_ON_CANVAS = false;
+        if (Entity.map == null) {
+            Entity.map = map;
+        }
+        if (Entity.shortestPathRoadMap == null) {
+            Entity.shortestPathRoadMap = new ShortestPathRoadMap(map);
+        }
     }
 
     public abstract void move();
