@@ -10,11 +10,14 @@ import entities.base.CentralisedEntity;
 import entities.base.Entity;
 import entities.specific.*;
 import entities.utils.ShortestPathRoadMap;
+import javafx.animation.AnimationTimer;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.*;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -3042,8 +3045,11 @@ public class Main extends Application {
 
         //start loop here
         //alter polygon at each step
+        int count = 0;
 
         while (true) {
+            //System.out.println(count);
+            count++;
             ArrayList<RPoint2D> newRoute = null;
             lines.clear();
             points.clear();
@@ -3068,14 +3074,16 @@ public class Main extends Application {
                 break;
             }
 
+            System.out.println("INTERSECTIONS SIZE: " + intersections.size());
+
             for (RPoint2D p : intersections.keySet()) {
-                System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
+                //System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
                 Circle c = new Circle(p.x.intValue(), p.y.intValue(), 5, Color.DARKOLIVEGREEN);
                 Main.pane.getChildren().add(c);
                 Set<RLineSegment2D> segments = intersections.get(p);
-                System.out.println(">> Lines in question: ");
+                //System.out.println(">> Lines in question: ");
                 for (RLineSegment2D segment : segments) {
-                    System.out.println(segment);
+                    //System.out.println(segment);
                 }
             }
 
@@ -3108,7 +3116,7 @@ public class Main extends Application {
                 lines.add(line);
                 linesList.add(line);
 
-                System.out.println("Reordering path");
+                //System.out.println("Reordering path");
 
                 RPoint2D randomPoint = intersectionPointsList.get(random.nextInt(intersectionPointsList.size()));
                 intersectionPointsList.remove(randomPoint);
@@ -3135,37 +3143,60 @@ public class Main extends Application {
 
                 //what is i(u) and what is k(v)? probably the ones to swap?
                 //optswap gets array index out of bounds sometimes, or somehow increases size of new route
-                int u = points.indexOf(intersectingLineOne.p2);
-                int v = points.indexOf(intersectingLineTwo.p1);
+                int a1 = points.indexOf(intersectingLineOne.p1);
+                int a2 = points.indexOf(intersectingLineOne.p2);
+                int b1 = points.indexOf(intersectingLineTwo.p1);
+                int b2 = points.indexOf(intersectingLineTwo.p2);
 
-                newRoute = optSwap(points, u, v);
-                System.out.println("size 1: " + points.size());
-                System.out.println("size 2: " + newRoute.size());
+                int u, v;
+
+                if (Math.abs(a2 - b1)  < Math.abs(a1 - b2)) {
+                    u = a2;
+                    v = b1;
+                } else {
+                    u = a1;
+                    v = b2;
+                }
+
+                //System.out.println("u " + u + ", v " + v);
+                if (u < v) {
+                    newRoute = optSwap(points, u, v);
+                } else {
+                    newRoute = optSwap(points, v, u);
+                }
 
                 //Edit polygon points for next iteration
-                System.out.println(newRoute);
+                //System.out.println(newRoute);
                 polygon.getPoints().clear();
                 for (RPoint2D point: newRoute) {
                     polygon.getPoints().add(point.x.doubleValue());
                     polygon.getPoints().add(point.y.doubleValue());
                 }
+
             }
+            if (count >= n*n*n*n) break;
         }
+
+        Main.pane.getChildren().remove(polygon);
+        Main.pane.getChildren().add(polygon);
     }
 
     public static ArrayList<RPoint2D> optSwap(ArrayList<RPoint2D> route, int i, int k) {
         ArrayList<RPoint2D> newRoute = new ArrayList<>();
-        for (int m = 0; m < i - 1; m++) {
-            newRoute.add(route.get(m));
-        }
 
-        for (int n = k - 1; n >= i - 1; n--) {
-            newRoute.add(route.get(n));
-        }
+            for (int m = 0; m < i - 1; m++) {
+                newRoute.add(route.get(m));
+            }
 
-        for (int o = k; o < route.size(); o++) {
-            newRoute.add(route.get(o));
-        }
+            for (int n = k - 1; n >= i - 1; n--) {
+                if (i != 0) {
+                    newRoute.add(route.get(n));
+                }
+            }
+
+            for (int o = k; o < route.size(); o++) {
+                newRoute.add(route.get(o));
+            }
 
         return newRoute;
     }
