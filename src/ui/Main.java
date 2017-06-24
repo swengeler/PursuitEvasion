@@ -1,5 +1,6 @@
 package ui;
 
+import compgeom.RLine2D;
 import compgeom.RLineSegment2D;
 import compgeom.RPoint2D;
 import compgeom.algorithms.BentleyOttmann;
@@ -3006,6 +3007,7 @@ public class Main extends Application {
         //Containers
         Polygon polygon = new Polygon();
         ArrayList<RPoint2D> points = new ArrayList<>();
+        ArrayList<RLineSegment2D> linesList = new ArrayList<>();
         Set<RLineSegment2D> lines = new HashSet<>();
 
         //Helpful for random point generation
@@ -3022,7 +3024,7 @@ public class Main extends Application {
 
         //Generate n random vertices within bounding box (aka a walk) (n will be input later)
         //"The step size is random but weighted towards steps that are smaller if n is large. This reduces the number of crossings in the initial polygon." care about this?
-        int n = 16;
+        int n = 8;
         double x, y;
 
         for (int i = 0; i < n; i++) {
@@ -3038,23 +3040,28 @@ public class Main extends Application {
         polygon.setFill(Color.TRANSPARENT);
         Main.pane.getChildren().add(polygon);
 
-        //Create lines
-        for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
-            RPoint2D f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
-            RPoint2D s = new RPoint2D(polygon.getPoints().get(i + 2).longValue(), polygon.getPoints().get(i + 3).longValue());
-            RLineSegment2D line = new RLineSegment2D(f, s);
-            lines.add(line);
-        }
-        RPoint2D l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size() - 2).longValue(), polygon.getPoints().get(polygon.getPoints().size() - 1).longValue());
-        RPoint2D f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
-        RLineSegment2D line = new RLineSegment2D(l, f);
-        lines.add(line);
-
         //start loop here
         //alter polygon at each step
 
         while (true) {
+            ArrayList<RPoint2D> newRoute = null;
+            lines.clear();
             points.clear();
+
+            //Create lines
+            for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
+                RPoint2D f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
+                RPoint2D s = new RPoint2D(polygon.getPoints().get(i + 2).longValue(), polygon.getPoints().get(i + 3).longValue());
+                RLineSegment2D line = new RLineSegment2D(f, s);
+                lines.add(line);
+                linesList.add(line);
+            }
+            RPoint2D l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size() - 2).longValue(), polygon.getPoints().get(polygon.getPoints().size() - 1).longValue());
+            RPoint2D f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
+            RLineSegment2D line = new RLineSegment2D(l, f);
+            lines.add(line);
+            linesList.add(line);
+
             Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
 
             if (intersections.isEmpty()) {
@@ -3075,39 +3082,94 @@ public class Main extends Application {
             Set<RPoint2D> intersectionPoints = intersections.keySet();
             ArrayList<RPoint2D> intersectionPointsList = new ArrayList<>();
             intersectionPointsList.addAll(intersectionPoints);
-            RPoint2D randomPoint = intersectionPointsList.get(random.nextInt(intersectionPointsList.size()));
-            Set<RLineSegment2D> segments = intersections.get(randomPoint);
-            RLineSegment2D[] tmp = segments.toArray(new RLineSegment2D[2]);
 
-            RLineSegment2D intersectingLineOne = tmp[0];
-            RLineSegment2D intersectingLineTwo = tmp[1];
-            for (int i = 0; i < polygon.getPoints().size() - 1; i++) {
-                RPoint2D p = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
-                points.add(p);
+            /*
+            Below this line it's a big fat mess.
+            What we need to do:
+
+            while there are still some intersections (we are in this loop now)
+                resolve them all (loop thats coming up an should use 2opt)
+             */
+
+            while (!intersectionPointsList.isEmpty()) {
+                lines.clear();
+                points.clear();
+
+                //Create lines
+                for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
+                    f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
+                    RPoint2D s = new RPoint2D(polygon.getPoints().get(i + 2).longValue(), polygon.getPoints().get(i + 3).longValue());
+                    line = new RLineSegment2D(f, s);
+                    lines.add(line);
+                    linesList.add(line);
+                }
+                l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size() - 2).longValue(), polygon.getPoints().get(polygon.getPoints().size() - 1).longValue());
+                f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
+                lines.add(line);
+                linesList.add(line);
+
+                System.out.println("Reordering path");
+
+                RPoint2D randomPoint = intersectionPointsList.get(random.nextInt(intersectionPointsList.size()));
+                intersectionPointsList.remove(randomPoint);
+                Set<RLineSegment2D> segments = intersections.get(randomPoint);
+                RLineSegment2D[] tmp = segments.toArray(new RLineSegment2D[2]);
+
+                RLineSegment2D intersectingLineOne = tmp[0];
+                RLineSegment2D intersectingLineTwo = tmp[1];
+
+                //2-opt computation here
+                //(A, B) (C,D) -> (A, C) (B, D)
+
+                for (int z = 0; z < linesList.size(); z++) {
+                    RLineSegment2D rls = linesList.get(z);
+
+                    if (!points.contains(rls.p1)) {
+                        points.add(rls.p1);
+                    }
+
+                    if (!points.contains(rls.p2)) {
+                        points.add(rls.p2);
+                    }
+                }
+
+                //what is i(u) and what is k(v)? probably the ones to swap?
+                //optswap gets array index out of bounds sometimes, or somehow increases size of new route
+                int u = points.indexOf(intersectingLineOne.p2);
+                int v = points.indexOf(intersectingLineTwo.p1);
+
+                newRoute = optSwap(points, u, v);
+                System.out.println("size 1: " + points.size());
+                System.out.println("size 2: " + newRoute.size());
+
+                //Edit polygon points for next iteration
+                System.out.println(newRoute);
+                polygon.getPoints().clear();
+                for (RPoint2D point: newRoute) {
+                    polygon.getPoints().add(point.x.doubleValue());
+                    polygon.getPoints().add(point.y.doubleValue());
+                }
             }
-
-            //2-opt computation here
-
-            //Edit polygon points for next iteration
         }
     }
 
-//    public static ArrayList<RPoint2D> optSwap(ArrayList<RPoint2D> route, int i, int k) {
-//        ArrayList<RPoint2D> newRoute = new ArrayList<>();
-//        for (int m = 0; m < i-1; m++) {
-//            newRoute.add(route.get(m));
-//        }
-//
-//        for (int n = k-1; n >= i-1; n--) {
-//            newRoute.add(route.get(n));
-//        }
-//
-//        for (int o = k; o < route.size(); o++) {
-//            newRoute.add(route.get(o));
-//        }
-//
-//        return newRoute;
-//    }
+    public static ArrayList<RPoint2D> optSwap(ArrayList<RPoint2D> route, int i, int k) {
+        ArrayList<RPoint2D> newRoute = new ArrayList<>();
+        for (int m = 0; m < i - 1; m++) {
+            newRoute.add(route.get(m));
+        }
+
+        for (int n = k - 1; n >= i - 1; n--) {
+            newRoute.add(route.get(n));
+        }
+
+        for (int o = k; o < route.size(); o++) {
+            newRoute.add(route.get(o));
+        }
+
+        return newRoute;
+    }
+
 
     public static void main(String[] args) {
         launch(args);
