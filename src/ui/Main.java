@@ -1,20 +1,23 @@
 package ui;
 
-import com.vividsolutions.jts.geom.Coordinate;
+import compgeom.RLine2D;
 import compgeom.RLineSegment2D;
 import compgeom.RPoint2D;
 import compgeom.algorithms.BentleyOttmann;
 import control.Controller;
 import conversion.GridConversion;
-import entities.base.*;
+import entities.base.CentralisedEntity;
+import entities.base.Entity;
 import entities.specific.*;
-import entities.utils.PathVertex;
 import entities.utils.ShortestPathRoadMap;
-import experiments.ExperimentConfiguration;
+import javafx.animation.AnimationTimer;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.*;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -33,11 +36,11 @@ import maps.MapRepresentation;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleWeightedGraph;
 import shadowPursuit.PursuitTree;
+import shadowPursuit.ShadowGraph;
 import shadowPursuit.WayPoint;
 import simulation.*;
+import sun.plugin.javascript.navig.Array;
 
 import java.awt.geom.Line2D;
 import java.io.*;
@@ -1904,40 +1907,9 @@ public class Main extends Application {
                 } catch (DelaunayError delaunayError) {
                     delaunayError.printStackTrace();
                 }
-                //ShortestPathRoadMap.SHOW_ON_CANVAS = true;
-                long before = System.currentTimeMillis();
+                ShortestPathRoadMap.SHOW_ON_CANVAS = true;
                 ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
-                System.out.println("Constructing map: " + (System.currentTimeMillis() - before));
-
-                try {
-                    // write object to file
-                    FileOutputStream fos = new FileOutputStream("E:\\Simon\\Desktop\\sprm.ser");
-                    ObjectOutputStream oos = new ObjectOutputStream(fos);
-                    oos.writeObject(sprm.getShortestPathGraph());
-                    oos.close();
-
-                    // read object from file
-                    FileInputStream fis = new FileInputStream("E:\\Simon\\Desktop\\sprm.ser");
-                    ObjectInputStream ois = new ObjectInputStream(fis);
-                    SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> result = (SimpleWeightedGraph<PathVertex, DefaultWeightedEdge>) ois.readObject();
-                    ois.close();
-
-                    before = System.currentTimeMillis();
-                    ShortestPathRoadMap res = new ShortestPathRoadMap(map, result);
-                    System.out.println("Loading map: " + (before - System.currentTimeMillis()));
-                    res.showOnCanvas();
-
-                    Coordinate c1 = map.getRandomPosition();
-                    Coordinate c2 = map.getRandomPosition();
-                    res.getShortestPath(c1.x, c1.y, c2.x, c2.y);
-
-                } catch (IOException err) {
-                    err.printStackTrace();
-                } catch (ClassNotFoundException err) {
-                    err.printStackTrace();
-                }
-
-                //ShortestPathRoadMap.SHOW_ON_CANVAS = false;
+                ShortestPathRoadMap.SHOW_ON_CANVAS = false;
             }
         });
         menu.getChildren().add(shortestPathMapButton);
@@ -2091,100 +2063,6 @@ public class Main extends Application {
 
         primaryStage.setScene(scene);
         primaryStage.show();
-
-
-
-        Button testButton = new Button("Test");
-        testButton.setOnAction(e -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Select maps to use");
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map data files", "*.mdo", "*.maa"));
-            File selectedFile = fileChooser.showOpenDialog(primaryStage);
-
-            if (selectedFile != null) {
-                MapRepresentation mapRepresentation = ExperimentConfiguration.loadMap(selectedFile);
-
-                Polygon polygon = mapRepresentation.getBorderPolygon();
-                polygon.setStroke(Color.ORANGE);
-                polygon.setFill(Color.WHITE);
-                pane.getChildren().add(polygon);
-
-                for (Polygon p : mapRepresentation.getObstaclePolygons()) {
-                    p.setStroke(Color.ORANGE);
-                    p.setFill(Color.LIGHTGREY);
-                    pane.getChildren().add(p);
-                }
-
-
-                CentralisedEntity testEntity = new DCRVEntity(mapRepresentation);
-                ArrayList<VisualAgent> pursuers = new ArrayList<>();
-                VisualAgent va;
-                Coordinate c;
-                for (int i = 0; i < testEntity.totalRequiredAgents(); i++) {
-                    c = mapRepresentation.getRandomPosition();
-                    va = new VisualAgent(c.x, c.y);
-                    pane.getChildren().add(va);
-                    pursuers.add(va);
-                }
-                c = mapRepresentation.getRandomPosition();
-                VisualAgent evader = new VisualAgent(c.x, c.y);
-                evader.getAgentBody().setFill(Color.LAWNGREEN);
-                pane.getChildren().add(evader);
-
-                //((Runnable) () -> {
-                    Agent a;
-                    AgentSettings as;
-                    // create entity and place agents
-                    CentralisedEntity dcrsEntity = new DCRVEntity(mapRepresentation);
-                    mapRepresentation.getPursuingEntities().add(dcrsEntity);
-                    for (VisualAgent visualAgent : pursuers) {
-                        dcrsEntity.getControlledAgents().add(new Agent(visualAgent.getSettings()));
-                    }
-
-                    DistributedEntity straightLineEntity = new RandomEntity(mapRepresentation);
-                    straightLineEntity.setAgent(new Agent(evader.getSettings()));
-                    mapRepresentation.getEvadingEntities().add(straightLineEntity);
-
-                    Agent catcher = null;
-                    Agent target = straightLineEntity.getControlledAgents().get(0);
-
-                    boolean simulationOver = false;
-                    System.out.println("Start simulation");
-                    long before = System.currentTimeMillis();
-                    while (!simulationOver) {
-                        for (Entity entity : mapRepresentation.getEvadingEntities()) {
-                            if (entity.isActive()) {
-                                entity.move();
-                            }
-                        }
-
-                        for (Entity entity : mapRepresentation.getPursuingEntities()) {
-                            if (entity.isActive()) {
-                                entity.move();
-                            }
-                        }
-
-                        /*if (catcher == null) {
-                            catcher = ((DCRSEntity) dcrsEntity).getCatcher();
-                        }
-
-                        System.out.println("Catcher position: (" + catcher.getXPos() + "|" + catcher.getYPos() + ")");*/
-                        System.out.println("Target position: (" + target.getXPos() + "|" + target.getYPos() + ")");
-
-                        simulationOver = true;
-                        for (Entity entity : mapRepresentation.getEvadingEntities()) {
-                            if (entity.isActive()) {
-                                simulationOver = false;
-                                break;
-                            }
-                        }
-                    }
-                    System.out.print("Simulation took: " + (System.currentTimeMillis() - before) + " ms");
-                //}).run();
-
-            }
-        });
-        menu.getChildren().add(testButton);
     }
 
     private void initPlaceAgents() {
@@ -3129,8 +3007,10 @@ public class Main extends Application {
     }
 
     public static void heregoesnothing() {
-        //Polygon and lines containers
+        //Containers
         Polygon polygon = new Polygon();
+        ArrayList<RPoint2D> points = new ArrayList<>();
+        ArrayList<RLineSegment2D> linesList = new ArrayList<>();
         Set<RLineSegment2D> lines = new HashSet<>();
 
         //Helpful for random point generation
@@ -3147,7 +3027,7 @@ public class Main extends Application {
 
         //Generate n random vertices within bounding box (aka a walk) (n will be input later)
         //"The step size is random but weighted towards steps that are smaller if n is large. This reduces the number of crossings in the initial polygon." care about this?
-        int n = 16;
+        int n = 8;
         double x, y;
 
         for (int i = 0; i < n; i++) {
@@ -3163,31 +3043,164 @@ public class Main extends Application {
         polygon.setFill(Color.TRANSPARENT);
         Main.pane.getChildren().add(polygon);
 
-        //Create lines
-        for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
-            RPoint2D f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i+1).longValue());
-            RPoint2D s = new RPoint2D(polygon.getPoints().get(i+2).longValue(), polygon.getPoints().get(i+3).longValue());
-            RLineSegment2D line = new RLineSegment2D(f, s);
-            lines.add(line);
-        }
-        RPoint2D l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size()-2).longValue(), polygon.getPoints().get(polygon.getPoints().size()-1).longValue());
-        RPoint2D f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
-        RLineSegment2D line = new RLineSegment2D(l, f);
-        lines.add(line);
+        //start loop here
+        //alter polygon at each step
+        int count = 0;
 
-        Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
+        while (true) {
+            //System.out.println(count);
+            count++;
+            ArrayList<RPoint2D> newRoute = null;
+            lines.clear();
+            points.clear();
 
-        for (RPoint2D p: intersections.keySet()) {
-            System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
-            Circle c = new Circle(p.x.intValue(), p.y.intValue(), 5, Color.DARKOLIVEGREEN);
-            Main.pane.getChildren().add(c);
-            Set<RLineSegment2D> segments = intersections.get(p);
-            System.out.println(">> Lines in question: ");
-            for (RLineSegment2D segment: segments) {
-                System.out.println(segment);
+            //Create lines
+            for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
+                RPoint2D f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
+                RPoint2D s = new RPoint2D(polygon.getPoints().get(i + 2).longValue(), polygon.getPoints().get(i + 3).longValue());
+                RLineSegment2D line = new RLineSegment2D(f, s);
+                lines.add(line);
+                linesList.add(line);
             }
+            RPoint2D l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size() - 2).longValue(), polygon.getPoints().get(polygon.getPoints().size() - 1).longValue());
+            RPoint2D f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
+            RLineSegment2D line = new RLineSegment2D(l, f);
+            lines.add(line);
+            linesList.add(line);
+
+            Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
+
+            if (intersections.isEmpty()) {
+                break;
+            }
+
+            System.out.println("INTERSECTIONS SIZE: " + intersections.size());
+
+            for (RPoint2D p : intersections.keySet()) {
+                //System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
+                Circle c = new Circle(p.x.intValue(), p.y.intValue(), 5, Color.DARKOLIVEGREEN);
+                Main.pane.getChildren().add(c);
+                Set<RLineSegment2D> segments = intersections.get(p);
+                //System.out.println(">> Lines in question: ");
+                for (RLineSegment2D segment : segments) {
+                    //System.out.println(segment);
+                }
+            }
+
+            Set<RPoint2D> intersectionPoints = intersections.keySet();
+            ArrayList<RPoint2D> intersectionPointsList = new ArrayList<>();
+            intersectionPointsList.addAll(intersectionPoints);
+
+            /*
+            Below this line it's a big fat mess.
+            What we need to do:
+
+            while there are still some intersections (we are in this loop now)
+                resolve them all (loop thats coming up an should use 2opt)
+             */
+
+            while (!intersectionPointsList.isEmpty()) {
+                lines.clear();
+                points.clear();
+
+                //Create lines
+                for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
+                    f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
+                    RPoint2D s = new RPoint2D(polygon.getPoints().get(i + 2).longValue(), polygon.getPoints().get(i + 3).longValue());
+                    line = new RLineSegment2D(f, s);
+                    lines.add(line);
+                    linesList.add(line);
+                }
+                l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size() - 2).longValue(), polygon.getPoints().get(polygon.getPoints().size() - 1).longValue());
+                f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
+                lines.add(line);
+                linesList.add(line);
+
+                //System.out.println("Reordering path");
+
+                RPoint2D randomPoint = intersectionPointsList.get(random.nextInt(intersectionPointsList.size()));
+                intersectionPointsList.remove(randomPoint);
+                Set<RLineSegment2D> segments = intersections.get(randomPoint);
+                RLineSegment2D[] tmp = segments.toArray(new RLineSegment2D[2]);
+
+                RLineSegment2D intersectingLineOne = tmp[0];
+                RLineSegment2D intersectingLineTwo = tmp[1];
+
+                //2-opt computation here
+                //(A, B) (C,D) -> (A, C) (B, D)
+
+                for (int z = 0; z < linesList.size(); z++) {
+                    RLineSegment2D rls = linesList.get(z);
+
+                    if (!points.contains(rls.p1)) {
+                        points.add(rls.p1);
+                    }
+
+                    if (!points.contains(rls.p2)) {
+                        points.add(rls.p2);
+                    }
+                }
+
+                //what is i(u) and what is k(v)? probably the ones to swap?
+                //optswap gets array index out of bounds sometimes, or somehow increases size of new route
+                int a1 = points.indexOf(intersectingLineOne.p1);
+                int a2 = points.indexOf(intersectingLineOne.p2);
+                int b1 = points.indexOf(intersectingLineTwo.p1);
+                int b2 = points.indexOf(intersectingLineTwo.p2);
+
+                int u, v;
+
+                if (Math.abs(a2 - b1)  < Math.abs(a1 - b2)) {
+                    u = a2;
+                    v = b1;
+                } else {
+                    u = a1;
+                    v = b2;
+                }
+
+                //System.out.println("u " + u + ", v " + v);
+                if (u < v) {
+                    newRoute = optSwap(points, u, v);
+                } else {
+                    newRoute = optSwap(points, v, u);
+                }
+
+                //Edit polygon points for next iteration
+                //System.out.println(newRoute);
+                polygon.getPoints().clear();
+                for (RPoint2D point: newRoute) {
+                    polygon.getPoints().add(point.x.doubleValue());
+                    polygon.getPoints().add(point.y.doubleValue());
+                }
+
+            }
+            if (count >= n*n*n*n) break;
         }
+
+        Main.pane.getChildren().remove(polygon);
+        Main.pane.getChildren().add(polygon);
     }
+
+    public static ArrayList<RPoint2D> optSwap(ArrayList<RPoint2D> route, int i, int k) {
+        ArrayList<RPoint2D> newRoute = new ArrayList<>();
+
+            for (int m = 0; m < i - 1; m++) {
+                newRoute.add(route.get(m));
+            }
+
+            for (int n = k - 1; n >= i - 1; n--) {
+                if (i != 0) {
+                    newRoute.add(route.get(n));
+                }
+            }
+
+            for (int o = k; o < route.size(); o++) {
+                newRoute.add(route.get(o));
+            }
+
+        return newRoute;
+    }
+
 
     public static void main(String[] args) {
         launch(args);
