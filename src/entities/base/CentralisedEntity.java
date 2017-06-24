@@ -1,5 +1,6 @@
 package entities.base;
 
+import entities.specific.DCRVEntity;
 import maps.MapRepresentation;
 import simulation.Agent;
 
@@ -25,6 +26,9 @@ public abstract class CentralisedEntity extends Entity {
 
     @Override
     public boolean isActive() {
+        if (this instanceof DCRVEntity) {
+            System.out.println("wat2.7: " + ((DCRVEntity) this).stats.getCounter());
+        }
         for (Agent a : availableAgents) {
             if (a.isActive()) {
                 return true;

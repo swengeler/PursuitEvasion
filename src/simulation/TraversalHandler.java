@@ -357,15 +357,16 @@ public class TraversalHandler {
                 System.out.println("Adjacency matrix:");
                 for (int i = 0; i < adjacencyMatrix.length; i++) {
                     for (int j = 0; j < adjacencyMatrix[0].length; j++) {
-                        System.out.print((restrictToPocket ? pocketAdjacencyMatrix : adjacencyMatrix)[i][j] + " ");
+                        if ((restrictToPocket ? pocketAdjacencyMatrix : adjacencyMatrix)[i][j] == 1) {
+                            System.out.println("Adjacent: i=" + i + ", j=" + j);
+                        }
                     }
-                    System.out.println();
                 }
                 System.out.println("Discrete probabilities:");
-                //System.out.println("Child probabilities (root " + currentIndex + "):");
                 for (int i = 0; i < discreteProbabilities.length; i++) {
                     System.out.println(indecesToGenerate[i] + " | " + discreteProbabilities[i]);
                 }
+                System.out.println();
             }
             currentIndex = rng.sample(); // needs proper probability distribution
             childIndeces.clear();
@@ -374,10 +375,16 @@ public class TraversalHandler {
         PlannedPath plannedPath;
         if (!inComponentLeaf) {
             plannedPath = (restrictToPocket ? pocketShortestPathRoadMap : restrictedShortestPathRoadMap).getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            if (plannedPath == null) {
+                return getRandomTraversal(xPos, yPos);
+            }
             moveToLeaf.addPathToEnd(plannedPath);
             plannedPath = moveToLeaf;
         } else {
             plannedPath = (restrictToPocket ? pocketShortestPathRoadMap : restrictedShortestPathRoadMap).getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            if (plannedPath == null) {
+                return getRandomTraversal(xPos, yPos);
+            }
         }
         plannedPath.setStartIndex(startIndex);
         plannedPath.setEndIndex(currentIndex);

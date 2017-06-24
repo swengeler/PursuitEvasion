@@ -3,6 +3,7 @@ package maps;
 import additionalOperations.GeometryOperations;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
+import com.vividsolutions.jts.operation.valid.IsValidOp;
 import entities.base.Entity;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
@@ -11,6 +12,7 @@ import simulation.Agent;
 import ui.Main;
 import ui.MapPolygon;
 
+import java.io.Serializable;
 import java.util.*;
 
 public class MapRepresentation {
@@ -138,6 +140,17 @@ public class MapRepresentation {
 
         polygon = new com.vividsolutions.jts.geom.Polygon(shell, holes, GeometryOperations.factory);
         visionPolygon = polygon.buffer(GeometryOperations.PRECISION_EPSILON);
+        /*for (int i = 0; i < visionPolygon.getCoordinates().length; i++) {
+            Line l = new Line(visionPolygon.getCoordinates()[i].x, visionPolygon.getCoordinates()[i].y, visionPolygon.getCoordinates()[i].x, visionPolygon.getCoordinates()[i].y);
+            l.setStroke(Color.GREEN);
+        }*/
+        /*Polygon p = new Polygon();
+        for (Coordinate c : polygon.getExteriorRing().getCoordinates()) {
+            p.getPoints().addAll(c.x, c.y);
+        }
+        p.setFill(Color.GREEN.deriveColor(1.0, 1.0, 1.0, 0.3));
+        Main.pane.getChildren().add(p);*/
+
         boundary = polygon.getBoundary();
 
         // TODO: construct LinearRing objects from polygons, construct a Polygon object from that
@@ -299,13 +312,16 @@ public class MapRepresentation {
         double length = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
         double deltaX = (x2 - x1) / length;
         double deltaY = (y2 - y1) / length;
-        tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1, y1), new Coordinate(x2, y2)}), GeometryOperations.factory);
+        tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1 + deltaX * 1E-6, y1 + deltaY * 1E-6), new Coordinate(x2 - deltaX * 1E-6, y2 - deltaY * 1E-6)}), GeometryOperations.factory);
         //tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1 + deltaX * 1E-5, y1 + deltaY * 1E-5), new Coordinate(x2 - deltaX * 1E-5, y2 - deltaY * 1E-5)}), GeometryOperations.factory);
         //tempLine = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(x1 + deltaX * GeometryOperations.PRECISION_EPSILON, y1 + deltaY * GeometryOperations.PRECISION_EPSILON), new Coordinate(x2 - deltaX * GeometryOperations.PRECISION_EPSILON, y2 - deltaY * GeometryOperations.PRECISION_EPSILON)}), GeometryOperations.factory);
         /*if (polygon.covers(tempLine) == polygon.buffer(GeometryOperations.PRECISION_EPSILON).covers(tempLine)) {
             return true;
         }*/
-        if (visionPolygon.covers(tempLine)) {
+        /*IsValidOp isValidOp = new IsValidOp(polygon);
+        System.err.println("Geometry is invalid: " + isValidOp.
+                getValidationError());*/
+        if (polygon.covers(tempLine)) {
             return true;
         }
         if (showVisible) {

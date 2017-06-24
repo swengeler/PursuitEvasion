@@ -3,8 +3,10 @@ package entities.base;
 import additionalOperations.Tuple;
 import com.vividsolutions.jts.geom.Coordinate;
 import entities.guarding.GuardManager;
+import entities.specific.DCRVEntity;
 import entities.utils.PathLine;
 import entities.utils.PlannedPath;
+import experiments.DCRVStats;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Shape;
@@ -19,9 +21,6 @@ import ui.Main;
 
 import java.util.*;
 
-/**
- * DC = Divide and Conquer
- */
 public abstract class PartitioningEntity extends CentralisedEntity {
 
     private static final boolean GUARD_TEST = false;
@@ -33,7 +32,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     protected ArrayList<Line> separatingLines;
 
     protected Agent target;
-    protected boolean tasksAssigned = false;
+    private boolean tasksAssigned = false;
 
     protected ArrayList<GuardManager> guardManagers;
     protected ArrayList<Agent> guards;
@@ -46,22 +45,34 @@ public abstract class PartitioningEntity extends CentralisedEntity {
 
     protected PartitioningEntity(MapRepresentation map) {
         super(map);
-        computeRequirements();
     }
 
     @Override
     public void move() {
-        System.out.print("move() in PartitioningEntity");
+        if (this instanceof DCRVEntity) {
+            System.out.println("wat2.6: " + ((DCRVEntity) this).stats.getCounter());
+        }
+
+        //System.out.println("move() in PartitioningEntity");
+
+        //System.out.println("Check 1");
+
         if (!tasksAssigned) {
             assignTasks();
             tasksAssigned = true;
         }
 
+        //System.out.println("Check 2");
+
         if (target == null) {
             determineTarget();
         }
 
+        //System.out.println("Check 3");
+
         doPrecedingOperations();
+
+        //System.out.println("Check 4");
 
         if (!guardsPositioned()) {
             // let the guards move along their respective paths
@@ -70,7 +81,15 @@ public abstract class PartitioningEntity extends CentralisedEntity {
                     // this guard is not at its final destination and will be moved along the path
                     guardPathLines = initGuardPaths.get(i).getPathLines();
 
-                    length = Math.sqrt(Math.pow(guardPathLines.get(guardPathLineCounters.get(i)).getEndX() - guardPathLines.get(guardPathLineCounters.get(i)).getStartX(), 2) + Math.pow(guardPathLines.get(guardPathLineCounters.get(i)).getEndY() - guardPathLines.get(guardPathLineCounters.get(i)).getStartY(), 2));
+                    try {
+                        length = Math.sqrt(Math.pow(guardPathLines.get(guardPathLineCounters.get(i)).getEndX() - guardPathLines.get(guardPathLineCounters.get(i)).getStartX(), 2) + Math.pow(guardPathLines.get(guardPathLineCounters.get(i)).getEndY() - guardPathLines.get(guardPathLineCounters.get(i)).getStartY(), 2));
+                    } catch (Exception e) {
+                        System.out.println("Guard " + i);
+                        //System.out.println("Last line: (" + guardPathLines.get(guardPathLines.size() - 1).getStartX() + "|" + guardPathLines.get(i - 1).getStartY() + "), (" + guardPathLines.get(i - 1).getEndX() + "|" + guardPathLines.get(i - 1).getEndY() + ")");
+                        System.out.println("Guard pos: " + guards.get(i).getXPos() + ", " + guards.get(i).getYPos());
+                        System.out.println("end position: " + initGuardPaths.get(i).getEndX() + ", " + initGuardPaths.get(i).getEndY());
+                        e.printStackTrace();
+                    }
                     deltaX = (guardPathLines.get(guardPathLineCounters.get(i)).getEndX() - guardPathLines.get(guardPathLineCounters.get(i)).getStartX()) / length * guards.get(i).getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
                     deltaY = (guardPathLines.get(guardPathLineCounters.get(i)).getEndY() - guardPathLines.get(guardPathLineCounters.get(i)).getStartY()) / length * guards.get(i).getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
 
@@ -92,11 +111,17 @@ public abstract class PartitioningEntity extends CentralisedEntity {
             doGuardOperations();
         }
 
+        //System.out.println("Check 5");
+
         if (!GUARD_TEST) {
             doSearchAndCatchOperations();
         }
 
+        //System.out.println("Check 6");
+
         doSucceedingOperations();
+
+        //System.out.println("Check 7");
     }
 
     protected abstract void determineTarget();
@@ -114,7 +139,10 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     protected void assignTasks() {
         if (availableAgents.size() < requiredAgents) {
             AdaptedSimulation.masterPause("Not enough agents for PartitioningEntity");
+            return;
         }
+
+        System.out.println("assign tasks");
 
         // assign a certain number of agents to be guards for separating triangles
         initGuardPaths = new ArrayList<>();
@@ -133,22 +161,22 @@ public abstract class PartitioningEntity extends CentralisedEntity {
                 for (Agent a : availableAgents) {
                     if (!guards.contains(a)) {
                         // compute distance to current triangle
-                        currentShortestPath = shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), c.x, c.y);
+                        /*currentShortestPath = shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), c.x, c.y);
                         currentDistance = currentShortestPath.getTotalLength();
                         if (currentDistance < bestDistance) {
                             bestDistance = currentDistance;
                             bestShortestPath = currentShortestPath;
                             tempClosestAgent = a;
-                        }
-                        /*guards.add(a);
+                        }*/
+                        guards.add(a);
                         currentGuards.add(a);
                         initGuardPaths.add(shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), c.x, c.y));
-                        break;*/
+                        break;
                     }
                 }
-                guards.add(tempClosestAgent);
+                /*guards.add(tempClosestAgent);
                 currentGuards.add(tempClosestAgent);
-                initGuardPaths.add(bestShortestPath);
+                initGuardPaths.add(bestShortestPath);*/
             }
             gm.assignGuards(currentGuards);
         }
@@ -161,8 +189,14 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     protected boolean guardsPositioned() {
         if (!guardsPositioned) {
             for (int i = 0; i < guards.size(); i++) {
-                if (guards.get(i).getXPos() != initGuardPaths.get(i).getEndX() || guards.get(i).getYPos() != initGuardPaths.get(i).getEndY()) {
-                    return false;
+                try {
+                    if (guards.get(i).getXPos() != initGuardPaths.get(i).getEndX() || guards.get(i).getYPos() != initGuardPaths.get(i).getEndY()) {
+                        return false;
+                    }
+                } catch (Exception e) {
+                    System.out.println(guards);
+                    System.out.println(initGuardPaths);
+                    e.printStackTrace();
                 }
             }
             guardsPositioned = true;

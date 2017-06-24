@@ -3,12 +3,19 @@ package entities.utils;
 
 import javafx.geometry.Point2D;
 
-public class PathVertex extends Point2D {
+import java.io.Serializable;
 
+public class PathVertex implements Serializable {
+
+    private double realX, realY;
     private double estX = -1, estY = -1;
 
+    public PathVertex() {}
+
     public PathVertex(double x, double y) {
-        super(x, y);
+        //super(x, y);
+        realX = x;
+        realY = y;
         estX = x;
         estY = y;
     }
@@ -18,7 +25,9 @@ public class PathVertex extends Point2D {
     }
 
     public PathVertex(double estX, double estY, double realX, double realY) {
-        super(realX, realY);
+        //super(realX, realY);
+        this.realX = realX;
+        this.realY = realY;
         this.estX = estX;
         this.estY = estY;
     }
@@ -52,11 +61,13 @@ public class PathVertex extends Point2D {
     }
 
     public double getRealX() {
-        return super.getX();
+        //return super.getX();
+        return realX;
     }
 
     public double getRealY() {
-        return super.getY();
+        //return super.getY();
+        return realY;
     }
 
 }

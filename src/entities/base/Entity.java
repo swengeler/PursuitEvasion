@@ -18,7 +18,9 @@ public abstract class Entity {
             Entity.map = map;
         }
         if (Entity.shortestPathRoadMap == null) {
+            long before = System.currentTimeMillis();
             Entity.shortestPathRoadMap = new ShortestPathRoadMap(map);
+            System.out.println("Time to generate shortest path map: " + (System.currentTimeMillis() - before));
         }
     }
 
@@ -27,5 +29,10 @@ public abstract class Entity {
     public abstract boolean isActive();
 
     public abstract ArrayList<Agent> getControlledAgents();
+
+    public static void reset() {
+        map = null;
+        shortestPathRoadMap = null;
+    }
 
 }

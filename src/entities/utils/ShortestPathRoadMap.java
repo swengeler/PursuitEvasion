@@ -14,10 +14,11 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import ui.Main;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class ShortestPathRoadMap {
+public class ShortestPathRoadMap implements Serializable {
 
     public static boolean SHOW_ON_CANVAS = false;
     public static boolean DRAW_VISION_LINES = false;
@@ -77,6 +78,53 @@ public class ShortestPathRoadMap {
         init();
     }
 
+    public ShortestPathRoadMap(MapRepresentation map, SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph) {
+        this.map = map;
+        this.shortestPathGraph = shortestPathGraph;
+        excludedPolygons = new ArrayList<>();
+        excludedLines = new ArrayList<>();
+        /*ArrayList<PathVertex> reflexVertices = findReflex(map);
+        for (PathVertex pv : reflexVertices) {
+            Circle circle = new Circle(pv.getEstX(), pv.getEstY(), 5, Color.CYAN);
+            Main.pane.getChildren().add(circle);
+        }*/
+    }
+
+    public ShortestPathRoadMap(MapRepresentation map, ArrayList<DTriangle> excludedTriangles, SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph) {
+        this.map = map;
+        this.shortestPathGraph = shortestPathGraph;
+        excludedPolygons = new ArrayList<>();
+        excludedLines = new ArrayList<>();
+        Polygon p;
+        for (DTriangle dt : excludedTriangles) {
+            p = new Polygon();
+            p.getPoints().addAll(
+                    dt.getPoint(0).getX(), dt.getPoint(0).getY(),
+                    dt.getPoint(1).getX(), dt.getPoint(1).getY(),
+                    dt.getPoint(2).getX(), dt.getPoint(2).getY()
+            );
+            p.setFill(Color.BLACK.deriveColor(1, 1, 1, 0.2));
+            Main.pane.getChildren().add(p);
+            excludedPolygons.add(p);
+        }
+    }
+
+    public ShortestPathRoadMap(ArrayList<Line> excludedLines, MapRepresentation map, SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph) {
+        this.map = map;
+        this.shortestPathGraph = shortestPathGraph;
+        excludedPolygons = new ArrayList<>();
+        this.excludedLines = excludedLines;
+        /*Line temp;
+        for (Line l : excludedLines) {
+            temp = new Line(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
+            temp.setStroke(Color.RED);
+            temp.setStrokeWidth(2);
+            Main.pane.getChildren().add(temp);
+        }*/
+        //System.out.println("excludedLines.size(): " + this.excludedLines.size());
+        //System.out.println("excludedPolygons.size(): " + excludedPolygons.size());
+    }
+
     private void init() {
         double distanceToActual = 1;
         shortestPathGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
@@ -109,14 +157,14 @@ public class ShortestPathRoadMap {
                             (polygons.get(i) == map.getBorderPolygon() && !GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint))) {
 
                         // get point "just off the tip" of the reflex vertex
-                        double prevDeltaX = currentPoints.get(j).getX() - currentPoints.get((j + 1) % currentPoints.size()).getX();
-                        double prevDeltaY = currentPoints.get(j).getY() - currentPoints.get((j + 1) % currentPoints.size()).getY();
+                        double prevDeltaX = currentPoints.get(j).getRealX() - currentPoints.get((j + 1) % currentPoints.size()).getRealX();
+                        double prevDeltaY = currentPoints.get(j).getRealY() - currentPoints.get((j + 1) % currentPoints.size()).getRealY();
                         double prevLength = Math.sqrt(Math.pow(prevDeltaX, 2) + Math.pow(prevDeltaY, 2));
                         prevDeltaX /= prevLength;
                         prevDeltaY /= prevLength;
 
-                        double nextDeltaX = currentPoints.get(j).getX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getX();
-                        double nextDeltaY = currentPoints.get(j).getY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getY();
+                        double nextDeltaX = currentPoints.get(j).getRealX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getRealX();
+                        double nextDeltaY = currentPoints.get(j).getRealY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getRealY();
                         double nextLength = Math.sqrt(Math.pow(nextDeltaX, 2) + Math.pow(nextDeltaY, 2));
                         nextDeltaX /= nextLength;
                         nextDeltaY /= nextLength;
@@ -124,8 +172,8 @@ public class ShortestPathRoadMap {
                         double averageX = (prevDeltaX + nextDeltaX) / 2;
                         double averageY = (prevDeltaY + nextDeltaY) / 2;
 
-                        double newX = currentPoints.get(j).getX() + averageX * distanceToActual;
-                        double newY = currentPoints.get(j).getY() + averageY * distanceToActual;
+                        double newX = currentPoints.get(j).getRealX() + averageX * distanceToActual;
+                        double newY = currentPoints.get(j).getRealY() + averageY * distanceToActual;
 
                         // if there are separating triangles (or polygons, technically), check whether the vertex should be moved)
                         // polygons which touch with a corner take precedence
@@ -187,14 +235,14 @@ public class ShortestPathRoadMap {
                             (polygons.get(i) == map.getBorderPolygon() && !GeometryOperations.leftTurnPredicate(prevPoint, currentPoints.get(j), nextPoint))) {
 
                         // get point "just off the tip" of the reflex vertex
-                        double prevDeltaX = currentPoints.get(j).getX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getX();
-                        double prevDeltaY = currentPoints.get(j).getY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getY();
+                        double prevDeltaX = currentPoints.get(j).getRealX() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getRealX();
+                        double prevDeltaY = currentPoints.get(j).getRealY() - currentPoints.get(j - 1 < 0 ? currentPoints.size() - 1 : j - 1).getRealY();
                         double prevLength = Math.sqrt(Math.pow(prevDeltaX, 2) + Math.pow(prevDeltaY, 2));
                         prevDeltaX /= prevLength;
                         prevDeltaY /= prevLength;
 
-                        double nextDeltaX = currentPoints.get(j).getX() - currentPoints.get((j + 1) % currentPoints.size()).getX();
-                        double nextDeltaY = currentPoints.get(j).getY() - currentPoints.get((j + 1) % currentPoints.size()).getY();
+                        double nextDeltaX = currentPoints.get(j).getRealX() - currentPoints.get((j + 1) % currentPoints.size()).getRealX();
+                        double nextDeltaY = currentPoints.get(j).getRealY() - currentPoints.get((j + 1) % currentPoints.size()).getRealY();
                         double nextLength = Math.sqrt(Math.pow(nextDeltaX, 2) + Math.pow(nextDeltaY, 2));
                         nextDeltaX /= nextLength;
                         nextDeltaY /= nextLength;
@@ -202,8 +250,8 @@ public class ShortestPathRoadMap {
                         double averageX = (prevDeltaX + nextDeltaX) / 2;
                         double averageY = (prevDeltaY + nextDeltaY) / 2;
 
-                        double newX = currentPoints.get(j).getX() + averageX * distanceToActual;
-                        double newY = currentPoints.get(j).getY() + averageY * distanceToActual;
+                        double newX = currentPoints.get(j).getRealX() + averageX * distanceToActual;
+                        double newY = currentPoints.get(j).getRealY() + averageY * distanceToActual;
 
                         boolean removePoint = false;
                         if (!excludedPolygons.isEmpty() || !excludedLines.isEmpty()) {
@@ -334,7 +382,7 @@ public class ShortestPathRoadMap {
                             Line line = new Line(reflexVertices.get(i).getEstX(), reflexVertices.get(i).getEstY(), reflexVertices.get(j).getEstX(), reflexVertices.get(j).getEstY());
                             if (SHOW_ON_CANVAS) {
                                 line.setStroke(Color.GREEN);
-                                line.setStrokeWidth(2);
+                                line.setStrokeWidth(1.2);
                                 Main.pane.getChildren().add(line);
                                 line.toFront();
                             }
@@ -346,9 +394,13 @@ public class ShortestPathRoadMap {
                             if (edge != null) {
                                 shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
                             } else {
-                                System.out.println("1: " + shortestPathGraph.containsEdge(v1, v2));
-                                System.out.println("2: " + shortestPathGraph.containsEdge(shortestPathGraph.getEdgeFactory().createEdge(v1, v2)));
-                                shortestPathGraph.getEdgeFactory().createEdge(v1, v2);
+                                /*System.out.println("1: " + shortestPathGraph.containsEdge(v1, v2));
+                                System.out.println("2: " + shortestPathGraph.containsEdge(shortestPathGraph.getEdgeFactory().createEdge(v1, v2)));*/
+                                //shortestPathGraph.getEdgeFactory().createEdge(v1, v2);
+                                edge = shortestPathGraph.getEdge(v1, v2);
+                                if (edge != null) {
+                                    shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
+                                }
                             }
                         }
                     }
@@ -359,6 +411,20 @@ public class ShortestPathRoadMap {
 
     public MapRepresentation getMap() {
         return map;
+    }
+
+    public void showOnCanvas() {
+        Line l;
+        for (PathVertex pv1 : shortestPathGraph.vertexSet()) {
+            for (PathVertex pv2 : shortestPathGraph.vertexSet()) {
+                if (/*map.isVisible(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY()) && */(shortestPathGraph.containsEdge(pv1, pv2) || shortestPathGraph.containsEdge(pv2, pv1))) {
+                    l = new Line(pv1.getRealX(), pv1.getRealY(), pv2.getRealX(), pv2.getRealY());
+                    l.setStroke(Color.BLUE);
+                    l.setStrokeWidth(1.3);
+                    Main.pane.getChildren().add(l);
+                }
+            }
+        }
     }
 
     public void addExtraVertex(PathVertex vertex) {
@@ -389,6 +455,10 @@ public class ShortestPathRoadMap {
         for (Coordinate c : coordinates) {
             addExtraVertex(new PathVertex(c.x, c.y));
         }
+    }
+
+    public SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> getShortestPathGraph() {
+        return shortestPathGraph;
     }
 
     public Set<PathVertex> getVertices() {
@@ -619,7 +689,7 @@ public class ShortestPathRoadMap {
             return result;
         }
         for (Line l : excludedLines) {
-            if ((l.getStartX() == cornerPoint.getX() && l.getStartY() == cornerPoint.getY()) || (l.getEndX() == cornerPoint.getX() && l.getEndY() == cornerPoint.getY())) {
+            if ((l.getStartX() == cornerPoint.getRealX() && l.getStartY() == cornerPoint.getRealY()) || (l.getEndX() == cornerPoint.getRealX() && l.getEndY() == cornerPoint.getRealY())) {
                 result.add(l);
             }
         }
@@ -635,7 +705,7 @@ public class ShortestPathRoadMap {
             boolean cornerAdjacent = false;
             int cornerAdjacentIndex = -1;
             for (int i = 0; !cornerAdjacent && i < p.getPoints().size(); i += 2) {
-                if (cornerPoint.getX() == (double) p.getPoints().get(i) && cornerPoint.getY() == (double) p.getPoints().get(i + 1)) {
+                if (cornerPoint.getRealX() == (double) p.getPoints().get(i) && cornerPoint.getRealY() == (double) p.getPoints().get(i + 1)) {
                     cornerAdjacent = true;
                     cornerAdjacentIndex = i;
                 }

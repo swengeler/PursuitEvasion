@@ -17,7 +17,8 @@ import java.util.List;
 
 public class GeometryOperations {
 
-    public static final GeometryFactory factory = new GeometryFactory();
+    public static final GeometryFactory factory = new GeometryFactory(new PrecisionModel(1E12));
+    //public static final GeometryFactory factory = new GeometryFactory();
     public static final double PRECISION_EPSILON = 1E-10;
 
     public static ArrayList<Point2D> polyToPoints(ArrayList<Polygon> allPoly) {
@@ -584,6 +585,10 @@ public class GeometryOperations {
 
     public static boolean leftTurnPredicate(Point2D p1, Point2D p2, Point2D p3) {
         return leftTurnPredicate(p1.getX(), p1.getY(), p2.getX(), p2.getY(), p3.getX(), p3.getY());
+    }
+
+    public static boolean leftTurnPredicate(PathVertex p1, PathVertex p2, PathVertex p3) {
+        return leftTurnPredicate(p1.getRealX(), p1.getRealY(), p2.getRealX(), p2.getRealY(), p3.getRealX(), p3.getRealY());
     }
 
     public static boolean leftTurnPredicate(double p1X, double p1Y, double p2X, double p2Y, double p3X, double p3Y) {

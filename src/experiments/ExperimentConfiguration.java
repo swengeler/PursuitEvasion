@@ -1,4 +1,4 @@
-package ui;
+package experiments;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import entities.base.*;
@@ -7,7 +7,6 @@ import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Polygon;
 import javafx.stage.FileChooser;
@@ -15,6 +14,8 @@ import javafx.stage.Stage;
 import maps.MapRepresentation;
 import simulation.Agent;
 import simulation.AgentSettings;
+import ui.Main;
+import ui.ZoomablePane;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -39,69 +40,93 @@ public class ExperimentConfiguration extends Application {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map data files", "*.mdo", "*.maa"));
             File selectedFile = fileChooser.showOpenDialog(primaryStage);
 
-            if (selectedFile != null) {
-                MapRepresentation mapRepresentation = loadMap(selectedFile);
+            MapRepresentation mapRepresentation = loadMap(selectedFile);
 
-                Coordinate c;
-                Agent a;
-                AgentSettings as;
-                // create entity and place agents
-                CentralisedEntity dcrsEntity = new DCRVEntity(mapRepresentation);
-                mapRepresentation.getPursuingEntities().add(dcrsEntity);
-                for (int i = 0; i < dcrsEntity.totalRequiredAgents(); i++) {
+            PartitioningEntityRequirements requirements = new PartitioningEntityRequirements();
+
+            for (int simulationCount = 0; simulationCount < 10; simulationCount++) {
+                if (selectedFile != null) {
+                    Coordinate c;
+                    Agent a;
+                    AgentSettings as;
+                    // create entity and place agents
+                    DCRVEntity dcrsEntity = new DCRVEntity(mapRepresentation, requirements);
+                    mapRepresentation.getPursuingEntities().add(dcrsEntity);
+                    for (int i = 0; i < dcrsEntity.totalRequiredAgents(); i++) {
+                        c = mapRepresentation.getRandomPosition();
+                        as = new AgentSettings();
+                        as.setXPos(c.x);
+                        as.setYPos(c.y);
+                        a = new Agent(as);
+                        dcrsEntity.addAgent(a);
+                    }
+
+                    DistributedEntity straightLineEntity = new StraightLineEntity(mapRepresentation);
                     c = mapRepresentation.getRandomPosition();
                     as = new AgentSettings();
                     as.setXPos(c.x);
                     as.setYPos(c.y);
                     a = new Agent(as);
-                    dcrsEntity.addAgent(a);
+                    straightLineEntity.setAgent(a);
+                    mapRepresentation.getEvadingEntities().add(straightLineEntity);
+
+                    DCRVStats stats = new DCRVStats(1, dcrsEntity.totalRequiredAgents());
+                    for (int i = 0; i < dcrsEntity.getControlledAgents().size(); i++) {
+                        stats.initPursuerPositions[i] = new Coordinate(dcrsEntity.getControlledAgents().get(i).getXPos(), dcrsEntity.getControlledAgents().get(i).getYPos());
+                    }
+                    stats.initEvaderPositions[0] = new Coordinate(straightLineEntity.getControlledAgents().get(0).getXPos(), straightLineEntity.getControlledAgents().get(0).getYPos());
+                    dcrsEntity.trackStats(stats);
+
+                    Agent catcher = null;
+                    Agent target = straightLineEntity.getControlledAgents().get(0);
+
+                    boolean simulationOver = false;
+                    System.out.println("Start simulation");
+                    long before = System.currentTimeMillis();
+                    int counter = 0;
+                    while (!simulationOver) {
+                        System.out.println("wat1: " + stats.getCounter());
+                        for (Entity entity : mapRepresentation.getEvadingEntities()) {
+                            if (entity.isActive()) {
+                                entity.move();
+                            }
+                        }
+                        System.out.println("wat2: " + stats.getCounter());
+
+                        for (Entity entity : mapRepresentation.getPursuingEntities()) {
+                            System.out.println("wat2.5: " + stats.getCounter());
+                            if (entity.isActive()) {
+                                entity.move();
+                            }
+                        }
+
+                        /*if (catcher == null) {
+                            catcher = ((DCRSEntity) dcrsEntity).getCatcher();
+                        }*/
+
+                        /*System.out.println("Catcher position: (" + catcher.getXPos() + "|" + catcher.getYPos() + ")");
+                        System.out.println("Target position: (" + target.getXPos() + "|" + target.getYPos() + ")");*/
+
+                        simulationOver = true;
+                        for (Entity entity : mapRepresentation.getEvadingEntities()) {
+                            if (entity.isActive()) {
+                                simulationOver = false;
+                                break;
+                            }
+                        }
+                        System.out.print(".");
+                        counter++;
+                        if (counter % 100 == 0) {
+                            System.out.println();
+                        }
+                    }
+                    System.out.println("\nSimulation (" + simulationCount + ") took: " + (System.currentTimeMillis() - before) + " ms");
+                    stats.print();
+                    //Entity.reset();
                 }
-
-                DistributedEntity straightLineEntity = new StraightLineEntity(mapRepresentation);
-                c = mapRepresentation.getRandomPosition();
-                as = new AgentSettings();
-                as.setXPos(c.x);
-                as.setYPos(c.y);
-                a = new Agent(as);
-                straightLineEntity.setAgent(a);
-                mapRepresentation.getEvadingEntities().add(straightLineEntity);
-
-                Agent catcher = null;
-                Agent target = straightLineEntity.getControlledAgents().get(0);
-
-                boolean simulationOver = false;
-                System.out.println("Start simulation");
-                long before = System.currentTimeMillis();
-                while (!simulationOver) {
-                    for (Entity entity : mapRepresentation.getEvadingEntities()) {
-                        if (entity.isActive()) {
-                            entity.move();
-                        }
-                    }
-
-                    for (Entity entity : mapRepresentation.getPursuingEntities()) {
-                        if (entity.isActive()) {
-                            entity.move();
-                        }
-                    }
-
-                    /*if (catcher == null) {
-                        catcher = ((DCRSEntity) dcrsEntity).getCatcher();
-                    }
-
-                    System.out.println("Catcher position: (" + catcher.getXPos() + "|" + catcher.getYPos() + ")");*/
-                    System.out.println("Target position: (" + target.getXPos() + "|" + target.getYPos() + ")");
-
-                    simulationOver = true;
-                    for (Entity entity : mapRepresentation.getEvadingEntities()) {
-                        if (entity.isActive()) {
-                            simulationOver = false;
-                            break;
-                        }
-                    }
-                }
-                System.out.print("Simulation took: " + (System.currentTimeMillis() - before) + " ms");
+                System.out.println("\n\n\n");
             }
+            Entity.reset();
         });
 
         Button selectMapButton = new Button("Select map");
@@ -122,7 +147,7 @@ public class ExperimentConfiguration extends Application {
         primaryStage.show();
     }
 
-    private MapRepresentation loadMap(File fileToOpen) {
+    public static MapRepresentation loadMap(File fileToOpen) {
         ArrayList<Polygon> polygons;
         if (fileToOpen != null) {
             polygons = new ArrayList<>();
@@ -162,7 +187,7 @@ public class ExperimentConfiguration extends Application {
 
                         for (int i = 0; i < coordsDouble.length - 2; i += 2) {
                             tempPolygon.getPoints().addAll(coordsDouble[i], coordsDouble[i + 1]);
-                            System.out.println("x: " + coordsDouble[i] + ", y: " + coordsDouble[i + 1]);
+                            //System.out.println("x: " + coordsDouble[i] + ", y: " + coordsDouble[i + 1]);
                         }
                         polygons.add(tempPolygon);
                     }

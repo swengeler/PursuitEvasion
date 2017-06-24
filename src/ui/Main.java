@@ -1,14 +1,16 @@
 package ui;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import compgeom.RLineSegment2D;
 import compgeom.RPoint2D;
 import compgeom.algorithms.BentleyOttmann;
 import control.Controller;
 import conversion.GridConversion;
-import entities.base.CentralisedEntity;
-import entities.base.Entity;
+import entities.base.*;
 import entities.specific.*;
+import entities.utils.PathVertex;
 import entities.utils.ShortestPathRoadMap;
+import experiments.ExperimentConfiguration;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -31,8 +33,9 @@ import maps.MapRepresentation;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.SimpleWeightedGraph;
 import shadowPursuit.PursuitTree;
-import shadowPursuit.ShadowGraph;
 import shadowPursuit.WayPoint;
 import simulation.*;
 
@@ -1901,9 +1904,40 @@ public class Main extends Application {
                 } catch (DelaunayError delaunayError) {
                     delaunayError.printStackTrace();
                 }
-                ShortestPathRoadMap.SHOW_ON_CANVAS = true;
+                //ShortestPathRoadMap.SHOW_ON_CANVAS = true;
+                long before = System.currentTimeMillis();
                 ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
-                ShortestPathRoadMap.SHOW_ON_CANVAS = false;
+                System.out.println("Constructing map: " + (System.currentTimeMillis() - before));
+
+                try {
+                    // write object to file
+                    FileOutputStream fos = new FileOutputStream("E:\\Simon\\Desktop\\sprm.ser");
+                    ObjectOutputStream oos = new ObjectOutputStream(fos);
+                    oos.writeObject(sprm.getShortestPathGraph());
+                    oos.close();
+
+                    // read object from file
+                    FileInputStream fis = new FileInputStream("E:\\Simon\\Desktop\\sprm.ser");
+                    ObjectInputStream ois = new ObjectInputStream(fis);
+                    SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> result = (SimpleWeightedGraph<PathVertex, DefaultWeightedEdge>) ois.readObject();
+                    ois.close();
+
+                    before = System.currentTimeMillis();
+                    ShortestPathRoadMap res = new ShortestPathRoadMap(map, result);
+                    System.out.println("Loading map: " + (before - System.currentTimeMillis()));
+                    res.showOnCanvas();
+
+                    Coordinate c1 = map.getRandomPosition();
+                    Coordinate c2 = map.getRandomPosition();
+                    res.getShortestPath(c1.x, c1.y, c2.x, c2.y);
+
+                } catch (IOException err) {
+                    err.printStackTrace();
+                } catch (ClassNotFoundException err) {
+                    err.printStackTrace();
+                }
+
+                //ShortestPathRoadMap.SHOW_ON_CANVAS = false;
             }
         });
         menu.getChildren().add(shortestPathMapButton);
@@ -2057,6 +2091,100 @@ public class Main extends Application {
 
         primaryStage.setScene(scene);
         primaryStage.show();
+
+
+
+        Button testButton = new Button("Test");
+        testButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select maps to use");
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Map data files", "*.mdo", "*.maa"));
+            File selectedFile = fileChooser.showOpenDialog(primaryStage);
+
+            if (selectedFile != null) {
+                MapRepresentation mapRepresentation = ExperimentConfiguration.loadMap(selectedFile);
+
+                Polygon polygon = mapRepresentation.getBorderPolygon();
+                polygon.setStroke(Color.ORANGE);
+                polygon.setFill(Color.WHITE);
+                pane.getChildren().add(polygon);
+
+                for (Polygon p : mapRepresentation.getObstaclePolygons()) {
+                    p.setStroke(Color.ORANGE);
+                    p.setFill(Color.LIGHTGREY);
+                    pane.getChildren().add(p);
+                }
+
+
+                CentralisedEntity testEntity = new DCRVEntity(mapRepresentation);
+                ArrayList<VisualAgent> pursuers = new ArrayList<>();
+                VisualAgent va;
+                Coordinate c;
+                for (int i = 0; i < testEntity.totalRequiredAgents(); i++) {
+                    c = mapRepresentation.getRandomPosition();
+                    va = new VisualAgent(c.x, c.y);
+                    pane.getChildren().add(va);
+                    pursuers.add(va);
+                }
+                c = mapRepresentation.getRandomPosition();
+                VisualAgent evader = new VisualAgent(c.x, c.y);
+                evader.getAgentBody().setFill(Color.LAWNGREEN);
+                pane.getChildren().add(evader);
+
+                //((Runnable) () -> {
+                    Agent a;
+                    AgentSettings as;
+                    // create entity and place agents
+                    CentralisedEntity dcrsEntity = new DCRVEntity(mapRepresentation);
+                    mapRepresentation.getPursuingEntities().add(dcrsEntity);
+                    for (VisualAgent visualAgent : pursuers) {
+                        dcrsEntity.getControlledAgents().add(new Agent(visualAgent.getSettings()));
+                    }
+
+                    DistributedEntity straightLineEntity = new RandomEntity(mapRepresentation);
+                    straightLineEntity.setAgent(new Agent(evader.getSettings()));
+                    mapRepresentation.getEvadingEntities().add(straightLineEntity);
+
+                    Agent catcher = null;
+                    Agent target = straightLineEntity.getControlledAgents().get(0);
+
+                    boolean simulationOver = false;
+                    System.out.println("Start simulation");
+                    long before = System.currentTimeMillis();
+                    while (!simulationOver) {
+                        for (Entity entity : mapRepresentation.getEvadingEntities()) {
+                            if (entity.isActive()) {
+                                entity.move();
+                            }
+                        }
+
+                        for (Entity entity : mapRepresentation.getPursuingEntities()) {
+                            if (entity.isActive()) {
+                                entity.move();
+                            }
+                        }
+
+                        /*if (catcher == null) {
+                            catcher = ((DCRSEntity) dcrsEntity).getCatcher();
+                        }
+
+                        System.out.println("Catcher position: (" + catcher.getXPos() + "|" + catcher.getYPos() + ")");*/
+                        System.out.println("Target position: (" + target.getXPos() + "|" + target.getYPos() + ")");
+
+                        simulationOver = true;
+                        for (Entity entity : mapRepresentation.getEvadingEntities()) {
+                            if (entity.isActive()) {
+                                simulationOver = false;
+                                break;
+                            }
+                        }
+                    }
+                    System.out.print("Simulation took: " + (System.currentTimeMillis() - before) + " ms");
+                //}).run();
+
+            }
+        });
+        menu.getChildren().add(testButton);
     }
 
     private void initPlaceAgents() {

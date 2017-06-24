@@ -114,6 +114,11 @@ public class LineGuardManager implements GuardManager {
     }
 
     @Override
+    public void clearGuards() {
+        guards.clear();
+    }
+
+    @Override
     public int totalRequiredGuards() {
         return originalPositions.size();
     }
@@ -161,6 +166,10 @@ public class LineGuardManager implements GuardManager {
             }
         }
         return false;
+    }
+
+    public MapRepresentation getMap() {
+        return map;
     }
 
 }

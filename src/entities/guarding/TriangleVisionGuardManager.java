@@ -38,6 +38,11 @@ public class TriangleVisionGuardManager implements GuardManager {
     }
 
     @Override
+    public void clearGuards() {
+        guard = null;
+    }
+
+    @Override
     public int totalRequiredGuards() {
         return 1;
     }
@@ -45,6 +50,10 @@ public class TriangleVisionGuardManager implements GuardManager {
     @Override
     public ArrayList<Coordinate> getOriginalPositions() {
         return originalPosition;
+    }
+
+    public MapRepresentation getMap() {
+        return map;
     }
 
 }
