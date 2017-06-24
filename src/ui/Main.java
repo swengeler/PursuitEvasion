@@ -3029,8 +3029,6 @@ public class Main extends Application {
             x = random.nextInt(width);
             y = random.nextInt(height);
 
-            points.add(new RPoint2D((long) x, (long) y));
-
             polygon.getPoints().add(x);
             polygon.getPoints().add(y);
         }
@@ -3055,7 +3053,8 @@ public class Main extends Application {
         //start loop here
         //alter polygon at each step
 
-        while(true) {
+        while (true) {
+            points.clear();
             Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
 
             if (intersections.isEmpty()) {
@@ -3082,12 +3081,33 @@ public class Main extends Application {
 
             RLineSegment2D intersectingLineOne = tmp[0];
             RLineSegment2D intersectingLineTwo = tmp[1];
+            for (int i = 0; i < polygon.getPoints().size() - 1; i++) {
+                RPoint2D p = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
+                points.add(p);
+            }
 
             //2-opt computation here
 
             //Edit polygon points for next iteration
         }
     }
+
+//    public static ArrayList<RPoint2D> optSwap(ArrayList<RPoint2D> route, int i, int k) {
+//        ArrayList<RPoint2D> newRoute = new ArrayList<>();
+//        for (int m = 0; m < i-1; m++) {
+//            newRoute.add(route.get(m));
+//        }
+//
+//        for (int n = k-1; n >= i-1; n--) {
+//            newRoute.add(route.get(n));
+//        }
+//
+//        for (int o = k; o < route.size(); o++) {
+//            newRoute.add(route.get(o));
+//        }
+//
+//        return newRoute;
+//    }
 
     public static void main(String[] args) {
         launch(args);
