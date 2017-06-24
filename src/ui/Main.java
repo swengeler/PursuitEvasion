@@ -3052,78 +3052,40 @@ public class Main extends Application {
         RLineSegment2D line = new RLineSegment2D(l, f);
         lines.add(line);
 
-        Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
+        //start loop here
+        //alter polygon at each step
 
-        for (RPoint2D p : intersections.keySet()) {
-            System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
-            Circle c = new Circle(p.x.intValue(), p.y.intValue(), 5, Color.DARKOLIVEGREEN);
-            Main.pane.getChildren().add(c);
-            Set<RLineSegment2D> segments = intersections.get(p);
-            System.out.println(">> Lines in question: ");
-            for (RLineSegment2D segment : segments) {
-                System.out.println(segment);
+        while(true) {
+            Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
+
+            if (intersections.isEmpty()) {
+                break;
             }
-        }
 
-        //Honestly discard everything below
-
-        Set<RPoint2D> intersectionPoints = intersections.keySet();
-        ArrayList<RPoint2D> intersectionPointsList = new ArrayList<>();
-        intersectionPointsList.addAll(intersectionPoints);
-
-        while (!intersectionPointsList.isEmpty()) {
-            RPoint2D randomPoint = null;
-
-            int index = random.nextInt(intersectionPointsList.size());
-            randomPoint = intersectionPointsList.get(index);
-
-            intersectionPointsList.remove(randomPoint);
-            Set<RLineSegment2D> segments = intersections.get(randomPoint);
-
-            RLineSegment2D[] tmp = segments.toArray(new RLineSegment2D[2]);
-            RPoint2D oldfirst = new RPoint2D(tmp[0].p1.x.longValue(), tmp[0].p1.y.longValue());
-            RPoint2D oldsecond = new RPoint2D(tmp[0].p2.x.longValue(), tmp[0].p1.y.longValue());
-
-            RPoint2D first = new RPoint2D(tmp[0].p2.y.longValue(), tmp[0].p2.x.longValue());
-            RPoint2D second = new RPoint2D(tmp[0].p1.y.longValue(), tmp[0].p1.x.longValue());
-
-            RPoint2D oldthird = new RPoint2D(tmp[1].p1.x.longValue(), tmp[1].p1.y.longValue());
-            RPoint2D oldfourth = new RPoint2D(tmp[1].p2.x.longValue(), tmp[1].p2.y.longValue());
-
-            RPoint2D third = new RPoint2D(tmp[1].p2.y.longValue(), tmp[1].p2.x.longValue());
-            RPoint2D fourth = new RPoint2D(tmp[1].p1.y.longValue(), tmp[1].p1.x.longValue());
-
-            RPoint2D[] oldp = new RPoint2D[]{oldfirst, oldsecond, oldthird, oldfourth};
-            RPoint2D[] newp = new RPoint2D[]{first, second, third, fourth};
-
-            for (int i = 0; i < points.size(); i++) {
-                RPoint2D p = points.get(i);
-                for (int j = 0; j < oldp.length; j++) {
-                    if (p.equals(oldp[j])) {
-                        points.add(i, newp[j]);
-                        points.remove(p);
-                    }
+            for (RPoint2D p : intersections.keySet()) {
+                System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
+                Circle c = new Circle(p.x.intValue(), p.y.intValue(), 5, Color.DARKOLIVEGREEN);
+                Main.pane.getChildren().add(c);
+                Set<RLineSegment2D> segments = intersections.get(p);
+                System.out.println(">> Lines in question: ");
+                for (RLineSegment2D segment : segments) {
+                    System.out.println(segment);
                 }
             }
 
-            Polygon newPoly = new Polygon();
-            for (RPoint2D p : points) {
-                newPoly.getPoints().add(p.x.doubleValue());
-                newPoly.getPoints().add(p.y.doubleValue());
-            }
+            Set<RPoint2D> intersectionPoints = intersections.keySet();
+            ArrayList<RPoint2D> intersectionPointsList = new ArrayList<>();
+            intersectionPointsList.addAll(intersectionPoints);
+            RPoint2D randomPoint = intersectionPointsList.get(random.nextInt(intersectionPointsList.size()));
+            Set<RLineSegment2D> segments = intersections.get(randomPoint);
+            RLineSegment2D[] tmp = segments.toArray(new RLineSegment2D[2]);
 
-            if (Main.pane.getChildren().contains(polygon)) {
-                Main.pane.getChildren().remove(polygon);
-            }
+            RLineSegment2D intersectingLineOne = tmp[0];
+            RLineSegment2D intersectingLineTwo = tmp[1];
 
-            if (Main.pane.getChildren().contains(newPoly)) {
-                Main.pane.getChildren().remove(newPoly);
-            }
+            //2-opt computation here
 
-            //Just for debugging purposes
-            newPoly.setStroke(Color.FIREBRICK);
-            newPoly.setFill(Color.TRANSPARENT);
-            Main.pane.getChildren().add(newPoly);
+            //Edit polygon points for next iteration
         }
     }
 
