@@ -7,6 +7,7 @@ import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 import entities.base.DistributedEntity;
 import entities.base.Entity;
 import entities.utils.PathLine;
+import entities.utils.PathVertex;
 import entities.utils.PlannedPath;
 import entities.utils.ShortestPathRoadMap;
 import javafx.collections.ObservableList;
@@ -15,6 +16,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Rectangle;
 import maps.MapRepresentation;
 import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
@@ -32,7 +34,7 @@ public class HideEntity extends DistributedEntity {
 
     /*
         - no shortest paths for guards (should be done - no computations)
-        - for shortest paths that have vertices which are in fov of guards / are 'very' close to them, 'penalize'
+        - for shortest paths that have vertices which are in fov of guards / are 'very' close to them, 'penalize' (should be done too)
      */
 
     private TraversalHandler traversalHandler;
@@ -73,11 +75,14 @@ public class HideEntity extends DistributedEntity {
                 shortestPathMap = new ShortestPathRoadMap(map);
             }
 
+            ArrayList<Agent> guards = new ArrayList<>();
+
             ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
             for (Entity entity : map.getPursuingEntities()) {
                 ArrayList<Agent> pursuers = entity.getControlledAgents();
                 for (Agent pursuer : pursuers) {
                     if (pursuer.isGuard()) {
+                        guards.add(pursuer);
                         continue;
                     }
 
@@ -88,10 +93,33 @@ public class HideEntity extends DistributedEntity {
                         double midpointDistance = shortestPathFromPursuer.getTotalLength();
                         int numberOfVertices = shortestPathFromPursuer.pathLength();
 
+                        ArrayList<PathVertex> vertices = shortestPathFromPursuer.getPathVertices();
+                        for (PathVertex vertex: vertices) {
+                            //Construct circle, use real or est?
+                            Circle areaNear = new Circle(vertex.getRealX(), vertex.getRealY(), 10 * evader.getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER);
+                            //check if any guards are within rectangle
+                            boolean veryClose = false;
+                            boolean inFov = false;
+
+                            for (Agent guard: guards) {
+                                if (areaNear.contains(guard.getXPos(), guard.getYPos())) {
+                                    veryClose = true;
+                                }
+                            }
+
+                            for (Agent guard: guards) {
+                                if (map.isVisible(guard, evader)) {
+                                    inFov = true;
+                                }
+                            }
+
+                            if (veryClose || inFov) {
+                                numberOfVertices *= 0.5;
+                            }
+                        }
+
                         PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
                         pursuerPointData.add(pd);
-                        //System.out.println("dist: " + midpointDistance);
-
                     }
 
                     allPursuerData.add(pursuerPointData);
