@@ -1,90 +1,122 @@
-/*
-package entities;
+package entities.specific;
 
+import additionalOperations.GeometryOperations;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
+import entities.base.DistributedEntity;
+import entities.base.Entity;
+import entities.utils.PathLine;
+import entities.utils.PlannedPath;
+import entities.utils.ShortestPathRoadMap;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
-import pathfinding.ShortestPathRoadMap;
+import maps.MapRepresentation;
+import org.jdelaunay.delaunay.ConstrainedMesh;
+import org.jdelaunay.delaunay.error.DelaunayError;
+import org.jdelaunay.delaunay.geometries.DEdge;
+import org.jdelaunay.delaunay.geometries.DPoint;
+import org.jdelaunay.delaunay.geometries.DTriangle;
 import simulation.*;
+import ui.Main;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
-    */
-/*
-        For now: 4 modes
-        If mode 2 and 3 are in a tie (unlikely for 2, euclidean distance for pursuer to midpoint will be used to decide)
-
-        Mode 1: Standard, don't take evader position into account.
-        Mode 2: Take evader position into account (min euclidean dist)
-        Mode 3: Take evader position into account (min verts)
-        Mode 4: Consider points from a given threshold as equal, just grab a random one
-        (Mode 5: Attach weights (?))
-
-        Fix shortest path error?
-    *//*
-
-
-public class HideEvaderEntity extends DistributedEntity {
+public class HideEntity extends DistributedEntity {
 
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
     private ShortestPathRoadMap shortestPathMap;
+    double cnt = 0;
 
+    private final static int STEP = 50;
     private final static int separationDistance = 100;
-    ArrayList<Line> pathLines;
+    private final static int pursuerDistance = 500;
+
+    ArrayList<PathLine> pathLines;
     int i = 0;
 
-    public HideEvaderEntity(MapRepresentation map) {
+    public HideEntity(MapRepresentation map) {
         super(map);
     }
 
     @Override
     public void move() {
-        if (traversalHandler == null) {
-            initTree(map);
-        }
+        boolean debug = true;
 
-        shortestPathMap = new ShortestPathRoadMap(map);
         ArrayList<ArrayList<PointData>> allPursuerData = new ArrayList<>();
-
-        ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
         Agent evader = controlledAgent;
         Point2D target = null;
+        boolean halt = false;
 
         int numberOfSeparationPursuers = 0;
         double separationDeltaX = 0;
         double separationDeltaY = 0;
 
-        for (Agent pursuer : agents) {
-            if (pursuer.isPursuer()) {
+        if (cnt % STEP == 0) {
+            if (traversalHandler == null) {
+                initTree(map);
+            }
 
-                ArrayList<PointData> pursuerPointData = new ArrayList<>();
-                for (Point2D midpoint : polygonMidpoints) {
+            if (shortestPathMap == null) {
+                shortestPathMap = new ShortestPathRoadMap(map);
+            }
 
-                    PlannedPath shortestPathFromPursuer = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
-                    double midpointDistance = shortestPathFromPursuer.getTotalLength();
-                    int numberOfVertices = shortestPathFromPursuer.pathLength();
+            ArrayList<Point2D> polygonMidpoints = getPossiblePolygonPoints(map);
+            for (Entity entity : map.getPursuingEntities()) {
+                ArrayList<Agent> pursuers = entity.getControlledAgents();
+                for (Agent pursuer : pursuers) {
+                    double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
+                    if (dist <= pursuerDistance) {
+                        ArrayList<PointData> pursuerPointData = new ArrayList<>();
+                        for (Point2D midpoint : polygonMidpoints) {
 
-                    PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
-                    pursuerPointData.add(pd);
-                    //System.out.println("dist: " + midpointDistance);
+                            PlannedPath shortestPathFromPursuer = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
+                            double midpointDistance = shortestPathFromPursuer.getTotalLength();
+                            int numberOfVertices = shortestPathFromPursuer.pathLength();
 
+                            PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
+                            pursuerPointData.add(pd);
+                            //System.out.println("dist: " + midpointDistance);
+
+                        }
+
+                        allPursuerData.add(pursuerPointData);
+
+                    }
                 }
 
-                allPursuerData.add(pursuerPointData);
+            }
 
+            target = getMin(allPursuerData, evader, 1);
+        }
+
+        if (allPursuerData.isEmpty() && cnt % STEP == 0) {
+            System.out.println("NO PURSUERS NEAR");
+            controlledAgent.moveBy(0, 0);
+            return;
+            //Alternatively, do a random move?
+        }
+
+        cnt++;
+
+        for (Entity entity : map.getPursuingEntities()) {
+            ArrayList<Agent> pursuers = entity.getControlledAgents();
+            for (Agent pursuer : pursuers) {
                 double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
                 if (dist <= separationDistance) {
                     separationDeltaX += (pursuer.getXPos() - evader.getXPos());
                     separationDeltaY += (pursuer.getYPos() - evader.getYPos());
                     numberOfSeparationPursuers++;
                 }
-
             }
-
         }
 
         if (numberOfSeparationPursuers != 0) {
@@ -99,7 +131,6 @@ public class HideEvaderEntity extends DistributedEntity {
             separationDeltaY /= dlength;
         }
 
-        target = getMin(allPursuerData, evader, 4);
 
         if (target != null) {
             if (ctarget == null) {
@@ -108,7 +139,23 @@ public class HideEvaderEntity extends DistributedEntity {
                 i = 0;
             } else if (!ctarget.equals(target)) {
                 ctarget = target;
-                currentPath = shortestPathMap.getShortestPath(new Point2D(controlledAgent.getXPos(), controlledAgent.getYPos()), target);
+                currentPath = shortestPathMap.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), target);
+                if (currentPath == null) {
+                    ShortestPathRoadMap.DRAW_VISION_LINES = true;
+                    currentPath = shortestPathMap.getShortestPath(controlledAgent.getXPos(), controlledAgent.getYPos(), target);
+                    ShortestPathRoadMap.DRAW_VISION_LINES = false;
+                    System.out.printf("Agent: (%.3f|%.3f)\n", controlledAgent.getXPos(), controlledAgent.getYPos());
+                    System.out.println("Legal position: " + shortestPathMap.getMap().legalPosition(controlledAgent.getXPos(), controlledAgent.getYPos()));
+                    System.out.printf("Target: (%.3f|%.3f)\n", target.getX(), target.getY());
+                    System.out.println("Target legal position: " + shortestPathMap.getMap().legalPosition(target.getX(), target.getY()));
+                    AdaptedSimulation.masterPause("What");
+                    Simulation.masterPause();
+                    //System.exit(-43);
+                    Main.pane.getChildren().add(new Circle(controlledAgent.getXPos(), controlledAgent.getYPos(), 7, Color.INDIANRED));
+                    Main.pane.getChildren().add(new Circle(target.getX(), target.getY(), 7, Color.BLUE));
+                    controlledAgent.moveBy(0, 0);
+                    return;
+                }
                 i = 0;
             }
         }
@@ -118,7 +165,12 @@ public class HideEvaderEntity extends DistributedEntity {
         if (separationDeltaX != 0 || separationDeltaY != 0) {
             if (map.legalPosition(controlledAgent.getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, controlledAgent.getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)) {
                 ctarget = null;
-                return new Move(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50, 0);
+                if (!map.legalPosition(evader.getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, evader.getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)) {
+                    System.out.println("ILLEGAL 1: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(evader.getXPos() + separationDeltaX * evader.getSpeed() * 1 / 50, evader.getYPos() + separationDeltaY * evader.getSpeed() * 1 / 50)}), GeometryOperations.factory)));
+                }
+                cnt = 0;
+                controlledAgent.moveBy(separationDeltaX * evader.getSpeed() * 1 / 50, separationDeltaY * evader.getSpeed() * 1 / 50);
+                return;
             } else {
                 //perhaps stand still here?
                 System.out.println("illegal separation");
@@ -126,23 +178,40 @@ public class HideEvaderEntity extends DistributedEntity {
         }
 
         if ((i > (pathLines.size() - 1))) {
-            return new Move(0, 0, 0);
+            controlledAgent.moveBy(0, 0);
+            return;
         }
 
         Move result;
         double length = Math.sqrt(Math.pow(pathLines.get(i).getEndX() - pathLines.get(i).getStartX(), 2) + Math.pow(pathLines.get(i).getEndY() - pathLines.get(i).getStartY(), 2));
-        double deltaX = (pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length * controlledAgent.getSpeed() / 50;
-        double deltaY = (pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length * controlledAgent.getSpeed() / 50;
+        double deltaX = ((pathLines.get(i).getEndX() - pathLines.get(i).getStartX()) / length) * (controlledAgent.getSpeed() / 50);
+        double deltaY = ((pathLines.get(i).getEndY() - pathLines.get(i).getStartY()) / length) * (controlledAgent.getSpeed() / 50);
 
         if (pathLines.get(i).contains(evader.getXPos() + deltaX, evader.getYPos() + deltaY)) {
             result = new Move(deltaX, deltaY, 0);
+            if (!map.legalPosition(evader.getXPos() + result.getXDelta(), evader.getYPos() + result.getYDelta())) {
+                System.out.println("ILLEGAL 2: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(evader.getXPos() + result.getXDelta(), evader.getYPos() + result.getYDelta())}), GeometryOperations.factory)));
+                System.out.println("WHAT: " + map.legalPosition(pathLines.get(i).getEndX(), pathLines.get(i).getEndY()));
+                System.out.println("WHAT: " + pathLines.get(i).contains(evader.getXPos() + deltaX + 0.49, evader.getYPos() + deltaY + 0.49));
+                Main.pane.getChildren().add(pathLines.get(i));
+            }
         } else {
             result = new Move(pathLines.get(i).getEndX() - controlledAgent.getXPos(), pathLines.get(i).getEndY() - controlledAgent.getYPos(), 0);
+            if (!map.legalPosition(evader.getXPos() + result.getXDelta(), evader.getYPos() + result.getYDelta())) {
+                System.out.println("ILLEGAL 3: " + map.getPolygon().distance(new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(evader.getXPos() + result.getXDelta(), evader.getYPos() + result.getYDelta())}), GeometryOperations.factory)));
+            }
             i++;
         }
+
+        controlledAgent.moveBy(result.getXDelta(), result.getYDelta());
+        return;
     }
 
     private Point2D getMin(ArrayList<ArrayList<PointData>> midpointData, Agent evader, int mode) {
+        if (midpointData.isEmpty()) {
+            return null;
+        }
+
         Point2D target = null;
         double euclideanDistance = Double.MIN_VALUE;
         int numberOfVertices = Integer.MIN_VALUE;
@@ -169,7 +238,19 @@ public class HideEvaderEntity extends DistributedEntity {
 
             if (mode != 4) {
 
-                PlannedPath shortestPathFromEvader = shortestPathMap.getShortestPath(new Point2D(evader.getXPos(), evader.getYPos()), midpointData.get(0).get(i).getMidpoint());
+                PlannedPath shortestPathFromEvader = null;
+                shortestPathFromEvader = shortestPathMap.getShortestPath(evader.getXPos(), evader.getYPos(), midpointData.get(0).get(i).getMidpoint());
+                if (shortestPathFromEvader == null) {
+                    System.out.printf("Midpoint: (%.3f|%.3f)\n", midpointData.get(0).get(i).getMidpoint().getX(), midpointData.get(0).get(i).getMidpoint().getY());
+                    System.out.println("Legal position: " + shortestPathMap.getMap().legalPosition(midpointData.get(0).get(i).getMidpoint().getX(), midpointData.get(0).get(i).getMidpoint().getY()));
+                    System.out.printf("Evader: (%.3f|%.3f)\n", evader.getXPos(), evader.getYPos());
+                    System.out.println("Evader legal position: " + shortestPathMap.getMap().legalPosition(evader.getXPos(), evader.getYPos()));
+                    AdaptedSimulation.masterPause("What");
+                    Simulation.masterPause();
+                    Main.pane.getChildren().add(new Circle(midpointData.get(0).get(i).getMidpoint().getX(), midpointData.get(0).get(i).getMidpoint().getY(), 7, Color.INDIANRED));
+                    //System.exit(-43);
+                    return new Point2D(0, 0);
+                }
 
                 if (tmpNumberOfVertices == numberOfVertices) {
                     if (mode == 1) {
@@ -299,10 +380,10 @@ public class HideEvaderEntity extends DistributedEntity {
 
             traversalHandler = new TraversalHandler((ArrayList<DTriangle>) includedTriangles);
             traversalHandler.shortestPathRoadMap = new ShortestPathRoadMap(map);
-            traversalHandler.map = map;
+            //traversalHandler.map = map;
         } catch (DelaunayError e) {
             e.printStackTrace();
         }
     }
+
 }
-*/

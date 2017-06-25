@@ -2406,8 +2406,6 @@ public class Main extends Application {
                         DoubleProperty xProperty = new SimpleDoubleProperty(e.getX());
                         DoubleProperty yProperty = new SimpleDoubleProperty(e.getY());
                         a = new Anchor(Color.GOLD, xProperty, yProperty);
-                        System.out.println(e.getX());
-                        System.out.println(e.getY());
                     } else if (a.getCenterX() == currentMapPolygon.getPoints().get(0) && a.getCenterY() == currentMapPolygon.getPoints().get(1)) {
                         for (int i = 1; i < mapPolygons.size() - 1; i++) {
                             if (mapPolygons.get(i) != currentMapPolygon && currentMapPolygon.contains(mapPolygons.get(i).getPoints().get(0), mapPolygons.get(i).getPoints().get(1))) {
@@ -2499,8 +2497,6 @@ public class Main extends Application {
 
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Straight line entity")) {
-                                    //Assume evader
-
                                     //Testing purposes
                                     va.getAgentBody().setFill(Color.AZURE);
                                     visualAgents.add(va);
@@ -2509,7 +2505,6 @@ public class Main extends Application {
                                     StraightLineEntity straightLineEntity = new StraightLineEntity(map);
                                     straightLineEntity.setAgent(new Agent(va.getSettings()));
                                     map.getPursuingEntities().add(straightLineEntity);
-                                    //map.getEvadingEntities().add(straightLineEntity);
 
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Flocking evader entity")) {
@@ -2524,7 +2519,15 @@ public class Main extends Application {
 
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Hide evader entity")) {
-                                    //Must be evader
+                                    va.getAgentBody().setFill(Color.RED);
+                                    visualAgents.add(va);
+                                    pane.getChildren().add(va);
+
+                                    HideEntity hideEntity = new HideEntity(map);
+                                    hideEntity.setAgent(new Agent(va.getSettings()));
+                                    map.getEvadingEntities().add(hideEntity);
+
+                                    selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().startsWith("DCR entity")) {
                                     if (selectedEntityButton.getId() == null) {
                                         DCRSEntity entity = new DCRSEntity(map);
@@ -2924,7 +2927,7 @@ public class Main extends Application {
             dupes = false;
 
             points = poly(centerX, centerY, avgRadius, irregularity, spikeyness, vertices);
-            Set<Point2D> set = new HashSet<>(points);
+            Set<Point2D> set = new LinkedHashSet<>(points);
 
             if (set.size() < points.size()) {
                 System.out.println("Duplicate(s) detected");
@@ -3016,7 +3019,7 @@ public class Main extends Application {
         ArrayList<RPoint2D> points = new ArrayList<>();
         ArrayList<RLineSegment2D> linesList = new ArrayList<>();
         ArrayList<RLineSegment2D> usedLines = new ArrayList<>();
-        Set<RLineSegment2D> lines = new HashSet<>();
+        Set<RLineSegment2D> lines = new LinkedHashSet<>();
 
         //Helpful for random point generation
         Random random = new Random();
@@ -3266,7 +3269,7 @@ public class Main extends Application {
         RLineSegment2D segm3 = new RLineSegment2D(p3, p4);
         RLineSegment2D segm4 = new RLineSegment2D(p4, p5);
         RLineSegment2D segm5 = new RLineSegment2D(p5, p1);
-        Set<RLineSegment2D> startsegments = new HashSet<>();
+        Set<RLineSegment2D> startsegments = new LinkedHashSet<>();
         startsegments.add(segm1);
         startsegments.add(segm2);
         startsegments.add(segm3);
@@ -3402,7 +3405,7 @@ public class Main extends Application {
                 }
 
                 ArrayList<RPoint2D> rPoint2DS = new ArrayList<>();
-                Set<RLineSegment2D> segment2DSet = new HashSet<RLineSegment2D>();
+                Set<RLineSegment2D> segment2DSet = new LinkedHashSet<RLineSegment2D>();
                 pointspoly.clear();
 
                 for (int z = 0; z < polygon.getPoints().size() - 1; z += 2) {
