@@ -1,20 +1,19 @@
 package maps;
 
+import additionalOperations.GeometryOperations;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.Polygon;
-import javafx.application.Application;
+import experiments.MapGenerator;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.io.*;
 import java.util.ArrayList;
 
-public class GridMapGenerator extends Application {
+public class GridMapGenerator extends MapGenerator {
 
     private final double[] DEFAULT_COORDS = {
             0.0, 0.0,
@@ -31,31 +30,28 @@ public class GridMapGenerator extends Application {
             100.0, 0.0
     };
 
-    private Stage stage;
-
-    private GeometryFactory factory;
     private Geometry finalPolygon;
 
-    private ArrayList<javafx.scene.shape.Polygon> mapPolygons;
+    public GridMapGenerator() {
+        super();
+    }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
-        factory = new GeometryFactory(new PrecisionModel(1));
-        finalPolygon = new Polygon(null, null, factory);
-        mapPolygons = new ArrayList<>();
-        generatePolygon();
+        finalPolygon = new Polygon(null, null, GeometryOperations.factory);
+        generateMap();
         saveMap();
     }
 
-    private void generatePolygon() {
+    protected void generateMap() {
         final double xScale = 1.0;
         final double yScale = 1.0;
         final boolean xStretch = true;
         final boolean yStretch = true;
 
-        final int xDimension = 3;
-        final int yDimension = 2;
+        final int xDimension = 4;
+        final int yDimension = 4;
 
         double horizontalWidth = DEFAULT_COORDS[11] * xScale;
         double horizontalHeight = DEFAULT_COORDS[16] * (yStretch ? yScale : 1.0);
@@ -198,6 +194,11 @@ public class GridMapGenerator extends Application {
             }
         }
 
+        for (javafx.scene.shape.Polygon p : mapPolygons) {
+            p.getPoints().remove(p.getPoints().size() - 1);
+            p.getPoints().remove(p.getPoints().size() - 1);
+        }
+
         int c = 0;
         for (javafx.scene.shape.Polygon p : mapPolygons) {
             for (int i = 0; i < p.getPoints().size(); i += 2) {
@@ -217,156 +218,9 @@ public class GridMapGenerator extends Application {
             pane.getChildren().addAll(label, new Circle(mapPolygons.get(1).getPoints().get(l), mapPolygons.get(1).getPoints().get(l + 1), 4, Color.GREEN));
         }
 
-
-        /*
-        GeometryFactory factory = new GeometryFactory();
-        Coordinate[] coordinates = new Coordinate[DEFAULT_COORDS.length / 2 + 1];
-        for (int i = 0; i < DEFAULT_COORDS.length; i += 2) {
-            coordinates[i / 2] = new Coordinate(DEFAULT_COORDS[i], DEFAULT_COORDS[i + 1]);
-        }
-        coordinates[coordinates.length - 1] = new Coordinate(DEFAULT_COORDS[0], DEFAULT_COORDS[1]);
-
-        Geometry vertical = new LinearRing(new CoordinateArraySequence(coordinates), factory);
-        Geometry horizontal = new LinearRing(new CoordinateArraySequence(coordinates), factory);
-        Geometry connector = new LinearRing(new CoordinateArraySequence(new Coordinate[]{new Coordinate(0.0, 0.0), new Coordinate(0.0, 200.0), new Coordinate(200.0, 200.0), new Coordinate(200.0, 0.0), new Coordinate(0.0, 0.0)}), factory);
-
-        AffineTransformation horizontalTransform = new AffineTransformation();
-        horizontalTransform.rotate(Math.PI / 2);
-        horizontalTransform.translate(horizontalWidth, 0.0);
-        horizontalTransform.scale(xScale, yStretch ? yScale : 1.0);
-        horizontal = horizontalTransform.transform(horizontal);
-
-        AffineTransformation verticalTransform = new AffineTransformation();
-        verticalTransform.scale(xStretch ? xScale : 1.0, yScale);
-        vertical = verticalTransform.transform(vertical);
-
-        AffineTransformation connectorTransform = new AffineTransformation();
-        connectorTransform.scale((xStretch ? xScale : 1.0) * 0.5, (yStretch ? yScale : 1.0) * 0.5);
-        connector = connectorTransform.transform(connector);
-
-        System.out.println("horizontalWidth: " + horizontalWidth);
-        System.out.println("horizontalHeight: " + horizontalHeight);
-        System.out.println("verticalWidth: " + verticalWidth);
-        System.out.println("verticalHeight: " + verticalHeight);
-
-        AffineTransformation translateTransform;
-        Geometry tempHorizontal, tempVertical, tempConnector, tempGeometry;
-        ArrayList<Geometry> geometries = new ArrayList<>();
-        Geometry[] geometryArray = new Geometry[3];
-        for (int i = 0; i < xDimension; i++) {
-            for (int j = 0; j < yDimension; j++) {
-                // do the horizontal ones first
-                translateTransform = new AffineTransformation();
-                translateTransform.translate((i + 1) * verticalWidth * 0.5 + i * horizontalWidth, j * horizontalHeight * 0.5 + j * verticalHeight);
-                tempHorizontal = translateTransform.transform(horizontal);
-
-                // then do the vertical ones
-                translateTransform = new AffineTransformation();
-                translateTransform.translate(i * horizontalWidth + i * verticalWidth * 0.5, (j + 1) * horizontalHeight * 0.5 + j * verticalHeight);
-                tempVertical = translateTransform.transform(vertical);
-
-                // and finally the connectors
-                translateTransform = new AffineTransformation();
-                translateTransform.translate(i * verticalWidth * 0.5 + i * horizontalWidth, j * horizontalHeight * 0.5 + j * verticalHeight);
-                tempConnector = translateTransform.transform(connector);
-
-                finalPolygon = tempConnector;
-                finalPolygon = tempHorizontal.union(tempVertical).union(tempConnector);
-
-                *//*geometries.add(tempHorizontal);
-                geometries.add(tempVertical);
-                geometries.add(tempConnector);*//*
-                geometryArray[0] = tempHorizontal;
-                geometryArray[1] = tempVertical;
-                geometryArray[2] = tempConnector;
-            }
-        }
-        //finalPolygon = TopologyPreservingSimplifier.simplify(finalPolygon, 0.1);
-        //finalPolygon = (new GeometryPrecisionReducer(new PrecisionModel(1))).reduce(finalPolygon);
-        //finalPolygon = horizontal.union(vertical);
-        *//*GeometryCollection geometryCollection = new GeometryCollection(geometryArray, factory);
-        finalPolygon = geometryCollection.getBoundary();*//*
-        *//*for (Geometry g : geometries) {
-            finalPolygon = finalPolygon.union(g);
-        }*//*
-        *//*translateTransform = new AffineTransformation();
-        translateTransform.translate(1 * verticalWidth * 0.5 + 0 * horizontalWidth, 0 * horizontalHeight * 0.5 + 0 * verticalHeight);
-        tempHorizontal = translateTransform.transform(horizontal);*//*
-        //finalPolygon = finalPolygon.union(horizontal).union(vertical).union(connector);
-        for (int i = 0; i < xDimension; i++) {
-
-        }
-        for (int i = 0; i < yDimension; i++) {
-
-        }
-
-
-        *//*Polygon polygon = new Polygon(new LinearRing(new CoordinateArraySequence(coordinates), factory), null, factory);
-        Polygon otherPolygon = new Polygon(new LinearRing(new CoordinateArraySequence(coordinates), factory), null, factory);
-
-        finalPolygon = polygon;
-
-        LinearRing ring = new LinearRing(new CoordinateArraySequence(new Coordinate[]{new Coordinate(0.0, 0.0), new Coordinate(0.0, 1.0), new Coordinate(1.0, 1.0), new Coordinate(1.0, 0.0), new Coordinate(0.0, 0.0)}), factory);
-
-        Polygon rectangle = new Polygon(ring, null, factory);
-
-
-        AffineTransformation transformation = new AffineTransformation();
-        transformation.scale(1.0, 2.0);
-        transformation.rotate(Math.PI / 2);
-        transformation.translate(11.0, 0.0);
-        Geometry test = transformation.transform(polygon);
-
-        AffineTransformation otherTransformation = new AffineTransformation();
-        otherTransformation.scale(1.0, 2.0);
-        otherTransformation.translate(0.0, 1.0);
-        Geometry otherTest = otherTransformation.transform(otherPolygon);
-
-        test = test.union(otherTest).union(rectangle);*//*
-
-        int counter = 0;
-        Label l;
-        *//*for (Coordinate c : finalPolygon.getCoordinates()) {
-            l = new Label("" + counter);
-            l.setTranslateX(c.x + 5);
-            l.setTranslateY(c.y + 5);
-            pane.getChildren().addAll(new Circle(c.x, c.y, 4, Color.GREEN), l);
-            System.out.println(counter + " - x: " + c.x + ", y: " + c.y);
-            counter++;
-        }*/
         Scene scene = new Scene(pane, 1700, 900);
         stage.setScene(scene);
         stage.show();
-    }
-
-    private void saveMap() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save the current map");
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Map data only file", "*.mdo"));
-        File selectedFile = fileChooser.showSaveDialog(stage);
-
-        if (selectedFile != null) {
-            // write map to file
-            try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
-                for (int i = 0; i < mapPolygons.size(); i++) {
-                    for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
-                        out.print(mapPolygons.get(i).getPoints().get(j) + " ");
-                    }
-                    out.println();
-                }
-                /*for (int j = 0; j < p.getPoints().size(); j++) {
-                    out.print((p.getPoints().get(j) * 100) + " ");
-                }*/
-                /*for (int i = 0; i < finalPolygon.getCoordinates().length; i++) {
-                    out.print(finalPolygon.getCoordinates()[i].x + " ");
-                    out.print(finalPolygon.getCoordinates()[i].y + " ");
-                }*/
-                out.println();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-        System.exit(1);
     }
 
     public static void main(String[] args) {

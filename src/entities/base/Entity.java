@@ -13,6 +13,11 @@ public abstract class Entity {
     protected static MapRepresentation map;
     protected static ShortestPathRoadMap shortestPathRoadMap;
 
+    protected Entity(ShortestPathRoadMap shortestPathRoadMap) {
+        map = shortestPathRoadMap.getMap();
+        Entity.shortestPathRoadMap = shortestPathRoadMap;
+    }
+
     protected Entity(MapRepresentation map) {
         if (Entity.map == null) {
             Entity.map = map;
@@ -33,6 +38,11 @@ public abstract class Entity {
     public static void reset() {
         map = null;
         shortestPathRoadMap = null;
+    }
+
+    public static void initialise(MapRepresentation map, ShortestPathRoadMap shortestPathRoadMap) {
+        Entity.map = map;
+        Entity.shortestPathRoadMap = shortestPathRoadMap;
     }
 
 }

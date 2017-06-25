@@ -4,6 +4,7 @@ import additionalOperations.GeometryOperations;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 import entities.base.Entity;
+import experiments.SquareGuardInfo;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 public class SquareGuardManager implements GuardManager {
 
     private Group graphics;
+    private SquareGuardInfo squareGuardInfo;
 
     private ArrayList<Line> squareSideLines;
     private Polygon guardedSquare; // the square shape, used for covers() checks
@@ -96,7 +98,8 @@ public class SquareGuardManager implements GuardManager {
         }
 
         graphics = new Group();
-        Main.pane.getChildren().add(graphics);
+        //Main.pane.getChildren().add(graphics);
+        squareGuardInfo = new SquareGuardInfo(guardedSquare, squareSides, entranceToGuarded, guardedToSegments, originalPositions);
     }
 
     @Override
@@ -402,6 +405,10 @@ public class SquareGuardManager implements GuardManager {
 
     public boolean inGuardedSquare() {
         return guardedSquare.covers(currentTargetPos);
+    }
+
+    public SquareGuardInfo getInfo() {
+        return squareGuardInfo;
     }
 
 }

@@ -27,7 +27,7 @@ public abstract class CentralisedEntity extends Entity {
     @Override
     public boolean isActive() {
         if (this instanceof DCRVEntity) {
-            System.out.println("wat2.7: " + ((DCRVEntity) this).stats.getCounter());
+            //System.out.println("wat2.7: " + ((DCRVEntity) this).evaderCounter);
         }
         for (Agent a : availableAgents) {
             if (a.isActive()) {

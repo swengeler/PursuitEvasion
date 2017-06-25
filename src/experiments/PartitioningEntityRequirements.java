@@ -55,4 +55,8 @@ public class PartitioningEntityRequirements {
         return isConfigured;
     }
 
+    public static void generateVisibilityPolygonData() {
+
+    }
+
 }

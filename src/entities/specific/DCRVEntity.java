@@ -1,6 +1,7 @@
 package entities.specific;
 
 import additionalOperations.Tuple;
+import com.vividsolutions.jts.geom.Coordinate;
 import entities.base.Entity;
 import entities.base.PartitioningEntity;
 import entities.guarding.GuardManager;
@@ -26,7 +27,8 @@ import java.util.ArrayList;
  */
 public class DCRVEntity extends PartitioningEntity {
 
-    public DCRVStats stats;
+    private DCRVStats stats;
+    public int evaderCounter = 0;
     private PartitioningEntityRequirements requirements;
 
     private TraversalHandler traversalHandler;
@@ -36,12 +38,20 @@ public class DCRVEntity extends PartitioningEntity {
     private ArrayList<PathLine> pathLines;
     private int searcherPathLineCounter;
 
+    private ArrayList<ArrayList<Coordinate>> triangleGuardOriginalPositions;
+
     private Group catchGraphics;
     private Group guardGraphics;
 
-    public DCRVEntity(MapRepresentation map, PartitioningEntityRequirements requirements) {
-        this(map);
+    public DCRVEntity(MapRepresentation map, PartitioningEntityRequirements requirements, ArrayList<ArrayList<Coordinate>> triangleGuardOriginalPositions) {
+        super(map);
+        catchGraphics = new Group();
+        guardGraphics = new Group();
+        Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
+
+        this.triangleGuardOriginalPositions = triangleGuardOriginalPositions;
         if (requirements.isConfigured()) {
+            System.out.println("Check");
             requiredAgents = requirements.requiredAgents;
             componentBoundaryLines = requirements.componentBoundaryLines;
             componentBoundaryEdges = requirements.componentBoundaryEdges;
@@ -49,6 +59,7 @@ public class DCRVEntity extends PartitioningEntity {
             separatingEdges = requirements.separatingEdges;
             separatingLines = requirements.separatingLines;
             traversalHandler = requirements.traversalHandler;
+            guardManagers = new ArrayList<>();
             for (GuardManager gm : requirements.guardManagers) {
                 guardManagers.add(new TriangleVisionGuardManager(((TriangleVisionGuardManager) gm).getMap(), ((TriangleVisionGuardManager) gm).getOriginalPositions().get(0).x, ((TriangleVisionGuardManager) gm).getOriginalPositions().get(0).y));
             }
@@ -68,8 +79,8 @@ public class DCRVEntity extends PartitioningEntity {
 
     @Override
     protected void determineTarget() {
-        System.out.println("wat3: " + this.stats.getCounter());
-        outer:
+        //System.out.println("wat3: " + evaderCounter);
+        /*outer:
         for (Entity e : map.getEvadingEntities()) {
             if (e.isActive()) {
                 for (Agent a : e.getControlledAgents()) {
@@ -82,29 +93,32 @@ public class DCRVEntity extends PartitioningEntity {
                     }
                 }
             }
-        }
-        System.out.println("wat4: " + this.stats.getCounter());
+        }*/
+        //System.out.println("wat4: " + evaderCounter);
     }
 
     @Override
     protected void doPrecedingOperations() {
-        System.out.println("wat5: " + this.stats.getCounter());
+        //System.out.println("wat5: " + evaderCounter);
     }
 
     @Override
     protected void doGuardOperations() {
-        System.out.println("wat6: " + this.stats.getCounter());
+        //System.out.println("wat6: " + evaderCounter);
     }
 
     @Override
     protected void doSearchAndCatchOperations() {
-        System.out.println("Check");
-        System.out.println("wat7: " + this.stats.getCounter());
+        //System.out.println("wat7: " + evaderCounter);
 
         if (currentSearcherPath == null) {
             try {
                 currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                 searcherPathLineCounter = 0;
+                if (stats != null) {
+                    //stats.nrLeafRuns[evaderCounter]++;
+                    stats.increaseNrLeafRuns();
+                }
             } catch (DelaunayError e) {
                 e.printStackTrace();
             }
@@ -114,12 +128,13 @@ public class DCRVEntity extends PartitioningEntity {
             // end of path reached, compute new path
             try {
                 currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                searcherPathLineCounter = 0;
+                if (stats != null) {
+                    //stats.nrLeafRuns[evaderCounter]++;
+                    stats.increaseNrLeafRuns();
+                }
             } catch (DelaunayError e) {
                 e.printStackTrace();
-            }
-            searcherPathLineCounter = 0;
-            if (stats != null) {
-                stats.increaseNrLeafRuns();
             }
         }
 
@@ -138,7 +153,7 @@ public class DCRVEntity extends PartitioningEntity {
         }
 
         if (stats != null) {
-            System.out.println(stats.getCounter());
+            //stats.nrSteps[evaderCounter]++;
             stats.increaseNrSteps();
         }
 
@@ -150,9 +165,11 @@ public class DCRVEntity extends PartitioningEntity {
                         for (Agent a2 : getControlledAgents()) {
                             if (map.isVisible(a1, a2)) {
                                 if (stats != null) {
-                                    System.out.println("HELL-o");
+                                    //stats.caughtBySearcher[evaderCounter] = a2.equals(searcher);
                                     stats.setCaughtBySearcher(a2.equals(searcher));
+                                    System.out.println("HELL-o (" + a2.equals(searcher) + ", " + stats.getCounter() + ")");
                                     stats.targetCaught();
+                                    //evaderCounter = evaderCounter + 1;
                                 }
                                 a1.setActive(false);
                                 target = null;
@@ -216,7 +233,14 @@ public class DCRVEntity extends PartitioningEntity {
             Tuple<ArrayList<ArrayList<DTriangle>>, int[]> componentInfo = computeConnectedComponents(nodes, componentNodes, spanningTreeAdjacencyMatrix);
             ArrayList<ArrayList<DTriangle>> simplyConnectedComponents = componentInfo.getFirst();
 
-            guardManagers = computeGuardManagers(separatingTriangles);
+            if (triangleGuardOriginalPositions == null) {
+                guardManagers = computeGuardManagers(separatingTriangles, map);
+            } else {
+                guardManagers = new ArrayList<>();
+                for (int i = 0; i < separatingTriangles.size(); i++) {
+                    guardManagers.add(new TriangleVisionGuardManager(map, triangleGuardOriginalPositions.get(i).get(0).x, triangleGuardOriginalPositions.get(i).get(0).y));
+                }
+            }
 
             traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
             traversalHandler.separatingTriangleBased(separatingTriangles);
@@ -238,14 +262,18 @@ public class DCRVEntity extends PartitioningEntity {
 
     public void trackStats(DCRVStats stats) {
         this.stats = stats;
-        System.out.println("wat: " + this.stats.getCounter());
+        //System.out.println("wat: " + evaderCounter);
     }
 
-    private ArrayList<GuardManager> computeGuardManagers(ArrayList<DTriangle> separatingTriangles) throws DelaunayError {
+    public static ArrayList<GuardManager> computeGuardManagers(ArrayList<DTriangle> separatingTriangles, MapRepresentation map) {
         ArrayList<GuardManager> triangleVisionGuardManager = new ArrayList<>(separatingTriangles.size());
 
         for (DTriangle dt : separatingTriangles) {
-            triangleVisionGuardManager.add(new TriangleVisionGuardManager(map, dt.getBarycenter().getX(), dt.getBarycenter().getY()));
+            try {
+                triangleVisionGuardManager.add(new TriangleVisionGuardManager(Entity.map, dt.getBarycenter().getX(), dt.getBarycenter().getY()));
+            } catch (DelaunayError e) {
+                e.printStackTrace();
+            }
         }
 
         return triangleVisionGuardManager;

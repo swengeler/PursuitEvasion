@@ -19,21 +19,6 @@ import java.util.ArrayList;
 
 public class TreeMapGenerator extends Application {
 
-    /*private final double[] DEFAULT_COORDS = {
-            0.0, 0.0,
-            0.0, 200.0,
-            100.0, 200.0,
-            100.0, 300.0,
-            0.0, 300.0,
-            0.0, 500.0,
-            100.0, 500.0,
-            100.0, 400.0,
-            200.0, 400.0,
-            200.0, 100.0,
-            100.0, 100.0,
-            100.0, 0.0
-    };*/
-
     private class TreeNode {
 
         private TreeNode parent;
@@ -81,6 +66,11 @@ public class TreeMapGenerator extends Application {
     }
 
     private final double[] DEFAULT_COORDS = {
+            0.0, 0.0, 0.0, 350.0, 125.0, 350.0, 125.0, 650.0, 0.0, 650.0, 0.0, 1000.0,
+            100.0, 1000.0, 100.0, 750.0, 225.0, 750.0, 225.0, 250.0, 100.0, 250.0, 100.0, 0.0
+    };
+
+    private final double[] SMOOTH_COORDS = {
             0.0, 0.0, 0.0, 350.0, 125.0, 350.0, 125.0, 650.0, 0.0, 650.0, 0.0, 1000.0,
             100.0, 1000.0, 100.0, 750.0, 225.0, 750.0, 225.0, 250.0, 100.0, 250.0, 100.0, 0.0
     };

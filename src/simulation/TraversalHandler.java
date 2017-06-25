@@ -367,6 +367,7 @@ public class TraversalHandler {
                     System.out.println(indecesToGenerate[i] + " | " + discreteProbabilities[i]);
                 }
                 System.out.println();
+                e.printStackTrace();
             }
             currentIndex = rng.sample(); // needs proper probability distribution
             childIndeces.clear();

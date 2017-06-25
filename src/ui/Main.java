@@ -1,5 +1,8 @@
 package ui;
 
+import additionalOperations.Tuple;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import compgeom.RLine2D;
 import compgeom.RLineSegment2D;
 import compgeom.RPoint2D;
@@ -9,6 +12,7 @@ import conversion.GridConversion;
 import entities.base.CentralisedEntity;
 import entities.base.Entity;
 import entities.specific.*;
+import entities.utils.PathVertex;
 import entities.utils.ShortestPathRoadMap;
 import javafx.animation.AnimationTimer;
 import javafx.animation.StrokeTransition;
@@ -19,8 +23,7 @@ import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.*;
-import javafx.scene.Node;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.*;
@@ -96,7 +99,7 @@ public class Main extends Application {
     private DCRSEntity testDCRSEntity;
     private DCRLEntity testDCRLEntity;
     private DCRVEntity testDCRVEntity;
-    private int ENTITY_TO_TEST = 1;
+    private int ENTITY_TO_TEST = 0;
     // ************************************************************************************************************** //
     // Test stuff for entities
     // ************************************************************************************************************** //
@@ -1907,12 +1910,62 @@ public class Main extends Application {
                 } catch (DelaunayError delaunayError) {
                     delaunayError.printStackTrace();
                 }
-                ShortestPathRoadMap.SHOW_ON_CANVAS = true;
+                map.what();
                 ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
-                ShortestPathRoadMap.SHOW_ON_CANVAS = false;
+                map.what();
+
+                ArrayList<PathVertex> pathVertices = new ArrayList<>();
+                for (PathVertex pv : sprm.getShortestPathGraph().vertexSet()) {
+                    pane.getChildren().add(new Circle(pv.getRealX(), pv.getRealY(), 3, Color.GREEN));
+                    //System.out.println(pv.getRealX() + " " + pv.getRealY() + " " + pv.getEstX() + " " + pv.getEstY());
+                    pathVertices.add(pv);
+                }
+
+                for (PathVertex pv1 : pathVertices) {
+                    for (PathVertex pv2 : pathVertices) {
+                        if (!pv1.equals(pv2) && sprm.getShortestPathGraph().containsEdge(pv1, pv2)) {
+                            Line l = new Line(pv1.getRealX(), pv1.getRealY(), pv2.getRealX(), pv2.getRealY());
+                            l.setStroke(Color.GREEN);
+                            l.setStrokeWidth(1.5);
+                            pane.getChildren().add(l);
+                            //System.out.println(pathVertices.indexOf(pv1) + " " + pathVertices.indexOf(pv2));
+                        }
+                    }
+                }
             }
         });
         menu.getChildren().add(shortestPathMapButton);
+
+        Button visibilityPolygonsButton = new Button("Visibility polygons");
+        visibilityPolygonsButton.setOnAction(e -> {
+            if (mapPolygons == null || mapPolygons.isEmpty()) {
+                System.out.println("Not enough data to construct simulation!");
+            } else {
+                map = new MapRepresentation(mapPolygons);
+                ShortestPathRoadMap shortestPathRoadMap = new ShortestPathRoadMap(map);
+
+                List<Coordinate> vertices = Arrays.asList(map.getPolygon().getCoordinates());
+
+                ArrayList<Coordinate> reflexVertices = new ArrayList<>();
+                Set<PathVertex> temp = shortestPathRoadMap.getVertices();
+                for (PathVertex pv : temp) {
+                    reflexVertices.add(new Coordinate(pv.getRealX(), pv.getRealY()));
+                }
+
+                long before = System.currentTimeMillis();
+                ArrayList<Tuple<Geometry, Group>> visibilityInfo = new ArrayList<>(vertices.size());
+                ArrayList<Geometry> visibilityPolygons = new ArrayList<>();
+                for (Coordinate c1 : reflexVertices) {
+                    visibilityInfo.add(DCRLEntity.computeVisibilityPolygon(c1, vertices, map));
+                    visibilityPolygons.add(visibilityInfo.get(visibilityInfo.size() - 1).getFirst());
+                }
+                pane.getChildren().add(visibilityInfo.get(2).getSecond());
+                /*for (Tuple<Geometry, Group> t : visibilityInfo) {
+                    pane.getChildren().add(t.getSecond());
+                }*/
+            }
+        });
+        menu.getChildren().add(visibilityPolygonsButton);
 
         // ****************************************************************************************************** //
         // New controls to debug the new project structure
@@ -3204,7 +3257,7 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch(args);
-        heregoesnothing();
+        //heregoesnothing();
     }
 
 }

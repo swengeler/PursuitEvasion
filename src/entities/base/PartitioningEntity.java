@@ -50,7 +50,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     @Override
     public void move() {
         if (this instanceof DCRVEntity) {
-            System.out.println("wat2.6: " + ((DCRVEntity) this).stats.getCounter());
+            //System.out.println("wat2.6: " + ((DCRVEntity) this).evaderCounter);
         }
 
         //System.out.println("move() in PartitioningEntity");
@@ -142,8 +142,6 @@ public abstract class PartitioningEntity extends CentralisedEntity {
             return;
         }
 
-        System.out.println("assign tasks");
-
         // assign a certain number of agents to be guards for separating triangles
         initGuardPaths = new ArrayList<>();
         guards = new ArrayList<>();
@@ -209,10 +207,10 @@ public abstract class PartitioningEntity extends CentralisedEntity {
     // Nitty-gritty computations to be done when the Entity is initialised //
     // ******************************************************************* //
 
-    protected Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> computeComponentBoundaries(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> separatingEdges, ArrayList<Line> separatingLines) {
+    public static Triplet<ArrayList<ArrayList<Line>>, ArrayList<ArrayList<DEdge>>, ArrayList<Shape>> computeComponentBoundaries(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> separatingEdges, ArrayList<Line> separatingLines) {
         //System.out.println("simplyConnectedComponents.size(): " + simplyConnectedComponents.size());
         ArrayList<ArrayList<Line>> boundaryLines = new ArrayList<>();
-        componentBoundaryEdges = new ArrayList<>();
+        ArrayList<ArrayList<DEdge>> componentBoundaryEdges = new ArrayList<>();
         ArrayList<Shape> componentShapes = new ArrayList<>();
         ArrayList<Line> temp;
         ArrayList<DEdge> tempEdges, tempComponentBoundaryEdges;
@@ -245,10 +243,10 @@ public abstract class PartitioningEntity extends CentralisedEntity {
             boundaryLines.add(temp);
             componentBoundaryEdges.add(tempComponentBoundaryEdges);
         }
-        return new Tuple<>(boundaryLines, componentShapes);
+        return new Triplet(boundaryLines, componentBoundaryEdges, componentShapes);
     }
 
-    protected Triplet<ArrayList<Line>, ArrayList<DEdge>, ArrayList<DEdge>> computeGuardingLines(ArrayList<DTriangle> separatingTriangles, ArrayList<DEdge> nonSeparatingEdges) {
+    public static Triplet<ArrayList<Line>, ArrayList<DEdge>, ArrayList<DEdge>> computeGuardingLines(ArrayList<DTriangle> separatingTriangles, ArrayList<DEdge> nonSeparatingEdges) {
         // for now its enough to just cover one side of each separating triangle because they are computed to have one edge adjacent to a polygon (i.e. they have degree 2 in the dual triangulation graph)
         ArrayList<Line> separatingLines = new ArrayList<>();
         ArrayList<DEdge> separatingEdges = new ArrayList<>();
@@ -280,7 +278,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         return new Triplet<>(separatingLines, reconnectingEdges, separatingEdges);
     }
 
-    protected Tuple<int[][], ArrayList<ArrayList<DTriangle>>> computeReconnectedAdjacency(ArrayList<DTriangle> triangles, ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> reconnectingEdges, int[][] disconnectedAdjacencyMatrix, ArrayList<DTriangle> separatingTriangles) {
+    public static Tuple<int[][], ArrayList<ArrayList<DTriangle>>> computeReconnectedAdjacency(ArrayList<DTriangle> triangles, ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<DEdge> reconnectingEdges, int[][] disconnectedAdjacencyMatrix, ArrayList<DTriangle> separatingTriangles) {
         int[][] reconnectedAdjacencyMatrix = new int[disconnectedAdjacencyMatrix.length][disconnectedAdjacencyMatrix.length];
         for (int i = 0; i < disconnectedAdjacencyMatrix.length; i++) {
             System.arraycopy(disconnectedAdjacencyMatrix[i], 0, reconnectedAdjacencyMatrix[i], 0, disconnectedAdjacencyMatrix.length);
@@ -315,7 +313,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         return new Tuple<>(reconnectedAdjacencyMatrix, reconnectedComponents);
     }
 
-    protected Tuple<ArrayList<DTriangle>, ArrayList<DTriangle>> triangulate(MapRepresentation map) throws DelaunayError {
+    public static Tuple<ArrayList<DTriangle>, ArrayList<DTriangle>> triangulate(MapRepresentation map) throws DelaunayError {
         ArrayList<javafx.scene.shape.Polygon> mapPolygons = map.getAllPolygons();
         ArrayList<DEdge> constraintEdges = new ArrayList<>();
         for (javafx.scene.shape.Polygon p : mapPolygons) {
@@ -360,7 +358,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         return new Tuple<>(includedTriangles, holeTriangles);
     }
 
-    protected Tuple<int[][], int[]> computeAdjacency(ArrayList<DTriangle> nodes) {
+    public static Tuple<int[][], int[]> computeAdjacency(ArrayList<DTriangle> nodes) {
         int[][] originalAdjacencyMatrix = new int[nodes.size()][nodes.size()];
 
         // checking for adjacency between nodes
@@ -405,7 +403,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         return new Tuple<>(originalAdjacencyMatrix, degreeMatrix);
     }
 
-    protected ArrayList<ArrayList<DTriangle>> computeHoles(ArrayList<DTriangle> holeTriangles) {
+    public static ArrayList<ArrayList<DTriangle>> computeHoles(ArrayList<DTriangle> holeTriangles) {
         // 1. group hole triangles by hole
         // 2. choose degree-2 triangle adjacent to the hole (can be according to some criterion)
         // 3. ???
@@ -470,7 +468,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         return holes;
     }
 
-    protected Triplet<ArrayList<DTriangle>, ArrayList<DEdge>, int[][]> computeSeparatingTriangles(ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> holes, int[][] originalAdjacencyMatrix, int[] degreeMatrix) {
+    public static Triplet<ArrayList<DTriangle>, ArrayList<DEdge>, int[][]> computeSeparatingTriangles(ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> holes, int[][] originalAdjacencyMatrix, int[] degreeMatrix) {
         // separating triangles are those adjacent to a hole and (for now) degree 2
         ArrayList<DTriangle> separatingTriangles = new ArrayList<>();
         ArrayList<DEdge> nonSeparatingEdges = new ArrayList<>();
@@ -539,7 +537,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         return new Triplet<>(separatingTriangles, nonSeparatingEdges, spanningTreeAdjacencyMatrix);
     }
 
-    protected Tuple<ArrayList<ArrayList<DTriangle>>, int[]> computeConnectedComponents(ArrayList<DTriangle> nodes, ArrayList<DTriangle> componentNodes, int[][] spanningTreeAdjacencyMatrix) {
+    public static Tuple<ArrayList<ArrayList<DTriangle>>, int[]> computeConnectedComponents(ArrayList<DTriangle> nodes, ArrayList<DTriangle> componentNodes, int[][] spanningTreeAdjacencyMatrix) {
         ArrayList<ArrayList<DTriangle>> simplyConnectedComponents = new ArrayList<>();
         ArrayList<DTriangle> temp;
         ArrayList<Integer> currentLayer, nextLayer;
@@ -582,7 +580,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         return new Tuple<>(simplyConnectedComponents, componentParentNodes);
     }
 
-    protected void computeSingleConnectedComponent(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<ArrayList<DTriangle>> holes, ArrayList<DTriangle> nodes, ArrayList<DTriangle> separatingTriangles, int[][] spanningTreeAdjacencyMatrix, int[][] originalAdjacencyMatrix, int[] parentNodes, ArrayList<Line> tree) throws DelaunayError {
+    public static void computeSingleConnectedComponent(ArrayList<ArrayList<DTriangle>> simplyConnectedComponents, ArrayList<ArrayList<DTriangle>> holes, ArrayList<DTriangle> nodes, ArrayList<DTriangle> separatingTriangles, int[][] spanningTreeAdjacencyMatrix, int[][] originalAdjacencyMatrix, int[] parentNodes, ArrayList<Line> tree) throws DelaunayError {
         if (parentNodes == null) {
             return;
         }
@@ -761,7 +759,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
         }
     }
 
-    protected ArrayList<Line> showSpanningTree(ArrayList<DTriangle> nodes, int[][] spanningTreeAdjacencyMatrix) throws DelaunayError {
+    public static ArrayList<Line> showSpanningTree(ArrayList<DTriangle> nodes, int[][] spanningTreeAdjacencyMatrix) throws DelaunayError {
         boolean unexploredLeft = true;
         ArrayList<Integer> currentLayer = new ArrayList<>();
         currentLayer.add(0);

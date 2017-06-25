@@ -65,6 +65,17 @@ public class MapRepresentation {
         evadingEntities = new ArrayList<>();
     }
 
+    public void what() {
+        System.out.println("\n\n");
+        for (Polygon p : allPolygons) {
+            for (double d : p.getPoints()) {
+                System.out.print(d + " ");
+            }
+            System.out.println("\n");
+        }
+        System.out.println("\n\n");
+    }
+
     public MapRepresentation(ArrayList<MapPolygon> map, ArrayList<Entity> pursuingEntities, ArrayList<Entity> evadingEntities) {
         allPolygons = new ArrayList<>();
         obstaclePolygons = new ArrayList<>();

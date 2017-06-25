@@ -8,8 +8,7 @@ import entities.base.PartitioningEntity;
 import entities.guarding.GuardManager;
 import entities.guarding.SquareGuardManager;
 import entities.utils.*;
-import experiments.DCRSStats;
-import experiments.PartitioningEntityRequirements;
+import experiments.*;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -58,6 +57,7 @@ public class DCRSEntity extends PartitioningEntity {
     private ArrayList<Line> testCrossedLines;
     private ArrayList<Coordinate> testAddedCoordinates;
     private boolean testInGuardedSquare, updated, spottedOnce;
+    private ArrayList<SquareGuardInfo> squareGuardInfo;
 
     private Coordinate previousTargetPosition, currentTargetPosition;
     private ArrayList<Line> initCrossableLines;
@@ -67,9 +67,19 @@ public class DCRSEntity extends PartitioningEntity {
     private Group catchGraphics;
     private Group guardGraphics;
 
-    public DCRSEntity(MapRepresentation map, DCRSStats stats, PartitioningEntityRequirements requirements) {
-        this(map);
-        this.stats = stats;
+    public DCRSEntity(MapRepresentation map, PartitioningEntityRequirements requirements, ArrayList<SquareGuardInfo> squareGuardInfo) {
+        super(map);
+        testGuardManagers = new ArrayList<>();
+        testExcludedLines = new ArrayList<>();
+        testCrossedLines = new ArrayList<>();
+        testAddedCoordinates = new ArrayList<>();
+        initCrossableLines = new ArrayList<>();
+        nastyBullshitLines = new ArrayList<>();
+        catchGraphics = new Group();
+        guardGraphics = new Group();
+        Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
+
+        this.squareGuardInfo = squareGuardInfo;
         if (requirements.isConfigured()) {
             requiredAgents = requirements.requiredAgents;
             componentBoundaryLines = requirements.componentBoundaryLines;
@@ -78,6 +88,7 @@ public class DCRSEntity extends PartitioningEntity {
             separatingEdges = requirements.separatingEdges;
             separatingLines = requirements.separatingLines;
             traversalHandler = requirements.traversalHandler;
+            guardManagers = new ArrayList<>();
             for (GuardManager gm : requirements.guardManagers) {
                 guardManagers.add(new SquareGuardManager(((SquareGuardManager) gm).getOriginalGuardingLine(), ((SquareGuardManager) gm).getGuardedSquare(), ((SquareGuardManager) gm).getSquareSides(), ((SquareGuardManager) gm).getEntranceToGuarded(), ((SquareGuardManager) gm).getGuardedToSegments()));
             }
@@ -453,6 +464,7 @@ public class DCRSEntity extends PartitioningEntity {
                 initInGuardingSquare = false;
                 catcherPathLineCounter = 0;
                 searcherPathLineCounter = 0;
+                currentSearcherPath = null;
                 currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
                 currentStage = Stage.CATCHER_TO_SEARCHER;
             } else {
@@ -532,6 +544,7 @@ public class DCRSEntity extends PartitioningEntity {
             initInGuardingSquare = false;
             catcherPathLineCounter = 0;
             searcherPathLineCounter = 0;
+            currentSearcherPath = null;
             currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
             currentStage = Stage.CATCHER_TO_SEARCHER;
         } else if (map.isVisible(target, catcher) /*&& legal/* || !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines))*/) {
@@ -1145,11 +1158,19 @@ public class DCRSEntity extends PartitioningEntity {
             int[][] reconnectedAdjacencyMatrix = reconnectedAdjacency.getFirst();
             ArrayList<ArrayList<DTriangle>> reconnectedComponents = reconnectedAdjacency.getSecond();
 
-            Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> componentBoundaries = computeComponentBoundaries(reconnectedComponents, separatingEdges, separatingLines);
-            componentBoundaryLines = componentBoundaries.getFirst();
-            componentBoundaryShapes = componentBoundaries.getSecond();
+            Triplet<ArrayList<ArrayList<Line>>, ArrayList<ArrayList<DEdge>>, ArrayList<Shape>> componentBoundaries = computeComponentBoundaries(reconnectedComponents, separatingEdges, separatingLines);
+            componentBoundaryLines = componentBoundaries.getValue0();
+            componentBoundaryEdges = componentBoundaries.getValue1();
+            componentBoundaryShapes = componentBoundaries.getValue2();
 
-            guardManagers = computeGuardManagers(separatingLines);
+            if (squareGuardInfo == null) {
+                guardManagers = computeGuardManagers(separatingLines, map);
+            } else {
+                guardManagers = new ArrayList<>();
+                for (int i = 0; i < separatingLines.size(); i++) {
+                    guardManagers.add(new SquareGuardManager(separatingLines.get(i), squareGuardInfo.get(i).guardedSquare, squareGuardInfo.get(i).squareSides, squareGuardInfo.get(i).entranceToGuarded, squareGuardInfo.get(i).guardedToSegments));
+                }
+            }
 
             gSqrIntersectingTriangles = computeGuardingSquareIntersection(guardManagers, nodes);
 
@@ -1186,13 +1207,13 @@ public class DCRSEntity extends PartitioningEntity {
         System.out.println("Time to compute DCRSEntity requirements: " + (System.currentTimeMillis() - before));
     }
 
-    private ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines) {
+    public static ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines, MapRepresentation map) {
         ArrayList<GuardManager> squareGuardManagers = new ArrayList<>(separatingLines.size());
         SquareGuardManager temp1, temp2;
 
         for (Line l : separatingLines) {
-            temp1 = computeSingleGuardManager(l, false);
-            temp2 = computeSingleGuardManager(l, true);
+            temp1 = computeSingleGuardManager(l, map, false);
+            temp2 = computeSingleGuardManager(l, map, true);
             if (temp1.getOriginalPositions().size() < temp2.getOriginalPositions().size()) {
                 squareGuardManagers.add(temp1);
                 for (int i = 0; i < temp1.getGuardedSquare().getCoordinates().length - 1; i++) {
@@ -1220,7 +1241,7 @@ public class DCRSEntity extends PartitioningEntity {
         return squareGuardManagers;
     }
 
-    private SquareGuardManager computeSingleGuardManager(Line l, boolean reverseSign) {
+    private static SquareGuardManager computeSingleGuardManager(Line l, MapRepresentation map, boolean reverseSign) {
         // **************************************** //
         // variables to be used for the computation //
         // **************************************** //

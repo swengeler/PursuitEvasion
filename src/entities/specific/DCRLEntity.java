@@ -50,23 +50,21 @@ public class DCRLEntity extends PartitioningEntity {
     private ArrayList<PathLine> pathLines;
     private int searcherPathLineCounter, catcherPathLineCounter;
 
-    private ShortestPathRoadMap testSPRM;
-    private LineGuardManager testCrossedLGM;
-    private ArrayList<DTriangle> testPossibleTriangles;
-    private boolean spottedOnce, linesSecured;
+    private boolean linesSecured;
+    private ArrayList<ArrayList<Coordinate>> lineGuardOriginalPositions;
 
     private Coordinate previousTargetPosition, currentTargetPosition;
 
     private Group catchGraphics;
     private Group guardGraphics;
 
-    public DCRLEntity(MapRepresentation map, DCRLStats stats, PartitioningEntityRequirements requirements) {
+    public DCRLEntity(MapRepresentation map, PartitioningEntityRequirements requirements, ArrayList<ArrayList<Coordinate>> lineGuardOriginalPositions) {
         super(map);
         catchGraphics = new Group();
         guardGraphics = new Group();
         Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
 
-        this.stats = stats;
+        this.lineGuardOriginalPositions = lineGuardOriginalPositions;
         if (requirements.isConfigured()) {
             requiredAgents = requirements.requiredAgents;
             componentBoundaryLines = requirements.componentBoundaryLines;
@@ -135,7 +133,6 @@ public class DCRLEntity extends PartitioningEntity {
                 for (GuardManager gm : guardManagers) {
                     if (((LineGuardManager) gm).crossable()) {
                         linesSecured = false;
-                        testCrossedLGM = null;
                         Line l = new Line(((LineGuardManager) gm).getOriginalGuardingLine().getStartX(), ((LineGuardManager) gm).getOriginalGuardingLine().getStartY(), ((LineGuardManager) gm).getOriginalGuardingLine().getEndX(), ((LineGuardManager) gm).getOriginalGuardingLine().getEndY());
                         l.setStroke(Color.INDIANRED);
                         Main.pane.getChildren().add(l);
@@ -178,7 +175,15 @@ public class DCRLEntity extends PartitioningEntity {
     private void catcherToSearcher() {
         // only move catcher
         pathLines = currentCatcherPath.getPathLines();
-        length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+        try {
+            length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+        } catch (Exception e) {
+            System.out.println("Catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
+            System.out.println("Searcher: " + searcher.getXPos() + ", " + searcher.getYPos());
+            System.out.println("pathLines.size(): " + pathLines.size());
+            System.out.println("catcherPathLineCounter: " + catcherPathLineCounter);
+            e.printStackTrace();
+        }
         deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
         deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
 
@@ -187,7 +192,6 @@ public class DCRLEntity extends PartitioningEntity {
             catcher.moveBy(deltaX, deltaY);
         } else {
             // move to end of line
-            // TODO: instead take a "shortcut" to the next line
             catcher.moveBy(pathLines.get(catcherPathLineCounter).getEndX() - catcher.getXPos(), pathLines.get(catcherPathLineCounter).getEndY() - catcher.getYPos());
             catcherPathLineCounter++;
         }
@@ -299,9 +303,9 @@ public class DCRLEntity extends PartitioningEntity {
                 target.setActive(false);
                 target = null;
                 origin = null;
-                spottedOnce = false;
                 catcherPathLineCounter = 0;
                 searcherPathLineCounter = 0;
+                currentSearcherPath = null;
                 currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
                 currentStage = Stage.CATCHER_TO_SEARCHER;
             } else {
@@ -320,9 +324,9 @@ public class DCRLEntity extends PartitioningEntity {
             target.setActive(false);
             target = null;
             origin = null;
-            spottedOnce = false;
             catcherPathLineCounter = 0;
             searcherPathLineCounter = 0;
+            currentSearcherPath = null;
             currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
             currentStage = Stage.CATCHER_TO_SEARCHER;
         } else if (map.isVisible(target, catcher)) {
@@ -516,9 +520,9 @@ public class DCRLEntity extends PartitioningEntity {
             target.setActive(false);
             target = null;
             origin = null;
-            spottedOnce = false;
             catcherPathLineCounter = 0;
             searcherPathLineCounter = 0;
+            currentSearcherPath = null;
             currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
             currentStage = Stage.CATCHER_TO_SEARCHER;
         } else if (map.isVisible(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos())) {
@@ -622,6 +626,10 @@ public class DCRLEntity extends PartitioningEntity {
         }
     }
 
+    public void trackStats(DCRLStats stats) {
+        this.stats = stats;
+    }
+
     @Override
     protected void assignTasks() {
         long before = System.currentTimeMillis();
@@ -698,11 +706,21 @@ public class DCRLEntity extends PartitioningEntity {
             int[][] reconnectedAdjacencyMatrix = reconnectedAdjacency.getFirst();
             ArrayList<ArrayList<DTriangle>> reconnectedComponents = reconnectedAdjacency.getSecond();
 
-            Tuple<ArrayList<ArrayList<Line>>, ArrayList<Shape>> componentBoundaries = computeComponentBoundaries(reconnectedComponents, separatingEdges, separatingLines);
-            componentBoundaryLines = componentBoundaries.getFirst();
-            componentBoundaryShapes = componentBoundaries.getSecond();
+            Triplet<ArrayList<ArrayList<Line>>, ArrayList<ArrayList<DEdge>>, ArrayList<Shape>> componentBoundaries = computeComponentBoundaries(reconnectedComponents, separatingEdges, separatingLines);
+            componentBoundaryLines = componentBoundaries.getValue0();
+            componentBoundaryEdges = componentBoundaries.getValue1();
+            componentBoundaryShapes = componentBoundaries.getValue2();
 
-            guardManagers = computeGuardManagers(separatingLines);
+            System.out.println("Time before computing guard managers: " + (System.currentTimeMillis() - before));
+
+            if (lineGuardOriginalPositions == null) {
+                guardManagers = computeGuardManagers(separatingLines, null, null);
+            } else {
+                guardManagers = new ArrayList<>();
+                for (int i = 0; i < separatingLines.size(); i++) {
+                    guardManagers.add(new LineGuardManager(separatingLines.get(i), lineGuardOriginalPositions.get(i), map));
+                }
+            }
 
             traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
             traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
@@ -722,7 +740,7 @@ public class DCRLEntity extends PartitioningEntity {
         System.out.println("Time to compute DCRLEntity requirements: " + (System.currentTimeMillis() - before));
     }
 
-    private ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines) {
+    public static ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines, ArrayList<Tuple<Geometry, Group>> visibilityInfo, ShortestPathRoadMap shortestPathRoadMap) {
         ArrayList<GuardManager> lineGuardManagers = new ArrayList<>(separatingLines.size());
         LineGuardManager tempLGM;
 
@@ -730,33 +748,36 @@ public class DCRLEntity extends PartitioningEntity {
             // for every reflex vertex of the polygon, calculate its visibility polygon
             // identify reflex vertices:
             // from shortest path map, get all vertices and convert them into coordinates
-            List<Coordinate> vertices = Arrays.asList(map.getPolygon().getCoordinates());
-
-            ArrayList<Coordinate> reflexVertices = new ArrayList<>();
+            if (shortestPathRoadMap == null) {
+                shortestPathRoadMap = Entity.shortestPathRoadMap;
+            }
             Set<PathVertex> temp = shortestPathRoadMap.getVertices();
+            ArrayList<Coordinate> reflexVertices = new ArrayList<>();
             for (PathVertex pv : temp) {
                 reflexVertices.add(new Coordinate(pv.getRealX(), pv.getRealY()));
             }
 
             long before = System.currentTimeMillis();
-            ArrayList<Tuple<Geometry, Group>> visibilityInfo = new ArrayList<>(vertices.size());
             ArrayList<Geometry> visibilityPolygons = new ArrayList<>();
-            for (Coordinate c1 : reflexVertices) {
-                visibilityInfo.add(computeVisibilityPolygon(c1, vertices));
-                visibilityPolygons.add(visibilityInfo.get(visibilityInfo.size() - 1).getFirst());
+            if (visibilityInfo == null) {
+                List<Coordinate> vertices = Arrays.asList(Entity.map.getPolygon().getCoordinates());
+
+                visibilityInfo = new ArrayList<>(vertices.size());
+                for (Coordinate c1 : reflexVertices) {
+                    visibilityInfo.add(computeVisibilityPolygon(c1, vertices, Entity.map));
+                    visibilityPolygons.add(visibilityInfo.get(visibilityInfo.size() - 1).getFirst());
+                }
+                System.out.println("Time to compute visibility polygons (vertices: " + vertices.size() + ", reflex vertices: " + reflexVertices.size() + "): " + (System.currentTimeMillis() - before) + " ms");
+            } else {
+                for (Tuple<Geometry, Group> t : visibilityInfo) {
+                    visibilityPolygons.add(t.getFirst());
+                }
             }
-            Group g = visibilityInfo.get(0).getSecond();
-            Main.pane.getChildren().add(g);
-            System.out.println("Time to compute visibility polygons (vertices: " + vertices.size() + ", reflex vertices: " + reflexVertices.size() + "): " + (System.currentTimeMillis() - before) + " ms");
 
             before = System.currentTimeMillis();
-            int c = 0;
             for (Line l : separatingLines) {
-                l.setStroke(Color.LIGHTBLUE);
-                //Main.pane.getChildren().add(l);
-                tempLGM = computeSingleGuardManager(l, reflexVertices, visibilityPolygons);
+                tempLGM = computeSingleGuardManager(l, reflexVertices, visibilityPolygons, shortestPathRoadMap.getMap());
                 lineGuardManagers.add(tempLGM);
-                //System.out.println("Time to compute " + (++c) + " guard(s): " + (System.currentTimeMillis() - before) + " ms");
             }
             System.out.println("Time to compute guard(s): " + (System.currentTimeMillis() - before) + " ms");
         }
@@ -764,7 +785,7 @@ public class DCRLEntity extends PartitioningEntity {
         return lineGuardManagers;
     }
 
-    private LineGuardManager computeSingleGuardManager(Line separatingLine, ArrayList<Coordinate> reflexVertices, ArrayList<Geometry> visibilityPolygons) {
+    private static LineGuardManager computeSingleGuardManager(Line separatingLine, ArrayList<Coordinate> reflexVertices, ArrayList<Geometry> visibilityPolygons, MapRepresentation map) {
         LineString lineString = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(separatingLine.getStartX(), separatingLine.getStartY()), new Coordinate(separatingLine.getEndX(), separatingLine.getEndY())}), GeometryOperations.factory);
         LineSegment lineSegment = new LineSegment(separatingLine.getStartX(), separatingLine.getStartY(), separatingLine.getEndX(), separatingLine.getEndY());
         // determine the reflex vertices visible from the line
@@ -953,21 +974,7 @@ public class DCRLEntity extends PartitioningEntity {
         return new LineGuardManager(separatingLine, guardPoints, map);
     }
 
-    private class PointPair {
-        private int index1, index2;
-
-        private PointPair(int index1, int index2) {
-            this.index1 = index1;
-            this.index2 = index2;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof PointPair && ((((PointPair) o).index1 == this.index1 && ((PointPair) o).index2 == this.index2) || (((PointPair) o).index1 == this.index2 && ((PointPair) o).index2 == this.index1));
-        }
-    }
-
-    private Tuple<Geometry, Group> computeVisibilityPolygon(Coordinate c1, List<Coordinate> vertices) {
+    public static Tuple<Geometry, Group> computeVisibilityPolygon(Coordinate c1, List<Coordinate> vertices, MapRepresentation map) {
         long before = System.currentTimeMillis();
 
         // algorithm (run once for each vertex)
@@ -984,8 +991,8 @@ public class DCRLEntity extends PartitioningEntity {
         ArrayList<Quintet<Coordinate, Coordinate, LineString, LineSegment[], LineSegment[]>> rays = new ArrayList<>(); // coordinate on the boundary, vertex of the polygon, ray from source to vertex of polygon and coordinate on boundary, intersecting boundary lines of the polygon
         HashMap<Quintet, Double> angles = new HashMap<>();
 
-        ArrayList<PointPair> checkedPairs;
-        PointPair currentPair;
+        ArrayList<IndexPair> checkedPairs;
+        IndexPair currentPair;
         Coordinate[] temp;
         boolean same;
         for (Coordinate c2 : vertices) {
@@ -1107,7 +1114,7 @@ public class DCRLEntity extends PartitioningEntity {
             if (i == 0) {
                 coordinates.add(c1);
             }
-            currentPair = new PointPair(i, (i + 1) % rays.size());
+            currentPair = new IndexPair(i, (i + 1) % rays.size());
 
             //try {
             boundaryPointsShareSegment = d1.getValue3()[0].equals(d2.getValue3()[0]) || (d2.getValue3()[1] != null && d1.getValue3()[0].equals(d2.getValue3()[1])) || (d1.getValue3()[1] != null && d1.getValue3()[1].equals(d2.getValue3()[0])) || (d1.getValue3()[1] != null && d2.getValue3()[1] != null && d1.getValue3()[1].equals(d2.getValue3()[1]));
