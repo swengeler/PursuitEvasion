@@ -169,6 +169,7 @@ public abstract class PartitioningEntity extends CentralisedEntity {
                             tempClosestAgent = a;
                         }*/
                         guards.add(a);
+                        a.setGuard();
                         currentGuards.add(a);
                         initGuardPaths.add(shortestPathRoadMap.getShortestPath(a.getXPos(), a.getYPos(), c.x, c.y));
                         break;

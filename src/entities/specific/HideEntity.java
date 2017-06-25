@@ -30,6 +30,11 @@ import java.util.Random;
 
 public class HideEntity extends DistributedEntity {
 
+    /*
+        - no shortest paths for guards (should be done - no computations)
+        - for shortest paths that have vertices which are in fov of guards / are 'very' close to them, 'penalize'
+     */
+
     private TraversalHandler traversalHandler;
     private PlannedPath currentPath;
     private Point2D ctarget;
@@ -38,7 +43,6 @@ public class HideEntity extends DistributedEntity {
 
     private final static int STEP = 50;
     private final static int separationDistance = 100;
-    private final static int pursuerDistance = 500;
 
     ArrayList<PathLine> pathLines;
     int i = 0;
@@ -73,24 +77,24 @@ public class HideEntity extends DistributedEntity {
             for (Entity entity : map.getPursuingEntities()) {
                 ArrayList<Agent> pursuers = entity.getControlledAgents();
                 for (Agent pursuer : pursuers) {
-                    double dist = Math.sqrt(Math.pow(pursuer.getXPos() - evader.getXPos(), 2) + Math.pow(pursuer.getYPos() - evader.getYPos(), 2));
-                    if (dist <= pursuerDistance) {
-                        ArrayList<PointData> pursuerPointData = new ArrayList<>();
-                        for (Point2D midpoint : polygonMidpoints) {
+                    if (pursuer.isGuard()) {
+                        continue;
+                    }
 
-                            PlannedPath shortestPathFromPursuer = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
-                            double midpointDistance = shortestPathFromPursuer.getTotalLength();
-                            int numberOfVertices = shortestPathFromPursuer.pathLength();
+                    ArrayList<PointData> pursuerPointData = new ArrayList<>();
+                    for (Point2D midpoint : polygonMidpoints) {
 
-                            PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
-                            pursuerPointData.add(pd);
-                            //System.out.println("dist: " + midpointDistance);
+                        PlannedPath shortestPathFromPursuer = shortestPathMap.getShortestPath(new Point2D(pursuer.getXPos(), pursuer.getYPos()), midpoint);
+                        double midpointDistance = shortestPathFromPursuer.getTotalLength();
+                        int numberOfVertices = shortestPathFromPursuer.pathLength();
 
-                        }
-
-                        allPursuerData.add(pursuerPointData);
+                        PointData pd = new PointData(midpoint, midpointDistance, numberOfVertices);
+                        pursuerPointData.add(pd);
+                        //System.out.println("dist: " + midpointDistance);
 
                     }
+
+                    allPursuerData.add(pursuerPointData);
                 }
 
             }
