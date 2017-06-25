@@ -99,6 +99,7 @@ public class SquareGuardManager implements GuardManager {
         Main.pane.getChildren().add(graphics);
     }
 
+    @Override
     public void assignGuards(ArrayList<Agent> guards) {
         assert guards.size() == originalPositions.size();
         this.guards = new ArrayList<>();
@@ -142,6 +143,12 @@ public class SquareGuardManager implements GuardManager {
         }*/
     }
 
+    @Override
+    public void clearGuards() {
+        guards.clear();
+    }
+
+    @Override
     public void updateTargetPosition(Agent a) {
         graphics.toFront();
         //lastTargetPos.getCoordinate().x = currentTargetPos.getX();
@@ -320,16 +327,19 @@ public class SquareGuardManager implements GuardManager {
 
     }
 
+    @Override
     public void initTargetPosition(Agent a) {
         //currentTargetPos.getCoordinate().x = a.getXPos();
         //currentTargetPos.getCoordinate().y = a.getYPos();
         currentTargetPos = new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(a.getXPos(), a.getYPos())}), GeometryOperations.factory);
     }
 
+    @Override
     public int totalRequiredGuards() {
         return originalPositions.size();
     }
 
+    @Override
     public ArrayList<Coordinate> getOriginalPositions() {
         return originalPositions;
     }
@@ -338,7 +348,7 @@ public class SquareGuardManager implements GuardManager {
         return guardedSquare;
     }
 
-    public Line getOriginalSeparatingLine() {
+    public Line getOriginalGuardingLine() {
         return squareSideLines.get(0);
     }
 
@@ -348,6 +358,14 @@ public class SquareGuardManager implements GuardManager {
 
     public ArrayList<LineString> getSquareSides() {
         return squareSides;
+    }
+
+    public HashMap<LineString, ArrayList<LineString>>  getEntranceToGuarded() {
+        return entranceToGuarded;
+    }
+
+    public HashMap<LineString, ArrayList<LineSegment>>  getGuardedToSegments() {
+        return guardedToSegments;
     }
 
     public boolean crossedNonSeparatingLine() {

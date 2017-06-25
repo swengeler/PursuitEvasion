@@ -8,6 +8,8 @@ import entities.base.PartitioningEntity;
 import entities.guarding.GuardManager;
 import entities.guarding.SquareGuardManager;
 import entities.utils.*;
+import experiments.DCRSStats;
+import experiments.PartitioningEntityRequirements;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -27,6 +29,9 @@ import java.util.*;
  * DCRS = Divide and Conquer, Randomised, Square Guards
  */
 public class DCRSEntity extends PartitioningEntity {
+
+    private DCRSStats stats;
+    private PartitioningEntityRequirements requirements;
 
     private static final boolean CONSTANT_TARGET_TEST = true;
 
@@ -62,8 +67,29 @@ public class DCRSEntity extends PartitioningEntity {
     private Group catchGraphics;
     private Group guardGraphics;
 
+    public DCRSEntity(MapRepresentation map, DCRSStats stats, PartitioningEntityRequirements requirements) {
+        this(map);
+        this.stats = stats;
+        if (requirements.isConfigured()) {
+            requiredAgents = requirements.requiredAgents;
+            componentBoundaryLines = requirements.componentBoundaryLines;
+            componentBoundaryEdges = requirements.componentBoundaryEdges;
+            componentBoundaryShapes = requirements.componentBoundaryShapes;
+            separatingEdges = requirements.separatingEdges;
+            separatingLines = requirements.separatingLines;
+            traversalHandler = requirements.traversalHandler;
+            for (GuardManager gm : requirements.guardManagers) {
+                guardManagers.add(new SquareGuardManager(((SquareGuardManager) gm).getOriginalGuardingLine(), ((SquareGuardManager) gm).getGuardedSquare(), ((SquareGuardManager) gm).getSquareSides(), ((SquareGuardManager) gm).getEntranceToGuarded(), ((SquareGuardManager) gm).getGuardedToSegments()));
+            }
+        } else {
+            this.requirements = requirements;
+            computeRequirements();
+        }
+    }
+
     public DCRSEntity(MapRepresentation map) {
         super(map);
+        computeRequirements();
         testGuardManagers = new ArrayList<>();
         testExcludedLines = new ArrayList<>();
         testCrossedLines = new ArrayList<>();
@@ -87,7 +113,7 @@ public class DCRSEntity extends PartitioningEntity {
                         for (GuardManager gm : guardManagers) {
                             gm.initTargetPosition(target);
                             if (((SquareGuardManager) gm).inGuardedSquare()) {
-                                initCrossableLines.add(((SquareGuardManager) gm).getOriginalSeparatingLine());
+                                initCrossableLines.add(((SquareGuardManager) gm).getOriginalGuardingLine());
                                 testCrossedLines.add(initCrossableLines.get(initCrossableLines.size() - 1));
                                 testExcludedLines.remove(initCrossableLines.get(initCrossableLines.size() - 1));
                                 initInGuardingSquare = true;
@@ -157,8 +183,8 @@ public class DCRSEntity extends PartitioningEntity {
                         testGuardManagers.remove(gm);
                         testExcludedLines.removeAll(gm.getSquareSideLines());
                         testCrossedLines.removeAll(gm.getSquareSideLines());
-                        if (!testExcludedLines.contains(gm.getOriginalSeparatingLine())) {
-                            testExcludedLines.add(gm.getOriginalSeparatingLine());
+                        if (!testExcludedLines.contains(gm.getOriginalGuardingLine())) {
+                            testExcludedLines.add(gm.getOriginalGuardingLine());
                         }
                         testAddedCoordinates.remove(gm.getSquareSides().get(i).getCoordinates()[0]);
                         testAddedCoordinates.remove(gm.getSquareSides().get(i).getCoordinates()[1]);
@@ -173,8 +199,8 @@ public class DCRSEntity extends PartitioningEntity {
                     if (!testGuardManagers.contains(gm)) {
                         crossedLineOrdinal = gm.crossedLineOrdinal();
                         /*if (crossedLineOrdinal == 0 && ((SquareGuardManager) gmr).enteredSquare()) {
-                            testExcludedLines.remove(((SquareGuardManager) gmr).getOriginalSeparatingLine());
-                            testCrossedLines.add(((SquareGuardManager) gmr).getOriginalSeparatingLine());
+                            testExcludedLines.remove(((SquareGuardManager) gmr).getOriginalGuardingLine());
+                            testCrossedLines.add(((SquareGuardManager) gmr).getOriginalGuardingLine());
                             testInGuardedSquare = true;
                             changed = true;
                         }*/
@@ -220,8 +246,8 @@ public class DCRSEntity extends PartitioningEntity {
                     if (!testGuardManagers.contains(gm)) {
                         crossedLineOrdinal = gm.crossedLineOrdinal();
                         /*if (crossedLineOrdinal == 0 && ((SquareGuardManager) gm).enteredSquare()) {
-                            testExcludedLines.remove(((SquareGuardManager) gm).getOriginalSeparatingLine());
-                            testCrossedLines.add(((SquareGuardManager) gm).getOriginalSeparatingLine());
+                            testExcludedLines.remove(((SquareGuardManager) gm).getOriginalGuardingLine());
+                            testCrossedLines.add(((SquareGuardManager) gm).getOriginalGuardingLine());
                             testInGuardedSquare = true;
                             changed = true;
                         }*/
@@ -283,8 +309,6 @@ public class DCRSEntity extends PartitioningEntity {
                     initCrossableLines.remove(initCrossableLines.get(i));
                     i--;
                     System.out.println("outside initial guarded square");
-                } else {
-                    System.out.println("not outside initial guarded square");
                 }
             }
             if (initCrossableLines.size() == 0) {
@@ -296,7 +320,15 @@ public class DCRSEntity extends PartitioningEntity {
     private void catcherToSearcher() {
         // only move catcher
         pathLines = currentCatcherPath.getPathLines();
-        length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+        try {
+            length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
+        } catch (Exception e) {
+            System.out.println("Catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
+            System.out.println("Searcher: " + searcher.getXPos() + ", " + searcher.getYPos());
+            System.out.println("pathLines.size(): " + pathLines.size());
+            System.out.println("catcherPathLineCounter: " + catcherPathLineCounter);
+            e.printStackTrace();
+        }
         deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
         deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
 
@@ -312,6 +344,8 @@ public class DCRSEntity extends PartitioningEntity {
 
         // check if searcher position reached and the next stage can begin
         if (catcher.getXPos() == searcher.getXPos() && catcher.getYPos() == searcher.getYPos()) {
+            currentSearcherPath = null;
+            currentCatcherPath = null;
             currentStage = Stage.INIT_FIND_TARGET;
         }
     }
@@ -414,6 +448,13 @@ public class DCRSEntity extends PartitioningEntity {
                 catcher.moveTo(target.getXPos(), target.getYPos());
                 target.setActive(false);
                 target = null;
+                origin = null;
+                spottedOnce = false;
+                initInGuardingSquare = false;
+                catcherPathLineCounter = 0;
+                searcherPathLineCounter = 0;
+                currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
+                currentStage = Stage.CATCHER_TO_SEARCHER;
             } else {
                 catcher.moveBy(deltaX, deltaY);
                 searcher.moveBy(deltaX, deltaY);
@@ -489,6 +530,9 @@ public class DCRSEntity extends PartitioningEntity {
             origin = null;
             spottedOnce = false;
             initInGuardingSquare = false;
+            catcherPathLineCounter = 0;
+            searcherPathLineCounter = 0;
+            currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
             currentStage = Stage.CATCHER_TO_SEARCHER;
         } else if (map.isVisible(target, catcher) /*&& legal/* || !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines))*/) {
             //System.out.println("Respotted (legal: " + legal + ", other metric: " + !GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), separatingLines) + ")");
@@ -505,7 +549,7 @@ public class DCRSEntity extends PartitioningEntity {
 
             /*if (inGuardedSquareOverNonSeparating && specialShortestPathRoadMap == null) {
                 ArrayList<Line> temp = new ArrayList<>();
-                temp.add(currentGuardedSquare.getOriginalSeparatingLine());
+                temp.add(currentGuardedSquare.getOriginalGuardingLine());
                 specialShortestPathRoadMap = new ShortestPathRoadMap(temp, map);
             } else if (inGuardedSquareOverSeparating && specialShortestPathRoadMap == null) {
                 ArrayList<Line> temp = new ArrayList<>();
@@ -1024,6 +1068,7 @@ public class DCRSEntity extends PartitioningEntity {
 
     @Override
     protected void assignTasks() {
+        long before = System.currentTimeMillis();
         super.assignTasks();
         // the computed PlannedPath objects will initially be used to position all the guards in their correct locations
         // the (at least 2) remaining agents will be assigned to be searcher (and catcher)
@@ -1039,14 +1084,18 @@ public class DCRSEntity extends PartitioningEntity {
                 break;
             }
         }
+        catcherPathLineCounter = 0;
+        searcherPathLineCounter = 0;
         currentStage = Stage.CATCHER_TO_SEARCHER;
-        ShortestPathRoadMap.SHOW_ON_CANVAS = true;
+        //ShortestPathRoadMap.SHOW_ON_CANVAS = true;
         currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
-        ShortestPathRoadMap.SHOW_ON_CANVAS = false;
+        //ShortestPathRoadMap.SHOW_ON_CANVAS = false;
+        System.out.println("Time to assign DCRSEntity tasks: " + (System.currentTimeMillis() - before));
     }
 
     @Override
     protected void computeRequirements() {
+        long before = System.currentTimeMillis();
         // build needed data structures and analyse map to see how many agents are required
         try {
             // computing the triangulation of the given map
@@ -1127,9 +1176,14 @@ public class DCRSEntity extends PartitioningEntity {
             }
             requiredAgents += 2;
             System.out.println("\nrequiredAgents: " + requiredAgents);
+
+            if (requirements != null) {
+                requirements.configure(requiredAgents, componentBoundaryLines, componentBoundaryEdges, componentBoundaryShapes, separatingEdges, separatingLines, guardManagers, traversalHandler);
+            }
         } catch (DelaunayError error) {
             error.printStackTrace();
         }
+        System.out.println("Time to compute DCRSEntity requirements: " + (System.currentTimeMillis() - before));
     }
 
     private ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines) {

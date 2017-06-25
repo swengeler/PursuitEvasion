@@ -13,6 +13,8 @@ public interface GuardManager {
 
     void assignGuards(ArrayList<Agent> guards);
 
+    void clearGuards();
+
     int totalRequiredGuards();
 
     ArrayList<Coordinate> getOriginalPositions();

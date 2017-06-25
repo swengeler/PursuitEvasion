@@ -7,6 +7,8 @@ import entities.guarding.GuardManager;
 import entities.guarding.TriangleVisionGuardManager;
 import entities.utils.PathLine;
 import entities.utils.PlannedPath;
+import experiments.DCRVStats;
+import experiments.PartitioningEntityRequirements;
 import javafx.scene.Group;
 import maps.MapRepresentation;
 import org.javatuples.Triplet;
@@ -20,9 +22,12 @@ import ui.Main;
 import java.util.ArrayList;
 
 /**
- * DCRS = Divide and Conquer, Randomised, Vision-Based
+ * DCRV = Divide and Conquer, Randomised, Vision-Based
  */
 public class DCRVEntity extends PartitioningEntity {
+
+    public DCRVStats stats;
+    private PartitioningEntityRequirements requirements;
 
     private TraversalHandler traversalHandler;
 
@@ -34,8 +39,28 @@ public class DCRVEntity extends PartitioningEntity {
     private Group catchGraphics;
     private Group guardGraphics;
 
+    public DCRVEntity(MapRepresentation map, PartitioningEntityRequirements requirements) {
+        this(map);
+        if (requirements.isConfigured()) {
+            requiredAgents = requirements.requiredAgents;
+            componentBoundaryLines = requirements.componentBoundaryLines;
+            componentBoundaryEdges = requirements.componentBoundaryEdges;
+            componentBoundaryShapes = requirements.componentBoundaryShapes;
+            separatingEdges = requirements.separatingEdges;
+            separatingLines = requirements.separatingLines;
+            traversalHandler = requirements.traversalHandler;
+            for (GuardManager gm : requirements.guardManagers) {
+                guardManagers.add(new TriangleVisionGuardManager(((TriangleVisionGuardManager) gm).getMap(), ((TriangleVisionGuardManager) gm).getOriginalPositions().get(0).x, ((TriangleVisionGuardManager) gm).getOriginalPositions().get(0).y));
+            }
+        } else {
+            this.requirements = requirements;
+            computeRequirements();
+        }
+    }
+
     public DCRVEntity(MapRepresentation map) {
         super(map);
+        computeRequirements();
         catchGraphics = new Group();
         guardGraphics = new Group();
         Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
@@ -43,6 +68,7 @@ public class DCRVEntity extends PartitioningEntity {
 
     @Override
     protected void determineTarget() {
+        System.out.println("wat3: " + this.stats.getCounter());
         outer:
         for (Entity e : map.getEvadingEntities()) {
             if (e.isActive()) {
@@ -57,18 +83,24 @@ public class DCRVEntity extends PartitioningEntity {
                 }
             }
         }
+        System.out.println("wat4: " + this.stats.getCounter());
     }
 
     @Override
     protected void doPrecedingOperations() {
+        System.out.println("wat5: " + this.stats.getCounter());
     }
 
     @Override
     protected void doGuardOperations() {
+        System.out.println("wat6: " + this.stats.getCounter());
     }
 
     @Override
     protected void doSearchAndCatchOperations() {
+        System.out.println("Check");
+        System.out.println("wat7: " + this.stats.getCounter());
+
         if (currentSearcherPath == null) {
             try {
                 currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
@@ -86,6 +118,9 @@ public class DCRVEntity extends PartitioningEntity {
                 e.printStackTrace();
             }
             searcherPathLineCounter = 0;
+            if (stats != null) {
+                stats.increaseNrLeafRuns();
+            }
         }
 
         // move searcher and catcher using same paths
@@ -102,22 +137,25 @@ public class DCRVEntity extends PartitioningEntity {
             searcherPathLineCounter++;
         }
 
+        if (stats != null) {
+            System.out.println(stats.getCounter());
+            stats.increaseNrSteps();
+        }
+
         // check whether target is visible
-        /*if (target != null) {
-            if (target.isActive() && map.isVisible(target, searcher)) {
-                target.setActive(false);
-                target = null;
-                currentSearcherPath = null;
-                searcherPathLineCounter = 0;
-            }
-        }*/
         for (Entity e : map.getEvadingEntities()) {
             if (e.isActive()) {
                 for (Agent a1 : e.getControlledAgents()) {
                     if (a1.isActive()) {
                         for (Agent a2 : getControlledAgents()) {
                             if (map.isVisible(a1, a2)) {
+                                if (stats != null) {
+                                    System.out.println("HELL-o");
+                                    stats.setCaughtBySearcher(a2.equals(searcher));
+                                    stats.targetCaught();
+                                }
                                 a1.setActive(false);
+                                target = null;
                                 return;
                             }
                         }
@@ -133,6 +171,7 @@ public class DCRVEntity extends PartitioningEntity {
 
     @Override
     protected void assignTasks() {
+        long before = System.currentTimeMillis();
         super.assignTasks();
         for (Agent a : availableAgents) {
             if (!guards.contains(a)) {
@@ -140,10 +179,12 @@ public class DCRVEntity extends PartitioningEntity {
                 break;
             }
         }
+        System.out.println("Time to assign DCRVEntity tasks: " + (System.currentTimeMillis() - before));
     }
 
     @Override
     protected void computeRequirements() {
+        long before = System.currentTimeMillis();
         // build needed data structures and analyse map to see how many agents are required
         try {
             // computing the triangulation of the given map
@@ -185,9 +226,19 @@ public class DCRVEntity extends PartitioningEntity {
             }
             requiredAgents++;
             System.out.println("\nrequiredAgents: " + requiredAgents);
+
+            if (requirements != null) {
+                requirements.configure(requiredAgents, componentBoundaryLines, componentBoundaryEdges, componentBoundaryShapes, separatingEdges, separatingLines, guardManagers, traversalHandler);
+            }
         } catch (DelaunayError error) {
             error.printStackTrace();
         }
+        System.out.println("Time to compute DCRVEntity requirements: " + (System.currentTimeMillis() - before));
+    }
+
+    public void trackStats(DCRVStats stats) {
+        this.stats = stats;
+        System.out.println("wat: " + this.stats.getCounter());
     }
 
     private ArrayList<GuardManager> computeGuardManagers(ArrayList<DTriangle> separatingTriangles) throws DelaunayError {

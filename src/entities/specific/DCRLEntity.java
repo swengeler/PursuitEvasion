@@ -8,6 +8,7 @@ import entities.base.PartitioningEntity;
 import entities.guarding.GuardManager;
 import entities.guarding.LineGuardManager;
 import entities.utils.*;
+import experiments.*;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -28,6 +29,9 @@ import java.util.*;
  * DCRL = Divide and Conquer, Randomised, Line Guards
  */
 public class DCRLEntity extends PartitioningEntity {
+
+    private DCRLStats stats;
+    private PartitioningEntityRequirements requirements;
 
     private static final boolean CONSTANT_TARGET_TEST = true;
 
@@ -56,8 +60,37 @@ public class DCRLEntity extends PartitioningEntity {
     private Group catchGraphics;
     private Group guardGraphics;
 
+    public DCRLEntity(MapRepresentation map, DCRLStats stats, PartitioningEntityRequirements requirements) {
+        super(map);
+        catchGraphics = new Group();
+        guardGraphics = new Group();
+        Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
+
+        this.stats = stats;
+        if (requirements.isConfigured()) {
+            requiredAgents = requirements.requiredAgents;
+            componentBoundaryLines = requirements.componentBoundaryLines;
+            componentBoundaryEdges = requirements.componentBoundaryEdges;
+            componentBoundaryShapes = requirements.componentBoundaryShapes;
+            separatingEdges = requirements.separatingEdges;
+            separatingLines = requirements.separatingLines;
+            //guardManagers = computeGuardManagers(separatingLines);
+            //guardManagers = requirements.guardManagers;
+            guardManagers = new ArrayList<>();
+            for (GuardManager gm : requirements.guardManagers) {
+                guardManagers.add(new LineGuardManager(((LineGuardManager) gm).getOriginalGuardingLine(), ((LineGuardManager) gm).getOriginalPositions(), ((LineGuardManager) gm).getMap()));
+            }
+            traversalHandler = requirements.traversalHandler;
+            System.out.println("Copy stuff from requirements wrapper");
+        } else {
+            this.requirements = requirements;
+            computeRequirements();
+        }
+    }
+
     public DCRLEntity(MapRepresentation map) {
         super(map);
+        computeRequirements();
         catchGraphics = new Group();
         guardGraphics = new Group();
         Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
@@ -161,6 +194,8 @@ public class DCRLEntity extends PartitioningEntity {
 
         // check if searcher position reached and the next stage can begin
         if (catcher.getXPos() == searcher.getXPos() && catcher.getYPos() == searcher.getYPos()) {
+            currentSearcherPath = null;
+            currentCatcherPath = null;
             currentStage = Stage.INIT_FIND_TARGET;
         }
     }
@@ -263,6 +298,12 @@ public class DCRLEntity extends PartitioningEntity {
                 catcher.moveTo(target.getXPos(), target.getYPos());
                 target.setActive(false);
                 target = null;
+                origin = null;
+                spottedOnce = false;
+                catcherPathLineCounter = 0;
+                searcherPathLineCounter = 0;
+                currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
+                currentStage = Stage.CATCHER_TO_SEARCHER;
             } else {
                 catcher.moveBy(deltaX, deltaY);
                 searcher.moveBy(deltaX, deltaY);
@@ -279,6 +320,10 @@ public class DCRLEntity extends PartitioningEntity {
             target.setActive(false);
             target = null;
             origin = null;
+            spottedOnce = false;
+            catcherPathLineCounter = 0;
+            searcherPathLineCounter = 0;
+            currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
             currentStage = Stage.CATCHER_TO_SEARCHER;
         } else if (map.isVisible(target, catcher)) {
             pseudoBlockingVertex = null;
@@ -471,6 +516,10 @@ public class DCRLEntity extends PartitioningEntity {
             target.setActive(false);
             target = null;
             origin = null;
+            spottedOnce = false;
+            catcherPathLineCounter = 0;
+            searcherPathLineCounter = 0;
+            currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
             currentStage = Stage.CATCHER_TO_SEARCHER;
         } else if (map.isVisible(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos())) {
             pseudoBlockingVertex = null;
@@ -575,13 +624,20 @@ public class DCRLEntity extends PartitioningEntity {
 
     @Override
     protected void assignTasks() {
+        long before = System.currentTimeMillis();
         super.assignTasks();
         // the computed PlannedPath objects will initially be used to position all the guards in their correct locations
         // the (at least 2) remaining agents will be assigned to be searcher (and catcher)
         for (Agent a : availableAgents) {
-            if (!guards.contains(a)) {
-                searcher = a;
-                break;
+            try {
+                if (!guards.contains(a)) {
+                    searcher = a;
+                    break;
+                }
+            } catch (Exception e) {
+                System.out.println("guards: " + guards);
+                System.out.println("agent a: " + a);
+                e.printStackTrace();
             }
         }
         for (Agent a : availableAgents) {
@@ -591,41 +647,35 @@ public class DCRLEntity extends PartitioningEntity {
             }
         }
         currentStage = Stage.CATCHER_TO_SEARCHER;
+        catcherPathLineCounter = 0;
+        searcherPathLineCounter = 0;
         currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
+        System.out.println("Time to assign DCRLEntity tasks: " + (System.currentTimeMillis() - before));
     }
 
     @Override
     protected void computeRequirements() {
+        long before = System.currentTimeMillis();
         // build needed data structures and analyse map to see how many agents are required
         try {
-            System.out.println("Check 0");
-
             // computing the triangulation of the given map
             Tuple<ArrayList<DTriangle>, ArrayList<DTriangle>> triangles = triangulate(map);
             ArrayList<DTriangle> nodes = triangles.getFirst();
             ArrayList<DTriangle> holeTriangles = triangles.getSecond();
-
-            System.out.println("Check 1");
 
             // computing adjacency between the triangles in the map -> modelling it as a graph
             Tuple<int[][], int[]> matrices = computeAdjacency(nodes);
             int[][] originalAdjacencyMatrix = matrices.getFirst();
             int[] degreeMatrix = matrices.getSecond();
 
-            System.out.println("Check 2");
-
             // grouping hole triangles by holes (through adjacency)
             ArrayList<ArrayList<DTriangle>> holes = computeHoles(holeTriangles);
-
-            System.out.println("Check 3");
 
             // compute separating triangles and the updated adjacency matrix
             Triplet<ArrayList<DTriangle>, ArrayList<DEdge>, int[][]> separation = computeSeparatingTriangles(nodes, holes, originalAdjacencyMatrix, degreeMatrix);
             ArrayList<DTriangle> separatingTriangles = separation.getValue0();
             ArrayList<DEdge> nonSeparatingLines = separation.getValue1();
             int[][] spanningTreeAdjacencyMatrix = separation.getValue2();
-
-            System.out.println("Check 4");
 
             // compute the simply connected components in the graph
             ArrayList<DTriangle> componentNodes = new ArrayList<>();
@@ -637,16 +687,12 @@ public class DCRLEntity extends PartitioningEntity {
             Tuple<ArrayList<ArrayList<DTriangle>>, int[]> componentInfo = computeConnectedComponents(nodes, componentNodes, spanningTreeAdjacencyMatrix);
             ArrayList<ArrayList<DTriangle>> simplyConnectedComponents = componentInfo.getFirst();
 
-            System.out.println("Check 5");
-
             Triplet<ArrayList<Line>, ArrayList<DEdge>, ArrayList<DEdge>> lineSeparation = computeGuardingLines(separatingTriangles, nonSeparatingLines);
             ArrayList<Line> separatingLines = lineSeparation.getValue0();
             ArrayList<DEdge> reconnectingEdges = lineSeparation.getValue1();
             ArrayList<DEdge> separatingEdges = lineSeparation.getValue2();
             this.separatingLines = separatingLines;
             this.separatingEdges = separatingEdges;
-
-            System.out.println("Check 6");
 
             Tuple<int[][], ArrayList<ArrayList<DTriangle>>> reconnectedAdjacency = computeReconnectedAdjacency(nodes, simplyConnectedComponents, reconnectingEdges, spanningTreeAdjacencyMatrix, separatingTriangles);
             int[][] reconnectedAdjacencyMatrix = reconnectedAdjacency.getFirst();
@@ -666,16 +712,20 @@ public class DCRLEntity extends PartitioningEntity {
             }
             requiredAgents += 2;
             System.out.println("\nrequiredAgents: " + requiredAgents);
+
+            if (requirements != null) {
+                requirements.configure(requiredAgents, componentBoundaryLines, componentBoundaryEdges, componentBoundaryShapes, this.separatingEdges, this.separatingLines, guardManagers, traversalHandler);
+            }
         } catch (DelaunayError error) {
             error.printStackTrace();
         }
+        System.out.println("Time to compute DCRLEntity requirements: " + (System.currentTimeMillis() - before));
     }
 
     private ArrayList<GuardManager> computeGuardManagers(ArrayList<Line> separatingLines) {
         ArrayList<GuardManager> lineGuardManagers = new ArrayList<>(separatingLines.size());
         LineGuardManager tempLGM;
 
-        System.out.println("separatingLines.size(): " + separatingLines.size());
         if (!separatingLines.isEmpty()) {
             // for every reflex vertex of the polygon, calculate its visibility polygon
             // identify reflex vertices:
@@ -695,16 +745,18 @@ public class DCRLEntity extends PartitioningEntity {
                 visibilityInfo.add(computeVisibilityPolygon(c1, vertices));
                 visibilityPolygons.add(visibilityInfo.get(visibilityInfo.size() - 1).getFirst());
             }
+            Group g = visibilityInfo.get(0).getSecond();
+            Main.pane.getChildren().add(g);
             System.out.println("Time to compute visibility polygons (vertices: " + vertices.size() + ", reflex vertices: " + reflexVertices.size() + "): " + (System.currentTimeMillis() - before) + " ms");
 
             before = System.currentTimeMillis();
             int c = 0;
             for (Line l : separatingLines) {
                 l.setStroke(Color.LIGHTBLUE);
-                Main.pane.getChildren().add(l);
+                //Main.pane.getChildren().add(l);
                 tempLGM = computeSingleGuardManager(l, reflexVertices, visibilityPolygons);
                 lineGuardManagers.add(tempLGM);
-                System.out.println("Time to compute " + (++c) + " guard(s): " + (System.currentTimeMillis() - before) + " ms");
+                //System.out.println("Time to compute " + (++c) + " guard(s): " + (System.currentTimeMillis() - before) + " ms");
             }
             System.out.println("Time to compute guard(s): " + (System.currentTimeMillis() - before) + " ms");
         }
@@ -734,7 +786,7 @@ public class DCRLEntity extends PartitioningEntity {
             if (!((reflexVertices.get(i).x == separatingLine.getStartX() && reflexVertices.get(i).y == separatingLine.getStartY()) || (reflexVertices.get(i).x == separatingLine.getEndX() && reflexVertices.get(i).y == separatingLine.getEndY()))) {
                 long what1 = System.currentTimeMillis();
                 try {
-                    curIntersection = lineString.intersection(visibilityPolygons.get(i).buffer(GeometryOperations.PRECISION_EPSILON * 100));
+                    curIntersection = lineString.intersection(visibilityPolygons.get(i).buffer(GeometryOperations.PRECISION_EPSILON * 1000));
                     if (curIntersection.getCoordinates().length >= 2) {
                         curVisibleSegment = new LineSegment(curIntersection.getCoordinates()[0].x, curIntersection.getCoordinates()[0].y, curIntersection.getCoordinates()[curIntersection.getCoordinates().length - 1].x, curIntersection.getCoordinates()[curIntersection.getCoordinates().length - 1].y);
                         visibleVertices.add(reflexVertices.get(i));
@@ -746,7 +798,6 @@ public class DCRLEntity extends PartitioningEntity {
                 } catch (TopologyException e) {
                     e.printStackTrace();
                 }
-                System.out.println("What 1: " + (System.currentTimeMillis() - what1));
             } else {
                 long what2 = System.currentTimeMillis();
                 // check whether both sides are properly visible
@@ -793,11 +844,10 @@ public class DCRLEntity extends PartitioningEntity {
                         }
                     }
                 }
-                System.out.println("What 2: " + (System.currentTimeMillis() - what2));
             }
         }
 
-        System.out.println("Time taken for first loop: " + (System.currentTimeMillis() - before));
+        //System.out.println("Time taken for first loop: " + (System.currentTimeMillis() - before));
         before = System.currentTimeMillis();
 
         visibleVertices.removeIf(c -> {
@@ -843,7 +893,7 @@ public class DCRLEntity extends PartitioningEntity {
             }
         });
 
-        System.out.println("Time taken for second loop: " + (System.currentTimeMillis() - before));
+        //System.out.println("Time taken for second loop: " + (System.currentTimeMillis() - before));
         before = System.currentTimeMillis();
 
         /*System.out.println("\nSORTED:\n");
@@ -899,29 +949,30 @@ public class DCRLEntity extends PartitioningEntity {
             Main.pane.getChildren().addAll(l/*, new Circle(midPoint.x, midPoint.y, 4, Color.DARKMAGENTA)*/);
         }
 
-        System.out.println("Time taken for third loop: " + (System.currentTimeMillis() - before));
+        //System.out.println("Time taken for third loop: " + (System.currentTimeMillis() - before));
         return new LineGuardManager(separatingLine, guardPoints, map);
     }
 
-    private Tuple<Geometry, Group> computeVisibilityPolygon(Coordinate c1, List<Coordinate> vertices) {
-        class PointPair {
-            private int index1, index2;
+    private class PointPair {
+        private int index1, index2;
 
-            private PointPair(int index1, int index2) {
-                this.index1 = index1;
-                this.index2 = index2;
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return o instanceof PointPair && ((((PointPair) o).index1 == this.index1 && ((PointPair) o).index2 == this.index2) || (((PointPair) o).index1 == this.index2 && ((PointPair) o).index2 == this.index1));
-            }
+        private PointPair(int index1, int index2) {
+            this.index1 = index1;
+            this.index2 = index2;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof PointPair && ((((PointPair) o).index1 == this.index1 && ((PointPair) o).index2 == this.index2) || (((PointPair) o).index1 == this.index2 && ((PointPair) o).index2 == this.index1));
+        }
+    }
+
+    private Tuple<Geometry, Group> computeVisibilityPolygon(Coordinate c1, List<Coordinate> vertices) {
+        long before = System.currentTimeMillis();
 
         // algorithm (run once for each vertex)
         Geometry visibilityPolygon;
         Group visibilityShape = new Group();
-        ;
         visibilityShape.getChildren().add(new Circle(c1.x, c1.y, 4, Color.GREEN));
 
         LinearRing currentTriangle;
@@ -946,7 +997,16 @@ public class DCRLEntity extends PartitioningEntity {
                 deltaX /= length;
                 deltaY /= length;
                 ls = new LineString(new CoordinateArraySequence(new Coordinate[]{c2, new Coordinate(c2.x + 1E8 * deltaX, c2.y + 1E8 * deltaY)}), GeometryOperations.factory);
-                intersection = ls.intersection(map.getBoundary());
+                intersection = null;
+                try {
+                    intersection = ls.intersection(map.getBoundary());
+                } catch (TopologyException e) {
+                    Line helpLine1 = new Line(ls.getStartPoint().getX(), ls.getStartPoint().getY(), ls.getEndPoint().getX(), ls.getEndPoint().getY());
+                    helpLine1.setStrokeWidth(1.5);
+                    helpLine1.setStroke(Color.RED);
+                    Main.pane.getChildren().add(helpLine1);
+                    e.printStackTrace();
+                }
 
                 double curDistanceSquared, minDistanceSquared = Double.MAX_VALUE;
                 Coordinate closest = null;
@@ -1073,8 +1133,8 @@ public class DCRLEntity extends PartitioningEntity {
 
             if (originalPointsShareSegment) {
                 // TODO: change this so that the union doesn't have to be used
-                currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue1(), c1}), GeometryOperations.factory);
-                visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                /*currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue1(), c1}), GeometryOperations.factory);
+                visibilityPolygon = visibilityPolygon.union(currentTriangle);*/
                 coordinates.add(d1.getValue1());
                 coordinates.add(d2.getValue1());
 
@@ -1085,8 +1145,8 @@ public class DCRLEntity extends PartitioningEntity {
                 l.setStroke(Color.INDIANRED);
                 visibilityShape.getChildren().addAll(p, l);
             } else if (boundaryPointsShareSegment) {
-                currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue0(), d2.getValue0(), c1}), GeometryOperations.factory);
-                visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                /*currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue0(), d2.getValue0(), c1}), GeometryOperations.factory);
+                visibilityPolygon = visibilityPolygon.union(currentTriangle);*/
                 coordinates.add(d1.getValue0());
                 coordinates.add(d2.getValue0());
 
@@ -1097,8 +1157,8 @@ public class DCRLEntity extends PartitioningEntity {
                 l.setStroke(Color.INDIANRED);
                 visibilityShape.getChildren().addAll(p, l);
             } else if (boundaryAndOriginalShareSegment) {
-                currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue0(), d2.getValue1(), c1}), GeometryOperations.factory);
-                visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                /*currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue0(), d2.getValue1(), c1}), GeometryOperations.factory);
+                visibilityPolygon = visibilityPolygon.union(currentTriangle);*/
                 coordinates.add(d1.getValue0());
                 coordinates.add(d2.getValue1());
 
@@ -1109,8 +1169,8 @@ public class DCRLEntity extends PartitioningEntity {
                 l.setStroke(Color.INDIANRED);
                 visibilityShape.getChildren().addAll(p, l);
             } else if (originalAndBoundaryShareSegment) {
-                currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue0(), c1}), GeometryOperations.factory);
-                visibilityPolygon = visibilityPolygon.union(currentTriangle);
+                /*currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, d1.getValue1(), d2.getValue0(), c1}), GeometryOperations.factory);
+                visibilityPolygon = visibilityPolygon.union(currentTriangle);*/
                 coordinates.add(d1.getValue1());
                 coordinates.add(d2.getValue0());
 
@@ -1149,173 +1209,12 @@ public class DCRLEntity extends PartitioningEntity {
                 }*/
 
         }
-
-        /*for (int i = 0; i < rays.size(); i++) {
-            segments[0] = null;
-            segments[1] = null;
-
-            currentPair = new PointPair(i, (i + 1) % rays.size());
-            if (!checkedPairs.contains(currentPair)) {
-                double deltaX = rays.get(i).getValue2().getCoordinateN(1).x - rays.get(i).getValue2().getCoordinateN(0).x;
-                double deltaY = rays.get(i).getValue2().getCoordinateN(1).y - rays.get(i).getValue2().getCoordinateN(0).y;
-                double length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                deltaX /= length;
-                deltaY /= length;
-                c3 = new Coordinate(rays.get(i).getValue0().x - deltaX * 1E-8, rays.get(i).getValue0().y - deltaY * 1E-8);
-
-                deltaX = rays.get((i + 1) % rays.size()).getValue2().getCoordinateN(1).x - rays.get(i).getValue2().getCoordinateN(0).x;
-                deltaY = rays.get((i + 1) % rays.size()).getValue2().getCoordinateN(1).y - rays.get(i).getValue2().getCoordinateN(0).y;
-                length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                deltaX /= length;
-                deltaY /= length;
-                c4 = new Coordinate(rays.get((i + 1) % rays.size()).getValue0().x - deltaX * 1E-8, rays.get((i + 1) % rays.size()).getValue0().y - deltaY * 1E-8);
-
-                if (map.isVisible(rays.get(i).getValue0(), rays.get((i + 1) % rays.size()).getValue0())) {
-                    line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y);
-                    *//*Main.pane.getChildren().addAll(new Circle(rays.get(i).getFirst().x, rays.get(i).getFirst().y, 4, Color.RED));
-                    Main.pane.getChildren().addAll(line);*//*
-                    checkedPairs.add(currentPair);
-                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y), c1}), GeometryOperations.factory);
-                    //visibilityPolygon = visibilityPolygon.union(currentTriangle);
-
-                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, rays.get((i + 1) % rays.size()).getValue0().x, rays.get((i + 1) % rays.size()).getValue0().y, c1.x, c1.y);
-                    p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
-                    visibilityShape.getChildren().add(p);
-                } else {
-                    for (LineSegment seg : map.getBorderLines()) {
-                        double distance = seg.distance(rays.get(i).getValue0());
-                        if (distance < GeometryOperations.PRECISION_EPSILON) {
-                        *//*deltaX = seg.getCoordinate(1).x - seg.getCoordinate(0).x;
-                        deltaY = seg.getCoordinate(1).y - seg.getCoordinate(0).y;
-                        length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                        deltaX /= length;
-                        deltaY /= length;
-                        line = new Line(rays.get(i).getFirst().x, rays.get(i).getFirst().y, rays.get(i).getFirst().x + deltaX * 10, rays.get(i).getFirst().y + deltaY * 10);
-                        Main.pane.getChildren().add(line);
-                        line = new Line(rays.get(i).getFirst().x, rays.get(i).getFirst().y, rays.get(i).getFirst().x - deltaX * 10, rays.get(i).getFirst().y - deltaY * 10);
-                        Main.pane.getChildren().add(line);
-                        Main.pane.getChildren().addAll(new Circle(rays.get(i).getFirst().x, rays.get(i).getFirst().y, 4, Color.GREEN));*//*
-                            if (segments[0] == null) {
-                                segments[0] = seg;
-                            } else {
-                                segments[1] = seg;
-                                break;
-                            }
-                        }
-                    }
-                    double distance1 = Double.MAX_VALUE;
-                    if (segments[0] != null) {
-                        distance1 = rays.get((i + 1) % rays.size()).getValue2().distance(segments[0].toGeometry(GeometryOperations.factory));
-                    }
-                    double distance2 = Double.MAX_VALUE;
-                    if (segments[1] != null) {
-                        distance2 = rays.get((i + 1) % rays.size()).getValue2().distance(segments[1].toGeometry(GeometryOperations.factory));
-                    }
-                    if (distance1 < distance2 && distance1 < GeometryOperations.PRECISION_EPSILON) {
-                        temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getValue2(), segments[0].toGeometry(GeometryOperations.factory));
-                        line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y);
-                        //Main.pane.getChildren().add(line);
-                        checkedPairs.add(currentPair);
-                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                        //visibilityPolygon = visibilityPolygon.union(currentTriangle);
-
-                        p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
-                        p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
-                        visibilityShape.getChildren().add(p);
-                    } else if (distance2 < distance1 && distance2 < GeometryOperations.PRECISION_EPSILON) {
-                        temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getValue2(), segments[1].toGeometry(GeometryOperations.factory));
-                        line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y);
-                        //Main.pane.getChildren().add(line);
-                        checkedPairs.add(currentPair);
-                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                        //visibilityPolygon = visibilityPolygon.union(currentTriangle);
-
-                        p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
-                        p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
-                        visibilityShape.getChildren().add(p);
-                    } else if (distance1 < GeometryOperations.PRECISION_EPSILON && distance2 < GeometryOperations.PRECISION_EPSILON) {
-                        distance1 = segments[0].distance(c1);
-                        distance2 = segments[1].distance(c1);
-                        if (distance1 > distance2) {
-                            temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getValue2(), segments[0].toGeometry(GeometryOperations.factory));
-                        } else {
-                            temp = DistanceOp.nearestPoints(rays.get((i + 1) % rays.size()).getValue2(), segments[1].toGeometry(GeometryOperations.factory));
-                        }
-                        checkedPairs.add(currentPair);
-                        currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                        //visibilityPolygon = visibilityPolygon.union(currentTriangle);
-
-                        p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
-                        p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
-                        visibilityShape.getChildren().add(p);
-                    }
-                }
-            }
-
-            segments[0] = null;
-            segments[1] = null;
-
-            currentPair = new PointPair(i, i == 0 ? rays.size() - 1 : i - 1);
-            if (!checkedPairs.contains(currentPair)) {
-                for (LineSegment seg : map.getBorderLines()) {
-                    double distance = seg.distance(rays.get(i).getValue0());
-                    if (distance < GeometryOperations.PRECISION_EPSILON) {
-                        if (segments[0] == null) {
-                            segments[0] = seg;
-                        } else {
-                            segments[1] = seg;
-                            break;
-                        }
-                    }
-                }
-                double distance1 = Double.MAX_VALUE;
-                if (segments[0] != null) {
-                    distance1 = rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2().distance(segments[0].toGeometry(GeometryOperations.factory));
-                }
-                double distance2 = Double.MAX_VALUE;
-                if (segments[1] != null) {
-                    distance2 = rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2().distance(segments[1].toGeometry(GeometryOperations.factory));
-                }
-                if (distance1 < distance2 && distance1 < GeometryOperations.PRECISION_EPSILON) {
-                    temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2(), segments[0].toGeometry(GeometryOperations.factory));
-                    line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y);
-                    //Main.pane.getChildren().add(line);
-                    checkedPairs.add(currentPair);
-                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                    //visibilityPolygon = visibilityPolygon.union(currentTriangle);
-
-                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
-                    p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
-                    visibilityShape.getChildren().add(p);
-                } else if (distance2 < distance1 && distance2 < GeometryOperations.PRECISION_EPSILON) {
-                    temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2(), segments[1].toGeometry(GeometryOperations.factory));
-                    line = new Line(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y);
-                    //Main.pane.getChildren().add(line);
-                    checkedPairs.add(currentPair);
-                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                    //visibilityPolygon = visibilityPolygon.union(currentTriangle);
-
-                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
-                    p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
-                    visibilityShape.getChildren().add(p);
-                } else if (distance1 < GeometryOperations.PRECISION_EPSILON && distance2 < GeometryOperations.PRECISION_EPSILON) {
-                    distance1 = segments[0].distance(c1);
-                    distance2 = segments[1].distance(c1);
-                    if (distance1 > distance2) {
-                        temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2(), segments[0].toGeometry(GeometryOperations.factory));
-                    } else {
-                        temp = DistanceOp.nearestPoints(rays.get(i == 0 ? rays.size() - 1 : i - 1).getValue2(), segments[1].toGeometry(GeometryOperations.factory));
-                    }
-                    checkedPairs.add(currentPair);
-                    currentTriangle = new LinearRing(new CoordinateArraySequence(new Coordinate[]{c1, new Coordinate(rays.get(i).getValue0().x, rays.get(i).getValue0().y), new Coordinate(temp[0].x, temp[0].y), c1}), GeometryOperations.factory);
-                    visibilityPolygon = visibilityPolygon.union(currentTriangle);
-
-                    p = new Polygon(rays.get(i).getValue0().x, rays.get(i).getValue0().y, temp[0].x, temp[0].y, c1.x, c1.y);
-                    p.setFill(Color.YELLOW.deriveColor(1.0, 1.0, 1.0, 0.3));
-                    visibilityShape.getChildren().add(p);
-                }
-            }
-        }*/
+        Coordinate[] coordinateArray = new Coordinate[coordinates.size()];
+        for (int i = 0; i < coordinates.size(); i++) {
+            coordinateArray[i] = coordinates.get(i);
+        }
+        CoordinateArraySequence cas = new CoordinateArraySequence(coordinateArray);
+        visibilityPolygon = new com.vividsolutions.jts.geom.Polygon(new LinearRing(cas, GeometryOperations.factory), null, GeometryOperations.factory);
         return new Tuple<>(visibilityPolygon, visibilityShape);
     }
 
