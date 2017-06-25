@@ -368,6 +368,17 @@ public class ShortestPathRoadMap implements Serializable {
                         }
                         for (int k = 0; !intersection && k < excludedLines.size(); k++) {
                             if (GeometryOperations.lineIntersect(excludedLines.get(k), excludedIntersectionLine)) {
+                                // TODO: possibly add check for collinear lines
+                                /*boolean check = GeometryOperations.leftTurnPredicate(p1, p2, p5) ^ GeometryOperations.leftTurnPredicate(p3, p2, p5);
+                                check = check || (GeometryOperations.leftTurnPredicate(p4, p5, p2) ^ GeometryOperations.leftTurnPredicate(p6, p5, p2));
+                                if (check) {
+                                    Line l = new Line(excludedIntersectionLine.getStartX(), excludedIntersectionLine.getStartY(), excludedIntersectionLine.getEndX(), excludedIntersectionLine.getEndY());
+                                    l.setStroke(Color.RED);
+                                    l.setStrokeWidth(3);
+                                    Main.pane.getChildren().add(l);
+                                    *//*System.err.println("excludedIntersectionLine: " + excludedIntersectionLine);
+                                    System.err.println("excludedLines.get(k): " + excludedLines.get(k));*//*
+                                }*/
                                 intersection = true;
                             }
                         }
@@ -400,6 +411,33 @@ public class ShortestPathRoadMap implements Serializable {
                                 edge = shortestPathGraph.getEdge(v1, v2);
                                 if (edge != null) {
                                     shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
+                                }
+                            }
+                        } else {
+                            /*System.err.println(GeometryOperations.leftTurnValue(p1, p2, p5) + " " + GeometryOperations.leftTurnValue(p3, p2, p5));
+                            System.err.println(GeometryOperations.leftTurnValue(p4, p5, p2) + " " + GeometryOperations.leftTurnValue(p6, p5, p2));*/
+                            if ((Math.abs(GeometryOperations.leftTurnValue(p1, p2, p5)) < GeometryOperations.PRECISION_EPSILON ||
+                                    Math.abs(GeometryOperations.leftTurnValue(p3, p2, p5)) < GeometryOperations.PRECISION_EPSILON ||
+                                    Math.abs(GeometryOperations.leftTurnValue(p4, p5, p2)) < GeometryOperations.PRECISION_EPSILON ||
+                                    Math.abs(GeometryOperations.leftTurnValue(p6, p5, p2)) < GeometryOperations.PRECISION_EPSILON) &&
+                                    !shortestPathGraph.containsEdge(p2, p5)) {
+                                /*Main.pane.getChildren().add(new Circle(p2.getRealX(), p2.getRealY(), 5, Color.BROWN));
+                                Main.pane.getChildren().add(new Circle(p5.getRealX(), p5.getRealY(), 5, Color.BROWN));*/
+
+                                PathVertex v1 = reflexVertices.get(i);
+                                PathVertex v2 = reflexVertices.get(j);
+                                double differenceSquared = Math.pow(v1.getEstX() - v2.getEstX(), 2) + Math.pow(v1.getEstY() - v2.getEstY(), 2);
+                                DefaultWeightedEdge edge = shortestPathGraph.addEdge(v1, v2);
+                                if (edge != null) {
+                                    shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
+                                } else {
+                                /*System.out.println("1: " + shortestPathGraph.containsEdge(v1, v2));
+                                System.out.println("2: " + shortestPathGraph.containsEdge(shortestPathGraph.getEdgeFactory().createEdge(v1, v2)));*/
+                                    //shortestPathGraph.getEdgeFactory().createEdge(v1, v2);
+                                    edge = shortestPathGraph.getEdge(v1, v2);
+                                    if (edge != null) {
+                                        shortestPathGraph.setEdgeWeight(edge, Math.sqrt(differenceSquared));
+                                    }
                                 }
                             }
                         }

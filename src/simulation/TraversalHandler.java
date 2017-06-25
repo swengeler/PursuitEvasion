@@ -1,6 +1,7 @@
 package simulation;
 
 import entities.utils.*;
+import experiments.ExperimentConfiguration;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.shape.Line;
@@ -239,11 +240,11 @@ public class TraversalHandler {
         return null;
     }
 
-    public TGNode getNode(double xCoord, double yCoord) {
+    public DTriangle getNode(double xCoord, double yCoord) {
         try {
-            for (TGNode n : nodes) {
-                if (n.getTriangle().contains(new DPoint(xCoord, yCoord, 0))) {
-                    return n;
+            for (DTriangle dt : nodess) {
+                if (dt.contains(new DPoint(xCoord, yCoord, 0))) {
+                    return dt;
                 }
             }
         } catch (DelaunayError e) {
@@ -253,7 +254,7 @@ public class TraversalHandler {
     }
 
     public int getNodeIndex(double xCoord, double yCoord) {
-        return nodes.indexOf(getNode(xCoord, yCoord));
+        return nodess.indexOf(getNode(xCoord, yCoord));
     }
 
     public ArrayList<TGNode> getNodes() {
@@ -325,6 +326,9 @@ public class TraversalHandler {
                     childIndeces.add(i);
                 }
             }
+            if (childIndeces.size() == 0) {
+                break;
+            }
             if (PRINT_PATH_CONSTRUCT) {
                 System.out.println("\nChildren on iteration " + counter++);
                 for (Integer i : childIndeces) {
@@ -354,7 +358,7 @@ public class TraversalHandler {
             try {
                 rng = new EnumeratedIntegerDistribution(indecesToGenerate, discreteProbabilities);
             } catch (MathArithmeticException e) {
-                System.out.println("Adjacency matrix:");
+                /*System.err.println("Adjacency matrix:");
                 for (int i = 0; i < adjacencyMatrix.length; i++) {
                     for (int j = 0; j < adjacencyMatrix[0].length; j++) {
                         if ((restrictToPocket ? pocketAdjacencyMatrix : adjacencyMatrix)[i][j] == 1) {
@@ -362,12 +366,12 @@ public class TraversalHandler {
                         }
                     }
                 }
-                System.out.println("Discrete probabilities:");
+                System.err.println("Discrete probabilities:");
                 for (int i = 0; i < discreteProbabilities.length; i++) {
-                    System.out.println(indecesToGenerate[i] + " | " + discreteProbabilities[i]);
-                }
-                System.out.println();
-                e.printStackTrace();
+                    System.err.println(indecesToGenerate[i] + " | " + discreteProbabilities[i]);
+                }*/
+                ExperimentConfiguration.interruptCurrentRun();
+                //e.printStackTrace();
             }
             currentIndex = rng.sample(); // needs proper probability distribution
             childIndeces.clear();
@@ -377,14 +381,18 @@ public class TraversalHandler {
         if (!inComponentLeaf) {
             plannedPath = (restrictToPocket ? pocketShortestPathRoadMap : restrictedShortestPathRoadMap).getShortestPath(new Point2D(nodess.get(startIndex).getBarycenter().getX(), nodess.get(startIndex).getBarycenter().getY()), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
             if (plannedPath == null) {
-                return getRandomTraversal(xPos, yPos);
+                //return getRandomTraversal(xPos, yPos);
+                System.err.println("First case (startIndex: " + startIndex + ", currentIndex: " + currentIndex + " " + isLeaf(currentIndex) + ")");
+                return null;
             }
             moveToLeaf.addPathToEnd(plannedPath);
             plannedPath = moveToLeaf;
         } else {
-            plannedPath = (restrictToPocket ? pocketShortestPathRoadMap : restrictedShortestPathRoadMap).getShortestPath(new Point2D(xPos, yPos), new Point2D(nodes.get(currentIndex).getTriangle().getBarycenter().getX(), nodes.get(currentIndex).getTriangle().getBarycenter().getY()));
+            plannedPath = (restrictToPocket ? pocketShortestPathRoadMap : restrictedShortestPathRoadMap).getShortestPath(new Point2D(xPos, yPos), new Point2D(nodess.get(currentIndex).getBarycenter().getX(), nodess.get(currentIndex).getBarycenter().getY()));
             if (plannedPath == null) {
-                return getRandomTraversal(xPos, yPos);
+                //return getRandomTraversal(xPos, yPos);
+                System.err.println("Second case (startIndex: " + startIndex + " " + isLeaf(startIndex) + ", currentIndex: " + currentIndex + " " + isLeaf(currentIndex) + ")");
+                return null;
             }
         }
         plannedPath.setStartIndex(startIndex);

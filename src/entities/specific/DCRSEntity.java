@@ -334,11 +334,12 @@ public class DCRSEntity extends PartitioningEntity {
         try {
             length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
         } catch (Exception e) {
-            System.out.println("Catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
-            System.out.println("Searcher: " + searcher.getXPos() + ", " + searcher.getYPos());
-            System.out.println("pathLines.size(): " + pathLines.size());
-            System.out.println("catcherPathLineCounter: " + catcherPathLineCounter);
-            e.printStackTrace();
+            System.err.println("Catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
+            System.err.println("Searcher: " + searcher.getXPos() + ", " + searcher.getYPos());
+            System.err.println("pathLines.size(): " + pathLines.size());
+            System.err.println("catcherPathLineCounter: " + catcherPathLineCounter);
+            ExperimentConfiguration.interruptCurrentRun();
+            //e.printStackTrace();
         }
         deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
         deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
@@ -370,6 +371,11 @@ public class DCRSEntity extends PartitioningEntity {
                     currentCatcherPath = currentSearcherPath;
                     searcherPathLineCounter = 0;
                     catcherPathLineCounter = 0;
+                    if (currentSearcherPath == null) {
+                        AdaptedSimulation.masterPause("DCRVEntity");
+                        ExperimentConfiguration.interruptCurrentRun();
+                        return;
+                    }
                 } catch (DelaunayError e) {
                     e.printStackTrace();
                 }
@@ -380,6 +386,11 @@ public class DCRSEntity extends PartitioningEntity {
                 try {
                     currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                     currentCatcherPath = currentSearcherPath;
+                    if (currentSearcherPath == null) {
+                        AdaptedSimulation.masterPause("DCRVEntity");
+                        ExperimentConfiguration.interruptCurrentRun();
+                        return;
+                    }
                 } catch (DelaunayError e) {
                     e.printStackTrace();
                 }
@@ -904,6 +915,11 @@ public class DCRSEntity extends PartitioningEntity {
                     try {
                         currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                         searcherPathLineCounter = 0;
+                        if (currentSearcherPath == null) {
+                            AdaptedSimulation.masterPause("DCRVEntity");
+                            ExperimentConfiguration.interruptCurrentRun();
+                            return;
+                        }
                     } catch (DelaunayError e) {
                         e.printStackTrace();
                     }
@@ -943,6 +959,11 @@ public class DCRSEntity extends PartitioningEntity {
             if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
                 try {
                     currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                    if (currentSearcherPath == null) {
+                        AdaptedSimulation.masterPause("DCRVEntity");
+                        ExperimentConfiguration.interruptCurrentRun();
+                        return;
+                    }
                 } catch (DelaunayError e) {
                     e.printStackTrace();
                 }

@@ -794,6 +794,8 @@ public abstract class PartitioningEntity extends CentralisedEntity {
             }
         }
 
+        Main.pane.getChildren().addAll(tree);
+
         for (int i = 0; i < spanningTreeAdjacencyMatrix.length; i++) {
             int c = 0;
             for (int j = 0; j < spanningTreeAdjacencyMatrix[0].length; j++) {

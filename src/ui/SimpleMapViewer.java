@@ -66,7 +66,7 @@ public class SimpleMapViewer extends Application {
             fileToOpen = fileChooser.showOpenDialog(stage);
         }
         if (fileToOpen != null) {
-            if (fileToOpen.getName().contains(".spm")) {
+            if (fileToOpen.getName().contains(".spm") || fileToOpen.getName().contains(".lrs") || fileToOpen.getName().contains(".trs")) {
                 File parent = fileToOpen.getParentFile();
                 File[] directoryContents = parent.listFiles();
                 if (directoryContents != null) {

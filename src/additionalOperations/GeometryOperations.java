@@ -596,6 +596,15 @@ public class GeometryOperations {
         return (new Matrix(array)).det() > 0;
     }
 
+    public static double leftTurnValue(PathVertex p1, PathVertex p2, PathVertex p3) {
+        return leftTurnValue(p1.getRealX(), p1.getRealY(), p2.getRealX(), p2.getRealY(), p3.getRealX(), p3.getRealY());
+    }
+
+    public static double leftTurnValue(double p1X, double p1Y, double p2X, double p2Y, double p3X, double p3Y) {
+        double[][] array = {{1, p1X, p1Y}, {1, p2X, p2Y}, {1, p3X, p3Y}};
+        return (new Matrix(array)).det();
+    }
+
     public static Point2D getLineMiddle(Line line) {
         Point2D start, end;
         start = new Point2D(line.getStartX(), line.getStartY());

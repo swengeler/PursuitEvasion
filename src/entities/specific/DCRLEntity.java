@@ -178,11 +178,12 @@ public class DCRLEntity extends PartitioningEntity {
         try {
             length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
         } catch (Exception e) {
-            System.out.println("Catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
-            System.out.println("Searcher: " + searcher.getXPos() + ", " + searcher.getYPos());
-            System.out.println("pathLines.size(): " + pathLines.size());
-            System.out.println("catcherPathLineCounter: " + catcherPathLineCounter);
-            e.printStackTrace();
+            System.err.println("Catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
+            System.err.println("Searcher: " + searcher.getXPos() + ", " + searcher.getYPos());
+            System.err.println("pathLines.size(): " + pathLines.size());
+            System.err.println("catcherPathLineCounter: " + catcherPathLineCounter);
+            ExperimentConfiguration.interruptCurrentRun();
+            //e.printStackTrace();
         }
         deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
         deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
@@ -213,6 +214,11 @@ public class DCRLEntity extends PartitioningEntity {
                     currentCatcherPath = currentSearcherPath;
                     searcherPathLineCounter = 0;
                     catcherPathLineCounter = 0;
+                    if (currentSearcherPath == null) {
+                        AdaptedSimulation.masterPause("DCRVEntity");
+                        ExperimentConfiguration.interruptCurrentRun();
+                        return;
+                    }
                 } catch (DelaunayError e) {
                     e.printStackTrace();
                 }
@@ -223,6 +229,11 @@ public class DCRLEntity extends PartitioningEntity {
                 try {
                     currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                     currentCatcherPath = currentSearcherPath;
+                    if (currentSearcherPath == null) {
+                        AdaptedSimulation.masterPause("DCRVEntity");
+                        ExperimentConfiguration.interruptCurrentRun();
+                        return;
+                    }
                 } catch (DelaunayError e) {
                     e.printStackTrace();
                 }
@@ -494,6 +505,11 @@ public class DCRLEntity extends PartitioningEntity {
                     try {
                         currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                         searcherPathLineCounter = 0;
+                        if (currentSearcherPath == null) {
+                            AdaptedSimulation.masterPause("DCRVEntity");
+                            ExperimentConfiguration.interruptCurrentRun();
+                            return;
+                        }
                     } catch (DelaunayError e) {
                         e.printStackTrace();
                     }
@@ -533,6 +549,11 @@ public class DCRLEntity extends PartitioningEntity {
             if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
                 try {
                     currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
+                    if (currentSearcherPath == null) {
+                        AdaptedSimulation.masterPause("DCRVEntity");
+                        ExperimentConfiguration.interruptCurrentRun();
+                        return;
+                    }
                 } catch (DelaunayError e) {
                     e.printStackTrace();
                 }
@@ -724,6 +745,20 @@ public class DCRLEntity extends PartitioningEntity {
 
             traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
             traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
+            //showSpanningTree(nodes, reconnectedAdjacencyMatrix);
+
+            ShortestPathRoadMap sprm = traversalHandler.getRestrictedShortestPathRoadMap();
+            for (PathVertex pv1 : sprm.getShortestPathGraph().vertexSet()) {
+                for (PathVertex pv2 : sprm.getShortestPathGraph().vertexSet()) {
+                    if (!pv1.equals(pv2) && sprm.getShortestPathGraph().containsEdge(pv1, pv2)) {
+                        Line l = new Line(pv1.getRealX(), pv1.getRealY(), pv2.getRealX(), pv2.getRealY());
+                        l.setStrokeWidth(1.5);
+                        l.setStroke(Color.GREEN);
+                        Main.pane.getChildren().add(l);
+                    }
+                }
+            }
+
 
             for (GuardManager gm : guardManagers) {
                 requiredAgents += gm.totalRequiredGuards();

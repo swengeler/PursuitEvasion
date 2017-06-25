@@ -8,16 +8,14 @@ import entities.guarding.GuardManager;
 import entities.guarding.TriangleVisionGuardManager;
 import entities.utils.PathLine;
 import entities.utils.PlannedPath;
-import experiments.DCRVStats;
-import experiments.PartitioningEntityRequirements;
+import experiments.*;
 import javafx.scene.Group;
 import maps.MapRepresentation;
 import org.javatuples.Triplet;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.DEdge;
 import org.jdelaunay.delaunay.geometries.DTriangle;
-import simulation.Agent;
-import simulation.TraversalHandler;
+import simulation.*;
 import ui.Main;
 
 import java.util.ArrayList;
@@ -115,6 +113,11 @@ public class DCRVEntity extends PartitioningEntity {
             try {
                 currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                 searcherPathLineCounter = 0;
+                if (currentSearcherPath == null) {
+                    AdaptedSimulation.masterPause("DCRVEntity");
+                    ExperimentConfiguration.interruptCurrentRun();
+                    return;
+                }
                 if (stats != null) {
                     //stats.nrLeafRuns[evaderCounter]++;
                     stats.increaseNrLeafRuns();
@@ -129,6 +132,11 @@ public class DCRVEntity extends PartitioningEntity {
             try {
                 currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                 searcherPathLineCounter = 0;
+                if (currentSearcherPath == null) {
+                    AdaptedSimulation.masterPause("DCRVEntity");
+                    ExperimentConfiguration.interruptCurrentRun();
+                    return;
+                }
                 if (stats != null) {
                     //stats.nrLeafRuns[evaderCounter]++;
                     stats.increaseNrLeafRuns();

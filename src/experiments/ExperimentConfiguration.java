@@ -37,6 +37,34 @@ public class ExperimentConfiguration extends Application {
         Main.pane = new ZoomablePane();
         layout = new GridPane();
 
+        /*
+        for (nrOfRepetitions) {
+            generate the best points for each line once for each map
+
+            starting point for ALL pursuers:
+            int index = (int) (Math.random() * mapRepresentation.getBorderLines().size());
+            double xPos = mapRepresentation.getBorderLines().get(index).midpoint().x;
+            double yPos = mapRepresentation.getBorderLines().get(index).midpoint().y;
+
+            (in theory, should find something better though)
+            double maxX, maxY;
+            PlannedPath tempPath;
+            int maxDistance = -Integer.MAX_VALUE, tempDistance;
+            for (Line l : mapRepresentation.getAllLines()) {
+                if (!mapRepresentation.getAllLines().indexOf(l) == index) {
+                    tempPath = shortestPathRoadMap.getShortestPath(l.midpoint().x, l.midpoint().y, xPos, yPos);
+                    tempDistance = tempPath.getPathVertices().size();
+                    if (tempDistance > maxDistance) {
+                        maxDistance = tempDistance;
+                        maxDistancePath = tempPath;
+                        maxX = l.midpoint().x;
+                        maxY = l.midpoint().y;
+                    }
+                }
+            }
+        }
+         */
+
         Button testButton = new Button("Test");
         testButton.setOnAction(e -> {
             FileChooser fileChooser = new FileChooser();
@@ -397,6 +425,7 @@ public class ExperimentConfiguration extends Application {
     }
 
     public static void interruptCurrentRun() {
+        System.err.println("Current simulation run interrupted");
         interruptCurrentRun = true;
     }
 

@@ -96,7 +96,7 @@ public abstract class MapGenerator extends Application {
                     for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
                         out.print(mapPolygons.get(i).getPoints().get(j) + " ");
                     }
-                    out.print(mapPolygons.get(i).getPoints().get(mapPolygons.get(i).getPoints().size() - 2) + " " + mapPolygons.get(i).getPoints().get(mapPolygons.get(i).getPoints().size() - 1) + " ");
+                    out.print(mapPolygons.get(i).getPoints().get(0) + " " + mapPolygons.get(i).getPoints().get(1) + " ");
                     out.println();
                 }
                 out.println();
@@ -123,7 +123,6 @@ public abstract class MapGenerator extends Application {
                     }
                 }
 
-                map.what();
 
                 out.println("pv");
                 for (PathVertex pv : pathVertices) {
@@ -206,6 +205,76 @@ public abstract class MapGenerator extends Application {
                 System.out.println("originalPositionsDCRV.size(): " + originalPositionsDCRV.size());
             } catch (Exception ex) {
                 ex.printStackTrace();
+            }
+
+            // write shortest path map to file
+            ShortestPathRoadMap sprmLR = new ShortestPathRoadMap(separatingLines, map);
+            File lineRestrictedShortestPathMapFile = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".lrs");
+            // write object to file
+            try (PrintWriter out = new PrintWriter(new FileOutputStream(lineRestrictedShortestPathMapFile))) {
+                SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph = sprmLR.getShortestPathGraph();
+
+                ArrayList<PathVertex> pathVertices = new ArrayList<>();
+                pathVertices.addAll(shortestPathGraph.vertexSet());
+
+                ArrayList<IndexPair> indexPairs = new ArrayList<>();
+                for (PathVertex pv1 : shortestPathGraph.vertexSet()) {
+                    for (PathVertex pv2 : shortestPathGraph.vertexSet()) {
+                        IndexPair pair = new IndexPair(pathVertices.indexOf(pv1), pathVertices.indexOf(pv2));
+                        if (!pv1.equals(pv2) && !indexPairs.contains(pair) && shortestPathGraph.containsEdge(pv1, pv2)) {
+                            indexPairs.add(pair);
+                        }
+                    }
+                }
+
+
+                out.println("pv");
+                for (PathVertex pv : pathVertices) {
+                    out.println(pv.getRealX() + " " + pv.getRealY() + " " + pv.getEstX() + " " + pv.getEstY());
+                    //System.out.println(pv.getRealX() + " " + pv.getRealY() + " " + pv.getEstX() + " " + pv.getEstY());
+                }
+                out.println("ip");
+                for (IndexPair ip : indexPairs) {
+                    out.println(ip.index1 + " " + ip.index2);
+                    //System.out.println(ip.index1 + " " + ip.index2);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // write shortest path map to file
+            ShortestPathRoadMap sprmTR = new ShortestPathRoadMap(separatingLines, map);
+            File triangleRestrictedShortestPathMapFile = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".trs");
+            // write object to file
+            try (PrintWriter out = new PrintWriter(new FileOutputStream(triangleRestrictedShortestPathMapFile))) {
+                SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph = sprmTR.getShortestPathGraph();
+
+                ArrayList<PathVertex> pathVertices = new ArrayList<>();
+                pathVertices.addAll(shortestPathGraph.vertexSet());
+
+                ArrayList<IndexPair> indexPairs = new ArrayList<>();
+                for (PathVertex pv1 : shortestPathGraph.vertexSet()) {
+                    for (PathVertex pv2 : shortestPathGraph.vertexSet()) {
+                        IndexPair pair = new IndexPair(pathVertices.indexOf(pv1), pathVertices.indexOf(pv2));
+                        if (!pv1.equals(pv2) && !indexPairs.contains(pair) && shortestPathGraph.containsEdge(pv1, pv2)) {
+                            indexPairs.add(pair);
+                        }
+                    }
+                }
+
+
+                out.println("pv");
+                for (PathVertex pv : pathVertices) {
+                    out.println(pv.getRealX() + " " + pv.getRealY() + " " + pv.getEstX() + " " + pv.getEstY());
+                    //System.out.println(pv.getRealX() + " " + pv.getRealY() + " " + pv.getEstX() + " " + pv.getEstY());
+                }
+                out.println("ip");
+                for (IndexPair ip : indexPairs) {
+                    out.println(ip.index1 + " " + ip.index2);
+                    //System.out.println(ip.index1 + " " + ip.index2);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
 

@@ -34,6 +34,9 @@ public class DummyPolicy extends MovePolicy {
             initTree(map);
             try {
                 currentPath = traversalHandler.getRandomTraversal(getSingleAgent().getXPos(), getSingleAgent().getYPos());
+                if (currentPath == null) {
+                    return new Move(0, 0, 0);
+                }
             } catch (DelaunayError delaunayError) {
                 delaunayError.printStackTrace();
             }
@@ -59,6 +62,9 @@ public class DummyPolicy extends MovePolicy {
             currentPath.addInitLine(new Line(getSingleAgent().getXPos(), getSingleAgent().getYPos(), currentPath.getStartX(), currentPath.getStartY()));*/
             try {
                 currentPath = traversalHandler.getRandomTraversal(getSingleAgent().getXPos(), getSingleAgent().getYPos());
+                if (currentPath == null) {
+                    return new Move(0, 0, 0);
+                }
             } catch (DelaunayError delaunayError) {
                 delaunayError.printStackTrace();
             }
