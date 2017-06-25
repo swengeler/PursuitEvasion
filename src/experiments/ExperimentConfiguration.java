@@ -181,11 +181,11 @@ public class ExperimentConfiguration extends Application {
                 Agent a;
                 AgentSettings as;
                 // create entity and place agents
-                DCRLEntity dcrsEntity;
+                DCRVEntity dcrsEntity;
                 if (lineGuardInfo == null) {
-                    dcrsEntity = new DCRLEntity(mapRepresentation, requirements, null);
+                    dcrsEntity = new DCRVEntity(mapRepresentation, requirements, null);
                 } else {
-                    dcrsEntity = new DCRLEntity(mapRepresentation, requirements, lineGuardInfo);
+                    dcrsEntity = new DCRVEntity(mapRepresentation, requirements, triangleGuardInfo);
                 }
                 mapRepresentation.getPursuingEntities().add(dcrsEntity);
                 for (int i = 0; i < dcrsEntity.totalRequiredAgents(); i++) {
@@ -221,7 +221,7 @@ public class ExperimentConfiguration extends Application {
                 }
                 stats.initEvaderPositions[0] = new Coordinate(straightLineEntity.getControlledAgents().get(0).getXPos(), straightLineEntity.getControlledAgents().get(0).getYPos());
                 stats.initEvaderPositions[1] = new Coordinate(randomEntity.getControlledAgents().get(0).getXPos(), randomEntity.getControlledAgents().get(0).getYPos());*/
-                dcrsEntity.trackStats(stats);
+                //dcrsEntity.trackStats(stats);
 
                 Agent catcher = null;
                 Agent target = straightLineEntity.getControlledAgents().get(0);
