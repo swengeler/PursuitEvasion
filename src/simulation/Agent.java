@@ -14,6 +14,8 @@ public class Agent {
 
     private boolean isActive = true;
 
+    private boolean isGuard = false;
+
     public Agent(AgentSettings agentSettings) {
         settings = agentSettings;
     }
@@ -129,12 +131,18 @@ public class Agent {
         return policy.evadingPolicy();
     }
 
+    public boolean isGuard() { return isGuard; }
+
     public void setActive(boolean isActive) {
         this.isActive = isActive;
     }
 
     public boolean isActive() {
         return isActive;
+    }
+
+    public void setGuard() {
+        this.isGuard = true;
     }
 
     public void move(MapRepresentation map, ArrayList<Agent> agents) {
