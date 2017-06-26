@@ -851,6 +851,7 @@ public class ExperimentConfiguration extends Application {
                     }
                     Entity.reset();
                 }
+                System.out.println("All maps processed");
             }
         });
 
@@ -920,7 +921,6 @@ public class ExperimentConfiguration extends Application {
                         polygons.add(tempPolygon);
                     }
                 }
-                System.out.println(polygons.size());
                 return new MapRepresentation(polygons);
             } catch (Exception ex) {
                 ex.printStackTrace();

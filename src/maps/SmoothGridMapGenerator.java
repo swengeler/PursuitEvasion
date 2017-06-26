@@ -25,9 +25,10 @@ public class SmoothGridMapGenerator extends MapGenerator {
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
 
-        /*for (int i = 1; i <= 5; i++) {
-            for (int j = i; j <= 5; j++) {*/
-                grid = new int[10][1];
+        for (int i = 1; i <= 4; i++) {
+            for (int j = i; j <= 4; j++) {
+                //grid = new int[10][1];
+                grid = new int[i][j];
                 for (int x = 0; x < grid.length; x++) {
                     for (int y = 0; y < grid[x].length; y++) {
                         grid[x][y] = 1;
@@ -35,10 +36,21 @@ public class SmoothGridMapGenerator extends MapGenerator {
                 }
                 mapName = "smoothgridmap_" + grid[0].length + "_" + grid.length + "_";
                 generateMap();
+
+                for (Polygon p : mapPolygons) {
+                    for (int k = 0; k < p.getPoints().size() - 2; k += 2) {
+                        if (p.getPoints().get(k).equals(p.getPoints().get(k + 2)) && p.getPoints().get(k + 1).equals(p.getPoints().get(k + 3))) {
+                            p.getPoints().remove(k + 2);
+                            p.getPoints().remove(k + 2);
+                            k -= 2;
+                        }
+                    }
+                }
+
                 saveMap();
                 mapPolygons.clear();
-        /*    }
-        }*/
+            }
+        }
         /*generateMap();
         saveMap();*/
         System.exit(0);

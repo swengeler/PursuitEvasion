@@ -172,6 +172,11 @@ public class ShortestPathRoadMap implements Serializable {
                         double averageX = (prevDeltaX + nextDeltaX) / 2;
                         double averageY = (prevDeltaY + nextDeltaY) / 2;
 
+                        /*System.err.println("deltas: " + prevDeltaX + " " + prevDeltaY + " " + nextDeltaX + " " + nextDeltaY);
+                        System.err.println("previous: " + prevPoint.getRealX() + " " + prevPoint.getRealY());
+                        System.err.println("current: " + currentPoints.get(j).getRealX() + " " + currentPoints.get(j).getRealY());
+                        System.err.println("next: " + nextPoint.getRealX() + " " + nextPoint.getRealY());*/
+
                         double newX = currentPoints.get(j).getRealX() + averageX * distanceToActual;
                         double newY = currentPoints.get(j).getRealY() + averageY * distanceToActual;
 
@@ -526,7 +531,14 @@ public class ShortestPathRoadMap implements Serializable {
     }
 
     public PlannedPath getShortestPath(PathVertex source, PathVertex sink) {
-        PlannedPath plannedPath = new PlannedPath();
+
+        if (source.getEstX() == sink.getEstX() && source.getEstY() == sink.getEstY()) {
+            PlannedPath plannedPath = new PlannedPath();
+            plannedPath.addPathVertex(source);
+            plannedPath.addPathVertex(sink);
+            plannedPath.addLine(new PathLine(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()));
+            return plannedPath;
+        }
 
         // if there is a straight line between source and sink point just use that as shortest path
         if (map.isVisible(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()) &&
@@ -549,6 +561,7 @@ public class ShortestPathRoadMap implements Serializable {
                 }
             }
 
+            PlannedPath plannedPath = new PlannedPath();
             plannedPath.addPathVertex(source);
             plannedPath.addPathVertex(sink);
             plannedPath.addLine(new PathLine(source.getEstX(), source.getEstY(), sink.getEstX(), sink.getEstY()));
@@ -668,19 +681,22 @@ public class ShortestPathRoadMap implements Serializable {
         if (graphPath == null) {
             return null;
         }
+        PlannedPath plannedPath = new PlannedPath();
         plannedPath.addPathVertex(graphPath.getVertexList().get(0));
-        for (int i = 0; i < graphPath.getVertexList().size() - 1; i++) {
-            pv1 = graphPath.getVertexList().get(i);
-            pv2 = graphPath.getVertexList().get(i + 1);
+        for (int i = 1; i < graphPath.getVertexList().size(); i++) {
+            pv1 = graphPath.getVertexList().get(i - 1);
+            pv2 = graphPath.getVertexList().get(i);
             plannedPath.addLine(new PathLine(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY()));
             plannedPath.addPathVertex(pv2);
-            Line line = new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY());
+            /*Line line = new Line(pv1.getEstX(), pv1.getEstY(), pv2.getEstX(), pv2.getEstY());
             line.setStrokeWidth(2);
             Label l = new Label("sz: " + excludedPolygons.size());
             l.setTranslateX(sink.getEstX());
-            l.setTranslateY(sink.getEstY());
+            l.setTranslateY(sink.getEstY());*/
             //Main.pane.getChildren().addAll(line, l);
         }
+        //System.err.println("Graphpath size: " + graphPath.getEdgeList().size());
+        //System.err.println("PlannedPath in sprm: " + plannedPath);
         //System.out.println("Time to find shortest path: " + (System.currentTimeMillis() - before));
         //try {
         //} catch (NullPointerException e) {

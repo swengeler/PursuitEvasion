@@ -335,20 +335,42 @@ public class DCRSEntity extends PartitioningEntity {
     }
 
     private void catcherToSearcher() {
+        /*double distanceToEnd = Math.sqrt(Math.pow(catcher.getXPos() - searcher.getXPos(), 2) + Math.pow(catcher.getXPos() - searcher.getXPos(), 2));
+        if (distanceToEnd <= catcher.getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER) {
+            catcher.moveTo(searcher.getXPos(), searcher.getYPos());
+            catcherPathLineCounter = 0;
+            searcherPathLineCounter = 0;
+            currentCatcherPath = null;
+            currentSearcherPath = null;
+            currentStage = Stage.INIT_FIND_TARGET;
+            return;
+        }*/
+
         // only move catcher
         pathLines = currentCatcherPath.getPathLines();
         try {
             length = Math.sqrt(Math.pow(pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX(), 2) + Math.pow(pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY(), 2));
         } catch (Exception e) {
             System.err.println("Catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
-            System.err.println("Searcher: " + searcher.getXPos() + ", " + searcher.getYPos());
+            System.err.println("Searcher: " + searcher.getXPos() + ", " + searcher.getYPos());/*
             System.err.println("pathLines.size(): " + pathLines.size());
             System.err.println("catcherPathLineCounter: " + catcherPathLineCounter);
-            ExperimentConfiguration.interruptCurrentRun();
+            //ExperimentConfiguration.interruptCurrentRun();*/
+            System.err.println("Wrong catcher position");
             //e.printStackTrace();
+            catcher.setXPos(searcher.getXPos());
+            catcher.setYPos(searcher.getYPos());
+            catcherPathLineCounter = 0;
+            searcherPathLineCounter = 0;
+            currentCatcherPath = null;
+            currentSearcherPath = null;
+            currentStage = Stage.INIT_FIND_TARGET;
+            return;
         }
         deltaX = (pathLines.get(catcherPathLineCounter).getEndX() - pathLines.get(catcherPathLineCounter).getStartX()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
         deltaY = (pathLines.get(catcherPathLineCounter).getEndY() - pathLines.get(catcherPathLineCounter).getStartY()) / length * searcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
+
+        System.out.println("length: " + length + ", deltaX: " + deltaX + ", deltaY: " + deltaY);
 
         if (pathLines.get(catcherPathLineCounter).contains(catcher.getXPos() + deltaX, catcher.getYPos() + deltaY)) {
             // move along line
@@ -364,6 +386,8 @@ public class DCRSEntity extends PartitioningEntity {
         if (catcher.getXPos() == searcher.getXPos() && catcher.getYPos() == searcher.getYPos()) {
             currentSearcherPath = null;
             currentCatcherPath = null;
+            catcherPathLineCounter = 0;
+            searcherPathLineCounter = 0;
             currentStage = Stage.INIT_FIND_TARGET;
         }
     }
@@ -759,7 +783,12 @@ public class DCRSEntity extends PartitioningEntity {
                 //PlannedPath temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
 
                 //PlannedPath temp = shortestPathRoadMap.getShortestPath(target.getXPos() - 1, target.getYPos(), origin.getEstX() + 1, origin.getEstY());
-                pseudoBlockingVertex = new Point2D(temp.getPathVertex(1).getEstX(), temp.getPathVertex(1).getEstY());
+                try {
+                    pseudoBlockingVertex = new Point2D(temp.getPathVertex(1).getEstX(), temp.getPathVertex(1).getEstY());
+                } catch (Exception e) {
+                    System.err.println(temp);
+                    e.printStackTrace();
+                }
                 lastPointVisible = new Point2D(catcher.getXPos(), catcher.getYPos());
                 pocketCounterClockwise = GeometryOperations.leftTurnPredicate(lastPointVisible.getX(), -lastPointVisible.getY(), pseudoBlockingVertex.getX(), -pseudoBlockingVertex.getY(), target.getXPos(), -target.getYPos());
                 //pocketCounterClockwise = GeometryOperations.leftTurnPredicate(lastPointVisible.getX(), -lastPointVisible.getY(), pseudoBlockingVertex.getX(), -pseudoBlockingVertex.getY(), temp.getPathVertex(2).getEstX(), -temp.getPathVertex(2).getEstY());
@@ -1120,6 +1149,7 @@ public class DCRSEntity extends PartitioningEntity {
         currentStage = Stage.CATCHER_TO_SEARCHER;
         //ShortestPathRoadMap.SHOW_ON_CANVAS = true;
         currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
+        //System.err.println(currentCatcherPath);
         //ShortestPathRoadMap.SHOW_ON_CANVAS = false;
         System.out.println("Time to assign DCRSEntity tasks: " + (System.currentTimeMillis() - before));
     }

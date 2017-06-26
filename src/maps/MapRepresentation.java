@@ -38,6 +38,7 @@ public class MapRepresentation {
     public MapRepresentation(List<Polygon> map) {
         allPolygons = new ArrayList<>();
         allPolygons.addAll(map);
+
         obstaclePolygons = new ArrayList<>();
         obstaclePolygons.addAll(map);
         borderPolygon = allPolygons.get(0);

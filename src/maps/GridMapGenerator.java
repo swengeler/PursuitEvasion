@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -51,6 +52,15 @@ public class GridMapGenerator extends MapGenerator {
                 mapName = "grid_" + xDimension + "_" + yDimension + "_";
                 System.out.println(xDimension + ", " + yDimension);
                 generateMap();
+                for (Polygon p : mapPolygons) {
+                    for (int x = 0; x < p.getPoints().size() - 2; x += 2) {
+                        if (p.getPoints().get(x).equals(p.getPoints().get(x + 2)) && p.getPoints().get(x + 1).equals(p.getPoints().get(x + 3))) {
+                            p.getPoints().remove(x + 2);
+                            p.getPoints().remove(x + 2);
+                            x -= 2;
+                        }
+                    }
+                }
                 saveMap();
                 mapPolygons.clear();
             }

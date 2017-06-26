@@ -100,6 +100,7 @@ public abstract class MapGenerator extends Application {
 
             // write map to file
             File mapGeometryFile = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".mdo");
+            System.out.println("mapGeometryFile:" + mapGeometryFile.getAbsolutePath());
             try (PrintWriter out = new PrintWriter(new FileOutputStream(mapGeometryFile))) {
                 for (int i = 0; i < mapPolygons.size(); i++) {
                     for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {

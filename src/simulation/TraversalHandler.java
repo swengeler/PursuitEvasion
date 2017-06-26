@@ -82,6 +82,7 @@ public class TraversalHandler {
         this.separatingLines = separatingLines;
         this.components = reconnectedComponents;
         this.adjacencyMatrix = reconnectedAdjacencyMatrix;
+        System.out.println("size: " + shortestPathRoadMap.getMap().getAllPolygons().get(0).getPoints().size());
         restrictedShortestPathRoadMap = new ShortestPathRoadMap(separatingLines, shortestPathRoadMap.getMap());
     }
 
@@ -354,7 +355,9 @@ public class TraversalHandler {
 
             // choose one of the leaves uniformly at random (because all subtrees would have the same number of leaves anyway)
             chosenLeafIndex = childIndeces.get((int) (Math.random() * childIndeces.size()));
-            moveToLeaf = shortestPathRoadMap.getShortestPath(new Point2D(xPos, yPos), new Point2D(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY()));
+            moveToLeaf = shortestPathRoadMap.getShortestPath(xPos, yPos, currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY());
+            //System.err.println("moveToLeaf: " + moveToLeaf);
+            //System.err.println("moveToLeaf positions: " + xPos + ", " + yPos + "; " + currentComponent.get(chosenLeafIndex).getBarycenter().getX() + ", " + currentComponent.get(chosenLeafIndex).getBarycenter().getY());
             childIndeces.clear();
             //Main.pane.getChildren().add(new Circle(currentComponent.get(chosenLeafIndex).getBarycenter().getX(), currentComponent.get(chosenLeafIndex).getBarycenter().getY(), 7, Color.BROWN));
         }
