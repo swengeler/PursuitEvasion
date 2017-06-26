@@ -753,7 +753,7 @@ public class ExperimentConfiguration extends Application {
 
                         DistributedEntity evaderEntity = null;
                         if (selectEvaderBox.getValue().equals("Hiding")) {
-                            //evaderEntity = new StaticEntity(mapRepresentation);
+                            evaderEntity = new HideEntity(mapRepresentation);
                         } else if (selectEvaderBox.getValue().equals("Straight line")) {
                             evaderEntity = new StraightLineEntity(mapRepresentation);
                         } else if (selectEvaderBox.getValue().equals("Random")) {
@@ -799,7 +799,7 @@ public class ExperimentConfiguration extends Application {
                         System.out.println("Start simulation");
                         long before = System.currentTimeMillis();
                         int counter = 0;
-                        //try {
+                        try {
                             while (!simulationOver && !interruptCurrentRun) {
                                 for (Entity entity : mapRepresentation.getEvadingEntities()) {
                                     if (entity.isActive()) {
@@ -827,10 +827,10 @@ public class ExperimentConfiguration extends Application {
                                     System.out.println();
                                 }
                             }
-                        /*} catch (Error | Exception e) {
-                            //interruptCurrentRun();
+                        } catch (Error | Exception e) {
+                            interruptCurrentRun();
                             e.printStackTrace();
-                        }*/
+                        }
                         System.out.println("\nSimulation (" + simulationCount + ") took: " + (System.currentTimeMillis() - before) + " ms");
                         if (!interruptCurrentRun) {
                             try (PrintWriter out = new PrintWriter(new FileOutputStream(logFile, true))) {
