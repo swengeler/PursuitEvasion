@@ -81,6 +81,12 @@ public abstract class PartitioningEntity extends CentralisedEntity {
                     // this guard is not at its final destination and will be moved along the path
                     guardPathLines = initGuardPaths.get(i).getPathLines();
 
+                    double distanceToEnd = Math.sqrt(Math.pow(initGuardPaths.get(i).getEndX() - guards.get(i).getXPos(), 2) + Math.pow(initGuardPaths.get(i).getEndX() - guards.get(i).getXPos(), 2));
+                    if (distanceToEnd <= guards.get(i).getSpeed() * Entity.UNIVERSAL_SPEED_MULTIPLIER) {
+                        guards.get(i).moveTo(initGuardPaths.get(i).getEndX(), initGuardPaths.get(i).getEndY());
+                        continue;
+                    }
+
                     try {
                         length = Math.sqrt(Math.pow(guardPathLines.get(guardPathLineCounters.get(i)).getEndX() - guardPathLines.get(guardPathLineCounters.get(i)).getStartX(), 2) + Math.pow(guardPathLines.get(guardPathLineCounters.get(i)).getEndY() - guardPathLines.get(guardPathLineCounters.get(i)).getStartY(), 2));
                     } catch (Exception e) {

@@ -318,4 +318,5 @@ public final class RPoint2D {
     public RPoint2D translate(Rational dx, Rational dy) {
         return new RPoint2D(this.x.add(dx), this.y.add(dy));
     }
+
 }

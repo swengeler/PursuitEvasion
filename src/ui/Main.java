@@ -2546,7 +2546,7 @@ public class Main extends Application {
 
                                     RandomEntity randomEntity = new RandomEntity(map);
                                     randomEntity.setAgent(new Agent(va.getSettings()));
-                                    map.getEvadingEntities().add(randomEntity);
+                                    map.getPursuingEntities().add(randomEntity);
 
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Straight line entity")) {
@@ -2557,7 +2557,7 @@ public class Main extends Application {
 
                                     StraightLineEntity straightLineEntity = new StraightLineEntity(map);
                                     straightLineEntity.setAgent(new Agent(va.getSettings()));
-                                    map.getPursuingEntities().add(straightLineEntity);
+                                    map.getEvadingEntities().add(straightLineEntity);
 
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Flocking evader entity")) {
