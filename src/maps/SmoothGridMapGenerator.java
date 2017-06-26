@@ -7,10 +7,10 @@ import javafx.stage.Stage;
 public class SmoothGridMapGenerator extends MapGenerator {
 
 
-    private final double CORRIDOR_WIDTH = 300.0;
-    private final double SIDE_LENGTH = 800.0;
-    private final double X_SCALE = 0.2;
-    private final double Y_SCALE = 0.2;
+    private final double CORRIDOR_WIDTH = 100.0;
+    private final double SIDE_LENGTH = 1000.0;
+    private final double X_SCALE = 0.25;
+    private final double Y_SCALE = 0.25;
 
     private int[][] grid = new int[][]{
             {1, 0, 1, 1},
@@ -24,9 +24,24 @@ public class SmoothGridMapGenerator extends MapGenerator {
     @Override
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
-        mapName = "smoothgridmap_" + grid[0].length + "_" + grid.length + "_";
-        generateMap();
-        saveMap();
+
+        /*for (int i = 1; i <= 5; i++) {
+            for (int j = i; j <= 5; j++) {*/
+                grid = new int[10][1];
+                for (int x = 0; x < grid.length; x++) {
+                    for (int y = 0; y < grid[x].length; y++) {
+                        grid[x][y] = 1;
+                    }
+                }
+                mapName = "smoothgridmap_" + grid[0].length + "_" + grid.length + "_";
+                generateMap();
+                saveMap();
+                mapPolygons.clear();
+        /*    }
+        }*/
+        /*generateMap();
+        saveMap();*/
+        System.exit(0);
     }
 
     @Override
@@ -41,8 +56,8 @@ public class SmoothGridMapGenerator extends MapGenerator {
         mapPolygons.add(outer);
 
         Polygon inner;
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
+        for (int i = 0; i < grid[0].length; i++) {
+            for (int j = 0; j < grid.length; j++) {
                 if (grid[j][i] == 1) {
                     inner = new Polygon(
                             (CORRIDOR_WIDTH + i * (CORRIDOR_WIDTH + SIDE_LENGTH)) * X_SCALE, (CORRIDOR_WIDTH + j * (CORRIDOR_WIDTH + SIDE_LENGTH)) * Y_SCALE,

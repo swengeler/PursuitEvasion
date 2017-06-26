@@ -88,6 +88,7 @@ public class DCRSEntity extends PartitioningEntity {
             separatingEdges = requirements.separatingEdges;
             separatingLines = requirements.separatingLines;
             traversalHandler = requirements.traversalHandler;
+            traversalHandler.removeRestriction();
             guardManagers = new ArrayList<>();
             for (GuardManager gm : requirements.guardManagers) {
                 guardManagers.add(new SquareGuardManager(((SquareGuardManager) gm).getOriginalGuardingLine(), ((SquareGuardManager) gm).getGuardedSquare(), ((SquareGuardManager) gm).getSquareSides(), ((SquareGuardManager) gm).getEntranceToGuarded(), ((SquareGuardManager) gm).getGuardedToSegments()));
@@ -1194,10 +1195,11 @@ public class DCRSEntity extends PartitioningEntity {
             // if separating lines are used
             //simplyConnectedComponents.set(0, nodes);
             traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
-            ShortestPathRoadMap.SHOW_ON_CANVAS = false;
-            //traversalHandler.separatingLineBased(separatingLines);
-            traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
-            ShortestPathRoadMap.SHOW_ON_CANVAS = false;
+            if (restrictedShortestPathRoadMap == null) {
+                traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
+            } else {
+                traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix, restrictedShortestPathRoadMap);
+            }
 
             testExcludedLines = new ArrayList<>();
             testExcludedLines.addAll(separatingLines);

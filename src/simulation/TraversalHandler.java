@@ -68,11 +68,23 @@ public class TraversalHandler {
         restrictedShortestPathRoadMap = new ShortestPathRoadMap(shortestPathRoadMap.getMap(), separatingTriangles);
     }
 
+    public void separatingTriangleBased(ArrayList<DTriangle> separatingTriangles, ShortestPathRoadMap restrictedShortestPathRoadMap) {
+        this.separatingTriangles = separatingTriangles;
+        this.restrictedShortestPathRoadMap = restrictedShortestPathRoadMap;
+    }
+
     public void separatingLineBased(ArrayList<Line> separatingLines, ArrayList<ArrayList<DTriangle>> reconnectedComponents, int[][] reconnectedAdjacencyMatrix) {
         this.separatingLines = separatingLines;
         this.components = reconnectedComponents;
         this.adjacencyMatrix = reconnectedAdjacencyMatrix;
         restrictedShortestPathRoadMap = new ShortestPathRoadMap(separatingLines, shortestPathRoadMap.getMap());
+    }
+
+    public void separatingLineBased(ArrayList<Line> separatingLines, ArrayList<ArrayList<DTriangle>> reconnectedComponents, int[][] reconnectedAdjacencyMatrix, ShortestPathRoadMap restrictedShortestPathRoadMap) {
+        this.separatingLines = separatingLines;
+        this.components = reconnectedComponents;
+        this.adjacencyMatrix = reconnectedAdjacencyMatrix;
+        this.restrictedShortestPathRoadMap = restrictedShortestPathRoadMap;
     }
 
     public void separatingLineBased(ArrayList<Line> separatingLines) {
@@ -248,6 +260,7 @@ public class TraversalHandler {
                 }
             }
         } catch (DelaunayError e) {
+            System.out.println(xCoord + " " + yCoord);
             e.printStackTrace();
         }
         return null;

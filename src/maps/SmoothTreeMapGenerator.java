@@ -95,15 +95,38 @@ public class SmoothTreeMapGenerator extends MapGenerator {
         stage.setScene(scene);
         stage.show();
 
-        mapName = "smoothtreemap_";
+        /*mapName = "smoothtreemap_";
         for (int i = 0; i < branchingFactors.length; i++) {
             mapName += branchingFactors[i] + "_";
         }
-        mapPolygons.add(new Polygon());
+        mapPolygons.add(new Polygon());*/
 
-        generateMap();
-        saveMap();
+        for (int x = 1; x <= 3; x++) {
+            for (int j = 1; j <= 3; j++) {
+                for (int k = 1; k <= 3; k++) {
+                    branchingFactors = new int[]{x, j, k};
+                    depthCount = new int[branchingFactors.length + 1];
+                    nodeCounter = new int[branchingFactors.length + 1];
+                    offset = new double[branchingFactors.length + 1];
+                    spacing = new double[branchingFactors.length + 1];
+                    idCounter = 0;
+                    mapName = "smoothtreemap_";
+                    for (int i = 0; i < branchingFactors.length; i++) {
+                        mapName += branchingFactors[i] + "_";
+                    }
+                    mapPolygons.add(new Polygon());
+
+                    generateMap();
+                    saveMap();
+                    mapPolygons.clear();
+                }
+            }
+        }
+
+        /*generateMap();
+        saveMap();*/
         //System.exit(1);
+        System.exit(0);
     }
 
     @Override

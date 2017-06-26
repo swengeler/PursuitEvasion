@@ -85,7 +85,7 @@ public class TreeMapGenerator extends MapGenerator {
     private double width = DEFAULT_COORDS[16] * (X_STRETCH ? X_SCALE : 1.0);
     private double height = DEFAULT_COORDS[11] * Y_SCALE;
 
-    private int[] branchingFactors = new int[]{2, 2};
+    private int[] branchingFactors = new int[]{2, 2, 2, 2};
     private int[] depthCount = new int[branchingFactors.length + 1];
     private int[] nodeCounter = new int[branchingFactors.length + 1];
     private double[] offset = new double[branchingFactors.length + 1];
@@ -101,19 +101,42 @@ public class TreeMapGenerator extends MapGenerator {
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
         pane = new Pane();
-        Scene scene = new Scene(pane, 1700, 900);
+        Scene scene = new Scene(pane, 500, 500);
         stage.setScene(scene);
         stage.show();
 
-        mapName = "treemap_";
+        /*mapName = "treemap_";
         for (int i = 0; i < branchingFactors.length; i++) {
             mapName += branchingFactors[i] + "_";
         }
         mapPolygons.add(new Polygon());
 
         generateMap();
-        saveMap();
-        //System.exit(1);
+        saveMap();*/
+
+        for (int x = 2; x <= 3; x++) {
+            for (int j = 2; j <= 3; j++) {
+                for (int k = 2; k <= 3; k++) {
+                    branchingFactors = new int[]{x, j, k};
+                    depthCount = new int[branchingFactors.length + 1];
+                    nodeCounter = new int[branchingFactors.length + 1];
+                    offset = new double[branchingFactors.length + 1];
+                    spacing = new double[branchingFactors.length + 1];
+                    idCounter = 0;
+                    mapName = "treemap_";
+                    for (int i = 0; i < branchingFactors.length; i++) {
+                        mapName += branchingFactors[i] + "_";
+                    }
+                    mapPolygons.add(new Polygon());
+
+                    generateMap();
+                    saveMap();
+                    mapPolygons.clear();
+                }
+            }
+        }
+
+        System.exit(0);
     }
 
     @Override
@@ -125,7 +148,7 @@ public class TreeMapGenerator extends MapGenerator {
             if (!INCLUDE_ROOT && (i % 2 == 1)) {
                 mapPolygons.get(0).getPoints().set(i, mapPolygons.get(0).getPoints().get(i) - height);
             }
-            mapPolygons.get(0).getPoints().set(i, mapPolygons.get(0).getPoints().get(i) * 0.1);
+            mapPolygons.get(0).getPoints().set(i, mapPolygons.get(0).getPoints().get(i) * 0.25);
         }
     }
 

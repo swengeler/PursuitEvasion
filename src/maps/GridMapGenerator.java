@@ -1,8 +1,5 @@
 package maps;
 
-import additionalOperations.GeometryOperations;
-import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.geom.Polygon;
 import experiments.MapGenerator;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -35,8 +32,10 @@ public class GridMapGenerator extends MapGenerator {
     private final boolean xStretch = true;
     private final boolean yStretch = true;
 
-    private final int xDimension = 2;
-    private final int yDimension = 1;
+    private final double scale = 0.25;
+
+    private int xDimension = 2;
+    private int yDimension = 1;
 
     public GridMapGenerator() {
         super();
@@ -45,9 +44,18 @@ public class GridMapGenerator extends MapGenerator {
     @Override
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
-        mapName = "grid_" + xDimension + "_" + yDimension + "_";
-        generateMap();
-        saveMap();
+        for (int i = 1; i <= 4; i++) {
+            for (int j = i; j <= 4; j++) {
+                xDimension = i;
+                yDimension = j;
+                mapName = "grid_" + xDimension + "_" + yDimension + "_";
+                System.out.println(xDimension + ", " + yDimension);
+                generateMap();
+                saveMap();
+                mapPolygons.clear();
+            }
+        }
+        System.exit(0);
     }
 
     protected void generateMap() {
@@ -161,8 +169,8 @@ public class GridMapGenerator extends MapGenerator {
             outer.getPoints().set(i, outer.getPoints().get(i) * 0.5);
         }*/
         for (int l = 0; l < outer.getPoints().size(); l += 2) {
-            outer.getPoints().set(l, outer.getPoints().get(l) * 0.25);
-            outer.getPoints().set(l + 1, outer.getPoints().get(l + 1) * 0.25);
+            outer.getPoints().set(l, outer.getPoints().get(l) * scale);
+            outer.getPoints().set(l + 1, outer.getPoints().get(l + 1) * scale);
             Label label = new Label("" + l);
             label.setTranslateX(outer.getPoints().get(l) + 5);
             label.setTranslateY(outer.getPoints().get(l + 1) + 5);
@@ -183,8 +191,8 @@ public class GridMapGenerator extends MapGenerator {
                 }*/
                 inner.getPoints().addAll(inner.getPoints().get(0), inner.getPoints().get(1));
                 for (int l = 0; l < inner.getPoints().size(); l += 2) {
-                    inner.getPoints().set(l, inner.getPoints().get(l) * 0.25);
-                    inner.getPoints().set(l + 1, inner.getPoints().get(l + 1) * 0.25);
+                    inner.getPoints().set(l, inner.getPoints().get(l) * scale);
+                    inner.getPoints().set(l + 1, inner.getPoints().get(l + 1) * scale);
                 }
                 mapPolygons.add(inner);
                 inner.setFill(Color.WHITE);

@@ -129,8 +129,8 @@ public class DCRVEntity extends PartitioningEntity {
         if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
             // end of path reached, compute new path
             try {
-                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                 searcherPathLineCounter = 0;
+                currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
                 if (currentSearcherPath == null) {
                     AdaptedSimulation.masterPause("DCRVEntity");
                     ExperimentConfiguration.interruptCurrentRun();
@@ -249,7 +249,11 @@ public class DCRVEntity extends PartitioningEntity {
             }
 
             traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
-            traversalHandler.separatingTriangleBased(separatingTriangles);
+            if (restrictedShortestPathRoadMap == null) {
+                traversalHandler.separatingTriangleBased(separatingTriangles);
+            } else {
+                traversalHandler.separatingTriangleBased(separatingTriangles, restrictedShortestPathRoadMap);
+            }
 
             for (GuardManager gm : guardManagers) {
                 requiredAgents += gm.totalRequiredGuards();

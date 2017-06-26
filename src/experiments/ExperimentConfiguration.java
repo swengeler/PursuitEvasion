@@ -122,7 +122,84 @@ public class ExperimentConfiguration extends Application {
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                             }
-                            break;
+                        } else if (f.getName().startsWith(selectedFile.getName().substring(0, selectedFile.getName().length() - 4)) && f.getName().endsWith(".lrs")) {
+                            try (BufferedReader in = new BufferedReader(new FileReader(f))) {
+                                ArrayList<PathVertex> pathVertices = new ArrayList<>();
+                                String line = in.readLine();
+                                String[] numbers;
+                                double[] coordinates;
+                                int[] indeces;
+                                while ((line = in.readLine()) != null && !line.contains("ip")) {
+                                    numbers = line.split(" ");
+                                    coordinates = new double[numbers.length];
+                                    for (int i = 0; i < numbers.length; i++) {
+                                        coordinates[i] = Double.parseDouble(numbers[i]);
+                                    }
+                                    pathVertices.add(new PathVertex(coordinates[2], coordinates[3], coordinates[0], coordinates[1]));
+                                }
+
+                                ArrayList<IndexPair> indexPairs = new ArrayList<>();
+                                while ((line = in.readLine()) != null) {
+                                    numbers = line.split(" ");
+                                    indeces = new int[numbers.length];
+                                    for (int i = 0; i < numbers.length; i++) {
+                                        indeces[i] = Integer.parseInt(numbers[i]);
+                                    }
+                                    indexPairs.add(new IndexPair(indeces[0], indeces[1]));
+                                }
+
+                                SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> tempSWG = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+
+                                for (PathVertex pv : pathVertices) {
+                                    tempSWG.addVertex(pv);
+                                }
+                                for (IndexPair ip : indexPairs) {
+                                    tempSWG.addEdge(pathVertices.get(ip.index1), pathVertices.get(ip.index2));
+                                }
+                                shortestPathRoadMap = new ShortestPathRoadMap(mapRepresentation, tempSWG);
+                                Entity.initialise(shortestPathRoadMap.getMap(), shortestPathRoadMap);
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        } else if (f.getName().startsWith(selectedFile.getName().substring(0, selectedFile.getName().length() - 4)) && f.getName().endsWith(".trs")) {
+                            try (BufferedReader in = new BufferedReader(new FileReader(f))) {
+                                ArrayList<PathVertex> pathVertices = new ArrayList<>();
+                                String line = in.readLine();
+                                String[] numbers;
+                                double[] coordinates;
+                                int[] indeces;
+                                while ((line = in.readLine()) != null && !line.contains("ip")) {
+                                    numbers = line.split(" ");
+                                    coordinates = new double[numbers.length];
+                                    for (int i = 0; i < numbers.length; i++) {
+                                        coordinates[i] = Double.parseDouble(numbers[i]);
+                                    }
+                                    pathVertices.add(new PathVertex(coordinates[2], coordinates[3], coordinates[0], coordinates[1]));
+                                }
+
+                                ArrayList<IndexPair> indexPairs = new ArrayList<>();
+                                while ((line = in.readLine()) != null) {
+                                    numbers = line.split(" ");
+                                    indeces = new int[numbers.length];
+                                    for (int i = 0; i < numbers.length; i++) {
+                                        indeces[i] = Integer.parseInt(numbers[i]);
+                                    }
+                                    indexPairs.add(new IndexPair(indeces[0], indeces[1]));
+                                }
+
+                                SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> tempSWG = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+
+                                for (PathVertex pv : pathVertices) {
+                                    tempSWG.addVertex(pv);
+                                }
+                                for (IndexPair ip : indexPairs) {
+                                    tempSWG.addEdge(pathVertices.get(ip.index1), pathVertices.get(ip.index2));
+                                }
+                                shortestPathRoadMap = new ShortestPathRoadMap(mapRepresentation, tempSWG);
+                                Entity.initialise(shortestPathRoadMap.getMap(), shortestPathRoadMap);
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -395,7 +472,7 @@ public class ExperimentConfiguration extends Application {
                     MapRepresentation mapRepresentation = loadMap(file);
 
                     File parent = file.getParentFile();
-                    ShortestPathRoadMap shortestPathRoadMap = null;
+                    ShortestPathRoadMap shortestPathRoadMap = null, lineRestrictedShortestPathRoadMap = null, triangleRestrictedShortestPathRoadMap = null;
                     int max = -1, temp, curIndex = 0;
                     if (parent != null) {
                         File[] directory = parent.listFiles();
@@ -453,7 +530,84 @@ public class ExperimentConfiguration extends Application {
                                     } catch (IOException ex) {
                                         ex.printStackTrace();
                                     }
-                                    break;
+                                } else if (f.getName().startsWith(file.getName().substring(0, file.getName().length() - 4)) && f.getName().endsWith(".lrs")) {
+                                    try (BufferedReader in = new BufferedReader(new FileReader(f))) {
+                                        ArrayList<PathVertex> pathVertices = new ArrayList<>();
+                                        String line = in.readLine();
+                                        String[] numbers;
+                                        double[] coordinates;
+                                        int[] indeces;
+                                        while ((line = in.readLine()) != null && !line.contains("ip")) {
+                                            numbers = line.split(" ");
+                                            coordinates = new double[numbers.length];
+                                            for (int i = 0; i < numbers.length; i++) {
+                                                coordinates[i] = Double.parseDouble(numbers[i]);
+                                            }
+                                            pathVertices.add(new PathVertex(coordinates[2], coordinates[3], coordinates[0], coordinates[1]));
+                                        }
+
+                                        ArrayList<IndexPair> indexPairs = new ArrayList<>();
+                                        while ((line = in.readLine()) != null) {
+                                            numbers = line.split(" ");
+                                            indeces = new int[numbers.length];
+                                            for (int i = 0; i < numbers.length; i++) {
+                                                indeces[i] = Integer.parseInt(numbers[i]);
+                                            }
+                                            indexPairs.add(new IndexPair(indeces[0], indeces[1]));
+                                        }
+
+                                        SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> tempSWG = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+
+                                        for (PathVertex pv : pathVertices) {
+                                            tempSWG.addVertex(pv);
+                                        }
+                                        for (IndexPair ip : indexPairs) {
+                                            tempSWG.addEdge(pathVertices.get(ip.index1), pathVertices.get(ip.index2));
+                                        }
+                                        lineRestrictedShortestPathRoadMap = new ShortestPathRoadMap(mapRepresentation, tempSWG);
+                                        Entity.initialiseRestricted(lineRestrictedShortestPathRoadMap);
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                } else if (f.getName().startsWith(file.getName().substring(0, file.getName().length() - 4)) && f.getName().endsWith(".trs")) {
+                                    try (BufferedReader in = new BufferedReader(new FileReader(f))) {
+                                        ArrayList<PathVertex> pathVertices = new ArrayList<>();
+                                        String line = in.readLine();
+                                        String[] numbers;
+                                        double[] coordinates;
+                                        int[] indeces;
+                                        while ((line = in.readLine()) != null && !line.contains("ip")) {
+                                            numbers = line.split(" ");
+                                            coordinates = new double[numbers.length];
+                                            for (int i = 0; i < numbers.length; i++) {
+                                                coordinates[i] = Double.parseDouble(numbers[i]);
+                                            }
+                                            pathVertices.add(new PathVertex(coordinates[2], coordinates[3], coordinates[0], coordinates[1]));
+                                        }
+
+                                        ArrayList<IndexPair> indexPairs = new ArrayList<>();
+                                        while ((line = in.readLine()) != null) {
+                                            numbers = line.split(" ");
+                                            indeces = new int[numbers.length];
+                                            for (int i = 0; i < numbers.length; i++) {
+                                                indeces[i] = Integer.parseInt(numbers[i]);
+                                            }
+                                            indexPairs.add(new IndexPair(indeces[0], indeces[1]));
+                                        }
+
+                                        SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> tempSWG = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+
+                                        for (PathVertex pv : pathVertices) {
+                                            tempSWG.addVertex(pv);
+                                        }
+                                        for (IndexPair ip : indexPairs) {
+                                            tempSWG.addEdge(pathVertices.get(ip.index1), pathVertices.get(ip.index2));
+                                        }
+                                        triangleRestrictedShortestPathRoadMap = new ShortestPathRoadMap(mapRepresentation, tempSWG);
+                                        Entity.initialiseRestricted(triangleRestrictedShortestPathRoadMap);
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
                                 }
                             }
                         }
@@ -627,32 +781,36 @@ public class ExperimentConfiguration extends Application {
                         System.out.println("Start simulation");
                         long before = System.currentTimeMillis();
                         int counter = 0;
-                        while (!simulationOver && !interruptCurrentRun) {
-                            for (Entity entity : mapRepresentation.getEvadingEntities()) {
-                                if (entity.isActive()) {
-                                    entity.move();
+                        try {
+                            while (!simulationOver && !interruptCurrentRun) {
+                                for (Entity entity : mapRepresentation.getEvadingEntities()) {
+                                    if (entity.isActive()) {
+                                        entity.move();
+                                    }
                                 }
-                            }
 
-                            //System.out.println("wat-1: " + dcrsEntity.evaderCounter);
-                            for (Entity entity : mapRepresentation.getPursuingEntities()) {
-                                if (entity.isActive()) {
-                                    entity.move();
+                                //System.out.println("wat-1: " + dcrsEntity.evaderCounter);
+                                for (Entity entity : mapRepresentation.getPursuingEntities()) {
+                                    if (entity.isActive()) {
+                                        entity.move();
+                                    }
                                 }
-                            }
 
-                            simulationOver = true;
-                            for (Entity entity : mapRepresentation.getEvadingEntities()) {
-                                if (entity.isActive()) {
-                                    simulationOver = false;
-                                    break;
+                                simulationOver = true;
+                                for (Entity entity : mapRepresentation.getEvadingEntities()) {
+                                    if (entity.isActive()) {
+                                        simulationOver = false;
+                                        break;
+                                    }
+                                }
+                                System.out.print(".");
+                                counter++;
+                                if (counter % 100 == 0) {
+                                    System.out.println();
                                 }
                             }
-                            System.out.print(".");
-                            counter++;
-                            if (counter % 100 == 0) {
-                                System.out.println();
-                            }
+                        } catch (Error | Exception e) {
+                            interruptCurrentRun();
                         }
                         System.out.println("\nSimulation (" + simulationCount + ") took: " + (System.currentTimeMillis() - before) + " ms");
                         if (!interruptCurrentRun) {

@@ -78,6 +78,7 @@ public class DCRLEntity extends PartitioningEntity {
                 guardManagers.add(new LineGuardManager(((LineGuardManager) gm).getOriginalGuardingLine(), ((LineGuardManager) gm).getOriginalPositions(), ((LineGuardManager) gm).getMap()));
             }
             traversalHandler = requirements.traversalHandler;
+            traversalHandler.removeRestriction();
             System.out.println("Copy stuff from requirements wrapper");
         } else {
             this.requirements = requirements;
@@ -786,8 +787,11 @@ public class DCRLEntity extends PartitioningEntity {
             }
 
             traversalHandler = new TraversalHandler(shortestPathRoadMap, nodes, simplyConnectedComponents, spanningTreeAdjacencyMatrix);
-            traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
-            //showSpanningTree(nodes, reconnectedAdjacencyMatrix);
+            if (restrictedShortestPathRoadMap == null) {
+                traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix);
+            } else {
+                traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix, restrictedShortestPathRoadMap);
+            }
 
             ShortestPathRoadMap sprm = traversalHandler.getRestrictedShortestPathRoadMap();
             for (PathVertex pv1 : sprm.getShortestPathGraph().vertexSet()) {

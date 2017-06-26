@@ -62,9 +62,12 @@ public abstract class MapGenerator extends Application {
             String tempString;
             for (File f : fileListing) {
                 if (f.getName().startsWith(mapName) && f.getName().endsWith(".mdo")) {
-                    tempString = f.getName().substring(15, f.getName().length() - 4);
-                    System.out.println(tempString);
-                    temp = Integer.parseInt(tempString);
+                    tempString = f.getName().substring(mapName.length(), f.getName().length() - 4);
+                    try {
+                        temp = Integer.parseInt(tempString);
+                    } catch (NumberFormatException e) {
+                        temp = -1;
+                    }
                     if (temp > max) {
                         max = temp;
                     }
@@ -290,7 +293,6 @@ public abstract class MapGenerator extends Application {
 
 
         }
-        System.exit(1);
     }
 
 }
