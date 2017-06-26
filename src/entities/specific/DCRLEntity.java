@@ -541,6 +541,7 @@ public class DCRLEntity extends PartitioningEntity {
                     if (!(pocketBoundaryEndPoint.getX() == pseudoBlockingVertex.getX() && pocketBoundaryEndPoint.getY() == pseudoBlockingVertex.getY())) {
                         Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
                         traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond(), map, separatingLines.contains(intersectedLine) ? intersectedLine : null);
+                        System.err.println("pocket size " + pocketInfo.getFirst().size());
                     } else {
                         System.err.println("catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
                         System.err.println("target: " + target.getXPos() + ", " + target.getYPos());
@@ -1371,12 +1372,37 @@ public class DCRLEntity extends PartitioningEntity {
             }
         }
 
+//        Point point = new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(approxPosition.getX(), approxPosition.getY())}), GeometryOperations.factory);
+//        double min = Double.MAX_VALUE;
+//        DTriangle minTriangle = null;
+
         for (DTriangle dt : traversalHandler.getComponents().get(componentIndex)) {
             if (dt.contains(approxPosition)) {
                 currentTriangle = dt;
                 break;
             }
+
+//            Coordinate[] coordinates = new Coordinate[]{
+//                    new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY()),
+//                    new Coordinate(dt.getPoint(1).getX(), dt.getPoint(1).getY()),
+//                    new Coordinate(dt.getPoint(2).getX(), dt.getPoint(2).getY()),
+//                    new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY())
+//            };
+//
+//            LinearRing lr = new LinearRing(new CoordinateArraySequence(coordinates), GeometryOperations.factory);
+//            System.err.println("check: " + lr.distance(point));
+//
+//            if (lr.distance(point) < min) {
+//                min = lr.distance(point);
+//                minTriangle = dt;
+//            }
+//
+//            System.err.println(dt);
         }
+
+//        currentTriangle = minTriangle;
+//
+//        System.err.println(approxPosition);
 
         try {
             System.out.println("Catcher vertex: (" + currentPoint.getX() + "|" + currentPoint.getY() + ")");

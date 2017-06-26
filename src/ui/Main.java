@@ -3,10 +3,6 @@ package ui;
 import additionalOperations.Tuple;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import compgeom.RLine2D;
-import compgeom.RLineSegment2D;
-import compgeom.RPoint2D;
-import compgeom.algorithms.BentleyOttmann;
 import control.Controller;
 import conversion.GridConversion;
 import entities.base.CentralisedEntity;
@@ -14,14 +10,10 @@ import entities.base.Entity;
 import entities.specific.*;
 import entities.utils.PathVertex;
 import entities.utils.ShortestPathRoadMap;
-import javafx.animation.AnimationTimer;
 import javafx.animation.StrokeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
-import javafx.concurrent.Task;
-import javafx.concurrent.WorkerStateEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
@@ -40,10 +32,8 @@ import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import shadowPursuit.PursuitTree;
-import shadowPursuit.ShadowGraph;
 import shadowPursuit.WayPoint;
 import simulation.*;
-import sun.plugin.javascript.navig.Array;
 
 import java.awt.geom.Line2D;
 import java.io.*;
@@ -359,7 +349,6 @@ public class Main extends Application {
         menu.getChildren().add(testIDKButton);
 
         testIDKButton.setOnAction(ae -> {
-            testopt();
         });
 
         Button testRandomPolyButton = new Button("Test random polygon");
@@ -2546,7 +2535,7 @@ public class Main extends Application {
 
                                     RandomEntity randomEntity = new RandomEntity(map);
                                     randomEntity.setAgent(new Agent(va.getSettings()));
-                                    map.getEvadingEntities().add(randomEntity);
+                                    map.getPursuingEntities().add(randomEntity);
 
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Straight line entity")) {
@@ -2557,7 +2546,7 @@ public class Main extends Application {
 
                                     StraightLineEntity straightLineEntity = new StraightLineEntity(map);
                                     straightLineEntity.setAgent(new Agent(va.getSettings()));
-                                    map.getPursuingEntities().add(straightLineEntity);
+                                    map.getEvadingEntities().add(straightLineEntity);
 
                                     selectedEntityButton.setText(selectedEntityButton.getText() + " [1]");
                                 } else if (selectedEntityButton.getText().equals("Flocking evader entity")) {
@@ -3064,439 +3053,6 @@ public class Main extends Application {
         }
 
         return p;
-    }
-
-    public static void heregoesnothing() {
-        //Containers
-        Polygon polygon = new Polygon();
-        ArrayList<RPoint2D> points = new ArrayList<>();
-        ArrayList<RLineSegment2D> linesList = new ArrayList<>();
-        ArrayList<RLineSegment2D> usedLines = new ArrayList<>();
-        Set<RLineSegment2D> lines = new LinkedHashSet<>();
-
-        //Helpful for random point generation
-        Random random = new Random();
-
-        //Bounding rectangle box is simply equal to size dimensions
-        int width = (int) pane.getWidth();
-        int height = (int) pane.getHeight();
-        Rectangle boundingBox = new Rectangle(width, height);
-
-        //Just for debugging purposes
-        boundingBox.setFill(Color.ALICEBLUE);
-        Main.pane.getChildren().add(boundingBox);
-
-        //Generate n random vertices within bounding box (aka a walk) (n will be input later)
-        //"The step size is random but weighted towards steps that are smaller if n is large. This reduces the number of crossings in the initial polygon." care about this?
-        int n = 8;
-        double x, y;
-
-        for (int i = 0; i < n; i++) {
-            x = random.nextInt(width);
-            y = random.nextInt(height);
-
-            polygon.getPoints().add(x);
-            polygon.getPoints().add(y);
-        }
-
-        //Just for debugging purposes
-        polygon.setStroke(Color.FIREBRICK);
-        polygon.setFill(Color.TRANSPARENT);
-        //Main.pane.getChildren().add(polygon);
-
-        //start loop here
-        //alter polygon at each step
-
-        new Thread(() -> {
-            int count = 0;
-
-            while (true) {
-//                try {
-//                    Thread.sleep(500);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-
-                //System.out.println(count);
-                count++;
-                ArrayList<RPoint2D> newRoute = null;
-                lines.clear();
-                points.clear();
-                usedLines.clear();
-
-                //Create lines
-                for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
-                    RPoint2D f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
-                    RPoint2D s = new RPoint2D(polygon.getPoints().get(i + 2).longValue(), polygon.getPoints().get(i + 3).longValue());
-                    RLineSegment2D line = new RLineSegment2D(f, s);
-                    lines.add(line);
-                    linesList.add(line);
-                }
-                RPoint2D l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size() - 2).longValue(), polygon.getPoints().get(polygon.getPoints().size() - 1).longValue());
-                RPoint2D f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
-                RLineSegment2D line = new RLineSegment2D(l, f);
-                lines.add(line);
-                linesList.add(line);
-
-                Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(lines);
-
-                if (intersections.isEmpty()) {
-                    break;
-                }
-
-                System.out.println("INTERSECTIONS SIZE: " + intersections.size());
-//                Platform.runLater(() -> {
-//                    Iterator<Circle> iter = intersectionCircles.iterator();
-//
-//                    while (iter.hasNext()) {
-//                        Circle ci = iter.next();
-//                        Main.pane.getChildren().remove(ci);
-//                    }
-//                });
-                intersectionCircles.clear();
-
-                for (RPoint2D p : intersections.keySet()) {
-                    //System.out.println(">> Intersection found at (" + p.x.longValue() + "," + p.y.longValue() + ")");
-                    Circle c = new Circle(p.x.intValue(), p.y.intValue(), 5, Color.DARKOLIVEGREEN);
-                    intersectionCircles.add(c);
-                    Set<RLineSegment2D> segments = intersections.get(p);
-                    //System.out.println(">> Lines in question: ");
-                    for (RLineSegment2D segment : segments) {
-                        //System.out.println(segment);
-                    }
-                }
-
-//                Platform.runLater(() -> {
-//                    Iterator<Circle> iter = intersectionCircles.iterator();
-//
-//                    while (iter.hasNext()) {
-//                        Circle ci = iter.next();
-//                        Main.pane.getChildren().add(ci);
-//                    }
-//                });
-
-                Set<RPoint2D> intersectionPoints = intersections.keySet();
-                ArrayList<RPoint2D> intersectionPointsList = new ArrayList<>();
-                intersectionPointsList.addAll(intersectionPoints);
-
-        /*
-        Below this line it's a big fat mess.
-        What we need to do:
-
-        while there are still some intersections (we are in this loop now)
-            resolve them all (loop thats coming up an should use 2opt)
-         */
-
-                while (!intersectionPointsList.isEmpty()) {
-                    lines.clear();
-                    points.clear();
-
-                    //Create lines
-                    for (int i = 0; i < polygon.getPoints().size() - 3; i += 2) {
-                        f = new RPoint2D(polygon.getPoints().get(i).longValue(), polygon.getPoints().get(i + 1).longValue());
-                        RPoint2D s = new RPoint2D(polygon.getPoints().get(i + 2).longValue(), polygon.getPoints().get(i + 3).longValue());
-                        line = new RLineSegment2D(f, s);
-                        lines.add(line);
-                        linesList.add(line);
-                    }
-                    l = new RPoint2D(polygon.getPoints().get(polygon.getPoints().size() - 2).longValue(), polygon.getPoints().get(polygon.getPoints().size() - 1).longValue());
-                    f = new RPoint2D(polygon.getPoints().get(0).longValue(), polygon.getPoints().get(1).longValue());
-                    lines.add(line);
-                    linesList.add(line);
-
-                    //System.out.println("Reordering path");
-
-                    RPoint2D randomPoint = intersectionPointsList.get(random.nextInt(intersectionPointsList.size()));
-                    intersectionPointsList.remove(randomPoint);
-                    Set<RLineSegment2D> segments = intersections.get(randomPoint);
-                    RLineSegment2D[] tmp = segments.toArray(new RLineSegment2D[2]);
-
-                    RLineSegment2D intersectingLineOne = tmp[0];
-                    RLineSegment2D intersectingLineTwo = tmp[1];
-                    if (usedLines.contains(intersectingLineOne) || usedLines.contains(intersectingLineTwo)) {
-                        continue;
-                    } else {
-                        usedLines.add(intersectingLineOne);
-                        usedLines.add(intersectingLineTwo);
-                    }
-
-                    //2-opt computation here
-                    //(A, B) (C,D) -> (A, C) (B, D)
-
-                    for (int z = 0; z < linesList.size(); z++) {
-                        RLineSegment2D rls = linesList.get(z);
-
-                        if (!points.contains(rls.p1)) {
-                            points.add(rls.p1);
-                        }
-
-                        if (!points.contains(rls.p2)) {
-                            points.add(rls.p2);
-                        }
-                    }
-
-                    //what is i(u) and what is k(v)? probably the ones to swap?
-                    //optswap gets array index out of bounds sometimes, or somehow increases size of new route
-
-                    int a1 = points.indexOf(intersectingLineOne.p1);
-                    int a2 = points.indexOf(intersectingLineOne.p2);
-                    int b1 = points.indexOf(intersectingLineTwo.p1);
-                    int b2 = points.indexOf(intersectingLineTwo.p2);
-
-                    int u, v, opt1, opt2;
-
-                    if (a2 > b1) {
-                        opt1 = a2 - b1;
-                    } else {
-                        opt1 = (points.size() - a2) + (b1 + 1);
-                    }
-
-                    if (b2 > a1) {
-                        opt2 = b2 - a1;
-                    } else {
-                        opt2 = (points.size() - b2) + (a1 + 1);
-                    }
-
-                    if (opt1 < opt2) {
-                        u = a2;
-                        v = b1;
-                    } else {
-                        u = b2;
-                        v = a1;
-                    }
-
-                    //System.out.println("u " + u + ", v " + v);
-                    if (u < v) {
-                        newRoute = optSwap(points, u, v);
-                    } else {
-                        newRoute = optSwap(points, v, u);
-                    }
-
-                    //Edit polygon points for next iteration
-                    //System.out.println(newRoute);
-
-                    if (newRoute.size() != n) {
-                        System.out.println("u: " + u + ", v: " + v);
-                        System.out.println("old: " + points);
-                        System.out.println("new: " + newRoute);
-                    }
-
-                }
-
-                polygon.getPoints().clear();
-                for (RPoint2D point : newRoute) {
-                    polygon.getPoints().add(point.x.doubleValue());
-                    polygon.getPoints().add(point.y.doubleValue());
-                }
-
-                if (count >= n * n * n * n) break;
-            }
-        }).start();
-
-        Main.pane.getChildren().remove(polygon);
-        Main.pane.getChildren().add(polygon);
-    }
-
-    public static void testopt() {
-        Polygon polygon = new Polygon();
-        ArrayList<RPoint2D> points = new ArrayList<>();
-        ArrayList<RPoint2D> pointspoly = new ArrayList<>();
-        ArrayList<RLineSegment2D> usedLines = new ArrayList<>();
-        Random random = new Random();
-
-        polygon.getPoints().addAll(261.0, 475.0, 268.0, 260.0, 422.0, 455.0, 433.0, 246.0, 624.0, 318.0);
-        RPoint2D p1 = new RPoint2D(261, 475);
-        RPoint2D p2 = new RPoint2D(268, 260);
-        RPoint2D p3 = new RPoint2D(422, 455);
-        RPoint2D p4 = new RPoint2D(433, 246);
-        RPoint2D p5 = new RPoint2D(624, 318);
-
-        pointspoly.add(p1);
-        pointspoly.add(p2);
-        pointspoly.add(p3);
-        pointspoly.add(p4);
-        pointspoly.add(p5);
-
-        RLineSegment2D segm1 = new RLineSegment2D(p1, p2);
-        RLineSegment2D segm2 = new RLineSegment2D(p2, p3);
-        RLineSegment2D segm3 = new RLineSegment2D(p3, p4);
-        RLineSegment2D segm4 = new RLineSegment2D(p4, p5);
-        RLineSegment2D segm5 = new RLineSegment2D(p5, p1);
-        Set<RLineSegment2D> startsegments = new LinkedHashSet<>();
-        startsegments.add(segm1);
-        startsegments.add(segm2);
-        startsegments.add(segm3);
-        startsegments.add(segm4);
-        startsegments.add(segm5);
-
-        polygon.setFill(Color.TRANSPARENT);
-        polygon.setStrokeWidth(1.0);
-        polygon.setStroke(Color.TEAL);
-        Main.pane.getChildren().add(polygon);
-
-        new Thread(() -> {
-            Map<RPoint2D, Set<RLineSegment2D>> intersections = BentleyOttmann.intersectionsMap(startsegments);
-
-            for (RPoint2D point : intersections.keySet()) {
-                points.add(point);
-            }
-
-            while (!intersections.isEmpty()) {
-
-                System.out.println("Found " + intersections.size() + " intersections");
-                int i = 0;
-                ArrayList<RPoint2D> newRoute = null;
-                usedLines.clear();
-
-                while (!points.isEmpty()) {
-                    //RPoint2D rp = points.get(random.nextInt(points.size()));
-                    RPoint2D rp = points.get(i);
-                    points.remove(rp);
-                    //i--;
-
-                    Circle c = new Circle(rp.x.doubleValue(), rp.y.doubleValue(), 10);
-                    c.setFill(Color.RED);
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            Main.pane.getChildren().add(c);
-                        }
-                    });
-
-                    Set<RLineSegment2D> segments = intersections.get(rp);
-                    RLineSegment2D[] tmp = segments.toArray(new RLineSegment2D[2]);
-                    RLineSegment2D intersectingLineOne = tmp[0];
-                    RLineSegment2D intersectingLineTwo = tmp[1];
-                    System.out.println("Resolving: " + rp.x.longValue() + ":" + rp.y.longValue());
-
-                    final Line l1, l2;
-
-                    if (usedLines.contains(intersectingLineOne) || usedLines.contains(intersectingLineTwo)) {
-                        System.out.println("At least one line was already covered @ " + rp.x.longValue() + ":" + rp.y.longValue());
-                        continue;
-                    } else {
-                        usedLines.add(intersectingLineOne);
-                        usedLines.add(intersectingLineTwo);
-
-                        l1 = new Line(intersectingLineOne.p1.x.doubleValue(), intersectingLineOne.p1.y.doubleValue(), intersectingLineOne.p2.x.doubleValue(), intersectingLineOne.p2.y.doubleValue());
-                        l2 = new Line(intersectingLineTwo.p1.x.doubleValue(), intersectingLineTwo.p1.y.doubleValue(), intersectingLineTwo.p2.x.doubleValue(), intersectingLineTwo.p2.y.doubleValue());
-
-                        l1.setStrokeWidth(3);
-                        l1.setFill(Color.TRANSPARENT);
-                        l1.setStroke(Color.BLACK);
-
-                        l2.setStrokeWidth(3);
-                        l2.setFill(Color.TRANSPARENT);
-                        l2.setStroke(Color.BLACK);
-
-                        Platform.runLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                //Main.pane.getChildren().add(l1);
-                                //Main.pane.getChildren().add(l2);
-                            }
-                        });
-                    }
-
-                    int a1 = pointspoly.indexOf(intersectingLineOne.p1);
-                    int a2 = pointspoly.indexOf(intersectingLineOne.p2);
-                    int b1 = pointspoly.indexOf(intersectingLineTwo.p1);
-                    int b2 = pointspoly.indexOf(intersectingLineTwo.p2);
-
-                    int u, v, opt1, opt2;
-
-                    if (a2 > b1) {
-                        opt1 = a2 - b1;
-                    } else {
-                        opt1 = (pointspoly.size() - a2) + (b1 + 1);
-                    }
-
-                    if (b2 > a1) {
-                        opt2 = b2 - a1;
-                    } else {
-                        opt2 = (pointspoly.size() - b2) + (a1 + 1);
-                    }
-
-                    if (opt1 < opt2) {
-                        u = a2;
-                        v = b1;
-                    } else {
-                        u = b2;
-                        v = a1;
-                    }
-
-                    System.out.println("u " + u + ", v " + v);
-                    System.out.println("path before: " + pointspoly);
-
-                    if (u < v) {
-                        newRoute = optSwap(pointspoly, u, v);
-                    } else {
-                        newRoute = optSwap(pointspoly, v, u);
-                    }
-
-                    System.out.println("path after: " + newRoute);
-
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            //Main.pane.getChildren().remove(l1);
-                            //Main.pane.getChildren().remove(l2);
-                        }
-                    });
-                }
-
-                polygon.getPoints().clear();
-                for (RPoint2D point : newRoute) {
-                    polygon.getPoints().add(point.x.doubleValue());
-                    polygon.getPoints().add(point.y.doubleValue());
-                }
-
-                ArrayList<RPoint2D> rPoint2DS = new ArrayList<>();
-                Set<RLineSegment2D> segment2DSet = new LinkedHashSet<RLineSegment2D>();
-                pointspoly.clear();
-
-                for (int z = 0; z < polygon.getPoints().size() - 1; z += 2) {
-                    rPoint2DS.add(new RPoint2D(polygon.getPoints().get(z).longValue(), polygon.getPoints().get(z+1).longValue()));
-                    pointspoly.add(new RPoint2D(polygon.getPoints().get(z).longValue(), polygon.getPoints().get(z+1).longValue()));
-                }
-
-                for (int z = 0; z < rPoint2DS.size() - 1; z += 2) {
-                    RLineSegment2D ls = new RLineSegment2D(rPoint2DS.get(z), rPoint2DS.get(z+1));
-                    segment2DSet.add(ls);
-                }
-                segment2DSet.add(new RLineSegment2D(rPoint2DS.get(rPoint2DS.size() - 1), rPoint2DS.get(0)));
-
-                intersections = BentleyOttmann.intersectionsMap(segment2DSet);
-
-                for (RPoint2D point : intersections.keySet()) {
-                    points.add(point);
-                }
-            }
-        }).start();
-    }
-
-    public static ArrayList<RPoint2D> optSwap(ArrayList<RPoint2D> route, int i, int k) {
-        ArrayList<RPoint2D> newRoute = new ArrayList<>();
-
-        for (int m = 0; m < i; m++) {
-            newRoute.add(route.get(m));
-        }
-
-        for (int n = k; n >= i; n--) {
-            newRoute.add(route.get(n));
-        }
-
-        for (int o = k + 1; o < route.size(); o++) {
-            newRoute.add(route.get(o));
-        }
-
-        return newRoute;
     }
 
     public static void main(String[] args) {

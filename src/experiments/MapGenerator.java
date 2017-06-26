@@ -75,6 +75,12 @@ public abstract class MapGenerator extends Application {
             }
             curIndex = max + 1;
 
+//            for (Polygon p : mapPolygons) {
+//                for (int i = 0; i < p.getPoints().size(); i++) {
+//                    p.getPoints().set(i, (p.getPoints().get(i) + (0.1 * (Math.random() - 0.5))));
+//                }
+//            }
+
             MapRepresentation map = new MapRepresentation(mapPolygons);
             ShortestPathRoadMap sprm = new ShortestPathRoadMap(map);
 

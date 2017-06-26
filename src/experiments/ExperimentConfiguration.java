@@ -574,11 +574,11 @@ public class ExperimentConfiguration extends Application {
                                             tempSWG.addEdge(pathVertices.get(ip.index1), pathVertices.get(ip.index2));
                                         }
                                         lineRestrictedShortestPathRoadMap = new ShortestPathRoadMap(mapRepresentation, tempSWG);
-                                        Entity.initialiseRestricted(lineRestrictedShortestPathRoadMap);
+                                        //Entity.initialiseRestricted(lineRestrictedShortestPathRoadMap);
                                     } catch (IOException ex) {
                                         ex.printStackTrace();
                                     }
-                                } else if (f.getName().startsWith(file.getName().substring(0, file.getName().length() - 4)) && f.getName().endsWith(".trs")) {
+                                }  else if (f.getName().startsWith(file.getName().substring(0, file.getName().length() - 4)) && f.getName().endsWith(".trs")) {
                                     try (BufferedReader in = new BufferedReader(new FileReader(f))) {
                                         ArrayList<PathVertex> pathVertices = new ArrayList<>();
                                         String line = in.readLine();
@@ -613,7 +613,7 @@ public class ExperimentConfiguration extends Application {
                                             tempSWG.addEdge(pathVertices.get(ip.index1), pathVertices.get(ip.index2));
                                         }
                                         triangleRestrictedShortestPathRoadMap = new ShortestPathRoadMap(mapRepresentation, tempSWG);
-                                        Entity.initialiseRestricted(triangleRestrictedShortestPathRoadMap);
+                                        //Entity.initialiseRestricted(triangleRestrictedShortestPathRoadMap);
                                     } catch (IOException ex) {
                                         ex.printStackTrace();
                                     }
@@ -719,17 +719,26 @@ public class ExperimentConfiguration extends Application {
                             } else {
                                 dcrsEntity = new DCRVEntity(mapRepresentation, requirements, triangleGuardInfo);
                             }
+                            if (triangleRestrictedShortestPathRoadMap != null) {
+                                Entity.initialiseRestricted(triangleRestrictedShortestPathRoadMap);
+                            }
                         } else if (selectPursuerBox.getValue().equals("DCRSEntity")) {
                             if (squareGuardInfo == null) {
                                 dcrsEntity = new DCRSEntity(mapRepresentation, requirements, null);
                             } else {
                                 dcrsEntity = new DCRSEntity(mapRepresentation, requirements, squareGuardInfo);
                             }
+                            if (lineRestrictedShortestPathRoadMap != null) {
+                                Entity.initialiseRestricted(lineRestrictedShortestPathRoadMap);
+                            }
                         } else if (selectPursuerBox.getValue().equals("DCRLEntity")) {
                             if (lineGuardInfo == null) {
                                 dcrsEntity = new DCRLEntity(mapRepresentation, requirements, null);
                             } else {
                                 dcrsEntity = new DCRLEntity(mapRepresentation, requirements, lineGuardInfo);
+                            }
+                            if (lineRestrictedShortestPathRoadMap != null) {
+                                Entity.initialiseRestricted(lineRestrictedShortestPathRoadMap);
                             }
                         }
 

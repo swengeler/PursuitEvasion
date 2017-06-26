@@ -1,5 +1,10 @@
 package simulation;
 
+import additionalOperations.GeometryOperations;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 import entities.utils.*;
 import experiments.ExperimentConfiguration;
 import javafx.geometry.Point2D;
@@ -286,11 +291,38 @@ public class TraversalHandler {
         currentComponent = restrictToPocket ? pocketComponent : currentComponent;
         // check whether we're already in that component, then the movement to one of its leaves can be skipped
         boolean inComponentLeaf = false;
+
+//        Point point = new Point(new CoordinateArraySequence(new Coordinate[]{new Coordinate(xPos, yPos)}), GeometryOperations.factory);
+//        double min = Double.MAX_VALUE;
+//        DTriangle minTriangle = null;
+//
+//        for (DTriangle dt: currentComponent) {
+//            Coordinate[] coordinates = new Coordinate[]{
+//                    new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY()),
+//                    new Coordinate(dt.getPoint(1).getX(), dt.getPoint(1).getY()),
+//                    new Coordinate(dt.getPoint(2).getX(), dt.getPoint(2).getY()),
+//                    new Coordinate(dt.getPoint(0).getX(), dt.getPoint(0).getY())
+//            };
+//
+//            LinearRing lr = new LinearRing(new CoordinateArraySequence(coordinates), GeometryOperations.factory);
+//            System.err.println("check: " + lr.distance(point));
+//
+//            if (lr.distance(point) < min) {
+//                min = lr.distance(point);
+//                minTriangle = dt;
+//            }
+//
+//            System.err.println(dt);
+//        }
+
         for (DTriangle dt : currentComponent) {
             if (dt.contains(new DPoint(xPos, yPos, 0)) && isLeaf(nodess.indexOf(dt))) {
                 inComponentLeaf = true;
                 break;
             }
+//            if (dt.equals(minTriangle) && isLeaf(nodess.indexOf(dt))) {
+//                inComponentLeaf = true;
+//            }
         }
 
         PlannedPath moveToLeaf = null;
