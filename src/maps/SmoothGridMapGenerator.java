@@ -12,23 +12,25 @@ public class SmoothGridMapGenerator extends MapGenerator {
     private final double X_SCALE = 0.2;
     private final double Y_SCALE = 0.2;
 
+    private int[][] grid = new int[][]{
+            {1, 0, 1, 1},
+            {1, 1, 1, 1},
+            {1, 1, 0, 1},
+            {1, 1, 0, 1}
+    };
+
     private Stage stage;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
+        mapName = "smoothgridmap_" + grid[0].length + "_" + grid.length + "_";
         generateMap();
         saveMap();
     }
 
     @Override
     protected void generateMap() {
-        int[][] grid = new int[][]{
-                {1, 0, 1, 1},
-                {1, 1, 1, 1},
-                {1, 1, 0, 1},
-                {1, 1, 0, 1}
-        };
 
         double totalWidth = (grid[0].length * SIDE_LENGTH + (grid[0].length + 1) * CORRIDOR_WIDTH) * X_SCALE;
         double totalHeight = (grid.length * SIDE_LENGTH + (grid.length + 1) * CORRIDOR_WIDTH) * Y_SCALE;

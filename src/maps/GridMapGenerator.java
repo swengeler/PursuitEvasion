@@ -30,7 +30,13 @@ public class GridMapGenerator extends MapGenerator {
             100.0, 0.0
     };
 
-    private Geometry finalPolygon;
+    private final double xScale = 1.0;
+    private final double yScale = 1.0;
+    private final boolean xStretch = true;
+    private final boolean yStretch = true;
+
+    private final int xDimension = 2;
+    private final int yDimension = 1;
 
     public GridMapGenerator() {
         super();
@@ -39,20 +45,12 @@ public class GridMapGenerator extends MapGenerator {
     @Override
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
-        finalPolygon = new Polygon(null, null, GeometryOperations.factory);
+        mapName = "grid_" + xDimension + "_" + yDimension + "_";
         generateMap();
         saveMap();
     }
 
     protected void generateMap() {
-        final double xScale = 1.0;
-        final double yScale = 1.0;
-        final boolean xStretch = true;
-        final boolean yStretch = true;
-
-        final int xDimension = 4;
-        final int yDimension = 4;
-
         double horizontalWidth = DEFAULT_COORDS[11] * xScale;
         double horizontalHeight = DEFAULT_COORDS[16] * (yStretch ? yScale : 1.0);
         double verticalWidth = DEFAULT_COORDS[16] * (xStretch ? xScale : 1.0);

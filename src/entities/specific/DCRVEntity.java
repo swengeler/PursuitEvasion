@@ -49,7 +49,6 @@ public class DCRVEntity extends PartitioningEntity {
 
         this.triangleGuardOriginalPositions = triangleGuardOriginalPositions;
         if (requirements.isConfigured()) {
-            System.out.println("Check");
             requiredAgents = requirements.requiredAgents;
             componentBoundaryLines = requirements.componentBoundaryLines;
             componentBoundaryEdges = requirements.componentBoundaryEdges;
@@ -119,7 +118,7 @@ public class DCRVEntity extends PartitioningEntity {
                     return;
                 }
                 if (stats != null) {
-                    //stats.nrLeafRuns[evaderCounter]++;
+                    //stats.nrLeafRunsBeforeFinding[evaderCounter]++;
                     stats.increaseNrLeafRuns();
                 }
             } catch (DelaunayError e) {
@@ -138,7 +137,7 @@ public class DCRVEntity extends PartitioningEntity {
                     return;
                 }
                 if (stats != null) {
-                    //stats.nrLeafRuns[evaderCounter]++;
+                    //stats.nrLeafRunsBeforeFinding[evaderCounter]++;
                     stats.increaseNrLeafRuns();
                 }
             } catch (DelaunayError e) {
@@ -173,9 +172,8 @@ public class DCRVEntity extends PartitioningEntity {
                         for (Agent a2 : getControlledAgents()) {
                             if (map.isVisible(a1, a2)) {
                                 if (stats != null) {
-                                    //stats.caughtBySearcher[evaderCounter] = a2.equals(searcher);
+                                    //stats.caughtByCatcher[evaderCounter] = a2.equals(searcher);
                                     stats.setCaughtBySearcher(a2.equals(searcher));
-                                    System.out.println("HELL-o (" + a2.equals(searcher) + ", " + stats.getCounter() + ")");
                                     stats.targetCaught();
                                     //evaderCounter = evaderCounter + 1;
                                 }

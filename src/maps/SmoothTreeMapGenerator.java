@@ -1,5 +1,6 @@
 package maps;
 
+import experiments.MapGenerator;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -12,7 +13,7 @@ import javafx.stage.Stage;
 import java.io.*;
 import java.util.ArrayList;
 
-public class SmoothTreeMapGenerator extends Application {
+public class SmoothTreeMapGenerator extends MapGenerator {
 
     private class TreeNode {
 
@@ -85,7 +86,6 @@ public class SmoothTreeMapGenerator extends Application {
     private Pane pane;
 
     private TreeNode root;
-    private Polygon resultPolygon;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -95,22 +95,28 @@ public class SmoothTreeMapGenerator extends Application {
         stage.setScene(scene);
         stage.show();
 
-        resultPolygon = new Polygon();
+        mapName = "smoothtreemap_";
+        for (int i = 0; i < branchingFactors.length; i++) {
+            mapName += branchingFactors[i] + "_";
+        }
+        mapPolygons.add(new Polygon());
+
+        generateMap();
+        saveMap();
+        //System.exit(1);
+    }
+
+    @Override
+    protected void generateMap() {
         determineOffsetAndSpacing();
         buildTree();
         preOrderTraversal(root, 0);
-        for (int i = 0; i < resultPolygon.getPoints().size(); i++) {
+        for (int i = 0; i < mapPolygons.get(0).getPoints().size(); i++) {
             if (!INCLUDE_ROOT && (i % 2 == 1)) {
-                resultPolygon.getPoints().set(i, resultPolygon.getPoints().get(i) - height);
+                mapPolygons.get(0).getPoints().set(i, mapPolygons.get(0).getPoints().get(i) - height);
             }
-            resultPolygon.getPoints().set(i, resultPolygon.getPoints().get(i) * SCALE);
+            mapPolygons.get(0).getPoints().set(i, mapPolygons.get(0).getPoints().get(i) * SCALE);
         }
-        resultPolygon.getPoints().addAll(resultPolygon.getPoints().get(0), resultPolygon.getPoints().get(1));
-        resultPolygon.setFill(Color.WHITE);
-        resultPolygon.setStroke(Color.BLACK);
-        pane.getChildren().add(resultPolygon);
-        saveMap();
-        //System.exit(1);
     }
 
     private void buildTree() {
@@ -156,16 +162,16 @@ public class SmoothTreeMapGenerator extends Application {
 
         if (depth != 0 || INCLUDE_ROOT) {
             if (depth > 0 && (nodeCounter[depth] % branchingFactors[depth - 1]) == 0) {
-                resultPolygon.getPoints().addAll(
+                mapPolygons.get(0).getPoints().addAll(
                         offset[depth] + nodeCounter[depth] * spacing[depth], (height + 100.0) * depth - 100.0
                 );
             } else {
-                resultPolygon.getPoints().addAll(
+                mapPolygons.get(0).getPoints().addAll(
                         SMOOTH_COORDS[0] + (offset[depth] + nodeCounter[depth] * spacing[depth]), SMOOTH_COORDS[1] + (height + 100.0) * depth
                 );
             }
 
-            resultPolygon.getPoints().addAll(
+            mapPolygons.get(0).getPoints().addAll(
                     SMOOTH_COORDS[2] + (offset[depth] + nodeCounter[depth] * spacing[depth]), SMOOTH_COORDS[3] + (height + 100.0) * depth
             );
         }
@@ -182,16 +188,16 @@ public class SmoothTreeMapGenerator extends Application {
         //pane.getChildren().addAll(l);
 
         if (depth != 0 || INCLUDE_ROOT) {
-            resultPolygon.getPoints().addAll(
+            mapPolygons.get(0).getPoints().addAll(
                     SMOOTH_COORDS[4] + (offset[depth] + nodeCounter[depth] * spacing[depth]), SMOOTH_COORDS[5] + (height + 100.0) * depth
             );
 
             if (depth > 0 && depth <= branchingFactors.length && ((nodeCounter[depth] + 1) % branchingFactors[depth - 1]) == 0) {
-                resultPolygon.getPoints().addAll(
+                mapPolygons.get(0).getPoints().addAll(
                         SMOOTH_COORDS[6] + (offset[depth] + nodeCounter[depth] * spacing[depth]), SMOOTH_COORDS[7] + (height + 100.0) * depth - 100.0
                 );
             } else {
-                resultPolygon.getPoints().addAll(
+                mapPolygons.get(0).getPoints().addAll(
                         SMOOTH_COORDS[6] + (offset[depth] + nodeCounter[depth] * spacing[depth]), SMOOTH_COORDS[7] + (height + 100.0) * depth
                 );
             }
@@ -199,32 +205,6 @@ public class SmoothTreeMapGenerator extends Application {
 
         nodeCounter[depth]++;
 
-    }
-
-    private void saveMap() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save the current map");
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Map data only file", "*.mdo"));
-        File selectedFile = fileChooser.showSaveDialog(stage);
-
-        if (selectedFile != null) {
-            // write map to file
-            try (PrintWriter out = new PrintWriter(new FileOutputStream(selectedFile))) {
-                /*for (int i = 0; i < mapPolygons.size(); i++) {
-                    for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
-                        out.print(mapPolygons.get(i).getPoints().get(j) + " ");
-                    }
-                    out.println();
-                }*/
-                for (int j = 0; j < resultPolygon.getPoints().size(); j++) {
-                    out.print(resultPolygon.getPoints().get(j) + " ");
-                }
-                out.println();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-        System.exit(1);
     }
 
     public static void main(String[] args) {

@@ -149,6 +149,9 @@ public class DCRSEntity extends PartitioningEntity {
             }
             currentTargetPosition = new Coordinate(target.getXPos(), target.getYPos());
         }
+        if (stats != null) {
+            stats.nrSteps[0]++;
+        }
     }
 
     @Override
@@ -381,6 +384,10 @@ public class DCRSEntity extends PartitioningEntity {
                 }
             }
 
+            if (stats != null) {
+                stats.nrStepsSearching[0]++;
+            }
+
             if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
                 // end of path reached, compute new path
                 try {
@@ -390,6 +397,9 @@ public class DCRSEntity extends PartitioningEntity {
                         AdaptedSimulation.masterPause("DCRVEntity");
                         ExperimentConfiguration.interruptCurrentRun();
                         return;
+                    }
+                    if (stats != null) {
+                        stats.nrLeafRunsBeforeFinding[0]++;
                     }
                 } catch (DelaunayError e) {
                     e.printStackTrace();
@@ -467,6 +477,10 @@ public class DCRSEntity extends PartitioningEntity {
             deltaX = (target.getXPos() - catcher.getXPos()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
             deltaY = (target.getYPos() - catcher.getYPos()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
             if (length < catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
+                if (stats != null) {
+                    stats.caughtByCatcher[0] = true;
+                }
+
                 catcher.moveTo(target.getXPos(), target.getYPos());
                 target.setActive(false);
                 target = null;
@@ -482,10 +496,15 @@ public class DCRSEntity extends PartitioningEntity {
                 catcher.moveBy(deltaX, deltaY);
                 searcher.moveBy(deltaX, deltaY);
             }
+        } else if (stats != null) {
+            stats.ticksTillSearchStarted[0]++;
         }
     }
 
     private void followTarget() {
+        if (stats != null) {
+            stats.nrStepsFollowing[0]++;
+        }
         // behaviour changes based on visibility
         // if the target is still visible, first check whether it can simply be caught
         length = Math.sqrt(Math.pow(target.getXPos() - catcher.getXPos(), 2) + Math.pow(target.getYPos() - catcher.getYPos(), 2));
@@ -544,6 +563,10 @@ public class DCRSEntity extends PartitioningEntity {
 
 
         if (map.isVisible(target, catcher) && length <= catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
+            if (stats != null) {
+                stats.caughtByCatcher[0] = true;
+            }
+
             pseudoBlockingVertex = null;
             //System.out.println("pseudoBlockingVertex null because target visible in FOLLOW_TARGET (can capture)");
             lastPointVisible = null;
@@ -693,54 +716,13 @@ public class DCRSEntity extends PartitioningEntity {
                     //System.out.println("candidate2 chosen");
                 }
             }
-        } /*else if (initInGuardingSquare && map.isVisible(target, catcher) && GeometryOperations.lineIntersectSeparatingLines(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos(), initCrossableLines)) {
-            System.out.println("HELLOOOOOOOO");
-            // find the triangle on the other side of the separating line the target just crossed over
-            ls = new LineSegment(previousTargetPosition, currentTargetPosition);
-            System.out.println(ls);
-            DEdge tempEdge = null;
-            for (Line l : initCrossableLines) {
-                tempLs = new LineSegment(l.getStartX(), l.getStartY(), l.getEndX(), l.getEndY());
-                System.out.println(tempLs);
-                if (ls.intersection(tempLs) != null) {
-                    tempEdge = separatingEdges.get(separatingLines.indexOf(l));
-                    // ban the other ones from being spotted through
-                    for (int i = 1; i < 4; i++) {
-                        nastyBullshitLines.add(((SquareGuardManager) guardManagers.get(separatingLines.indexOf(l))).getSquareSideLines().get(i));
-                    }
-                    ;
-                    System.out.println("tempEdge: " + tempEdge);
-                    break;
-                }
-            }
-            try {
-                if (tempEdge != null) {
-                    if (tempEdge.getLeft().contains(new DPoint(currentTargetPosition.x, currentTargetPosition.y, 0))) {
-                        // make the left triangle the next "target" for search
-                        currentSearcherPath = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(searcher.getXPos(), searcher.getYPos(), tempEdge.getLeft().getBarycenter().getX(), tempEdge.getLeft().getBarycenter().getY());
-                        currentSearcherPath.setEndIndex(traversalHandler.getNodeIndex(tempEdge.getLeft().getBarycenter().getX(), tempEdge.getLeft().getBarycenter().getY()));
-                    } else {
-                        // make the right triangle the next "target" for search
-                        currentSearcherPath = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(searcher.getXPos(), searcher.getYPos(), tempEdge.getRight().getBarycenter().getX(), tempEdge.getRight().getBarycenter().getY());
-                        currentSearcherPath.setEndIndex(traversalHandler.getNodeIndex(tempEdge.getRight().getBarycenter().getX(), tempEdge.getRight().getBarycenter().getY()));
-                    }
-                    if (catcher.shareLocation(searcher)) {
-                        currentCatcherPath = currentSearcherPath;
-                        searcherPathLineCounter = 0;
-                        catcherPathLineCounter = 0;
-                    } else {
-                        System.out.println("something went wrong when the target exited one of the squares that it was initially in");
-                    }
-                    currentStage = Stage.INIT_FIND_TARGET;
-                }
-
-            } catch (DelaunayError e) {
-                e.printStackTrace();
-            }
-        } */ else {
+        } else {
             // second case: target is not visible anymore (disappeared around corner)
             // the method used here is cheating somewhat but assuming minimum feature size it just makes the computation easier
             if (pseudoBlockingVertex == null) {
+                if (stats != null) {
+                    stats.nrLostSight[0]++;
+                }
                 System.out.println("target around corner, calculate path to first vertex");
 
                 if (/*testInGuardedSquare && testSPRM == null*/(updated || testSPRM == null)) {
@@ -932,6 +914,9 @@ public class DCRSEntity extends PartitioningEntity {
     }
 
     private void findTarget() {
+        if (stats != null) {
+            stats.nrStepsFindingAgain[0]++;
+        }
         // searcher and catcher are "locked onto" a target, but the searcher has to rediscover it
         // could do this by
         // a) restricting random traversals to the triangles that are in the pocket (at least in part)
@@ -1090,6 +1075,10 @@ public class DCRSEntity extends PartitioningEntity {
                 currentStage = Stage.FOLLOW_TARGET;
             }
         }
+    }
+
+    public void trackStats(DCRSStats stats) {
+        this.stats = stats;
     }
 
     public Agent getSearcher() {

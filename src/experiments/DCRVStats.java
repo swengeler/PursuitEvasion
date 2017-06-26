@@ -7,27 +7,24 @@ import java.util.stream.IntStream;
 
 public class DCRVStats {
 
-    private int nrEvaders;
-    private int nrPursuers;
-    private int currentEvader, what;
+    public int nrEvaders;
+    public int nrPursuers;
+    public int currentEvader;
     public Coordinate[] initEvaderPositions;
     public Coordinate[] initPursuerPositions;
     public int[] nrLeafRuns;
     public int[] nrSteps;
     public boolean[] caughtBySearcher;
-    public boolean[] caughtAfterGuardPositioning;
 
     public DCRVStats(int nrEvaders, int nrPursuers) {
         this.nrEvaders = nrEvaders;
         this.nrPursuers = nrPursuers;
         currentEvader = 0;
-        what = 0;
         initEvaderPositions = new Coordinate[nrEvaders];
         initPursuerPositions = new Coordinate[nrPursuers];
         nrLeafRuns = new int[nrEvaders];
         nrSteps = new int[nrEvaders];
         caughtBySearcher = new boolean[nrEvaders];
-        caughtAfterGuardPositioning = new boolean[nrEvaders];
     }
 
     public void print() {
@@ -77,4 +74,17 @@ public class DCRVStats {
     public void setCaughtBySearcher(boolean caughtBySearcher) {
         this.caughtBySearcher[currentEvader % nrEvaders] = caughtBySearcher;
     }
+
+    @Override
+    public String toString() {
+        String result = "nrEvaders: " + nrEvaders + "\r\n";
+        result += "nrPursuers: " + nrPursuers + "\r\n";
+        result += "initEvaderPositions: " + Arrays.toString(initEvaderPositions) + "\r\n";
+        result += "initPursuerPositions: " + Arrays.toString(initPursuerPositions) + "\r\n";
+        result += "nrLeafRuns: " + nrLeafRuns[0] + "\r\n";
+        result += "nrSteps: " + nrSteps[0] + "\r\n";
+        result += "caughtByCatcher: " + caughtBySearcher[0] + "\r\n";
+        return result;
+    }
+
 }

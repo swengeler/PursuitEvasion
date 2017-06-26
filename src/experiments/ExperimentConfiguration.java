@@ -1,10 +1,10 @@
 package experiments;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineSegment;
 import entities.base.*;
 import entities.specific.*;
-import entities.utils.PathVertex;
-import entities.utils.ShortestPathRoadMap;
+import entities.utils.*;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -27,8 +27,11 @@ public class ExperimentConfiguration extends Application {
 
     private GridPane layout;
 
-    private List<File> selectedFiles;
     private MapRepresentation map;
+    private List<File> selectedFiles;
+    private String pursuerType;
+    private String evaderType;
+    private int nrRuns;
 
     private static boolean interruptCurrentRun;
 
@@ -177,19 +180,41 @@ public class ExperimentConfiguration extends Application {
 
             int evaderCounter = 0;
             for (int simulationCount = 0; simulationCount < 10; simulationCount++) {
+                mapRepresentation.getEvadingEntities().clear();
+                mapRepresentation.getPursuingEntities().clear();
+
+                int index = (int) (Math.random() * mapRepresentation.getBorderLines().size());
+                double xPos = mapRepresentation.getBorderLines().get(index).midPoint().x;
+                double yPos = mapRepresentation.getBorderLines().get(index).midPoint().y;
+
+                double maxX = 0, maxY = 0;
+                PlannedPath tempPath, maxDistancePath = null;
+                int maxDistance = -Integer.MAX_VALUE, tempDistance;
+                for (LineSegment line : mapRepresentation.getAllLines()) {
+                    tempPath = shortestPathRoadMap.getShortestPath(line.midPoint().x, line.midPoint().y, xPos, yPos);
+                    tempDistance = tempPath.getPathVertices().size();
+                    if (tempDistance > maxDistance) {
+                        maxDistance = tempDistance;
+                        maxDistancePath = tempPath;
+                        maxX = line.midPoint().x;
+                        maxY = line.midPoint().y;
+                    }
+                }
+
                 Coordinate c;
+                c = mapRepresentation.getBorderLines().get(index).midPoint();
                 Agent a;
                 AgentSettings as;
                 // create entity and place agents
-                DCRVEntity dcrsEntity;
-                if (lineGuardInfo == null) {
-                    dcrsEntity = new DCRVEntity(mapRepresentation, requirements, null);
+                DCRLEntity dcrsEntity;
+                if (triangleGuardInfo == null) {
+                    dcrsEntity = new DCRLEntity(mapRepresentation, requirements, null);
                 } else {
-                    dcrsEntity = new DCRVEntity(mapRepresentation, requirements, triangleGuardInfo);
+                    dcrsEntity = new DCRLEntity(mapRepresentation, requirements, triangleGuardInfo);
                 }
                 mapRepresentation.getPursuingEntities().add(dcrsEntity);
                 for (int i = 0; i < dcrsEntity.totalRequiredAgents(); i++) {
-                    c = mapRepresentation.getRandomPosition();
+                    //c = mapRepresentation.getRandomPosition();
                     as = new AgentSettings();
                     as.setXPos(c.x);
                     as.setYPos(c.y);
@@ -197,8 +222,33 @@ public class ExperimentConfiguration extends Application {
                     dcrsEntity.addAgent(a);
                 }
 
-                DistributedEntity straightLineEntity = new StraightLineEntity(mapRepresentation);
-                c = mapRepresentation.getRandomPosition();
+                System.out.println("Initial starting position pursuers: " + c.x + ", " + c.y);
+                System.out.println("Initial starting position evader: " + maxX + ", " + maxY + " (" + maxDistancePath.getPathVertices().size() + ")");
+
+                DistributedEntity straightLineEntity = new StaticEntity(mapRepresentation);
+                c = new Coordinate(maxX, maxY);
+                /*c = mapRepresentation.getRandomPosition();
+                for (int i = 0; i < 10000; i++) {
+                    c = mapRepresentation.getRandomPosition();
+                    boolean visible = false;
+                    for (Agent agent : dcrsEntity.getControlledAgents()) {
+                        if (mapRepresentation.isVisible(agent.getXPos(), agent.getYPos(), c.x, c.y)) {
+                            visible = true;
+                            break;
+                        }
+                    }
+                    if (!visible) {
+                        break;
+                    }
+                }
+                boolean visible = false;
+                for (Agent agent : dcrsEntity.getControlledAgents()) {
+                    if (mapRepresentation.isVisible(agent.getXPos(), agent.getYPos(), c.x, c.y)) {
+                        visible = true;
+                        break;
+                    }
+                }
+                System.out.println("is visible: " + visible);*/
                 as = new AgentSettings();
                 as.setXPos(c.x);
                 as.setYPos(c.y);
@@ -215,13 +265,13 @@ public class ExperimentConfiguration extends Application {
                 randomEntity.setAgent(a);
                 mapRepresentation.getEvadingEntities().add(randomEntity);*/
 
-                DCRLStats stats = new DCRLStats(2, dcrsEntity.totalRequiredAgents());
-                /*for (int i = 0; i < dcrsEntity.getControlledAgents().size(); i++) {
+                DCRLStats stats = new DCRLStats(1, dcrsEntity.totalRequiredAgents());
+                for (int i = 0; i < dcrsEntity.getControlledAgents().size(); i++) {
                     stats.initPursuerPositions[i] = new Coordinate(dcrsEntity.getControlledAgents().get(i).getXPos(), dcrsEntity.getControlledAgents().get(i).getYPos());
                 }
                 stats.initEvaderPositions[0] = new Coordinate(straightLineEntity.getControlledAgents().get(0).getXPos(), straightLineEntity.getControlledAgents().get(0).getYPos());
-                stats.initEvaderPositions[1] = new Coordinate(randomEntity.getControlledAgents().get(0).getXPos(), randomEntity.getControlledAgents().get(0).getYPos());*/
-                //dcrsEntity.trackStats(stats);
+                //stats.initEvaderPositions[1] = new Coordinate(randomEntity.getControlledAgents().get(0).getXPos(), randomEntity.getControlledAgents().get(0).getYPos());
+                dcrsEntity.trackStats(stats);
 
                 Agent catcher = null;
                 Agent target = straightLineEntity.getControlledAgents().get(0);
@@ -277,7 +327,7 @@ public class ExperimentConfiguration extends Application {
                 //dcrsEntity.evaderCounter = new Integer(0);
                 System.out.println("\nSimulation (" + simulationCount + ") took: " + (System.currentTimeMillis() - before) + " ms");
                 if (!interruptCurrentRun) {
-                    //stats.print();
+                    stats.print();
                 }
                 System.out.println("\n\n\n");
                 interruptCurrentRun = false;
@@ -296,11 +346,19 @@ public class ExperimentConfiguration extends Application {
 
         ComboBox<String> selectPursuerBox = new ComboBox<>();
         selectPursuerBox.getItems().addAll("DCRVEntity", "DCRLEntity", "DCRSEntity");
+        selectPursuerBox.valueProperty().addListener((ov, oldValue, newValue) -> {
+            pursuerType = newValue;
+        });
         selectPursuerBox.setValue("DCRVEntity");
+        pursuerType = "DCRVEntity";
 
         ComboBox<String> selectEvaderBox = new ComboBox<>();
         selectEvaderBox.getItems().addAll("Hiding", "Straight line", "Random");
-        selectEvaderBox.setValue("Hiding");
+        selectEvaderBox.valueProperty().addListener((ov, oldValue, newValue) -> {
+            evaderType = newValue;
+        });
+        selectEvaderBox.setValue("Straight line");
+        evaderType = "Straight line";
 
         TextField nrEvadersInput = new TextField();
         nrEvadersInput.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -315,8 +373,11 @@ public class ExperimentConfiguration extends Application {
         nrRunsInput.textProperty().addListener((ov, oldValue, newValue) -> {
             if (!newValue.matches("\\d*")) {
                 nrRunsInput.setText(newValue.replaceAll("[^\\d]", ""));
-            } else if (!newValue.equals("") && Integer.parseInt(newValue) > 2000) {
-                nrRunsInput.setText(2000 + "");
+            } else if (!newValue.equals("") && Integer.parseInt(newValue) > 500) {
+                nrRunsInput.setText(500 + "");
+                nrRuns = 500;
+            } else {
+                nrRuns = Integer.parseInt(newValue);
             }
         });
 
@@ -324,45 +385,311 @@ public class ExperimentConfiguration extends Application {
         hiddenAtStartBox.setSelected(false);
 
         CheckBox sameInitPositions = new CheckBox();
-        hiddenAtStartBox.setSelected(false);
+        sameInitPositions.setSelected(false);
 
         Button runButton = new Button("Run");
+        runButton.setOnAction((event) -> {
+            if (selectedFiles != null) {
+                for (File file : selectedFiles) {
+                    String mapName = file.getName().substring(0, file.getName().length() - 4);
+                    MapRepresentation mapRepresentation = loadMap(file);
+
+                    File parent = file.getParentFile();
+                    ShortestPathRoadMap shortestPathRoadMap = null;
+                    int max = -1, temp, curIndex = 0;
+                    if (parent != null) {
+                        File[] directory = parent.listFiles();
+                        if (directory != null) {
+                            String tempString;
+                            for (File f : directory) {
+                                if (f.getName().startsWith(mapName) && f.getName().endsWith(".txt")) {
+                                    tempString = f.getName().substring(f.getName().lastIndexOf("_") + 1, f.getName().length() - 4);
+                                    System.out.println(tempString);
+                                    temp = Integer.parseInt(tempString);
+                                    if (temp > max) {
+                                        max = temp;
+                                    }
+                                }
+                            }
+                            curIndex = max + 1;
+
+                            for (File f : directory) {
+                                if (f.getName().startsWith(file.getName().substring(0, file.getName().length() - 4)) && f.getName().endsWith(".spm")) {
+                                    try (BufferedReader in = new BufferedReader(new FileReader(f))) {
+                                        ArrayList<PathVertex> pathVertices = new ArrayList<>();
+                                        String line = in.readLine();
+                                        String[] numbers;
+                                        double[] coordinates;
+                                        int[] indeces;
+                                        while ((line = in.readLine()) != null && !line.contains("ip")) {
+                                            numbers = line.split(" ");
+                                            coordinates = new double[numbers.length];
+                                            for (int i = 0; i < numbers.length; i++) {
+                                                coordinates[i] = Double.parseDouble(numbers[i]);
+                                            }
+                                            pathVertices.add(new PathVertex(coordinates[2], coordinates[3], coordinates[0], coordinates[1]));
+                                        }
+
+                                        ArrayList<IndexPair> indexPairs = new ArrayList<>();
+                                        while ((line = in.readLine()) != null) {
+                                            numbers = line.split(" ");
+                                            indeces = new int[numbers.length];
+                                            for (int i = 0; i < numbers.length; i++) {
+                                                indeces[i] = Integer.parseInt(numbers[i]);
+                                            }
+                                            indexPairs.add(new IndexPair(indeces[0], indeces[1]));
+                                        }
+
+                                        SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> tempSWG = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+
+                                        for (PathVertex pv : pathVertices) {
+                                            tempSWG.addVertex(pv);
+                                        }
+                                        for (IndexPair ip : indexPairs) {
+                                            tempSWG.addEdge(pathVertices.get(ip.index1), pathVertices.get(ip.index2));
+                                        }
+                                        shortestPathRoadMap = new ShortestPathRoadMap(mapRepresentation, tempSWG);
+                                        Entity.initialise(shortestPathRoadMap.getMap(), shortestPathRoadMap);
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    ArrayList<ArrayList<Coordinate>> lineGuardInfo = null;
+                    if (parent != null) {
+                        File[] directory = parent.listFiles();
+                        if (directory != null) {
+                            for (File f : directory) {
+                                if (f.getName().startsWith(file.getName().substring(0, file.getName().length() - 4)) && f.getName().endsWith(".lgi")) {
+                                    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
+                                        lineGuardInfo = (ArrayList<ArrayList<Coordinate>>) ois.readObject();
+                                    } catch (IOException | ClassNotFoundException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    ArrayList<SquareGuardInfo> squareGuardInfo = null;
+                    if (parent != null) {
+                        File[] directory = parent.listFiles();
+                        if (directory != null) {
+                            for (File f : directory) {
+                                if (f.getName().startsWith(file.getName().substring(0, file.getName().length() - 4)) && f.getName().endsWith(".sgi")) {
+                                    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
+                                        squareGuardInfo = (ArrayList<SquareGuardInfo>) ois.readObject();
+                                    } catch (IOException | ClassNotFoundException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    ArrayList<ArrayList<Coordinate>> triangleGuardInfo = null;
+                    if (parent != null) {
+                        File[] directory = parent.listFiles();
+                        if (directory != null) {
+                            for (File f : directory) {
+                                if (f.getName().startsWith(file.getName().substring(0, file.getName().length() - 4)) && f.getName().endsWith(".tgi")) {
+                                    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
+                                        triangleGuardInfo = (ArrayList<ArrayList<Coordinate>>) ois.readObject();
+                                    } catch (IOException | ClassNotFoundException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    PartitioningEntityRequirements requirements = new PartitioningEntityRequirements();
+
+                    File logFile = new File(file.getParentFile().getAbsolutePath() +"/" + mapName + "_exp_" + curIndex + ".txt");
+                    try (PrintWriter out = new PrintWriter(new FileOutputStream(logFile, true))) {
+                        out.println("map name: " + mapName);
+                        out.println("pursuer type: " + selectPursuerBox.getValue());
+                        out.println("evader type: " + selectEvaderBox.getValue());
+                        out.println("number of runs: " + nrRuns);
+                        out.println();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    for (int simulationCount = 0; simulationCount < nrRuns; simulationCount++) {
+                        mapRepresentation.getEvadingEntities().clear();
+                        mapRepresentation.getPursuingEntities().clear();
+
+                        int index = (int) (Math.random() * mapRepresentation.getBorderLines().size());
+                        double xPos = mapRepresentation.getBorderLines().get(index).midPoint().x;
+                        double yPos = mapRepresentation.getBorderLines().get(index).midPoint().y;
+
+                        double maxX = 0, maxY = 0;
+                        PlannedPath tempPath, maxDistancePath = null;
+                        int maxDistance = -Integer.MAX_VALUE, tempDistance;
+                        for (LineSegment line : mapRepresentation.getAllLines()) {
+                            tempPath = shortestPathRoadMap.getShortestPath(line.midPoint().x, line.midPoint().y, xPos, yPos);
+                            if (tempPath != null) {
+                                tempDistance = tempPath.getPathVertices().size();
+                                if (tempDistance > maxDistance) {
+                                    maxDistance = tempDistance;
+                                    maxDistancePath = tempPath;
+                                    maxX = line.midPoint().x;
+                                    maxY = line.midPoint().y;
+                                }
+                            }
+                        }
+
+                        Coordinate c;
+                        c = mapRepresentation.getBorderLines().get(index).midPoint();
+                        Agent a;
+                        AgentSettings as;
+                        // create entity and place agents
+                        CentralisedEntity dcrsEntity = null;
+                        if (selectPursuerBox.getValue().equals("DCRVEntity")) {
+                            if (triangleGuardInfo == null) {
+                                dcrsEntity = new DCRVEntity(mapRepresentation, requirements, null);
+                            } else {
+                                dcrsEntity = new DCRVEntity(mapRepresentation, requirements, triangleGuardInfo);
+                            }
+                        } else if (selectPursuerBox.getValue().equals("DCRSEntity")) {
+                            if (squareGuardInfo == null) {
+                                dcrsEntity = new DCRSEntity(mapRepresentation, requirements, null);
+                            } else {
+                                dcrsEntity = new DCRSEntity(mapRepresentation, requirements, squareGuardInfo);
+                            }
+                        } else if (selectPursuerBox.getValue().equals("DCRLEntity")) {
+                            if (lineGuardInfo == null) {
+                                dcrsEntity = new DCRLEntity(mapRepresentation, requirements, null);
+                            } else {
+                                dcrsEntity = new DCRLEntity(mapRepresentation, requirements, lineGuardInfo);
+                            }
+                        }
+
+                        mapRepresentation.getPursuingEntities().add(dcrsEntity);
+                        for (int i = 0; i < dcrsEntity.totalRequiredAgents(); i++) {
+                            as = new AgentSettings();
+                            as.setXPos(c.x);
+                            as.setYPos(c.y);
+                            a = new Agent(as);
+                            dcrsEntity.addAgent(a);
+                        }
+
+                        DistributedEntity evaderEntity = null;
+                        if (selectEvaderBox.getValue().equals("Hiding")) {
+                            //evaderEntity = new StaticEntity(mapRepresentation);
+                        } else if (selectEvaderBox.getValue().equals("Straight line")) {
+                            evaderEntity = new StraightLineEntity(mapRepresentation);
+                        } else if (selectEvaderBox.getValue().equals("Random")) {
+                            evaderEntity = new RandomEntity(mapRepresentation);
+                        } else if (selectEvaderBox.getValue().equals("Static")) {
+                            evaderEntity = new StaticEntity(mapRepresentation);
+                        }
+                        c = new Coordinate(maxX, maxY);
+                        as = new AgentSettings();
+                        as.setXPos(c.x);
+                        as.setYPos(c.y);
+                        a = new Agent(as);
+                        evaderEntity.setAgent(a);
+                        mapRepresentation.getEvadingEntities().add(evaderEntity);
+
+                        DCRVStats stats1 = null;
+                        DCRSStats stats2 = null;
+                        DCRLStats stats3 = null;
+                        if (selectPursuerBox.getValue().equals("DCRVEntity")) {
+                            stats1 = new DCRVStats(1, dcrsEntity.totalRequiredAgents());
+                            for (int i = 0; i < dcrsEntity.getControlledAgents().size(); i++) {
+                                stats1.initPursuerPositions[i] = new Coordinate(dcrsEntity.getControlledAgents().get(i).getXPos(), dcrsEntity.getControlledAgents().get(i).getYPos());
+                            }
+                            stats1.initEvaderPositions[0] = new Coordinate(evaderEntity.getControlledAgents().get(0).getXPos(), evaderEntity.getControlledAgents().get(0).getYPos());
+                            ((DCRVEntity) dcrsEntity).trackStats(stats1);
+                        } else if (selectPursuerBox.getValue().equals("DCRSEntity")) {
+                            stats2 = new DCRSStats(1, dcrsEntity.totalRequiredAgents());
+                            for (int i = 0; i < dcrsEntity.getControlledAgents().size(); i++) {
+                                stats2.initPursuerPositions[i] = new Coordinate(dcrsEntity.getControlledAgents().get(i).getXPos(), dcrsEntity.getControlledAgents().get(i).getYPos());
+                            }
+                            stats2.initEvaderPositions[0] = new Coordinate(evaderEntity.getControlledAgents().get(0).getXPos(), evaderEntity.getControlledAgents().get(0).getYPos());
+                            ((DCRSEntity) dcrsEntity).trackStats(stats2);
+                        } else if (selectPursuerBox.getValue().equals("DCRLEntity")) {
+                            stats3 = new DCRLStats(1, dcrsEntity.totalRequiredAgents());
+                            for (int i = 0; i < dcrsEntity.getControlledAgents().size(); i++) {
+                                stats3.initPursuerPositions[i] = new Coordinate(dcrsEntity.getControlledAgents().get(i).getXPos(), dcrsEntity.getControlledAgents().get(i).getYPos());
+                            }
+                            stats3.initEvaderPositions[0] = new Coordinate(evaderEntity.getControlledAgents().get(0).getXPos(), evaderEntity.getControlledAgents().get(0).getYPos());
+                            ((DCRLEntity) dcrsEntity).trackStats(stats3);
+                        }
+
+                        boolean simulationOver = false;
+                        System.out.println("Start simulation");
+                        long before = System.currentTimeMillis();
+                        int counter = 0;
+                        while (!simulationOver && !interruptCurrentRun) {
+                            for (Entity entity : mapRepresentation.getEvadingEntities()) {
+                                if (entity.isActive()) {
+                                    entity.move();
+                                }
+                            }
+
+                            //System.out.println("wat-1: " + dcrsEntity.evaderCounter);
+                            for (Entity entity : mapRepresentation.getPursuingEntities()) {
+                                if (entity.isActive()) {
+                                    entity.move();
+                                }
+                            }
+
+                            simulationOver = true;
+                            for (Entity entity : mapRepresentation.getEvadingEntities()) {
+                                if (entity.isActive()) {
+                                    simulationOver = false;
+                                    break;
+                                }
+                            }
+                            System.out.print(".");
+                            counter++;
+                            if (counter % 100 == 0) {
+                                System.out.println();
+                            }
+                        }
+                        System.out.println("\nSimulation (" + simulationCount + ") took: " + (System.currentTimeMillis() - before) + " ms");
+                        if (!interruptCurrentRun) {
+                            try (PrintWriter out = new PrintWriter(new FileOutputStream(logFile, true))) {
+                                out.println("SIMULATION RUN " + simulationCount + ":");
+                                if (selectPursuerBox.getValue().equals("DCRVEntity")) {
+                                    out.println(stats1);
+                                } else if (selectPursuerBox.getValue().equals("DCRSEntity")) {
+                                    out.println(stats2);
+                                } else if (selectPursuerBox.getValue().equals("DCRLEntity")) {
+                                    out.println(stats3);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        System.out.println("\n\n\n");
+                        interruptCurrentRun = false;
+                    }
+                    Entity.reset();
+                }
+            }
+        });
 
         //leftLayout.getChildren().addAll(new Label(), new Label("Select pursuer: "), new Label("Select evader: "), new Label("Number evaders: "), new Label("Number runs: "), new Label("Hidden at start: "), new Label(), new Label());
-        layout.getChildren().addAll(testButton, selectPursuerBox, selectEvaderBox, nrEvadersInput, nrRunsInput, hiddenAtStartBox, sameInitPositions, selectMapButton, runButton);
+        layout.getChildren().addAll(testButton, selectPursuerBox, selectEvaderBox, nrRunsInput, selectMapButton, runButton);
 
         layout.add(new Label("Select pursuer: "), 0, 1);
         layout.add(new Label("Select evader: "), 0, 2);
-        layout.add(new Label("Number evaders: "), 0, 3);
-        layout.add(new Label("Number runs: "), 0, 4);
-        layout.add(new Label("Hidden at start: "), 0, 5);
-        layout.add(new Label("Same init positions: "), 0, 6);
+        layout.add(new Label("Number runs: "), 0, 3);
 
         GridPane.setConstraints(testButton, 1, 0);
         GridPane.setConstraints(selectPursuerBox, 1, 1);
-        GridPane.setConstraints(selectEvaderBox, 1, 2);
-        GridPane.setConstraints(nrEvadersInput, 1, 3);
-        GridPane.setConstraints(nrRunsInput, 1, 4);
-        GridPane.setConstraints(hiddenAtStartBox, 1, 5);
-        GridPane.setConstraints(sameInitPositions, 1, 6);
-        GridPane.setConstraints(selectMapButton, 1, 7);
-        GridPane.setConstraints(runButton, 1, 8);
-
-        runButton.setOnAction((e -> {
-            File file = new File("res/maps");
-            File[] directoryListing = file.listFiles();
-            if (directoryListing != null) {
-                for (File f : directoryListing) {
-                    if (f.getName().contains("searcher_catcher_test") && f.getName().contains(".mdo")) {
-                        System.out.println(f.getName());
-                    }
-                }
-            }
-
-            /*System.out.println(file.getAbsolutePath());
-            System.out.println(file.getParentFile().getAbsolutePath());
-            System.out.println(file);*/
-        }));
+        GridPane.setConstraints(nrEvadersInput, 1, 2);
+        GridPane.setConstraints(nrRunsInput, 1, 3);
+        GridPane.setConstraints(selectMapButton, 1, 4);
+        GridPane.setConstraints(runButton, 1, 5);
 
         Scene scene = new Scene(layout);
         primaryStage.setScene(scene);

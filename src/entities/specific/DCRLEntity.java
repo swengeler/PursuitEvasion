@@ -3,8 +3,7 @@ package entities.specific;
 import additionalOperations.*;
 import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
-import entities.base.Entity;
-import entities.base.PartitioningEntity;
+import entities.base.*;
 import entities.guarding.GuardManager;
 import entities.guarding.LineGuardManager;
 import entities.utils.*;
@@ -84,6 +83,7 @@ public class DCRLEntity extends PartitioningEntity {
             this.requirements = requirements;
             computeRequirements();
         }
+        stats = new DCRLStats();
     }
 
     public DCRLEntity(MapRepresentation map) {
@@ -92,6 +92,7 @@ public class DCRLEntity extends PartitioningEntity {
         catchGraphics = new Group();
         guardGraphics = new Group();
         Main.pane.getChildren().addAll(catchGraphics, guardGraphics);
+        stats = new DCRLStats();
     }
 
     @Override
@@ -121,6 +122,9 @@ public class DCRLEntity extends PartitioningEntity {
                 previousTargetPosition = new Coordinate(target.getXPos(), target.getYPos());
             }
             currentTargetPosition = new Coordinate(target.getXPos(), target.getYPos());
+        }
+        if (stats != null) {
+            stats.nrSteps[0]++;
         }
     }
 
@@ -224,6 +228,10 @@ public class DCRLEntity extends PartitioningEntity {
                 }
             }
 
+            if (stats != null) {
+                stats.nrStepsSearching[0]++;
+            }
+
             if (traversalHandler.getNodeIndex(searcher.getXPos(), searcher.getYPos()) == currentSearcherPath.getEndIndex()) {
                 // end of path reached, compute new path
                 try {
@@ -233,6 +241,9 @@ public class DCRLEntity extends PartitioningEntity {
                         AdaptedSimulation.masterPause("DCRVEntity");
                         ExperimentConfiguration.interruptCurrentRun();
                         return;
+                    }
+                    if (stats != null) {
+                        stats.nrLeafRunsBeforeFinding[0]++;
                     }
                 } catch (DelaunayError e) {
                     e.printStackTrace();
@@ -310,6 +321,10 @@ public class DCRLEntity extends PartitioningEntity {
             deltaX = (target.getXPos() - catcher.getXPos()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
             deltaY = (target.getYPos() - catcher.getYPos()) / length * catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER;
             if (length < catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
+                if (stats != null) {
+                    stats.caughtByCatcher[0] = true;
+                }
+
                 catcher.moveTo(target.getXPos(), target.getYPos());
                 target.setActive(false);
                 target = null;
@@ -323,12 +338,21 @@ public class DCRLEntity extends PartitioningEntity {
                 catcher.moveBy(deltaX, deltaY);
                 searcher.moveBy(deltaX, deltaY);
             }
+        } else if (stats != null) {
+            stats.ticksTillSearchStarted[0]++;
         }
     }
 
     private void followTarget() {
+        if (stats != null ) {
+            stats.nrStepsFollowing[0]++;
+        }
         length = Math.sqrt(Math.pow(target.getXPos() - catcher.getXPos(), 2) + Math.pow(target.getYPos() - catcher.getYPos(), 2));
         if (map.isVisible(target, catcher) && length <= catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
+            if (stats != null) {
+                stats.caughtByCatcher[0] = true;
+            }
+
             pseudoBlockingVertex = null;
             lastPointVisible = null;
             catcher.moveBy(target.getXPos() - catcher.getXPos(), target.getYPos() - catcher.getYPos());
@@ -386,6 +410,9 @@ public class DCRLEntity extends PartitioningEntity {
             }
         } else {
             if (pseudoBlockingVertex == null) {
+                if (stats != null) {
+                    stats.nrLostSight[0]++;
+                }
                 System.out.println("target around corner, calculate path to first vertex");
                 ShortestPathRoadMap.drawLines = true;
 
@@ -522,6 +549,10 @@ public class DCRLEntity extends PartitioningEntity {
     }
 
     private void findTarget() {
+        if (stats != null) {
+            stats.nrStepsFindingAgain[0]++;
+        }
+
         boolean visible = false;
         for (Agent g : guards) {
             if (map.isVisible(g, target)) {
@@ -530,6 +561,10 @@ public class DCRLEntity extends PartitioningEntity {
             }
         }
         if (map.isVisible(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos()) && Math.sqrt(Math.pow(target.getXPos() - catcher.getXPos(), 2) + Math.pow(target.getYPos() - catcher.getYPos(), 2)) <= catcher.getSpeed() * UNIVERSAL_SPEED_MULTIPLIER) {
+            if (stats != null) {
+                stats.caughtByCatcher[0] = true;
+            }
+
             pseudoBlockingVertex = null;
             lastPointVisible = null;
             catcher.moveBy(target.getXPos() - catcher.getXPos(), target.getYPos() - catcher.getYPos());
@@ -680,6 +715,13 @@ public class DCRLEntity extends PartitioningEntity {
         searcherPathLineCounter = 0;
         currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), searcher.getXPos(), searcher.getYPos());
         System.out.println("Time to assign DCRLEntity tasks: " + (System.currentTimeMillis() - before));
+
+        stats.init(1, requiredAgents);
+        for (int i = 0; i < getControlledAgents().size(); i++) {
+            stats.initPursuerPositions[i] = new Coordinate(getControlledAgents().get(i).getXPos(), getControlledAgents().get(i).getYPos());
+        }
+        stats.initEvaderPositions[0] = new Coordinate((map.getEvadingEntities().get(0)).getControlledAgents().get(0).getXPos(), map.getEvadingEntities().get(0).getControlledAgents().get(0).getYPos());
+        //stats.initEvaderPositions[1] = new Coordinate(randomEntity.getControlledAgents().get(0).getXPos(), randomEntity.getControlledAgents().get(0).getYPos());
     }
 
     @Override

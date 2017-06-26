@@ -28,6 +28,7 @@ import java.util.*;
 public abstract class MapGenerator extends Application {
 
     protected ArrayList<Polygon> mapPolygons = new ArrayList<>();
+    protected String mapName;
 
     protected Stage stage;
 
@@ -57,11 +58,10 @@ public abstract class MapGenerator extends Application {
         }
 
         if (directory != null && fileListing != null) {
-            System.out.println("Help");
             int max = -1, temp, curIndex;
             String tempString;
             for (File f : fileListing) {
-                if (f.getName().startsWith("experiment_map_") && f.getName().endsWith(".mdo")) {
+                if (f.getName().startsWith(mapName) && f.getName().endsWith(".mdo")) {
                     tempString = f.getName().substring(15, f.getName().length() - 4);
                     System.out.println(tempString);
                     temp = Integer.parseInt(tempString);
@@ -90,7 +90,7 @@ public abstract class MapGenerator extends Application {
             }
 
             // write map to file
-            File mapGeometryFile = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".mdo");
+            File mapGeometryFile = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".mdo");
             try (PrintWriter out = new PrintWriter(new FileOutputStream(mapGeometryFile))) {
                 for (int i = 0; i < mapPolygons.size(); i++) {
                     for (int j = 0; j < mapPolygons.get(i).getPoints().size(); j++) {
@@ -105,7 +105,7 @@ public abstract class MapGenerator extends Application {
             }
 
             // write shortest path map to file
-            File shortestPathMapFile = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".spm");
+            File shortestPathMapFile = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".spm");
             // write object to file
             try (PrintWriter out = new PrintWriter(new FileOutputStream(shortestPathMapFile))) {
                 SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph = sprm.getShortestPathGraph();
@@ -184,14 +184,14 @@ public abstract class MapGenerator extends Application {
             }
 
 
-            File squareGuardInfo = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".sgi");
+            File squareGuardInfo = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".sgi");
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(squareGuardInfo))) {
                 oos.writeObject(guardManagerInfo);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
 
-            File lineGuardInfo = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".lgi");
+            File lineGuardInfo = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".lgi");
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(lineGuardInfo))) {
                 oos.writeObject(originalPositionsDCRL);
                 System.out.println("originalPositionsDCRL.size(): " + originalPositionsDCRL.size());
@@ -199,7 +199,7 @@ public abstract class MapGenerator extends Application {
                 ex.printStackTrace();
             }
 
-            File triangleGuardInfo = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".tgi");
+            File triangleGuardInfo = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".tgi");
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(triangleGuardInfo))) {
                 oos.writeObject(originalPositionsDCRV);
                 System.out.println("originalPositionsDCRV.size(): " + originalPositionsDCRV.size());
@@ -209,7 +209,7 @@ public abstract class MapGenerator extends Application {
 
             // write shortest path map to file
             ShortestPathRoadMap sprmLR = new ShortestPathRoadMap(separatingLines, map);
-            File lineRestrictedShortestPathMapFile = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".lrs");
+            File lineRestrictedShortestPathMapFile = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".lrs");
             // write object to file
             try (PrintWriter out = new PrintWriter(new FileOutputStream(lineRestrictedShortestPathMapFile))) {
                 SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph = sprmLR.getShortestPathGraph();
@@ -244,7 +244,7 @@ public abstract class MapGenerator extends Application {
 
             // write shortest path map to file
             ShortestPathRoadMap sprmTR = new ShortestPathRoadMap(separatingLines, map);
-            File triangleRestrictedShortestPathMapFile = new File(directory.getAbsolutePath() + "/experiment_map_" + curIndex + ".trs");
+            File triangleRestrictedShortestPathMapFile = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".trs");
             // write object to file
             try (PrintWriter out = new PrintWriter(new FileOutputStream(triangleRestrictedShortestPathMapFile))) {
                 SimpleWeightedGraph<PathVertex, DefaultWeightedEdge> shortestPathGraph = sprmTR.getShortestPathGraph();
@@ -273,6 +273,17 @@ public abstract class MapGenerator extends Application {
                     out.println(ip.index1 + " " + ip.index2);
                     //System.out.println(ip.index1 + " " + ip.index2);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            File infoFile = new File(directory.getAbsolutePath() + "/" + mapName + curIndex + ".info");
+            try (PrintWriter out = new PrintWriter(new FileOutputStream(infoFile))) {
+                out.print("map name: " + mapName);
+                out.print("vertices: " + vertices.size());
+                out.print("reflex vertices: " + reflexVertices.size());
+                out.print("holes: " + holes.size());
+                out.print("area: " + map.getPolygon().getArea());
             } catch (IOException e) {
                 e.printStackTrace();
             }
