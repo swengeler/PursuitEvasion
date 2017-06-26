@@ -19,4 +19,9 @@ public class PathLine extends Line {
         return lineSegment.distance(new Coordinate(x, y)) < GeometryOperations.PRECISION_EPSILON;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof PathLine && ((PathLine) o).getStartX() == getStartX() && ((PathLine) o).getStartY() == getStartY() && ((PathLine) o).getEndX() == getEndX() && ((PathLine) o).getEndY() == getEndY();
+    }
+
 }

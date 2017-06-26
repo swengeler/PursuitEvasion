@@ -10,8 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.*;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
+import javafx.stage.*;
 import maps.MapRepresentation;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -29,6 +28,7 @@ public class ExperimentConfiguration extends Application {
 
     private MapRepresentation map;
     private List<File> selectedFiles;
+    private File directory;
     private String pursuerType;
     private String evaderType;
     private int nrRuns;
@@ -421,6 +421,13 @@ public class ExperimentConfiguration extends Application {
             selectedFiles = fileChooser.showOpenMultipleDialog(primaryStage);
         });
 
+        Button selectOutputFolderButton = new Button("Select output folder");
+        selectOutputFolderButton.setOnAction(e -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Select maps to use");
+            directory = directoryChooser.showDialog(primaryStage);
+        });
+
         ComboBox<String> selectPursuerBox = new ComboBox<>();
         selectPursuerBox.getItems().addAll("DCRVEntity", "DCRLEntity", "DCRSEntity");
         selectPursuerBox.valueProperty().addListener((ov, oldValue, newValue) -> {
@@ -472,13 +479,15 @@ public class ExperimentConfiguration extends Application {
                     MapRepresentation mapRepresentation = loadMap(file);
 
                     File parent = file.getParentFile();
+                    //File parent = directory;
                     ShortestPathRoadMap shortestPathRoadMap = null, lineRestrictedShortestPathRoadMap = null, triangleRestrictedShortestPathRoadMap = null;
                     int max = -1, temp, curIndex = 0;
                     if (parent != null) {
                         File[] directory = parent.listFiles();
-                        if (directory != null) {
+                        File[] targetDirectory = this.directory.listFiles();
+                        if (directory != null && targetDirectory != null) {
                             String tempString;
-                            for (File f : directory) {
+                            for (File f : targetDirectory) {
                                 if (f.getName().startsWith(mapName) && f.getName().endsWith(".txt")) {
                                     tempString = f.getName().substring(f.getName().lastIndexOf("_") + 1, f.getName().length() - 4);
                                     System.out.println(tempString);
@@ -663,7 +672,7 @@ public class ExperimentConfiguration extends Application {
 
                     PartitioningEntityRequirements requirements = new PartitioningEntityRequirements();
 
-                    File logFile = new File(file.getParentFile().getAbsolutePath() +"/" + mapName + "_exp_" + curIndex + ".txt");
+                    File logFile = new File(this.directory.getAbsolutePath() +"/" + mapName + "_exp_" + curIndex + ".txt");
                     try (PrintWriter out = new PrintWriter(new FileOutputStream(logFile, true))) {
                         out.println("map name: " + mapName);
                         out.println("pursuer type: " + selectPursuerBox.getValue());
@@ -781,7 +790,7 @@ public class ExperimentConfiguration extends Application {
                         System.out.println("Start simulation");
                         long before = System.currentTimeMillis();
                         int counter = 0;
-                        try {
+                        //try {
                             while (!simulationOver && !interruptCurrentRun) {
                                 for (Entity entity : mapRepresentation.getEvadingEntities()) {
                                     if (entity.isActive()) {
@@ -809,9 +818,10 @@ public class ExperimentConfiguration extends Application {
                                     System.out.println();
                                 }
                             }
-                        } catch (Error | Exception e) {
-                            interruptCurrentRun();
-                        }
+                        /*} catch (Error | Exception e) {
+                            //interruptCurrentRun();
+                            e.printStackTrace();
+                        }*/
                         System.out.println("\nSimulation (" + simulationCount + ") took: " + (System.currentTimeMillis() - before) + " ms");
                         if (!interruptCurrentRun) {
                             try (PrintWriter out = new PrintWriter(new FileOutputStream(logFile, true))) {
@@ -836,7 +846,7 @@ public class ExperimentConfiguration extends Application {
         });
 
         //leftLayout.getChildren().addAll(new Label(), new Label("Select pursuer: "), new Label("Select evader: "), new Label("Number evaders: "), new Label("Number runs: "), new Label("Hidden at start: "), new Label(), new Label());
-        layout.getChildren().addAll(testButton, selectPursuerBox, selectEvaderBox, nrRunsInput, selectMapButton, runButton);
+        layout.getChildren().addAll(testButton, selectPursuerBox, selectEvaderBox, nrRunsInput, selectMapButton, selectOutputFolderButton, runButton);
 
         layout.add(new Label("Select pursuer: "), 0, 1);
         layout.add(new Label("Select evader: "), 0, 2);
@@ -847,7 +857,8 @@ public class ExperimentConfiguration extends Application {
         GridPane.setConstraints(nrEvadersInput, 1, 2);
         GridPane.setConstraints(nrRunsInput, 1, 3);
         GridPane.setConstraints(selectMapButton, 1, 4);
-        GridPane.setConstraints(runButton, 1, 5);
+        GridPane.setConstraints(selectOutputFolderButton, 1, 5);
+        GridPane.setConstraints(runButton, 1, 6);
 
         Scene scene = new Scene(layout);
         primaryStage.setScene(scene);

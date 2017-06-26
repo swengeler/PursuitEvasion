@@ -69,7 +69,7 @@ public class PlannedPath {
         return pathLines.get(index);
     }
 
-    public Line getFirstPathLine() {
+    public PathLine getFirstPathLine() {
         return pathLines.get(0);
     }
 

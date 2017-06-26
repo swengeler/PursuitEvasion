@@ -860,16 +860,19 @@ public class DCRSEntity extends PartitioningEntity {
                 for (Line line : componentBoundaryLines.get(componentIndex)) {
                     if (!separatingLines.contains(line) || testExcludedLines.contains(line) || !(((SquareGuardManager) guardManagers.get(separatingLines.indexOf(line))).inGuardedSquare(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY()))) {
                         currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
-                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared) {
-                            minLengthSquared = currentLengthSquared;
-                            pocketBoundaryEndPoint = currentPoint;
-                            intersectedLine = line;
-                            //Main.pane.getChildren().add(new Circle(currentPoint.getX(), currentPoint.getY(), 5, Color.DARKGRAY));
-                            //found = true;
-                            //break;
-                        }/* else if (currentPoint != null) {
-                                    Main.pane.getChildren().add(new Circle(currentPoint.getEstX(), currentPoint.getEstY(), 2, Color.BLACK));
-                                }*/
+                        if (currentPoint != null && !(currentPoint.getX() == pseudoBlockingVertex.getX() && currentPoint.getY() == pseudoBlockingVertex.getY())) {
+                            if ((currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared) {
+                                minLengthSquared = currentLengthSquared;
+                                pocketBoundaryEndPoint = currentPoint;
+                                intersectedLine = line;
+                                //Main.pane.getChildren().add(new Circle(currentPoint.getX(), currentPoint.getY(), 5, Color.DARKGRAY));
+                                //found = true;
+                                //break;
+                            }/* else if (currentPoint != null) {
+                                        Main.pane.getChildren().add(new Circle(currentPoint.getEstX(), currentPoint.getEstY(), 2, Color.BLACK));
+                                    }*/
+
+                        }
                     }
                 }
 
@@ -1040,10 +1043,12 @@ public class DCRSEntity extends PartitioningEntity {
                     }
                     if (!ignored) {
                         currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
-                        if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
-                            minLengthSquared = currentLengthSquared;
-                            pocketBoundaryEndPoint = currentPoint;
-                            intersectedLine = line;
+                        if (currentPoint != null && !(currentPoint.getX() == pseudoBlockingVertex.getX() && currentPoint.getY() == pseudoBlockingVertex.getY())) {
+                            if ((currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
+                                minLengthSquared = currentLengthSquared;
+                                pocketBoundaryEndPoint = currentPoint;
+                                intersectedLine = line;
+                            }
                         }
                     }
                 }

@@ -420,7 +420,16 @@ public class DCRLEntity extends PartitioningEntity {
                 //PlannedPath temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(target.getXPos(), target.getYPos(), catcher.getXPos(), catcher.getYPos());
                 PlannedPath temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(catcher.getXPos(), catcher.getYPos(), target.getXPos(), target.getYPos());
 
-                pseudoBlockingVertex = new Point2D(temp.getPathVertex(1).getEstX(), temp.getPathVertex(1).getEstY());
+                PathLine l1 = temp.getFirstPathLine();
+                PathLine l2 = temp.getPathLine(1);
+                int counter = 1;
+                while (l1.equals(l2)) {
+                    counter++;
+                    l2 = temp.getPathLine(counter);
+                }
+
+                System.out.println("plannedpath: " + temp);
+                pseudoBlockingVertex = new Point2D(temp.getPathVertex(counter).getEstX(), temp.getPathVertex(counter).getEstY());
                 lastPointVisible = new Point2D(catcher.getXPos(), catcher.getYPos());
                 pocketCounterClockwise = GeometryOperations.leftTurnPredicate(lastPointVisible.getX(), -lastPointVisible.getY(), pseudoBlockingVertex.getX(), -pseudoBlockingVertex.getY(), target.getXPos(), -target.getYPos());
 
@@ -508,10 +517,12 @@ public class DCRLEntity extends PartitioningEntity {
                 Line intersectedLine = null;
                 for (Line line : componentBoundaryLines.get(componentIndex)) {
                     currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
-                    if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared) {
-                        minLengthSquared = currentLengthSquared;
-                        pocketBoundaryEndPoint = currentPoint;
-                        intersectedLine = line;
+                    if (currentPoint != null) {
+                        if ((currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared) {
+                            minLengthSquared = currentLengthSquared;
+                            pocketBoundaryEndPoint = currentPoint;
+                            intersectedLine = line;
+                        }
                     }
                 }
 
@@ -527,8 +538,15 @@ public class DCRLEntity extends PartitioningEntity {
 
                     // find the new "pocket component"
                     //System.out.printf("Catcher at (%f|%f)\nReal at (%f|%f)\nFake at (%f|%f)\n", catcher.getXPos(), catcher.getYPos(), currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY(), currentCatcherPath.getLastPathVertex().getEstX(), currentCatcherPath.getLastPathVertex().getEstY());
-                    Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
-                    traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond(), map, separatingLines.contains(intersectedLine) ? intersectedLine : null);
+                    if (!(pocketBoundaryEndPoint.getX() == pseudoBlockingVertex.getX() && pocketBoundaryEndPoint.getY() == pseudoBlockingVertex.getY())) {
+                        Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, currentCatcherPath.getLastPathVertex().getRealX(), currentCatcherPath.getLastPathVertex().getRealY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
+                        traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond(), map, separatingLines.contains(intersectedLine) ? intersectedLine : null);
+                    } else {
+                        System.err.println("catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
+                        System.err.println("target: " + target.getXPos() + ", " + target.getYPos());
+                        System.err.println("pseudoBlockingVertex: " + pseudoBlockingVertex.getX() + ", " + pseudoBlockingVertex.getY());
+                        System.err.println("intersectedLine: " + intersectedLine + " (" + separatingLines.contains(intersectedLine) + ")");
+                    }
 
                     try {
                         currentSearcherPath = traversalHandler.getRandomTraversal(searcher.getXPos(), searcher.getYPos());
@@ -648,17 +666,27 @@ public class DCRLEntity extends PartitioningEntity {
                 boolean ignored;
                 for (Line line : componentBoundaryLines.get(componentIndex)) {
                     currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
-                    if (currentPoint != null && (currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
-                        minLengthSquared = currentLengthSquared;
-                        pocketBoundaryEndPoint = currentPoint;
-                        intersectedLine = line;
+                    if (currentPoint != null) {
+                        if ((currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
+                            minLengthSquared = currentLengthSquared;
+                            pocketBoundaryEndPoint = currentPoint;
+                            intersectedLine = line;
+                        }
                     }
                 }
                 Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
                 catchGraphics.getChildren().add(boundaryLine);
                 catchGraphics.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 6, Color.BLACK));
-                Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
-                traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond(), map, separatingLines.contains(intersectedLine) ? intersectedLine : null);
+
+                if (!(pocketBoundaryEndPoint.getX() == pseudoBlockingVertex.getX() && pocketBoundaryEndPoint.getY() == pseudoBlockingVertex.getY())) {
+                    Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
+                    traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond(), map, separatingLines.contains(intersectedLine) ? intersectedLine : null);
+                } else {
+                    System.err.println("catcher: " + catcher.getXPos() + ", " + catcher.getYPos());
+                    System.err.println("target: " + target.getXPos() + ", " + target.getYPos());
+                    System.err.println("pseudoBlockingVertex: " + pseudoBlockingVertex.getX() + ", " + pseudoBlockingVertex.getY());
+                    System.err.println("intersectedLine: " + intersectedLine + " (" + separatingLines.contains(intersectedLine) + ")");
+                }
 
                 Label l = new Label("v");
                 l.setTranslateX(pseudoBlockingVertex.getX() + 5);
@@ -1318,6 +1346,12 @@ public class DCRLEntity extends PartitioningEntity {
         try {
             approxPosition = new DPoint(pseudoBlockingVertX + deltaX, pseudoBlockingVertY + deltaY, 0);
         } catch (DelaunayError e) {
+            System.err.println("pseudoBlockingVertX + deltaX: " + (pseudoBlockingVertX + deltaX));
+            System.err.println("pseudoBlockingVertX: " + pseudoBlockingVertX + ", deltaX: " + deltaX);
+            System.err.println("boundaryLine.getStartX(): " + boundaryLine.getStartX() + ", boundaryLine.getEndX(): " + boundaryLine.getEndX());
+            System.err.println("pseudoBlockingVertY + deltaY: " + (pseudoBlockingVertY + deltaY));
+            System.err.println("pseudoBlockingVertX: " + pseudoBlockingVertY + ", deltaX: " + deltaY);
+            System.err.println("boundaryLine.getStartY(): " + boundaryLine.getStartY() + ", boundaryLine.getEndY(): " + boundaryLine.getEndY());
             e.printStackTrace();
         }
 
