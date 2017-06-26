@@ -2,8 +2,6 @@
   <library name="Maven: com.vividsolutions:jts-core:1.14.0">
     <CLASSES>
       <root url="jar://$MAVEN_REPOSITORY$/com/vividsolutions/jts-core/1.14.0/jts-core-1.14.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/res/lib/antlr-3.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/res/lib/antlr-runtime-3.2.jar!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$MAVEN_REPOSITORY$/com/vividsolutions/jts-core/1.14.0/jts-core-1.14.0-javadoc.jar!/" />

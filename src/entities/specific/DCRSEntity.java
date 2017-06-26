@@ -87,12 +87,14 @@ public class DCRSEntity extends PartitioningEntity {
             componentBoundaryShapes = requirements.componentBoundaryShapes;
             separatingEdges = requirements.separatingEdges;
             separatingLines = requirements.separatingLines;
+            testExcludedLines.addAll(separatingLines);
             traversalHandler = requirements.traversalHandler;
             traversalHandler.removeRestriction();
             guardManagers = new ArrayList<>();
             for (GuardManager gm : requirements.guardManagers) {
                 guardManagers.add(new SquareGuardManager(((SquareGuardManager) gm).getOriginalGuardingLine(), ((SquareGuardManager) gm).getGuardedSquare(), ((SquareGuardManager) gm).getSquareSides(), ((SquareGuardManager) gm).getEntranceToGuarded(), ((SquareGuardManager) gm).getGuardedToSegments()));
             }
+            gSqrIntersectingTriangles = computeGuardingSquareIntersection(guardManagers, traversalHandler.getTriangles());
         } else {
             this.requirements = requirements;
             computeRequirements();
