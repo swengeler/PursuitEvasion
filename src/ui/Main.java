@@ -603,7 +603,7 @@ public class Main extends Application {
                     }
                     */
 
-
+                    /*
                     for (WayPoint wayPP : pursuitPath.getWayPoints()) {
                         for (WayPoint wayPPP : wayPP.getConnected()) {
                             Line line = new Line(wayPP.getX(), wayPP.getY(), wayPPP.getX(), wayPPP.getY());
@@ -614,6 +614,7 @@ public class Main extends Application {
                             pane.getChildren().add(line);
                         }
                     }
+                    */
 
 
                     for (int i = 0; i < wayP.size(); i++) {
@@ -638,6 +639,25 @@ public class Main extends Application {
                             c.setFill(Color.BLUE);
                             pane.getChildren().add(c);
                         }
+                    }
+
+                    for(int i = pursuitPath.getPath().size()-1; i > 0; --i)   {
+                        for(int j = 0; j < pursuitPath.getPath().get(i).size(); j++)    {
+                            Line line = new Line(pursuitPath.getPath().get(i).get(j).getX(), pursuitPath.getPath().get(i).get(j).getY(), pursuitPath.getPath().get(i-1).get(j).getX(), pursuitPath.getPath().get(i-1).get(j).getY());
+                            line.setFill(Color.GREEN);
+                            line.setStroke(Color.GREEN);
+                            line.setStrokeWidth(0.5);
+                            line.setStrokeLineCap(StrokeLineCap.ROUND);
+                            pane.getChildren().add(line);
+                        }
+                    }
+                    for(int j = 0; j < pursuitPath.getPath().get(pursuitPath.getPath().size()-1).size(); j++) {
+                        Line line = new Line(pursuitPath.getPath().get(pursuitPath.getPath().size()-1).get(j).getX(), pursuitPath.getPath().get(pursuitPath.getPath().size()-1).get(j).getY(), visualAgents.get(j).getCenterX(), visualAgents.get(j).getCenterY());
+                        line.setFill(Color.GREEN);
+                        line.setStroke(Color.GREEN);
+                        line.setStrokeWidth(0.5);
+                        line.setStrokeLineCap(StrokeLineCap.ROUND);
+                        pane.getChildren().add(line);
                     }
 
                     for (Polygon p : new ShadowGraph(map, pursuitPath.getPath().get(0), true).getShadows()) {
