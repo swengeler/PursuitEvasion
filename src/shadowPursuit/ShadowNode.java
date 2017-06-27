@@ -3,6 +3,8 @@ package shadowPursuit;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 
+import static shadowPursuit.shadowOperations.distance;
+
 /**
  * Created by Robins on 30.04.2017.
  */
@@ -109,7 +111,7 @@ public class ShadowNode {
         type2Creating=Type2;
         type = type3;
 
-        System.out.println(this);
+        //System.out.println(this);
 
 
         this.occLine = Ray;
@@ -125,6 +127,8 @@ public class ShadowNode {
 
         this.occLine = Ray;
         //todo continue here
+
+
         if (Type2.getLeft() == null) {
             this.right = Type2;
             this.left = null;
@@ -141,21 +145,7 @@ public class ShadowNode {
 
     }
 
-    //For Type3
-    public ShadowNode(Point2D position, ShadowNode left, ShadowNode right, Line Ray, Point2D agent) {
 
-        //System.out.println("ENTTEREDED");
-        this.position = position;
-        this.left = left;
-        this.right = right;
-
-        this.neighbourLeftAgent = agent;
-        type = type3;
-
-        //System.out.println(this);
-
-        this.occLine = Ray;
-    }
 
 
     //For Type4
@@ -199,16 +189,126 @@ public class ShadowNode {
             this.right = type2Neighbor2;
             this.neighbourRightAgent = agent2;
             this.neighbourLeftAgent = agent1;
-        } else if (type2Neighbor1.getRight().getType() == 3 && type2Neighbor2.getLeft().getType() == 3) {
+        }
+        else if ((type2Neighbor1.getRight() == null && type2Neighbor2.getRight() == null) && (type2Neighbor1.getLeft() != null && type2Neighbor2.getLeft() != null)) {
+            this.left =  type2Neighbor2;
+            type2Neighbor2.right = this;
+
+            this.right =  type2Neighbor1;
+            type2Neighbor1.left = this;
+
+        }
+        else if ((type2Neighbor1.getLeft() == null && type2Neighbor2.getLeft() == null) && (type2Neighbor1.getRight() != null && type2Neighbor2.getRight() != null)) {
+            this.right =  type2Neighbor2;
+            type2Neighbor2.left = this;
+
+            this.left =  type2Neighbor1;
+            type2Neighbor1.right = this;
+
+        }else if(type2Neighbor1.getLeft() == null && type2Neighbor2.getRight().getType() == 3){
+            this.right = type2Neighbor1;
+            this.left = type2Neighbor2;
+            this.neighbourLeftAgent = agent2;
+            this.neighbourRightAgent = agent1;
+        }else if(type2Neighbor1.getRight() != null && type2Neighbor1.getRight().getType() == 3 && type2Neighbor2.getLeft() == null){
+            this.left = type2Neighbor1;
+            this.right = type2Neighbor2;
+            this.neighbourRightAgent = agent2;
+            this.neighbourLeftAgent = agent1;
+        }
+        else if(type2Neighbor1.getLeft() != null &&type2Neighbor1.getLeft().getType() == 3 && type2Neighbor2.getRight().getType() == 3) {
+            this.right = type2Neighbor1;
+            this.left = type2Neighbor2;
+            this.neighbourLeftAgent = agent2;
+            this.neighbourRightAgent = agent1;
+        } else if(type2Neighbor1.getRight() != null && type2Neighbor1.getRight().getType() == 3 && type2Neighbor1.getLeft() != null &&type2Neighbor2.getLeft().getType() == 3) {
             this.left = type2Neighbor1;
             this.right = type2Neighbor2;
             this.neighbourRightAgent = agent2;
             this.neighbourLeftAgent = agent1;
         } else {
 
-            System.out.println("First Neighbor => " + type2Neighbor1);
-            System.out.println("Second Neighbor => " + type2Neighbor2);
-            System.exit(67666);
+            if(type2Neighbor1.getRight() != null && type2Neighbor1.getRight().getType() == 4)   {
+                ShadowNode t4 = type2Neighbor1.getRight();
+                if(t4.getLeft() == type2Neighbor2)  {
+                    if((distance(t4.getPosition(), t4.getLeft().getPosition()) >= distance(position, type2Neighbor2.getPosition())
+                            && (distance(t4.getPosition(), t4.getRight().getPosition())) >= distance(position, type2Neighbor1.getPosition())))    {
+                        left = t4.getLeft();
+                        t4.getLeft().right = this;
+
+                        right = t4.getRight();
+                        t4.getRight().left = this;
+                    }
+                }
+                else {
+                    //System.exit(661);
+                }
+            }
+            else if(type2Neighbor1.getLeft() != null && type2Neighbor1.getLeft().getType() == 4) {
+                ShadowNode t4 = type2Neighbor1.getLeft();
+                if (t4.getRight() == type2Neighbor2) {
+                    if ((distance(t4.getPosition(), t4.getRight().getPosition()) >= distance(position, type2Neighbor2.getPosition())
+                            && (distance(t4.getPosition(), t4.getLeft().getPosition())) >= distance(position, type2Neighbor1.getPosition()))) {
+                        left = t4.getLeft();
+                        t4.getLeft().right = this;
+
+                        right = t4.getRight();
+                        t4.getRight().left = this;
+                    }
+                } else {
+                    //System.exit(662);
+                }
+            }
+            else if(type2Neighbor2.getRight() != null && type2Neighbor2.getRight().getType() == 4)   {
+                ShadowNode t4 = type2Neighbor1.getRight();
+                if(t4.getLeft() == type2Neighbor1)  {
+                    if((distance(t4.getPosition(), t4.getLeft().getPosition()) >= distance(position, type2Neighbor1.getPosition())
+                            && (distance(t4.getPosition(), t4.getRight().getPosition())) >= distance(position, type2Neighbor2.getPosition())))    {
+                        left = t4.getLeft();
+                        t4.getLeft().right = this;
+
+                        right = t4.getRight();
+                        t4.getRight().left = this;
+                    }
+                }
+                else {
+                    //System.exit(663);
+                }
+            }
+            else if(type2Neighbor2.getLeft() != null && type2Neighbor2.getLeft().getType() == 4) {
+                ShadowNode t4 = type2Neighbor1.getLeft();
+                if (t4.getRight() == type2Neighbor1) {
+                    if ((distance(t4.getPosition(), t4.getRight().getPosition()) >= distance(position, type2Neighbor1.getPosition())
+                            && (distance(t4.getPosition(), t4.getLeft().getPosition())) >= distance(position, type2Neighbor2.getPosition()))) {
+                        left = t4.getLeft();
+                        t4.getLeft().right = this;
+
+                        right = t4.getRight();
+                        t4.getRight().left = this;
+                    }
+                } else {
+                    //System.exit(664);
+                }
+            }
+            else {
+                //System.out.println("First Neighbor => " + type2Neighbor1);
+                if (type2Neighbor1.getLeft() != null) {
+                   // System.out.println("\tFirst Neighbor on the left=> " + type2Neighbor1.getLeft());
+                }
+                if (type2Neighbor1.getRight() != null) {
+                    //System.out.println("\tFirst Neighbor on the right=> " + type2Neighbor1.getRight());
+                }
+
+                //System.out.println("\nSecond Neighbor => " + type2Neighbor2);
+                if (type2Neighbor2.getLeft() != null) {
+                    //System.out.println("\tSecond Neighbor on the left=> " + type2Neighbor2.getLeft());
+                }
+                if (type2Neighbor2.getRight() != null) {
+                    //System.out.println("\tSecond Neighbor on the right=> " + type2Neighbor2.getRight());
+                }
+
+                System.exit(67666);
+            }
         }
 
         type = type4;
@@ -237,7 +337,7 @@ public class ShadowNode {
 
 
     public void connect(ShadowNode next) {
-        System.out.println("Connnecting " + this + "\nAND " + next);
+        //System.out.println("Connnecting " + this + "\nAND " + next);
 
 
         if (this.getLeft() != null && this.getLeft() != next && this.getRight() == null) {
@@ -254,8 +354,8 @@ public class ShadowNode {
             next.right = this;
             left = next;
         }
-        System.out.println("AFTER CONNECT\n " + this + "\nAND " + next);
-        System.out.println();
+        //System.out.println("AFTER CONNECT\n " + this + "\nAND " + next);
+        //System.out.println();
     }
 
 
@@ -292,7 +392,7 @@ public class ShadowNode {
             }
         } else {
             System.out.println("stop cheating");
-            System.exit(9999);
+            System.exit(9991);
         }
     }
 
@@ -403,13 +503,14 @@ public class ShadowNode {
 
     //For Type3
     public void overwriteConnectedType2(ShadowNode toCopy) {
-        //System.out.println("PROBLEM FOR =>\n" + this);
+        /*
+        System.out.println("PROBLEM FOR =>\n" + this);
         System.out.println("\n----BEFORE----");
         System.out.println("THIS T3 => " + this);
         System.out.println("To copy => " + toCopy);
         System.out.println("----------------\n");
 
-
+           */
         if (getLeft() != null && getLeft().getType() == 2) {
             this.left.right = null;
             if (toCopy.getLeft() == this.getLeft()) {
@@ -426,15 +527,22 @@ public class ShadowNode {
                 toCopy.left = this;
             }
             this.right = toCopy;
-
         }
         else {
+            /*
             System.out.println("\n----PROBLEM ANALYSIS----");
             System.out.println("THIS T3 => " + this);
             System.out.println("To copy => " + toCopy);
+            if (getLeft() != null) {
+                System.out.println("LEFT: " + getLeft());
+            }
+            if (getRight() != null) {
+                System.out.println("Right: " + getRight());
+            }
             System.out.println("------------------------\n");
-
-            System.exit(343);
+            */
+            //TODO Check if fuck up
+            //System.exit(343);
         }
 
     }
@@ -469,7 +577,7 @@ public class ShadowNode {
             if (this.getLeft() != null && this.getLeft().getType() == 2) {
                 this.getLeft().right = this;
             } else if (this.getRight() != null && this.getRight().getType() == 2) {
-                System.out.println("!!!!");
+                //System.out.println("!!!!");
                 this.getRight().left = this;
             }
         } else if (this.getType() == 4) {
@@ -480,6 +588,6 @@ public class ShadowNode {
                 this.getRight().left = this;
             }
         }
-        System.out.println("BITCH = " + this);
+        //System.out.println("BITCH = " + this);
     }
 }

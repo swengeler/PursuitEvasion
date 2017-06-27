@@ -342,12 +342,12 @@ public class MapRepresentation {
             System.out.println("difference is empty: " + difference.isEmpty());
             for (Coordinate c : difference.getCoordinates()) {
                 Main.pane.getChildren().add(new Circle(c.x, c.y, 2, Color.LAWNGREEN));
-                System.out.println(c);
+               // System.out.println(c);
             }
             System.out.println("Intersection between vision line and boundary: (" + !intersection.isEmpty() + ")");
             for (Coordinate c : intersection.getCoordinates()) {
                 Main.pane.getChildren().add(new Circle(c.x, c.y, 2, Color.INDIANRED));
-                System.out.println(c);
+               // System.out.println(c);
             }
         }
         /*if (!legalPosition(tempLine.getCoordinates()[0]) || !legalPosition(tempLine.getCoordinates()[1])) {

@@ -58,6 +58,8 @@ public class shadowOperations {
         //System.out.println(agents);
 
 
+
+
         ArrayList<Point2D> vis = new ArrayList<>();
         if (obstacles.size() > 0 && obstacles != null) {
             for (Polygon poly : obstacles) {
@@ -107,7 +109,7 @@ public class shadowOperations {
                     }
                     if (x2 == 658 && y2 == 257) {
                         Point2D tmp = new Point2D(658, 257);
-                        System.out.println("VISIBLE for " + tmp + " ????? -> " + visib);
+                        //System.out.println("VISIBLE for " + tmp + " ????? -> " + visib);
                     }
                     if (visib == true) {
                         //System.out.println("Removed = " + all.get(i));
@@ -117,7 +119,7 @@ public class shadowOperations {
                 }
                 i++;
             }
-            System.out.println();
+            //System.out.println();
 
         }
 
@@ -502,7 +504,7 @@ public class shadowOperations {
                     right = polygon.get(0);
 
                 } else {
-                    System.out.println("you're a fucking retard");
+                    //System.out.println("you're a fucking retard");
                     left = polygon.get(j - 1);
                     right = polygon.get(0);
                 }
@@ -851,6 +853,30 @@ public class shadowOperations {
         return (ax - cx) * (by - cy) - (ay - cy) * (bx - cx);
     }
 
+
+    public static boolean polygonContain(Polygon main, Polygon toTest) {
+        ArrayList<Point2D> points1 = polyToPoints(toTest);
+        ArrayList<Point2D> points2= polyToPoints(main);
+
+        for(Point2D p : points1) {
+            if(points2.contains(p))    {
+                /*
+                System.out.println("Polygon main");
+                for(Point2D p2 : points2)   {
+                    System.out.println(p2);
+                }
+                System.out.println("contaions => " + p);
+                */
+
+                return true;
+            }
+          //  System.out.println("Does not contain" + p);
+        }
+
+        return false;
+    }
+
+
     public static double GetLineYIntesept(Point2D p, double slope) {
 
         return p.getY() - slope * p.getX();
@@ -868,6 +894,15 @@ public class shadowOperations {
             slope1 = Double.MAX_VALUE;
             System.out.println("first fuck up");
             double xvalue = line1.getEndX();
+            if((line2.getStartX()<= xvalue && line2.getEndX()>=xvalue)){
+
+
+                scaleRay(new Point2D(line2.getStartX(),line2.getStartY()), new Point2D(line2.getEndX(),line2.getEndY()),(xvalue-line2.getStartX())/(line2.getEndX()-line2.getStartX())).getEndY();
+            }else if((line2.getStartX()>= xvalue && line2.getEndX()<=xvalue)) {
+                scaleRay(new Point2D(line2.getStartX(),line2.getStartY()), new Point2D(line2.getEndX(),line2.getEndY()),(xvalue-line2.getEndX())/(line2.getStartX()-line2.getEndY())).getEndY();
+
+            }else
+                return null;
 
 
         } else {
@@ -878,6 +913,17 @@ public class shadowOperations {
         if (l2x == 0) {
             slope2 = Double.MAX_VALUE;
             System.out.println("second fuck up");
+            double xvalue = line2.getEndX();
+            if((line1.getStartX()<= xvalue && line1.getEndX()>=xvalue)){
+
+
+                scaleRay(new Point2D(line1.getStartX(),line1.getStartY()), new Point2D(line1.getEndX(),line1.getEndY()),(xvalue-line1.getStartX())/(line1.getEndX()-line1.getStartX())).getEndY();
+            }else if((line1.getStartX()>= xvalue && line1.getEndX()<=xvalue)) {
+                scaleRay(new Point2D(line1.getStartX(),line1.getStartY()), new Point2D(line1.getEndX(),line1.getEndY()),(xvalue-line1.getEndX())/(line1.getStartX()-line1.getEndY())).getEndY();
+
+            }else
+                return null;
+
         } else {
             slope2 = (line2.getEndY() - line2.getStartY()) / l2x;
         }

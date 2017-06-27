@@ -32,6 +32,7 @@ import org.jdelaunay.delaunay.ConstrainedMesh;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
 import shadowPursuit.PursuitTree;
+import shadowPursuit.ShadowGraph;
 import shadowPursuit.WayPoint;
 import simulation.*;
 
@@ -629,6 +630,23 @@ public class Main extends Application {
                         c.setFill(Color.GREEN);
                         pane.getChildren().add(c);
                     }
+
+                    for(int i = pursuitPath.getPath().size()-1; i >= 0; --i)   {
+                        for(int j = 0; j < pursuitPath.getPath().get(i).size(); j++)    {
+                            Point2D point = pursuitPath.getPath().get(i).get(j).getCoord();
+                            Circle c = new Circle(point.getX(), point.getY(), 5);
+                            c.setFill(Color.BLUE);
+                            pane.getChildren().add(c);
+                        }
+                    }
+
+                    for (Polygon p : new ShadowGraph(map, pursuitPath.getPath().get(0), true).getShadows()) {
+                        p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
+                        p.setFill(Color.RED.deriveColor(1, 1, 1, 0.1));
+                        p.setStrokeWidth(1);
+                        pane.getChildren().add(p);
+                    }
+
 
 
                 }
