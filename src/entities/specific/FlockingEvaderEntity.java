@@ -46,7 +46,7 @@ public class FlockingEvaderEntity extends DistributedEntity {
             }
         }
 
-        System.out.println(agents.size());
+       // System.out.println(agents.size());
 
         for (Agent pursuer : agents) {
             //cycle through all agents

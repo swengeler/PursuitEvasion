@@ -1,5 +1,6 @@
 package shadowPursuit;
 
+import entities.Tree;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
@@ -21,6 +22,7 @@ public class PursuitTree {
     TreeNode root;
     ArrayList<TreeNode> children;
     TreeNode Parent;
+    double oldBest;
 
     ArrayList<Line> envEdges;
 
@@ -28,8 +30,9 @@ public class PursuitTree {
 
 
     ArrayList<Line> connections;
-    TreeNode treeNode;
+    TreeNode bestNode;
     ShadowGraph shadowGraph;
+    ArrayList<TreeNode> nodes;
 
 
     public PursuitTree(MapRepresentation map, ArrayList<Point2D> agents) {
@@ -38,9 +41,10 @@ public class PursuitTree {
 
         envEdges = new ArrayList<>();
 
-        for(int i = 0; i < map.getPolygonEdges().size(); i++)   {
+        for (int i = 0; i < map.getPolygonEdges().size(); i++) {
             envEdges.add(map.getPolygonEdges().get(i));
         }
+        bestNode = null;
 
 
        /* for(int i=0;i<agents.size();i++) {
@@ -54,21 +58,22 @@ public class PursuitTree {
         calculateNodes();
         shadowGraph = new ShadowGraph(map, agents);
         depthLevel = graph.size();
+        nodes = new ArrayList<>();
+
 
         //System.arraycopy(map.getPolygonEdges(), 0, envEdges, 0, map.getPolygonEdges().size());
-       // buildTree();
+        // buildTree();
     }
 
-
-    public void buildTree2() {
+    public void buildTree() {
         double mindDist;
         WayPoint tempPoint;
+        ///System.out.println(11111111);
         ArrayList<WayPoint> startPoints = new ArrayList<>();
 
         for (Point2D agent : agents) {
             mindDist = Double.MAX_VALUE;
             tempPoint = null;
-
 
 
             for (WayPoint wayP : graph) {
@@ -81,159 +86,204 @@ public class PursuitTree {
             startPoints.add(tempPoint);
         }
 
-        root = new TreeNode(startPoints, new ShadowGraph(map, startPoints, true).getShadows());
+
+        root = new TreeNode(startPoints, map, new ShadowGraph(map, startPoints, true).getShadows());
+        //System.out.println(22222);
     }
 
-    /*
-    public void buildTree() {
-        ArrayList<WayPoint> startPoints = new ArrayList<>();
-        WayPoint tmpPoint;
 
-
-        for (Point2D agent : agents) {
-            tmpPoint = new WayPoint(agent);
-
-            for (int j = 0; j < graph.size(); j++) {
-                if (isVisible(agent.getX(), agent.getY(), graph.get(j).getX(), graph.get(j).getY(), map.getPolygonEdges())) {
-
-                    boolean crossed = false;
-                    Line crossOcc = new Line(agent.getX(), agent.getY(), graph.get(j).getX(), graph.get(j).getY());
-                    for (int q = 0; q < raystopasson.size(); q++) {
-                        if (lineIntersect(crossOcc, raystopasson.get(q))) {
-                            // if (!onLine(graph.get(i).getX(), graph.get(i).getY(), rays.get(q)) && !onLine(graph.get(j).getX(), graph.get(j).getY(), rays.get(q))){
-                            crossed = true;
-
-                        }
-                    }
-                    if (crossed == false) {
-                        tmpPoint.addConnection(graph.get(j));
-                    }
-
-
-                }
-
-
+    public void sortArray(ArrayList<TreeNode> tosort) {//go through the array and sort from smallest to highest
+        for (int i = 1; i < tosort.size(); i++) {
+            TreeNode temp = null;
+            if (tosort.get(i - 1).score > tosort.get(i).score) {
+                temp = tosort.get(i - 1);
+                tosort.set(i - 1, tosort.get(i));
+                tosort.set(i, temp);
             }
-            startPoints.add(tmpPoint);
         }
-
-
-        root = new TreeNode(startPoints, shadowGraph.getShadows());
-
-        //Now lets start building from the root
-        int depth = 0;
-        int childrenSize;
-        TreeNode tmpNode = root;
-        ShadowGraph tmpGraph;
-        int numberofbacktracks = 0;
-        //while (numberofbacktracks == graph.size() * linestopasson.size()) {
-        while (depth < graph.size()) {
-            numberofbacktracks++;
-
-            childrenSize = 1;
-            for (WayPoint wayP : tmpNode.getWayPoints()) {
-                childrenSize *= wayP.connected.size();
-            }
-
-
-            for (WayPoint wayP : tmpNode.getWayPoints()) {
-                for (int i = 0; i < wayP.connected.size(); i++) {
-                    ArrayList<Point2D> loc = new ArrayList<>();
-                    loc.add(wayP.connected.get(i).getCoord());
-
-                    ArrayList<WayPoint> wpp = new ArrayList<>();
-                    wpp.add(wayP.connected.get(i));
-
-                    tmpGraph = new ShadowGraph(map, loc);
-
-
-                    tmpNode.addChild(new TreeNode(tmpNode, wpp, tmpGraph.getShadows()));
-                }
-            }
-
-            TreeNode best = null;
-            if (tmpNode.children != null) {
-                for (int i = 0; i < tmpNode.children.size(); i++) {
-                    if (i == 0) {
-
-                        best = tmpNode.children.get(i);
-                    } else if (best.score < tmpNode.children.get(i).score) {
-
-                        best = tmpNode.children.get(i);
-                    }else if (best.score== tmpNode.children.get(i).score){
-
-                    }
-                }
-            }
-            /*
-
-            for(int j = 0; j < childrenSize; j++)   {
-                try {
-                    tmpGraph = new ShadowGraph(map, )
-                } catch (IndexOutOfBoundsException e) {
-                    System.err.println("IndexOutOfBoundsException: " + e.getMessage());
-                } catch (IOException e) {
-                    System.err.println("Caught IOException: " + e.getMessage());
-                }
-            }
-
-            if (best != null && best.contShadows == null) {
-
-                System.out.println("\nbest = " + best);
-                int i = 0;
-                while (best.parent != null) {
-                    System.out.println("\nbest = " + best.parent + " the number it is is= " + i);
-                    best = best.parent;
-                }
-                System.exit(824);
-                // return the path to this point
-            } else if (best != null) {
-                tmpNode = best;
-                System.out.println("this is the best one =" + best);
-
-                depth++;
-            } else {
-                System.exit(666);
-            }
-            System.out.println("Current Depth => " + depth + "\t allowed => " + graph.size());
-        }
-
-
-        //for(WayPoint )
-
-
     }
 
-    */
     public void test2() {
-        buildTree2();
+        buildTree();
+        //System.out.println(3333333);
+        //root.addChildren();
+        nodes.add(root);
+        //System.out.println(44444444);
 
-        System.out.println("START!!!!");
 
-        if(root.getWayPoints().size() > 1) {
-            for (WayPoint wayP : root.getWayPoints()) {
-                if (wayP != null) {
-                    System.out.print(wayP);
+        //TreeNode child = null;
+        TreeNode current = root;
+        nodes.add(root);
 
-                    System.out.println("\nOTHER PRINT\n");
 
-                    wayP.printWayPoint();
+        //System.out.println("Lowest => " + getLowestVal().getScore());
+        //System.out.println("root => " + root);
+
+        int curdepth = 1;
+        int count = 0;
+
+        int counter;
+        ArrayList<TreeNode> temp = new ArrayList<>();
+        boolean expanding = true;
+
+        bestNode = getLowestVal();
+
+
+        /*
+        while (bestNode.score > 0.5) {
+            //sortArray(bestToContinue);
+            for (int i = 0; i < bestToContinue.size(); i++) {
+
+                //System.out.println("doing shit");
+                if (bestToContinue.size() > i) {
+                    //  System.out.println("doing shit");
+                    bestToContinue.get(i);
+                    if (bestToContinue.get(i).getchildren() == null) {
+                        if (bestToContinue.get(i).getParent().getParent() != null) {
+                            if (bestToContinue.get(i).score <= bestToContinue.get(i).getParent().getParent().getScore()) {
+
+                                bestToContinue.get(i).addChildren();
+
+                            } else expanding = false;
+                        } else bestToContinue.get(i).addChildren();
+                    }
+                    if (expanding) {
+                        for (TreeNode node : bestToContinue.get(i).getchildren()) {
+                            if (!temp.contains(node)) {
+                                temp.add(node);
+                            }
+                            if (!nodes.contains(node)) {
+                                nodes.add(node);
+                            }
+                        }
+                    }else
+                        expanding=true;
+
+
                 }
+            }
+            curdepth++;
 
+            bestToContinue.clear();
+            for (TreeNode node : temp) {
+                bestToContinue.add(node);
+                count++;
+            }
+
+            System.out.println("count:" + count);
+            count=0;
+            System.out.println("Best:\n" + getLowestVal(bestToContinue));
+            temp.clear();
+
+            bestNode = getLowestVal(bestToContinue);
+        }
+        */
+        current = root;
+        oldBest = Double.MAX_VALUE;
+        double breakCounter = 15000;
+        while(getLowestVal().getScore()  > 0.5 && nodes.size() < breakCounter) {
+            counter = 0;
+            for(int i = 0; i < nodes.size() && nodes.size() < breakCounter; i++) {
+                current = nodes.get(i);
+                if (current.getDepth() == curdepth && (current.getchildren() == null || current.getchildren().size() == 0)) {
+                    counter++;
+
+                    current.addChildren();
+                    for (TreeNode child : current.getchildren()) {
+                        nodes.add(child);
+                    }
+                    System.out.println("\t" + nodes.size());
+
+                }
+            }
+            System.out.println("For Depth: " + curdepth);
+            System.out.println("Number of Nodes at this depth: " + counter + "\n");
+            curdepth++;
+
+            if(bestNode.getScore() < oldBest)   {
+                System.out.println("New best Score at Depth: " + (curdepth-1));
+                System.out.println("Best Node: " + bestNode);
+                oldBest = bestNode.getScore();
             }
         }
-        System.out.println("END!!!!");
+
+
+        System.out.println("Best Node: " + bestNode);
+        if(bestNode.getchildren() != null)  {
+            for(int i = 0; i < bestNode.getchildren().size(); i++)    {
+                System.out.println("Child number: " + (i+1));
+                System.out.println(bestNode.getchildren().get(i));
+            }
+        }
+
+
+
+
+
 
     }
 
-    public ArrayList<Point2D> getStart()  {
+    public TreeNode getLowestVal() {
+        double minValue = Double.MAX_VALUE;
+        TreeNode tmp = null;
+        for (TreeNode node : nodes) {
+            if (node.getScore() < minValue) {
+                minValue = node.getScore();
+                tmp = node;
+            }
+        }
+        bestNode = tmp;
+
+        return tmp;
+    }
+
+    public void getBestAtDepth(int depth, int numOfNodes) {
+        ArrayList<TreeNode> best = new ArrayList<>();
+        double maxVal = Double.MIN_NORMAL;
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes.get(i).getDepth() == depth) {
+            }
+            //if()
+        }
+    }
+
+    public TreeNode getLowestVal(ArrayList<TreeNode> checking) {
+        double minValue = Double.MAX_VALUE;
+        TreeNode tmp = null;
+        for (TreeNode node : checking) {
+            if (node.getScore() < minValue) {
+                minValue = node.getScore();
+                tmp = node;
+            }
+        }
+
+        return tmp;
+    }
+
+
+    public ArrayList<Point2D> getStart() {
         ArrayList<Point2D> temp = new ArrayList<>();
-        for(WayPoint wayP : root.getWayPoints())    {
+        for (WayPoint wayP : root.getWayPoints()) {
             temp.add(wayP.getCoord());
         }
         return temp;
     }
 
+    public ArrayList<ArrayList<WayPoint>> getPath() {
+        if (bestNode != null) {
+            ArrayList<ArrayList<WayPoint>> paths = new ArrayList<>();
+            //From Goal to start, meaning => in reversed order
+            TreeNode tmp = bestNode;
+            paths.add(tmp.getWayPoints());
+            while (tmp.getParent() != null) {
+                tmp = tmp.getParent();
+                paths.add(tmp.getWayPoints());
+            }
+            return paths;
+        } else {
+            return null;
+        }
+    }
 
 
     /*
@@ -349,11 +399,9 @@ public class PursuitTree {
             ArrayList<Point2D> points = new ArrayList<>();
             points.add(wayP.getCoord());
             root.addChild(new TreeNode(root, wayP.connected, new ShadowGraph(map, points).getShadows()));
-            System.out.println("NEW TREENODE => " + root.children.get(0));
+            //System.out.println("NEW TREENODE => " + root.children.get(0));
         }
     }
-
-
 
 
     public void calculateNodes() {
@@ -408,7 +456,7 @@ public class PursuitTree {
                         b.add(rays.get(i));
                         b.add(rays.get(j));
                         // graph.add(new WayPoint(a));
-                        if(j>i) {
+                        if (j > i) {
                             graph.add(new WayPoint(a, b));
                             locationsOfPursuers.add(a);
                         }
@@ -507,29 +555,28 @@ public class PursuitTree {
     }
 
     public void createConnections() {
-        for(int i = 0; i < graph.size(); i++)   {
-            System.out.println(graph.get(i));
+        for (int i = 0; i < graph.size(); i++) {
+            //  System.out.println(graph.get(i));
         }
-        for(Line line : connections) {
-            System.out.println("line start x= " + line.getStartX() );
-            System.out.println("line start y= " + line.getStartY() );
-            System.out.println("line end x= " + line.getEndX() );
-            System.out.println("line end y= " + line.getEndY() );
+        for (Line line : connections) {
+            //System.out.println("line start x= " + line.getStartX() );
+            //System.out.println("line start y= " + line.getStartY() );
+            //System.out.println("line end x= " + line.getEndX() );
+            //System.out.println("line end y= " + line.getEndY() );
 
 
             if (getWayPointFromGraph(new Point2D(line.getStartX(), line.getStartY())) != null && getWayPointFromGraph(new Point2D(line.getEndX(), line.getEndY())) != null) {
-                System.out.println("Works for => " + new Point2D(line.getStartX(), line.getStartY())  + "\nAND => " + new Point2D(line.getEndX(), line.getEndY()));
+                //System.out.println("Works for => " + new Point2D(line.getStartX(), line.getStartY())  + "\nAND => " + new Point2D(line.getEndX(), line.getEndY()));
                 WayPoint wayP1 = getWayPointFromGraph(new Point2D(line.getStartX(), line.getStartY()));
                 WayPoint wayP2 = getWayPointFromGraph(new Point2D(line.getEndX(), line.getEndY()));
 
                 wayP1.addConnection(wayP2);
                 wayP2.addConnection(wayP1);
-            }
-            else    {
-                for(int i = 0; i < graph.size(); i++)   {
-                    System.out.println(graph.get(i));
+            } else {
+                for (int i = 0; i < graph.size(); i++) {
+                    // System.out.println(graph.get(i));
                 }
-                System.out.println("Doesn't work for  => " + new Point2D(line.getStartX(), line.getStartY())  + "\nOR => " + new Point2D(line.getEndX(), line.getEndY()));
+                //System.out.println("Doesn't work for  => " + new Point2D(line.getStartX(), line.getStartY())  + "\nOR => " + new Point2D(line.getEndX(), line.getEndY()));
                 System.exit(888888);
             }
         }
@@ -537,9 +584,9 @@ public class PursuitTree {
 
     }
 
-    public WayPoint getWayPointFromGraph(Point2D point)  {
-        for(WayPoint wayP : graph)  {
-            if(wayP.getX() == point.getX() && wayP.getY() == point.getY())    {
+    public WayPoint getWayPointFromGraph(Point2D point) {
+        for (WayPoint wayP : graph) {
+            if (wayP.getX() == point.getX() && wayP.getY() == point.getY()) {
                 return wayP;
             }
         }
@@ -550,7 +597,7 @@ public class PursuitTree {
     public ArrayList<Point2D> getPoints() {
         ArrayList<Point2D> points = new ArrayList<>();
         for (WayPoint way : graph) {
-            way.printWayPoint();
+            //way.printWayPoint();
             points.add(way.getCoord());
         }
         return points;
@@ -609,6 +656,15 @@ public class PursuitTree {
     public ArrayList<Polygon> getShadows() {
         this.shadowGraph = new ShadowGraph(map, agents);
         return shadowGraph.getShadows();
+    }
+
+    public ArrayList<Polygon> getContShadows(TreeNode node) {
+        node.getContShadows();
+        return shadowGraph.getShadows();
+    }
+
+    public void printShadows() {
+        this.shadowGraph.printShadows();
     }
 
     public ArrayList<Line> getRays() {

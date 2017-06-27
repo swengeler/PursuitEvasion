@@ -7,6 +7,7 @@ import maps.MapRepresentation;
 import java.util.ArrayList;
 
 import static shadowPursuit.shadowOperations.getX1Points;
+import static shadowPursuit.shadowOperations.polyToPoints;
 
 
 /**
@@ -48,10 +49,10 @@ public class ShadowTest {
         //Point2D agent1Pos = new Point2D(442, 343);
         //Point2D agent2Pos = new Point2D(441, 465);
 
-        environment = new Polygon(297.0,95.0,879.0,175.0,544.0,207.0,952.0,248.0,422.0,276.0,949.0,307.0,297.0,321.0,933.0,391.0,116.0,363.0);
+        environment = new Polygon(726.0,186.0,906.0,184.0,904.0,212.0,793.0,210.0,795.0,308.0,118.0,313.0,120.0,276.0,297.0,270.0,299.0,166.0,141.0,172.0,141.0,130.0,334.0,130.0,331.0,268.0,376.0,263.0,376.0,108.0,280.0,108.0,279.0,68.0,479.0,69.0,478.0,124.0,399.0,122.0,402.0,172.0,480.0,176.0,476.0,205.0,406.0,203.0,408.0,262.0,524.0,256.0,526.0,161.0,448.0,155.0,455.0,135.0,534.0,138.0,533.0,43.0,444.0,41.0,441.0,16.0,602.0,18.0,600.0,258.0,681.0,254.0,688.0,135.0,916.0,138.0,917.0,158.0,730.0,159.0);
 
-        Point2D agent1Pos = new Point2D(526, 156);
-        Point2D agent2Pos = new Point2D(575, 396);
+        Point2D agent1Pos = new Point2D(716.1833256563797, 252.26255181943804);
+        Point2D agent2Pos = new Point2D(532.8638919767213, 30.06973778853353);
         Point2D agent3Pos = new Point2D(894, 280);
         Point2D agent4Pos = new Point2D(798, 220);
 
@@ -67,7 +68,7 @@ public class ShadowTest {
 
         ArrayList<Point2D> agents = new ArrayList<>();
         agents.add(agent1Pos);
-        //agents.add(agent2Pos);
+        agents.add(agent2Pos);
         //agents.add(agent3Pos);
         //agents.add(agent4Pos);
 
@@ -84,7 +85,7 @@ public class ShadowTest {
             System.out.println(point);
         }*/
 
-        System.out.println("\n");
+        //System.out.println("\n");
         /*
         System.out.println("\nvisible");
         ArrayList<Point2D> env = polyToPoints(environment);
@@ -103,9 +104,14 @@ public class ShadowTest {
         //ArrayList<Point2D> connected = getAdjacentPoints(type1.get(0), polys);
         //System.out.println("\nFor = " + type1.get(0) + "\n" + connected.get(0) + " \t " + connected.get(1));
 
+        for(Point2D point : polyToPoints(environment))  {
+            System.out.println(point);
+        }
+        System.out.println("------");
 
         shadows = new ShadowGraph(environment, obst, agents);
-
+        //shadows.printNodes();
+        shadows.printShadows();
 
     }
 

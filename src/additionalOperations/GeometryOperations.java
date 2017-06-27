@@ -407,7 +407,7 @@ public class GeometryOperations {
         double slope2, slope1;
         if (l1x == 0) {
             slope1 = Double.MAX_VALUE;
-            System.out.println("first fuck up");
+            //System.out.println("first fuck up");
             double xvalue = line1.getEndX();
 
 
