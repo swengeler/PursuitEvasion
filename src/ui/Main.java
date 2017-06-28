@@ -500,7 +500,8 @@ public class Main extends Application {
                         if (inPolygon) {
                             //System.out.printf("(%f|%f), (%f|%f), (%f|%f)\n", dt.getPoint(0).getEstX(), dt.getPoint(0).getEstY(), dt.getPoint(1).getEstX(), dt.getPoint(1).getEstY(), dt.getPoint(2).getEstX(), dt.getPoint(2).getEstY());
                             p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
-                            p.setStroke(Color.BLACK.deriveColor(1, 1, 1, 0.5));
+                            p.setStroke(Color.GRAY.deriveColor(1, 1, 1, 0.5));
+                            p.setStrokeWidth(0.2);
                             p.setFill(Color.WHITE.deriveColor(1, 1, 1, 0.1));
                             p.setStrokeWidth(1);
 
@@ -511,7 +512,7 @@ public class Main extends Application {
                             index.setTranslateX(c.getCenterX() + 10);
                             index.setTranslateY(c.getCenterY() + 10);
 
-                            pane.getChildren().addAll(p, c, index);
+                            pane.getChildren().addAll(p);
                             includedTriangles.add(dt);
                         }
                     }
@@ -540,10 +541,10 @@ public class Main extends Application {
                                     l.setStrokeWidth(2);
                                     pane.getChildren().add(l);*/
                                     Line l1 = new Line(dt1.getBarycenter().getX(), dt1.getBarycenter().getY(), connectingEdge.getBarycenter().getX(), connectingEdge.getBarycenter().getY());
-                                    l1.setStroke(Color.RED);
+                                    l1.setStroke(Color.BLACK);
                                     l1.setStrokeWidth(2);
                                     Line l2 = new Line(connectingEdge.getBarycenter().getX(), connectingEdge.getBarycenter().getY(), otherTriangle.getBarycenter().getX(), otherTriangle.getBarycenter().getY());
-                                    l2.setStroke(Color.RED);
+                                    l2.setStroke(Color.BLACK);
                                     l2.setStrokeWidth(2);
                                     pane.getChildren().addAll(l1, l2);
                                 }

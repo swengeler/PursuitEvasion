@@ -1,20 +1,19 @@
 package simulation;
 
-import additionalOperations.GeometryOperations;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
 import entities.utils.*;
 import experiments.ExperimentConfiguration;
 import javafx.geometry.Point2D;
+import javafx.scene.Group;
 import javafx.scene.control.Label;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import maps.MapRepresentation;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.apache.commons.math3.exception.MathArithmeticException;
 import org.jdelaunay.delaunay.error.DelaunayError;
 import org.jdelaunay.delaunay.geometries.*;
+import ui.Main;
 
 import java.util.ArrayList;
 
@@ -44,9 +43,13 @@ public class TraversalHandler {
 
     private EnumeratedIntegerDistribution rng;
 
+    private Group graphics;
+
     public TraversalHandler(ArrayList<DTriangle> triangles) {
         init(triangles);
         nodess = triangles;
+        graphics = new Group();
+        Main.pane.getChildren().add(graphics);
     }
 
     public TraversalHandler(ShortestPathRoadMap shortestPathRoadMap, ArrayList<DTriangle> nodes, ArrayList<ArrayList<DTriangle>> components, int[][] adjacencyMatrix) {
@@ -59,6 +62,9 @@ public class TraversalHandler {
         this.nodess = nodes;
         this.components = components;
         this.adjacencyMatrix = adjacencyMatrix;
+
+        graphics = new Group();
+        Main.pane.getChildren().add(graphics);
 
         /*for (int i = 0; i < adjacencyMatrix.length; i++) {
             for (int j = 0; j < adjacencyMatrix.length; j++) {
@@ -281,6 +287,7 @@ public class TraversalHandler {
     }
 
     public PlannedPath getRandomTraversal(double xPos, double yPos) throws DelaunayError {
+        graphics.getChildren().clear();
         // 1. pick one of the simply-connected components to make a run/traversal in
         //    (could do that uniformly or by size or something like that)
         // 2. move to a randomly chosen leaf node of that component
@@ -442,6 +449,7 @@ public class TraversalHandler {
                 System.err.println("Second case (startIndex: " + startIndex + " " + isLeaf(startIndex) + ", currentIndex: " + currentIndex + " " + isLeaf(currentIndex) + ")");
                 return null;
             }
+            //graphics.getChildren().add(new Circle(nodess.get(currentIndex).getBarycenter().getX(), nodess.get(currentIndex).getBarycenter().getY(), 7, Color.BLACK));
         }
         plannedPath.setStartIndex(startIndex);
         plannedPath.setEndIndex(currentIndex);
