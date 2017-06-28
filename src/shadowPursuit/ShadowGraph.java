@@ -558,20 +558,20 @@ public class ShadowGraph {
                             //Nodes.remove(i--);
                         } else {
 
-                            /*
+
                             Point2D left=getAdjacentPoints(tmp.getPosition(),allPolygons).get(0);
                             Point2D right=getAdjacentPoints(tmp.getPosition(),allPolygons).get(1);
-                            if (onLine(tmp.getPosition(), new Line(left.getX(), left.getY(), agentX, agentY)) && nodePresent(left) != null) {
+                            if (onLine(tmp.getPosition(), new Line(left.getX(), left.getY(), agentX, agentY)) && nodePresent(left) != null && pointiPoints.contains(left)) {
                                 tempPoint=left;
                                 tmp = nodePresent(left);
                                 tmpLine= scaleRay(agent, tempPoint, rayLength);
                             }
-                            else if (onLine(tmp.getPosition(), new Line(right.getX(), right.getY(), agentX, agentY))&& nodePresent(right) != null) {
+                            else if (onLine(tmp.getPosition(), new Line(right.getX(), right.getY(), agentX, agentY))&& nodePresent(right) != null && pointiPoints.contains(right)) {
                                 tempPoint=right;
                                 tmp = nodePresent(right);
                                 tmpLine= scaleRay(agent, tempPoint, rayLength);
                             }
-                            */
+
 
                             tmp2 = new ShadowNode(intersect, tmp, tmpLine, agent);
                             Line b = new Line(intersect.getX(), intersect.getY(), tempPoint.getX(), tempPoint.getY());

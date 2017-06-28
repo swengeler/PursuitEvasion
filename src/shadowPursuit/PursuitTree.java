@@ -180,8 +180,8 @@ public class PursuitTree {
         */
         current = root;
         oldBest = Double.MAX_VALUE;
-        double breakCounter = 15000;
-        while(getLowestVal().getScore()  > 0.5 && nodes.size() < breakCounter) {
+        double breakCounter = 60000;
+        while(getLowestVal().getScore()  > 0 && nodes.size() < breakCounter) {
             counter = 0;
             for(int i = 0; i < nodes.size() && nodes.size() < breakCounter; i++) {
                 current = nodes.get(i);

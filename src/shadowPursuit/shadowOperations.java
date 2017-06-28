@@ -453,6 +453,7 @@ public class shadowOperations {
 
 
         for (Line l : polygonEdges) {
+            //System.out.println(l);
             if (l != getLineOn(new Point2D(x1, y1), polygonEdges) && l != getLineOn(new Point2D(x2, y2), polygonEdges)) {
                 if (lineIntersect(l, x1, y1, x2, y2)) {
                     //System.out.println("\n\nIntersect between " + l + "\nand " + new Line(x1,y1,x2,y2)+ "\n");
