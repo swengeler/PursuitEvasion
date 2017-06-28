@@ -829,7 +829,7 @@ public class ExperimentConfiguration extends Application {
                             }
                         } catch (Error | Exception e) {
                             interruptCurrentRun();
-                            e.printStackTrace();
+                            //e.printStackTrace();
                         }
                         System.out.println("\nSimulation (" + simulationCount + ") took: " + (System.currentTimeMillis() - before) + " ms");
                         if (!interruptCurrentRun) {

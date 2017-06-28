@@ -1035,7 +1035,7 @@ public class DCRSEntity extends PartitioningEntity {
 
                 //PlannedPath temp = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), target.getXPos(), target.getYPos());
                 PlannedPath temp = testSPRM.getShortestPath(catcher.getXPos(), catcher.getYPos(), target.getXPos(), target.getYPos());
-                catchGraphics.getChildren().addAll(temp.getPathLines());
+                //catchGraphics.getChildren().addAll(temp.getPathLines());
 
 
                 //PlannedPath temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(catcher.getXPos(), catcher.getYPos(), target.getXPos(), target.getYPos());
@@ -1076,40 +1076,42 @@ public class DCRSEntity extends PartitioningEntity {
                         currentPoint = GeometryOperations.rayLineSegIntersection(rayStartX, rayStartY, rayDeltaX, rayDeltaY, line);
                         if (currentPoint != null && !(currentPoint.getX() == pseudoBlockingVertex.getX() && currentPoint.getY() == pseudoBlockingVertex.getY())) {
                             if ((currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
-                                minLengthSquared = currentLengthSquared;
-                                pocketBoundaryEndPoint = currentPoint;
-                                intersectedLine = line;
+                                if ((currentLengthSquared = Math.pow(catcher.getXPos() - currentPoint.getX(), 2) + Math.pow(catcher.getYPos() - currentPoint.getY(), 2)) < minLengthSquared/*&& map.isVisible(catcher.getXPos(), catcher.getYPos(), pocketBoundaryEndPoint.getEstX(), pocketBoundaryEndPoint.getEstY())*/) {
+                                    minLengthSquared = currentLengthSquared;
+                                    pocketBoundaryEndPoint = currentPoint;
+                                    intersectedLine = line;
+                                }
                             }
                         }
                     }
-                }
-                Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
-                catchGraphics.getChildren().add(boundaryLine);
-                catchGraphics.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 6, Color.BLACK));
-                Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
-                traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond(), map, separatingLines.contains(intersectedLine) ? intersectedLine : null);
+                    Line boundaryLine = new Line(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
+                    catchGraphics.getChildren().add(boundaryLine);
+                    catchGraphics.getChildren().add(new Circle(pocketBoundaryEndPoint.getX(), pocketBoundaryEndPoint.getY(), 6, Color.BLACK));
+                    Tuple<ArrayList<DTriangle>, int[][]> pocketInfo = findPocketComponent(boundaryLine, componentIndex, pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), separatingLines.contains(intersectedLine) ? intersectedLine : null);
+                    traversalHandler.restrictToPocket(pocketInfo.getFirst(), pocketInfo.getSecond(), map, separatingLines.contains(intersectedLine) ? intersectedLine : null);
 
-                System.out.println("Pocket component size: " + pocketInfo.getFirst().size());
+                    System.out.println("Pocket component size: " + pocketInfo.getFirst().size());
 
-                Label l = new Label("v");
-                l.setTranslateX(pseudoBlockingVertex.getX() + 5);
-                l.setTranslateY(pseudoBlockingVertex.getY() + 5);
-                catchGraphics.getChildren().addAll(new Circle(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), 7, Color.BLUEVIOLET), l);
+                    Label l = new Label("v");
+                    l.setTranslateX(pseudoBlockingVertex.getX() + 5);
+                    l.setTranslateY(pseudoBlockingVertex.getY() + 5);
+                    catchGraphics.getChildren().addAll(new Circle(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY(), 7, Color.BLUEVIOLET), l);
 
-                currentSearcherPath = null;
-                //currentSearcherPath = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(searcher.getXPos(), searcher.getYPos(), pseudoBlockingVertex);
-                // not sure about which one of these it should be
-                // I think the first one probably works if the random traversal truly includes the triangles in the guarding square
-                // but it would fuck up otherwise because the pseudo-blocking vertex might lie somewhere completely different
-                //currentCatcherPath = (testInGuardedSquare ? testSPRM : traversalHandler.getRestrictedShortestPathRoadMap()).getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
+                    currentSearcherPath = null;
+                    //currentSearcherPath = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(searcher.getXPos(), searcher.getYPos(), pseudoBlockingVertex);
+                    // not sure about which one of these it should be
+                    // I think the first one probably works if the random traversal truly includes the triangles in the guarding square
+                    // but it would fuck up otherwise because the pseudo-blocking vertex might lie somewhere completely different
+                    //currentCatcherPath = (testInGuardedSquare ? testSPRM : traversalHandler.getRestrictedShortestPathRoadMap()).getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
                 /*currentCatcherPath = (testInGuardedSquare ? testSPRM : traversalHandler.getRestrictedShortestPathRoadMap()).getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);*/
-                //currentCatcherPath = (testInGuardedSquare ? testSPRM : shortestPathRoadMap).getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
-                currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
-                searcherPathLineCounter = 0;
-                catcherPathLineCounter = 0;
+                    //currentCatcherPath = (testInGuardedSquare ? testSPRM : shortestPathRoadMap).getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
+                    currentCatcherPath = shortestPathRoadMap.getShortestPath(catcher.getXPos(), catcher.getYPos(), pseudoBlockingVertex);
+                    searcherPathLineCounter = 0;
+                    catcherPathLineCounter = 0;
 
-                System.out.println("pseudoBlockingVertex null because target visible in FIND_TARGET (2)");
-                currentStage = Stage.FOLLOW_TARGET;
+                    System.out.println("pseudoBlockingVertex null because target visible in FIND_TARGET (2)");
+                    currentStage = Stage.FOLLOW_TARGET;
+                }
             }
         }
     }

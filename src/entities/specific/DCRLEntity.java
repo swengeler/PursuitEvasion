@@ -639,7 +639,7 @@ public class DCRLEntity extends PartitioningEntity {
                 catchGraphics.getChildren().clear();
 
                 PlannedPath temp = traversalHandler.getRestrictedShortestPathRoadMap().getShortestPath(catcher.getXPos(), catcher.getYPos(), target.getXPos(), target.getYPos());
-                catchGraphics.getChildren().addAll(temp.getPathLines());
+                //catchGraphics.getChildren().addAll(temp.getPathLines());
 
                 lastPointVisible = new Point2D(pseudoBlockingVertex.getX(), pseudoBlockingVertex.getY());
                 pseudoBlockingVertex = new Point2D(temp.getPathVertex(1).getEstX(), temp.getPathVertex(1).getEstY());
@@ -821,19 +821,6 @@ public class DCRLEntity extends PartitioningEntity {
             } else {
                 traversalHandler.separatingLineBased(separatingLines, reconnectedComponents, reconnectedAdjacencyMatrix, restrictedShortestPathRoadMap);
             }
-
-            ShortestPathRoadMap sprm = traversalHandler.getRestrictedShortestPathRoadMap();
-            for (PathVertex pv1 : sprm.getShortestPathGraph().vertexSet()) {
-                for (PathVertex pv2 : sprm.getShortestPathGraph().vertexSet()) {
-                    if (!pv1.equals(pv2) && sprm.getShortestPathGraph().containsEdge(pv1, pv2)) {
-                        Line l = new Line(pv1.getRealX(), pv1.getRealY(), pv2.getRealX(), pv2.getRealY());
-                        l.setStrokeWidth(1.5);
-                        l.setStroke(Color.GREEN);
-                        Main.pane.getChildren().add(l);
-                    }
-                }
-            }
-
 
             for (GuardManager gm : guardManagers) {
                 requiredAgents += gm.totalRequiredGuards();
@@ -1414,7 +1401,7 @@ public class DCRLEntity extends PartitioningEntity {
         Polygon plgn;
         plgn = new Polygon(currentTriangle.getPoint(0).getX(), currentTriangle.getPoint(0).getY(), currentTriangle.getPoint(1).getX(), currentTriangle.getPoint(1).getY(), currentTriangle.getPoint(2).getX(), currentTriangle.getPoint(2).getY());
         plgn.setFill(Color.BLUE.deriveColor(1, 1, 1, 0.1));
-        catchGraphics.getChildren().add(plgn);
+        //catchGraphics.getChildren().add(plgn);
         pocketBoundaryTriangles.add(currentTriangle);
         // add all triangles that are intersected by the boundary line to the list
         LineString lineString = new LineString(new CoordinateArraySequence(new Coordinate[]{new Coordinate(boundaryLine.getStartX(), boundaryLine.getStartY()), new Coordinate(boundaryLine.getEndX(), boundaryLine.getEndY())}), GeometryOperations.factory);
@@ -1454,7 +1441,7 @@ public class DCRLEntity extends PartitioningEntity {
                         Line l = new Line(de.getPointLeft().getX(), de.getPointLeft().getY(), de.getPointRight().getX(), de.getPointRight().getY());
                         l.setStroke(Color.BLUE);
                         l.setStrokeWidth(2);
-                        catchGraphics.getChildren().add(l);
+                        //catchGraphics.getChildren().add(l);
                     }
                 }
             }
@@ -1543,6 +1530,8 @@ public class DCRLEntity extends PartitioningEntity {
         for (DTriangle dt : pocketBoundaryTriangles) {
             p = new Polygon(dt.getPoint(0).getX(), dt.getPoint(0).getY(), dt.getPoint(1).getX(), dt.getPoint(1).getY(), dt.getPoint(2).getX(), dt.getPoint(2).getY());
             p.setFill(Color.BLUE.deriveColor(1, 1, 1, 0.1));
+            p.setStroke(Color.BLACK);
+            p.setStrokeWidth(0.2);
             catchGraphics.getChildren().add(p);
         }
         return new Tuple<>(pocketBoundaryTriangles, pocketAdjacencyMatrix);

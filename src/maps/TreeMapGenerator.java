@@ -85,7 +85,7 @@ public class TreeMapGenerator extends MapGenerator {
     private double width = DEFAULT_COORDS[16] * (X_STRETCH ? X_SCALE : 1.0);
     private double height = DEFAULT_COORDS[11] * Y_SCALE;
 
-    private int[] branchingFactors = new int[]{10, 1, 1, 1};
+    private int[] branchingFactors = new int[]{2, 2};
     private int[] depthCount = new int[branchingFactors.length + 1];
     private int[] nodeCounter = new int[branchingFactors.length + 1];
     private double[] offset = new double[branchingFactors.length + 1];
@@ -105,7 +105,7 @@ public class TreeMapGenerator extends MapGenerator {
         stage.setScene(scene);
         stage.show();
 
-        /*mapName = "treemap_";
+        mapName = "treemap_";
         for (int i = 0; i < branchingFactors.length; i++) {
             mapName += branchingFactors[i] + "_";
         }
@@ -121,12 +121,12 @@ public class TreeMapGenerator extends MapGenerator {
                 }
             }
         }
-        saveMap();*/
+        saveMap();
 
-        for (int x = 1; x <= 4; x++) {
+        /*for (int x = 1; x <= 4; x++) {
             for (int j = 1; j <= 4; j++) {
-                /*for (int k = 1; k <= 2; k++) {
-                    for (int l = 1; l <= 2; l++) {*/
+                *//*for (int k = 1; k <= 2; k++) {
+                    for (int l = 1; l <= 2; l++) {*//*
                         branchingFactors = new int[]{x, j};
                         depthCount = new int[branchingFactors.length + 1];
                         nodeCounter = new int[branchingFactors.length + 1];
@@ -140,7 +140,7 @@ public class TreeMapGenerator extends MapGenerator {
                         mapPolygons.add(new Polygon());
 
                         generateMap();
-                        /*for (Polygon p : mapPolygons) {
+                        *//*for (Polygon p : mapPolygons) {
                             for (int i = 0; i < p.getPoints().size() - 2; i += 2) {
                                 if (p.getPoints().get(i).equals(p.getPoints().get(i + 2)) && p.getPoints().get(i + 1).equals(p.getPoints().get(i + 3))) {
                                     p.getPoints().remove(i + 2);
@@ -148,13 +148,13 @@ public class TreeMapGenerator extends MapGenerator {
                                     i -= 2;
                                 }
                             }
-                        }*/
+                        }*//*
                         saveMap();
-                        mapPolygons.clear();/*
+                        mapPolygons.clear();*//*
                     }
-                }*/
+                }*//*
             }
-        }
+        }*/
 
         System.exit(0);
     }

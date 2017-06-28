@@ -25,7 +25,7 @@ public class TestEntity extends DistributedEntity {
         super(map);
         targetX = map.getBorderPolygon().getPoints().get(0);
         targetY = map.getBorderPolygon().getPoints().get(1);
-        sprm = new ShortestPathRoadMap(map);
+        sprm = shortestPathRoadMap;
         mapThing = map;
     }
 

@@ -75,7 +75,7 @@ public class SmoothTreeMapGenerator extends MapGenerator {
     private double width = SMOOTH_COORDS[4] * (X_STRETCH ? X_SCALE : 1.0);
     private double height = SMOOTH_COORDS[3] * Y_SCALE;
 
-    private int[] branchingFactors = new int[]{10, 1, 1, 1};
+    private int[] branchingFactors = new int[]{2, 2};
     private int[] depthCount = new int[branchingFactors.length + 1];
     private int[] nodeCounter = new int[branchingFactors.length + 1];
     private double[] offset = new double[branchingFactors.length + 1];
@@ -95,7 +95,7 @@ public class SmoothTreeMapGenerator extends MapGenerator {
         stage.setScene(scene);
         stage.show();
 
-       /* mapName = "smoothtreemap_";
+        mapName = "smoothtreemap_";
         for (int i = 0; i < branchingFactors.length; i++) {
             mapName += branchingFactors[i] + "_";
         }
@@ -109,10 +109,10 @@ public class SmoothTreeMapGenerator extends MapGenerator {
                 System.out.println(mapPolygons.get(0).getPoints().get(i) + "-" + mapPolygons.get(0).getPoints().get(i + 1));
             }
         }
-        saveMap();*/
+        saveMap();
         //System.exit(1);
 
-        for (int x = 1; x <= 4; x++) {
+        /*for (int x = 1; x <= 4; x++) {
             for (int j = 1; j <= 4; j++) {
                 //for (int k = 2; k <= 4; k++) {
                     branchingFactors = new int[]{x, j};
@@ -141,7 +141,7 @@ public class SmoothTreeMapGenerator extends MapGenerator {
                     mapPolygons.clear();
                 //}
             }
-        }
+        }*/
 
 
         System.exit(0);

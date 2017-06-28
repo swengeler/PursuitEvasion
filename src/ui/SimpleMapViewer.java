@@ -8,7 +8,11 @@ import experiments.SquareGuardInfo;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Polygon;
@@ -22,6 +26,8 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class SimpleMapViewer extends Application {
+
+    private static final double SCALE_FACTOR = 1.1;
 
     private static File fileToOpen;
 
@@ -43,11 +49,31 @@ public class SimpleMapViewer extends Application {
         stage = primaryStage;
         graphics = new Group();
         pane = new ScrollPane();
-        pane.setContent(graphics);
+        StackPane otherPane = new StackPane();
+        pane.setContent(otherPane);
         pane.setFitToWidth(true);
         pane.setPannable(true);
         pane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         pane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        Label scrollLabel = new Label();
+        scrollLabel.setTextFill(Color.LAWNGREEN);
+        otherPane.getChildren().addAll(graphics);
+
+        pane.setOnKeyPressed(e -> {
+            if (e.isControlDown()) {
+                if (e.getCode() == KeyCode.M) {
+                    graphics.setScaleX(graphics.getScaleX() / SCALE_FACTOR);
+                    graphics.setScaleY(graphics.getScaleY() / SCALE_FACTOR);
+                    scrollLabel.setText("" + graphics.getScaleX());
+                } else if (e.getCode() == KeyCode.P) {
+                    graphics.setScaleX(graphics.getScaleX() * SCALE_FACTOR);
+                    graphics.setScaleY(graphics.getScaleY() * SCALE_FACTOR);
+                    scrollLabel.setText("" + graphics.getScaleX());
+                } else if (e.getCode() == KeyCode.W) {
+                    primaryStage.close();
+                }
+            }
+        });
 
         load();
         //displayMap();
@@ -406,7 +432,7 @@ public class SimpleMapViewer extends Application {
             }
 
             if (maxX - minX + 50 < screenWidth) {
-                stage.setWidth(maxX - minX + 50);
+                stage.setWidth(maxX - minX + 100);
             }
             if (maxY - minY + 50 < screenHeight) {
                 stage.setHeight(maxY - minY + 50);

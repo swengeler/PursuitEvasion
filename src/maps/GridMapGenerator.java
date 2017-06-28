@@ -38,13 +38,20 @@ public class GridMapGenerator extends MapGenerator {
     private int xDimension = 2;
     private int yDimension = 1;
 
+    private Pane pane;
+
     public GridMapGenerator() {
         super();
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        pane = new Pane();
+        Scene scene = new Scene(pane, 200, 200);
         stage = primaryStage;
+        stage.setScene(scene);
+        stage.show();
+        /*stage = primaryStage;
         for (int i = 1; i <= 4; i++) {
             for (int j = i; j <= 4; j++) {
                 xDimension = i;
@@ -64,7 +71,23 @@ public class GridMapGenerator extends MapGenerator {
                 saveMap();
                 mapPolygons.clear();
             }
+        }*/
+        xDimension = 2;
+        yDimension = 2;
+        mapName = "grid_" + xDimension + "_" + yDimension + "_";
+        System.out.println(xDimension + ", " + yDimension);
+        generateMap();
+        for (Polygon p : mapPolygons) {
+            for (int x = 0; x < p.getPoints().size() - 2; x += 2) {
+                if (p.getPoints().get(x).equals(p.getPoints().get(x + 2)) && p.getPoints().get(x + 1).equals(p.getPoints().get(x + 3))) {
+                    p.getPoints().remove(x + 2);
+                    p.getPoints().remove(x + 2);
+                    x -= 2;
+                }
+            }
         }
+        saveMap();
+        mapPolygons.clear();
         System.exit(0);
     }
 
@@ -74,7 +97,6 @@ public class GridMapGenerator extends MapGenerator {
         double verticalWidth = DEFAULT_COORDS[16] * (xStretch ? xScale : 1.0);
         double verticalHeight = DEFAULT_COORDS[11] * yScale;
 
-        Pane pane = new Pane();
         ArrayList<Double> points = new ArrayList<>(40);
         /*javafx.scene.shape.Polygon p = new javafx.scene.shape.Polygon();
         p.getPoints().addAll(
@@ -234,9 +256,6 @@ public class GridMapGenerator extends MapGenerator {
             pane.getChildren().addAll(label, new Circle(mapPolygons.get(1).getPoints().get(l), mapPolygons.get(1).getPoints().get(l + 1), 4, Color.GREEN));
         }
 
-        Scene scene = new Scene(pane, 1700, 900);
-        stage.setScene(scene);
-        stage.show();
     }
 
     public static void main(String[] args) {
